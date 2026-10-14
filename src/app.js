@@ -1,11 +1,13 @@
 import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, saveDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
 import { loadCards, browserCardCache } from './cards.js';
 import { icon } from './icons.js';
+import { SUBTYPES, MIN_RELEASE_YEAR, currentYear, normalizeReleaseYear, releaseCutoff, hydrateDeckDates, buildYearHighlights } from './era.js';
+import { cardGridLayout } from './layout.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 const main = $('#main'), modal = $('#modal');
-const state = { route: 'home', cards: [], cardIndex: new Map(), cardStatus: 'loading', source: '', cardError: '', cacheWarning: false, filters: { query: '', category: 'All', attribute: '', race: '', mechanic: '', sort: 'az' }, filtered: [], decks: [], draft: createDeck(), section: 'main', dirty: false, storageError: '', showStats: true };
+const state = { route: 'home', cards: [], cardIndex: new Map(), cardStatus: 'loading', source: '', cardError: '', cacheWarning: false, filters: { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' }, filtered: [], yearHighlights: new Map(), decks: [], draft: createDeck(), section: 'main', dirty: false, storageError: '', showStats: true };
 let cache;
 try {
   state.decks = readDecks(localStorage);
@@ -82,7 +84,7 @@ function renderHome() {
 function renderArchive() {
   main.innerHTML = `<section class="screen archive-screen" aria-label="Card Archive">
     <div class="page-heading"><div><div class="eyebrow">EXPLORE & DISCOVER</div><h1>Card Archive</h1></div><span class="pill">YGOPRODeck</span></div>
-    <div class="search-row"><div class="search-wrap">${icon('search')}<label class="sr-only" for="card-search">Search card name, archetype, or effect text</label><input id="card-search" type="search" placeholder="Name, archetype, or card text" value="${escape(state.filters.query)}" autocomplete="off"><button class="search-clear" data-action="clear-search" aria-label="Clear search">×</button></div><button class="filter-toggle" data-action="filters" data-active="${Boolean(state.filters.attribute || state.filters.race || state.filters.mechanic || state.filters.sort !== 'az')}" aria-haspopup="dialog">${icon('filter')}<span>Filters</span></button></div>
+    <div class="search-row"><div class="search-wrap">${icon('search')}<label class="sr-only" for="card-search">Search card name, archetype, or effect text</label><input id="card-search" type="search" placeholder="Name, archetype, or card text" value="${escape(state.filters.query)}" autocomplete="off"><button class="search-clear" data-action="clear-search" aria-label="Clear search">×</button></div><button class="filter-toggle" data-action="filters" data-active="${Boolean(state.filters.attribute || state.filters.race || state.filters.subtype || state.filters.mechanic || state.draft.releaseYear !== null || state.filters.sort !== 'az')}" aria-haspopup="dialog">${icon('filter')}<span>Filters</span></button></div>
     <div class="category-tabs" aria-label="Card category">${[['All', 'All'], ['Monster', 'Monster'], ['Spell', 'Spell'], ['Trap', 'Trap'], ['Extra', 'Extra Deck']].map(([key, label]) => `<button data-category="${key}" aria-pressed="${state.filters.category === key}">${label}</button>`).join('')}</div>
     <div class="result-meta" id="result-meta" role="status"></div>
     <div class="archive-panel" id="archive-panel" aria-label="Scrollable card results" tabindex="0"></div>
@@ -91,7 +93,7 @@ function renderArchive() {
   updateArchive();
 }
 function searchControls() {
-  const filtered = Boolean(state.filters.attribute || state.filters.race || state.filters.mechanic || state.filters.sort !== 'az' || state.filters.category !== 'All');
+  const filtered = Boolean(state.filters.attribute || state.filters.race || state.filters.subtype || state.filters.mechanic || state.draft.releaseYear !== null || state.filters.sort !== 'az' || state.filters.category !== 'All');
   return `<div class="search-row"><div class="search-wrap">${icon('search')}<label class="sr-only" for="card-search">Search card name, archetype, or effect text</label><input id="card-search" type="search" placeholder="Find cards for your deck…" value="${escape(state.filters.query)}" autocomplete="off"><button class="search-clear" data-action="clear-search" aria-label="Clear search">×</button></div><button class="filter-toggle" data-action="filters" data-active="${filtered}" aria-haspopup="dialog" aria-label="Filter and sort cards">${icon('filter')}</button></div>`;
 }
 function defaultCardSection(card) {
@@ -123,10 +125,15 @@ function updateArchive() {
     panel.innerHTML = state.cardStatus === 'loading' ? `<div class="empty-state"><div class="loading-mark">${icon('deck')}</div><h3>Opening the archive</h3><p>Fetching the full card database. Search and filters will work on your device.</p></div>` : `<div class="empty-state">${icon('wifi')}<h3>Let’s reconnect</h3><p>${escape(state.cardError)}</p><button class="primary" data-action="retry">Retry card archive</button></div>`;
     return;
   }
+  if (!state.cards.some(card => card.tcgDate)) {
+    $('#result-meta').textContent = 'Cached cards need first-release dates';
+    panel.innerHTML = `<div class="empty-state">${icon('wifi')}<h3>Update release dates</h3><p>Connect once to download TCG release dates for year filtering. Your saved decks are still available.</p><button class="primary" data-action="retry">Retry archive update</button></div>`;
+    return;
+  }
   state.filtered = filterCardsForUI();
-  const activeFilters = [state.filters.attribute, state.filters.race, state.filters.mechanic].filter(Boolean).join(' · ');
+  const activeFilters = [state.filters.attribute, state.filters.race, state.filters.subtype, state.filters.mechanic].filter(Boolean).join(' · ');
   const source = state.source === 'offline' ? 'Offline cache' : state.source === 'cache' ? 'Saved archive' : 'Live archive';
-  $('#result-meta').innerHTML = `<span><strong>${state.filtered.length.toLocaleString()}</strong> cards${activeFilters ? ` · ${escape(activeFilters)}` : ''}</span><button data-action="retry" aria-label="Refresh archive from the card API">${source} ↻</button>`;
+  $('#result-meta').innerHTML = `<span><strong>${state.filtered.length.toLocaleString()}</strong> cards · TCG ${state.draft.releaseYear ?? currentYear()}${activeFilters ? ` · ${escape(activeFilters)}` : ''}</span><button data-action="retry" aria-label="Refresh archive from the card API">${source} ↻</button>`;
   if (!state.filtered.length) { panel.innerHTML = `<div class="empty-state">${icon('search')}<h3>No cards found</h3><p>Try another name or clear your filters.</p><button data-action="reset-filters">Clear search & filters</button></div>`; return; }
   panel.scrollTop = 0;
   panel.innerHTML = '<div class="virtual-grid" id="virtual-grid"></div>';
@@ -136,7 +143,7 @@ function updateArchive() {
 }
 // All results remain in one continuous scroll range; no next-page controls.
 function filterCardsForUI() {
-  const filtered = filterCards(state.cards, state.filters);
+  const filtered = filterCards(state.cards, { ...state.filters, year: state.draft.releaseYear });
   if (state.route !== 'decks') return filtered;
   return filtered.filter(card => !/Token|Skill Card/.test(card.type) && (state.section === 'side' || isExtra(card) === (state.section === 'extra')));
 }
@@ -144,11 +151,7 @@ function renderGrid() {
   const panel = $('#archive-panel'), grid = $('#virtual-grid');
   if (!panel || !grid) return;
   const width = panel.clientWidth || 350;
-  const columns = Math.max(2, Math.floor((width + 10) / 126));
-  const gap = 10, tileWidth = (width - gap * (columns - 1)) / columns;
-  const naturalHeight = Math.round((tileWidth - 14) * 1.455 + 100);
-  const tileHeight = state.route === 'decks' ? Math.min(naturalHeight, Math.max(148, panel.clientHeight || 240)) : naturalHeight;
-  const stride = tileHeight + gap;
+  const { columns, gap, tileWidth, tileHeight, stride } = cardGridLayout(width, panel.clientHeight || 500, state.route === 'decks');
   const startRow = Math.max(0, Math.floor(panel.scrollTop / stride) - 1);
   const endRow = Math.min(Math.ceil(state.filtered.length / columns), Math.ceil((panel.scrollTop + (panel.clientHeight || 500)) / stride) + 1);
   grid.style.height = `${Math.ceil(state.filtered.length / columns) * stride - gap}px`;
@@ -179,6 +182,10 @@ async function requestArchive(force = false) {
     try {
       const result = await loadCards({ cache, force });
       state.cards = result.cards; state.cardIndex = new Map(result.cards.map(c => [c.id, c]));
+      state.decks = state.decks.map(deck => hydrateDeckDates(deck, state.cardIndex));
+      state.draft = hydrateDeckDates(state.draft, state.cardIndex);
+      state.yearHighlights = buildYearHighlights(state.cards);
+      if (state.route === 'decks') refreshDeckWorkspace();
       state.source = result.source; state.cacheWarning = result.cacheWarning; state.cardStatus = 'ready';
       if (result.source === 'offline') toast('Using your saved archive. The API is unavailable.');
       if (result.cacheWarning) toast('Cards loaded. This browser could not save the archive for offline use.', true);
@@ -191,18 +198,56 @@ async function requestArchive(force = false) {
   })();
   return cardRequest;
 }
+function yearContextHTML(value) {
+  const year = normalizeReleaseYear(value) ?? currentYear();
+  const context = state.yearHighlights.get(year);
+  if (!context) return `<strong>${year} · TCG context</strong><p>Load the archive to see this year’s additions.</p>`;
+  const lines = [];
+  if (context.introduced.length) lines.push(`New types / mechanics: ${context.introduced.join(', ')}.`);
+  if (context.archetypes.length) lines.push(`New archetypes: ${context.archetypes.join(', ')}.`);
+  if (!lines.length) lines.push(`${context.newCards.toLocaleString()} new cards with recorded TCG dates. No new type or mechanic is recorded for this year.`);
+  return `<strong>New in ${year} · from TCG release data</strong><ul>${lines.map(line => `<li>${escape(line)}</li>`).join('')}</ul>`;
+}
 function showFilters() {
-  const options = (values, selected, title) => `<option value="">${title}</option>${values.map(v => `<option ${selected === v ? 'selected' : ''} value="${escape(v)}">${escape(v)}</option>`).join('')}`;
-  const races = [...new Set(state.cards.map(c => c.race).filter(Boolean))].sort();
-  showDialog(`${dialogHeader('Archive filters')}<form id="filters-form"><div class="field-grid">
-    <label class="full">Card category<select name="category">${['All', 'Monster', 'Spell', 'Trap', 'Extra'].map(category => `<option value="${category}" ${state.filters.category === category ? 'selected' : ''}>${category === 'Extra' ? 'Extra Deck' : category === 'All' ? 'All cards' : category}</option>`).join('')}</select></label>
-    <label>Attribute<select name="attribute">${options(['DARK', 'LIGHT', 'EARTH', 'WATER', 'FIRE', 'WIND', 'DIVINE'], state.filters.attribute, 'All attributes')}</select></label>
-    <label>Card type / race<select name="race">${options(races, state.filters.race, 'All types')}</select></label>
-    <label>Summoning mechanic<select name="mechanic">${options(MECHANICS, state.filters.mechanic, 'All mechanics')}</select></label>
-    <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([v, label]) => `<option value="${v}" ${state.filters.sort === v ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
-  </div><div class="dialog-actions" style="margin-top:16px"><button type="button" data-action="reset-filters">Reset all</button><button class="primary" type="submit">Show cards</button></div></form>`);
+  const options = (values, selected, title) => `<option value="">${title}</option>${values.map(value => `<option ${selected === value ? 'selected' : ''} value="${escape(value)}">${escape(value)}</option>`).join('')}`;
+  const races = [...new Set(state.cards.map(card => card.race).filter(Boolean))].sort();
+  const years = Array.from({ length: currentYear() - MIN_RELEASE_YEAR }, (_, index) => currentYear() - index - 1);
+  const selectedYear = state.draft.releaseYear;
+  const yearOptions = `<option value="current" ${selectedYear === null ? 'selected' : ''}>Current year (${currentYear()}) · through today</option>${years.map(year => `<option value="${year}" ${selectedYear === year ? 'selected' : ''}>${year} · through December 31</option>`).join('')}`;
+  showDialog(`${dialogHeader('Card filters')}<form id="filters-form">
+    <div class="filter-tabs" role="tablist" aria-label="Filter panels"><button type="button" id="card-filter-tab" role="tab" aria-selected="true" aria-controls="card-filter-panel" data-filter-panel="cards">Card filters</button><button type="button" id="year-filter-tab" role="tab" aria-selected="false" aria-controls="year-filter-panel" data-filter-panel="year">Release year · ${selectedYear ?? currentYear()}</button></div>
+    <div id="card-filter-panel" class="field-grid filter-panel" role="tabpanel" aria-labelledby="card-filter-tab">
+      <label>Category<select name="category">${['All', 'Monster', 'Spell', 'Trap', 'Extra'].map(category => `<option value="${category}" ${state.filters.category === category ? 'selected' : ''}>${category === 'Extra' ? 'Extra Deck' : category === 'All' ? 'All cards' : category}</option>`).join('')}</select></label>
+      <label>Attribute<select name="attribute">${options(['DARK', 'LIGHT', 'EARTH', 'WATER', 'FIRE', 'WIND', 'DIVINE'], state.filters.attribute, 'All attributes')}</select></label>
+      <label>Type / race<select name="race">${options(races, state.filters.race, 'All types')}</select></label>
+      <label>Monster subtype<select name="subtype">${options(SUBTYPES, state.filters.subtype, 'All subtypes')}</select></label>
+      <label>Mechanic<select name="mechanic">${options(MECHANICS, state.filters.mechanic, 'All mechanics')}</select></label>
+      <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([value, label]) => `<option value="${value}" ${state.filters.sort === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
+    </div>
+    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-year">Playable through year · first TCG release<select id="release-year" name="year">${yearOptions}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Saved with this deck. Undated cards are excluded. Historical banlists and past card text are not applied.</p></div>
+    <div class="dialog-actions"><button type="button" data-action="reset-filters">Reset filters</button><button class="primary" type="submit">Show cards</button></div>
+  </form>`, 'filter-body');
+  const activatePanel = panel => {
+    const year = panel === 'year';
+    $('#card-filter-panel').hidden = year; $('#year-filter-panel').hidden = !year;
+    $('#card-filter-tab').setAttribute('aria-selected', String(!year)); $('#year-filter-tab').setAttribute('aria-selected', String(year));
+  };
+  modal.querySelectorAll('[data-filter-panel]').forEach(button => {
+    button.onclick = () => activatePanel(button.dataset.filterPanel);
+    button.onkeydown = event => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+      event.preventDefault(); const panel = event.key === 'Home' ? 'cards' : event.key === 'End' ? 'year' : button.dataset.filterPanel === 'cards' ? 'year' : 'cards';
+      activatePanel(panel); $(`[data-filter-panel="${panel}"]`).focus({ preventScroll: true });
+    };
+  });
+  $('#release-year').value = selectedYear === null ? 'current' : String(selectedYear);
+  $('#release-year').onchange = event => { $('#year-context').innerHTML = yearContextHTML(event.target.value); };
   $('#filters-form').addEventListener('submit', event => {
-    event.preventDefault(); Object.assign(state.filters, Object.fromEntries(new FormData(event.target))); closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive();
+    event.preventDefault();
+    const data = Object.fromEntries(new FormData(event.target)), year = normalizeReleaseYear(data.year);
+    delete data.year; Object.assign(state.filters, data);
+    if (state.draft.releaseYear !== year) { state.draft = { ...state.draft, releaseYear: year }; state.dirty = true; }
+    closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive();
   });
 }
 function inspectCard(card) {
@@ -249,8 +294,8 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
   const counts = totals(state.draft), warnings = deckWarnings(state.draft);
   $('#deck-picker').innerHTML = deckPickerOptions();
   const status = $('.deck-state');
-  status.textContent = state.storageError ? 'Storage unavailable · export a backup' : warnings.some(w => w.includes('disabled')) ? 'Review disabled mechanics in Deck options' : state.dirty ? 'Unsaved changes' : state.decks.some(deck => deck.id === state.draft.id) ? 'Saved on this device' : 'New deck · tap Save to keep it';
-  status.classList.toggle('restricted', warnings.some(w => w.includes('disabled')) || Boolean(state.storageError));
+  status.textContent = state.storageError ? 'Storage unavailable · export a backup' : warnings.some(w => w.includes('release-year')) ? 'Review cards outside this release year' : warnings.some(w => w.includes('disabled')) ? 'Review disabled mechanics in Deck options' : state.dirty ? 'Unsaved changes' : state.decks.some(deck => deck.id === state.draft.id) ? 'Saved on this device' : 'New deck · tap Save to keep it';
+  status.classList.toggle('restricted', warnings.some(w => w.includes('disabled') || w.includes('release-year')) || Boolean(state.storageError));
   SECTIONS.forEach(section => {
     $(`[data-section-count="${section}"]`).textContent = `${counts[section]}/${LIMITS[section]}`;
     $(`[data-section="${section}"]`).setAttribute('aria-pressed', state.section === section);
@@ -362,7 +407,7 @@ async function handleImport(file) {
       const parsed = JSON.parse(text);
       if (parsed.version === 1 && Array.isArray(parsed.decks)) {
         if (parsed.decks.length > 500) throw new Error('This backup contains too many decks.');
-        const copies = parsed.decks.map(value => ({ ...validateDeck(value), id: crypto.randomUUID() }));
+        const copies = parsed.decks.map(value => ({ ...hydrateDeckDates(validateDeck(value), state.cardIndex), id: crypto.randomUUID() }));
         if (!copies.length) throw new Error('This backup contains no saved decks.');
         if (state.storageError) throw new Error('Browser storage is unavailable. Import a single-deck backup to edit it for this session.');
         confirmReplace(() => {
@@ -378,7 +423,7 @@ async function handleImport(file) {
       imported = importJSON(text);
     }
     imported.id = crypto.randomUUID();
-    confirmReplace(() => { state.draft = imported; state.dirty = true; state.section = 'main'; closeDialog(); navigate('decks'); toast('Deck imported. Tap Save deck to keep this copy.'); });
+    confirmReplace(() => { state.draft = hydrateDeckDates(imported, state.cardIndex); state.dirty = true; state.section = 'main'; closeDialog(); navigate('decks'); toast('Deck imported. Tap Save deck to keep this copy.'); });
   } catch (error) { toast(error.message || 'This backup could not be imported.', true); }
   finally { $('#import-file').value = ''; }
 }
@@ -412,11 +457,11 @@ function showAbout() {
 const actions = {
  close: closeDialog, filters: showFilters, retry: () => requestArchive(true),
  'clear-search': () => { state.filters.query = ''; $('#card-search').value = ''; updateArchive(); $('#card-search').focus(); },
- 'reset-filters': () => { Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', mechanic: '', sort: 'az' }); closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
+ 'reset-filters': () => { Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
  'add-card': () => {
     try {
       const section = $('#add-section').value;
-      state.draft = addCard(state.draft, detailCard, section); state.dirty = true;
+      state.draft = addCard(state.draft, state.cardIndex.get(detailCard.id) || detailCard, section); state.dirty = true;
       $('#detail-error').textContent = '';
       $('.detail-deck').textContent = `Adding to: ${state.draft.name} · unsaved changes`;
       toast(`${detailCard.name} added to ${sectionName(section)} Deck.`);

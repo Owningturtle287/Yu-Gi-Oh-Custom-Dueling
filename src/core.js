@@ -1,4 +1,5 @@
-export const VERSION = '0.0.2';
+import { cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
+export const VERSION = '0.0.3';
 export const MECHANICS = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link'];
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
@@ -10,12 +11,15 @@ export function normalizeCard(card) {
   if (!card || !Number.isSafeInteger(card.id) || card.id <= 0 || typeof card.name !== 'string' || typeof card.type !== 'string') throw new Error('Invalid card data.');
   const fields = ['id', 'name', 'type', 'humanReadableCardType', 'frameType', 'desc', 'race', 'attribute', 'archetype', 'atk', 'def', 'level', 'linkval', 'linkmarkers', 'scale'];
   const normalized = Object.fromEntries(fields.filter(k => card[k] !== undefined).map(k => [k, card[k]]));
+  normalized.tcgDate = cardReleaseDate(card);
   normalized.card_images = (card.card_images || []).slice(0, 1).map(img => Object.fromEntries(['id', 'image_url', 'image_url_small'].filter(k => img[k] !== undefined).map(k => [k, img[k]])));
   return normalized;
 }
 export function filterCards(cards, filters = {}) {
   const query = (filters.query || '').trim().toLocaleLowerCase();
+  const cutoff = releaseCutoff(filters.year);
   const result = cards.filter(card => {
+    if (!availableBy(card, cutoff)) return false;
     if (query && ![card.name, card.archetype, card.desc].some(v => String(v || '').toLocaleLowerCase().includes(query))) return false;
     if (filters.category === 'Monster' && !card.type.includes('Monster')) return false;
     if (filters.category === 'Spell' && card.type !== 'Spell Card') return false;
@@ -23,6 +27,7 @@ export function filterCards(cards, filters = {}) {
     if (filters.category === 'Extra' && !isExtra(card)) return false;
     if (filters.attribute && card.attribute !== filters.attribute) return false;
     if (filters.race && card.race !== filters.race) return false;
+    if (filters.subtype && !card.type.toLowerCase().includes(filters.subtype.toLowerCase())) return false;
     if (filters.mechanic && !cardMechanics(card).includes(filters.mechanic)) return false;
     return true;
   });
@@ -34,16 +39,18 @@ export function filterCards(cards, filters = {}) {
   });
 }
 export function createDeck(name = 'Untitled deck', id = globalThis.crypto.randomUUID()) {
-  return { id, name: validName(name), mechanics: allMechanics(), sections: { main: [], extra: [], side: [] }, updatedAt: new Date().toISOString() };
+  return { id, name: validName(name), releaseYear: null, mechanics: allMechanics(), sections: { main: [], extra: [], side: [] }, updatedAt: new Date().toISOString() };
 }
 export function validName(name) {
   if (typeof name !== 'string' || !name.trim() || name.trim().length > 60) throw new Error('Use a deck name between 1 and 60 characters.');
   return name.trim();
 }
 export const totals = deck => Object.fromEntries(SECTIONS.map(s => [s, deck.sections[s].reduce((sum, entry) => sum + entry.quantity, 0)]));
-export function addCard(deck, card, section = isExtra(card) ? 'extra' : 'main') {
+export function addCard(deck, card, section = isExtra(card) ? 'extra' : 'main', { preserveExisting = false } = {}) {
   if (!SECTIONS.includes(section)) throw new Error('Choose Main, Extra, or Side Deck.');
   if (/Token|Skill Card/.test(card.type)) throw new Error('Tokens and Skill Cards are not supported in this deck builder.');
+  const normalized = normalizeCard(card);
+  if (!preserveExisting && !availableBy(normalized, releaseCutoff(deck.releaseYear))) throw new Error(normalized.tcgDate ? `This card was first released in the TCG on ${normalized.tcgDate}, after this deck’s cutoff of ${releaseCutoff(deck.releaseYear)}.` : 'This card has no verified TCG release date. Refresh the archive before adding it.');
   const blocked = cardMechanics(card).filter(m => !deck.mechanics[m]);
   if (blocked.length) throw new Error(`${blocked.join(' / ')} is disabled in this deck’s Rules / Format.`);
   if (section === 'main' && isExtra(card)) throw new Error('This card belongs in the Extra Deck or Side Deck.');
@@ -54,7 +61,7 @@ export function addCard(deck, card, section = isExtra(card) ? 'extra' : 'main') 
   const next = structuredClone(deck);
   const entry = next.sections[section].find(e => e.card.id === card.id);
   if (entry) entry.quantity++;
-  else next.sections[section].push({ card: normalizeCard(card), quantity: 1 });
+  else next.sections[section].push({ card: normalized, quantity: 1 });
   return next;
 }
 export function removeCard(deck, cardId, section) {
@@ -68,6 +75,8 @@ export function deckWarnings(deck) {
   if (totals(deck).main < 40) warnings.push('Main Deck has fewer than 40 cards. You can still save while building.');
   const restricted = SECTIONS.flatMap(s => deck.sections[s]).filter(e => cardMechanics(e.card).some(m => !deck.mechanics[m]));
   if (restricted.length) warnings.push(`${restricted.length} card type${restricted.length > 1 ? 's use' : ' uses'} a disabled mechanic. Remove them or update Rules / Format.`);
+  const outsideYear = SECTIONS.flatMap(section => deck.sections[section]).filter(entry => !availableBy(entry.card, releaseCutoff(deck.releaseYear)));
+  if (outsideYear.length) warnings.push(`${outsideYear.length} card type${outsideYear.length === 1 ? '' : 's'} outside the release-year cutoff or missing a TCG date. Review Release year in Filters.`);
   return warnings;
 }
 // Backups and browser storage use the same strictly validated format.
@@ -76,6 +85,7 @@ export function validateDeck(value) {
   const deck = createDeck(validName(value.name), value.id);
   if (!value.mechanics || MECHANICS.some(m => typeof value.mechanics[m] !== 'boolean')) throw new Error('Invalid mechanic settings.');
   const desiredMechanics = Object.fromEntries(MECHANICS.map(m => [m, value.mechanics[m]]));
+  const desiredYear = normalizeReleaseYear(value.releaseYear);
   if (!value.sections || SECTIONS.some(s => !Array.isArray(value.sections[s]))) throw new Error('Invalid deck sections.');
   let next = deck;
   for (const section of SECTIONS) {
@@ -83,10 +93,11 @@ export function validateDeck(value) {
     for (const entry of value.sections[section]) {
       if (!Number.isInteger(entry.quantity) || entry.quantity < 1 || entry.quantity > 3) throw new Error('Invalid card quantity.');
       const card = normalizeCard(entry.card);
-      for (let n = 0; n < entry.quantity; n++) next = addCard(next, card, section);
+      for (let n = 0; n < entry.quantity; n++) next = addCard(next, card, section, { preserveExisting: true });
     }
   }
   next.mechanics = desiredMechanics; // Preserve warnings on decks saved before a mechanic was disabled.
+  next.releaseYear = desiredYear;
   next.updatedAt = typeof value.updatedAt === 'string' ? value.updatedAt : deck.updatedAt;
   return next;
 }

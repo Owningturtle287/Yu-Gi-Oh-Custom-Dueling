@@ -1,5 +1,6 @@
 import { normalizeCard } from './core.js';
-export const API_URL = 'https://db.ygoprodeck.com/api/v7/cardinfo.php';
+export const API_URL = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?misc=yes';
+export const CARD_CACHE_SCHEMA = 2;
 export const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 export function validateCardResponse(payload) {
   if (!payload || !Array.isArray(payload.data) || !payload.data.length) throw new Error('The card API returned an empty or invalid archive.');
@@ -16,7 +17,7 @@ export function validateCardResponse(payload) {
 export async function loadCards({ fetchImpl = fetch, cache, force = false, now = Date.now() } = {}) {
   let cached;
   try { cached = await cache?.read(); } catch { /* Browsing still works in private/quota-limited storage. */ }
-  if (cached && !force && now - cached.fetchedAt < CACHE_MAX_AGE) {
+  if (cached && cached.schema === CARD_CACHE_SCHEMA && !force && now - cached.fetchedAt < CACHE_MAX_AGE) {
     try { return { cards: validateCardResponse({ data: cached.cards }), source: 'cache', fetchedAt: cached.fetchedAt }; } catch { cached = null; }
   }
   try {
@@ -24,7 +25,7 @@ export async function loadCards({ fetchImpl = fetch, cache, force = false, now =
     if (!response.ok) throw new Error(`Card API request failed (${response.status}).`);
     const cards = validateCardResponse(await response.json());
     let cacheWarning = false;
-    try { await cache?.write({ cards, fetchedAt: now }); } catch { cacheWarning = true; }
+    try { await cache?.write({ cards, fetchedAt: now, schema: CARD_CACHE_SCHEMA }); } catch { cacheWarning = true; }
     return { cards, source: 'api', fetchedAt: now, cacheWarning };
   } catch (error) {
     if (cached) {

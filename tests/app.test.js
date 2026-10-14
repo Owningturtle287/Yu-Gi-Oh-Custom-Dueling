@@ -6,14 +6,14 @@ import { cards } from './fixtures.js';
 import { STORAGE_KEY, createDeck, addCard, totals } from '../src/core.js';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-async function boot(suffix, saved, fail = false) {
+async function boot(suffix, saved, fail = false, catalog = cards) {
   const window = new Window({ url: 'https://example.com/Yu-Gi-Oh-Custom-Dueling/' });
   window.document.write(html.replace(/<script[\s\S]*?<\/script>/g, ''));
   if (saved) window.localStorage.setItem(STORAGE_KEY, saved);
   for (const key of ['window', 'document', 'localStorage', 'location', 'history', 'navigator', 'FormData', 'ResizeObserver', 'HTMLElement', 'URL', 'Blob']) Object.defineProperty(globalThis, key, { value: window[key], writable: true, configurable: true });
   globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window);
   globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(window);
-  globalThis.fetch = async () => { if (fail) throw new Error('Offline'); return { ok: true, json: async () => ({ data: cards }) }; };
+  globalThis.fetch = async () => { if (fail) throw new Error('Offline'); return { ok: true, json: async () => ({ data: catalog }) }; };
   if (!window.HTMLDialogElement.prototype.showModal) window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
   if (!window.HTMLDialogElement.prototype.close) window.HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); };
   const app = await import(`../src/app.js?${suffix}`);
@@ -210,5 +210,40 @@ test('the builder shows loading and updates its card results when an API request
     assert.ok($('.card-tile [data-quick-add]'));
     assert.equal(app.state.cardStatus, 'ready');
     assert.ok($('.deck-tray'));
+  } finally { window.close(); }
+});
+test('Spirit and release-year controls filter results, update year context, and save the year', async () => {
+  const spirit = { ...cards[0], id: 16889337, name: 'Aratama', type: 'Spirit Monster', race: 'Fiend', attribute: 'DARK', tcgDate: '2013-11-08' };
+  const { window, app, $ } = await boot('spirit-year-filter', null, false, [...cards, spirit]);
+  try {
+    app.navigate('decks'); $('[data-action="filters"]').click();
+    $('#filters-form select[name="subtype"]').value = 'Spirit';
+    $('[data-filter-panel="year"]').click();
+    assert.equal($('#year-filter-panel').hidden, false);
+    $('#release-year').value = '2013'; $('#release-year').dispatchEvent(new window.Event('change', { bubbles: true }));
+    assert.match($('#year-context').textContent, /2013/);
+    $('#filters-form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    assert.equal(app.state.draft.releaseYear, 2013);
+    assert.equal(app.state.filters.subtype, 'Spirit');
+    assert.deepEqual(app.state.filtered.map(card => card.id), [16889337]);
+    assert.match($('#result-meta').textContent, /TCG 2013/);
+    $('[data-quick-add="16889337"]').click(); $('[data-action="save-deck"]').click();
+    assert.equal(JSON.parse(window.localStorage.getItem(STORAGE_KEY)).decks[0].releaseYear, 2013);
+    $('[data-action="filters"]').click();
+    assert.equal($('#release-year').value, '2013');
+    $('[data-action="reset-filters"]').click();
+    assert.equal(app.state.draft.releaseYear, null);
+    assert.equal(app.state.filters.subtype, '');
+  } finally { window.close(); }
+});
+test('card tiles render a third phone column and do not nest compact controls inside inspection', async () => {
+  const { window, app, $ } = await boot('three-column-grid');
+  try {
+    app.navigate('archive');
+    const tiles = [...document.querySelectorAll('.card-tile')];
+    assert.equal(tiles[0].style.top, tiles[1].style.top);
+    assert.equal(tiles[1].style.top, tiles[2].style.top);
+    assert.notEqual(tiles[2].style.left, tiles[1].style.left);
+    assert.equal($('.card-inspect .quick-controls'), null);
   } finally { window.close(); }
 });

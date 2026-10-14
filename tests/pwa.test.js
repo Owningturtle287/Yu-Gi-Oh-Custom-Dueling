@@ -19,6 +19,8 @@ test('service worker installs a complete shell and removes only this app’s old
   let pending; listeners.install({ waitUntil: promise => pending = promise }); await pending;
   for (const path of installed) if (path !== './') await access(new URL('../' + path, import.meta.url));
   assert.ok(installed.includes('./src/core.js'));
+  assert.ok(installed.includes('./src/era.js'));
+  assert.ok(installed.includes('./src/layout.js'));
   listeners.activate({ waitUntil: promise => pending = promise }); await pending;
   assert.deepEqual(removed, [`duel-atlas:${scope}:shell-v0.0.0`]);
 });
@@ -42,7 +44,7 @@ test('mobile layout contains page overflow and limits scroll regions', async () 
 test('compact controls preserve tap targets and contain list focus and horizontal panning', async () => {
   const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
   assert.match(css, /height:calc\(54px \+ env\(safe-area-inset-bottom\)\)/);
-  assert.match(css, /\.quick-controls button\s*\{[^}]*width:44px[^}]*height:44px/);
+  assert.match(css, /\.quick-controls button\s*\{[^}]*width:30px[^}]*height:30px/);
   assert.match(css, /\.archive-panel\s*\{[^}]*overflow-x:hidden[^}]*overflow-y:auto[^}]*touch-action:pan-y/);
   assert.match(css, /\.archive-panel:focus[^}]*\{[^}]*outline:none;[^}]*box-shadow:none/);
   assert.match(css, /input, select\s*\{[^}]*font-size:16px/);
