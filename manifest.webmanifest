@@ -1,0 +1,23 @@
+{
+  "id": "./",
+  "name": "Duel Atlas — Yu-Gi-Oh! Companion",
+  "short_name": "Duel Atlas",
+  "description": "Your pocket card archive and local deck workshop.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a111c",
+  "theme_color": "#0a111c",
+  "lang": "en",
+  "categories": ["games", "utilities"],
+  "icons": [
+    { "src": "./assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Card Archive", "url": "./#archive", "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Deck Builder", "url": "./#decks", "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Solo Duel · Coming soon", "url": "./#solo" }
+  ]
+}
