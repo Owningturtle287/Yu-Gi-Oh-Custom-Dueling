@@ -89,15 +89,15 @@ test('Attack shortcut selects a highlighted Set monster on the board without a t
     assert.equal(r.$(`[data-duel-card="${attacker.uid}"]`).dataset.role,'source');assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'target');
   }finally{r.close();}
 });
-test('direct attacks target the opponent’s outside HUD; card faces and stats are oriented separately',async()=>{
+test('direct attacks target the AI’s own bottom-left LP corner; card faces and stats are oriented separately',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster);r.controller.refresh();
-    r.$(`[data-duel-quick="${attacker.uid}"]`).click();const lp=r.$('[data-field-lp="1"]');assert.equal(lp.dataset.role,'eligible');assert.ok(lp.closest('.duel-hud'));assert.equal(lp.closest('.duel-table'),null);
-    assert.ok(r.$('[data-field-lp="0"]').closest('.duel-hud'));
+    r.$(`[data-duel-quick="${attacker.uid}"]`).click();const lp=r.$('[data-field-lp="1"]');assert.equal(lp.dataset.role,'eligible');assert.ok(lp.closest('.opponent-side'));assert.ok(lp.closest('.duel-table'));
+    assert.ok(r.$('[data-field-lp="0"]').closest('.player-side'));
     lp.click();assert.equal(r.controller.getMatch().pending.target,null);
     r.controller.getMatch().window=null;r.controller.getMatch().pending=null;const enemy=put(r.controller.getMatch(),1,monster,'monsters',{position:'defense'});r.controller.refresh();
     assert.equal(r.$(`[data-duel-card="${enemy.uid}"] .duel-card-visual`).style.getPropertyValue('--card-rotation'),'270deg');
-    assert.match(r.$(`[data-duel-card="${enemy.uid}"]`).closest('.duel-zone-shell').querySelector('.duel-card-stats').textContent,/A 1800D 1200/);
+    assert.match(r.$(`[data-duel-card="${enemy.uid}"]`).closest('.duel-zone-shell').querySelector('.duel-card-stats').textContent,/ATK1800DEF1200/);
   }finally{r.close();}
 });
 test('Effect shortcut highlights Spell/Trap and Field targets while both rows remain available',async()=>{
@@ -196,8 +196,8 @@ test('all twenty zones and both rows keep their grid display across landscape ph
         assert.equal(computed.gridTemplateRows,'repeat(2,minmax(0,1fr))');assert.equal(computed.gridColumn,'2');assert.equal(computed.gridRow,'1');
       }
       for(const row of r.main.querySelectorAll('.monster-zones, .backrow-zones'))assert.equal(r.window.getComputedStyle(row).display,'grid',`${width}×${height}: each row is present`);
-      assert.equal(r.main.querySelectorAll('.duel-table .duel-life').length,0);
-      assert.equal(r.main.querySelectorAll('.duel-hud .duel-life').length,2);
+      assert.equal(r.main.querySelectorAll('.duel-table .duel-life').length,2);
+      assert.equal(r.main.querySelectorAll('.duel-hud .duel-life').length,0);
       assert.equal(r.main.querySelector('[data-duel-layer]'),null);
     }
   }finally{r.close();}
@@ -221,7 +221,7 @@ test('the game mats oppose vertically and mirror auxiliary and pile positions fo
     assert.ok(r.$('.duel-hand').closest('.player-side'));assert.ok(r.$('.duel-opponent-hand').closest('.opponent-side'));
     assert.equal(computed('.duel-hand-area').gridRow,'2');assert.equal(computed('.duel-opponent-hand').gridRow,'1');
     assert.equal(computed('.opponent-side .duel-mat').gridRow,'2');
-    assert.equal(computed('.opponent-side').gridTemplateRows,'clamp(32px,10dvh,56px) minmax(0,1fr)');
+    assert.equal(computed('.opponent-side').gridTemplateRows,'clamp(44px,11dvh,60px) minmax(0,1fr)');
     assert.equal(r.$('.duel-center-line').contains(r.$('.duel-phases')),true);
     assert.equal(r.$('.duel-console').contains(r.$('.duel-phases')),false);
   }finally{r.close();}
@@ -236,7 +236,8 @@ test('separate Deck, Graveyard and Extra Deck zones open the correct pile and pr
     const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,recent.uid);assert.equal(grave.querySelector('.duel-pile-count').textContent,'2');grave.click();
     assert.match(r.modal.querySelector('h2').textContent,/Your Graveyard/);
     assert.deepEqual([...r.modal.querySelectorAll('.duel-public-card')].map(node=>node.dataset.duelCard),[old.uid,recent.uid]);
-    r.modal.querySelector('[data-duel-pile-zone="extra"]').click();assert.match(r.modal.textContent,/Known Fusion/);assert.doesNotMatch(r.modal.textContent,/First fallen/);
+    assert.equal(r.modal.querySelector('.duel-pile-tabs'),null);assert.equal(r.modal.querySelector('[data-duel-pile]'),null);
+    r.$('[data-motion-zone="0:extra"]').click();assert.match(r.modal.textContent,/Known Fusion/);assert.doesNotMatch(r.modal.textContent,/First fallen/);
     r.$('[data-motion-zone="1:extra"]').click();assert.match(r.modal.textContent,/AI’s Extra Deck stays face-down/);
     assert.doesNotMatch(r.modal.innerHTML,new RegExp(secret.card.name+'|12345678.jpg'));assert.equal(r.modal.querySelectorAll('.duel-public-card').length,0);
     r.$('[data-motion-zone="0:deck"]').click();assert.match(r.modal.querySelector('h2').textContent,/Your Deck/);assert.equal(r.modal.querySelectorAll('.duel-public-card').length,0);
@@ -271,7 +272,7 @@ test('zone captions are absent while accessible names and occupied monster stats
     assert.match(r.$('[data-motion-zone="0:spells:0"]').getAttribute('aria-label'),/Spell \/ Trap Zone/);
     assert.match(r.$('[data-motion-zone="0:banished"]').getAttribute('aria-label'),/Your Banished/);
     const slot=r.$(`[data-duel-card="${card.uid}"]`).closest('.duel-zone-shell');assert.ok(slot.classList.contains('has-stats'));
-    assert.match(slot.querySelector('.duel-card-stats').textContent,/A 1800D 1200/);
+    assert.match(slot.querySelector('.duel-card-stats').textContent,/ATK1800DEF1200/);
     assert.equal(r.$('[data-motion-zone="0:spells:0"]').closest('.duel-zone-shell').classList.contains('has-stats'),false);
   }finally{r.close();}
 });
@@ -354,12 +355,12 @@ test('phase changes preserve every unchanged field, hand, pile image and the ter
     assert.equal(r.$('.duel-phases [aria-current]').textContent,'M2Main 2');
   }finally{r.close();}
 });
-test('large inspection uses supplied full art; closing by the dialog close event resumes AI',async()=>{
+test('inspection immediately uses the field thumbnail; closing by the dialog close event resumes AI',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch(),card=put(s,0,{...monster,card_images:[{image_url:'https://images.ygoprodeck.com/images/cards/123.jpg',image_url_small:'https://images.ygoprodeck.com/images/cards_small/123.jpg'}]},'hand');
     s.active=1;s.turn=2;s.phase='main1';r.controller.refresh();r.$(`[data-duel-card="${card.uid}"]`).click();
-    assert.equal(r.$('.duel-inspect-art img').getAttribute('src'),card.card.card_images[0].image_url);
-    assert.equal(r.$('.duel-inspect-art img').dataset.imageFallback,card.card.card_images[0].image_url_small);
+    assert.equal(r.$('.duel-inspect-art img').getAttribute('src'),card.card.card_images[0].image_url_small);
+    assert.equal(r.$('.duel-card-typing').textContent,'Warrior / Normal');
     const frozen=JSON.stringify(r.controller.getMatch());r.modal.removeAttribute('open');r.modal.dispatchEvent(new r.window.Event('close'));
     await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);
   }finally{r.close();}
@@ -374,5 +375,43 @@ test('terminal presentation is scrollable with a large effect reader and smaller
     r.$('.duel-hand-card').click();r.$('[data-duel="read-card"]').click();
     assert.equal(computed('.duel-card-reader .effect-text').fontSize,'18px');assert.equal(computed('.duel-card-reader .effect-text').overflowY,'auto');
     assert.ok(r.$('.duel-card-reader .effect-text').closest('.duel-card-viewer'));
+  }finally{r.close();}
+});
+
+test('expanded mats, bounded stats, and POV life corners hold at phone and tablet sizes',async()=>{
+  const r=await rig();try{
+    const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
+    const s=r.controller.getMatch();put(s,0,{...monster,atk:99999,def:99999});put(s,0,monster);put(s,1,monster);put(s,1,monster);r.controller.refresh();
+    for(const [width,height] of [[568,320],[667,375],[844,390],[932,430],[1024,768]]){
+      rotate(r,width,height);
+      for(const side of r.main.querySelectorAll('.duel-side')){
+        assert.equal(r.window.getComputedStyle(side).position,'relative');
+        assert.equal(r.window.getComputedStyle(side.querySelector('.duel-mat')).width,'100%','Mats must use the full available field width');
+      }
+      for(const bar of r.main.querySelectorAll('.duel-card-stats')){
+        const css=r.window.getComputedStyle(bar);assert.equal(css.gridTemplateColumns,'repeat(2,minmax(0,1fr))');assert.equal(css.width,'100%');assert.equal(css.overflow,'hidden');assert.equal(css.contain,'paint');
+        assert.equal(bar.querySelectorAll('small').length,2);assert.equal(parseFloat(r.window.getComputedStyle(bar.querySelector('span')).minWidth),0);
+      }
+      const yours=r.window.getComputedStyle(r.$('.player-life')),foe=r.window.getComputedStyle(r.$('.opponent-life'));
+      assert.equal(yours.left,'4px');assert.equal(yours.bottom,'2px');assert.equal(foe.right,'4px');assert.equal(foe.top,'2px');
+      assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
+    }
+    assert.match(r.$('.yours .duel-card-stats').textContent,/99999/);
+  }finally{r.close();}
+});
+test('compact card and pile sheets retain visible full typing, small buttons and safe-area margins',async()=>{
+  const r=await rig({width:844,height:390});try{
+    const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
+    const s=r.controller.getMatch(),beast=put(s,0,{...monster,name:'Mystic Horseman',race:'Beast'},'hand');r.controller.refresh();
+    r.$(`[data-duel-card="${beast.uid}"]`).click();
+    assert.equal(r.$('.duel-card-typing').textContent,'Beast / Normal');
+    assert.equal(r.window.getComputedStyle(r.modal).width,'440px');
+    assert.equal(r.window.getComputedStyle(r.$('[data-duel="read-card"]')).minHeight,'32px');
+    rotate(r,568,320);r.$(`[data-duel-card="${beast.uid}"]`).click();
+    assert.notEqual(r.window.getComputedStyle(r.$('.duel-inspect-meta')).display,'none','Typing must remain visible on short phones');
+    r.$('[data-duel="close-card"]').click();r.$('[data-motion-zone="0:grave"]').click();
+    assert.equal(r.window.getComputedStyle(r.modal).width,'340px');assert.equal(r.modal.querySelectorAll('.duel-pile-tabs, [data-duel-pile]').length,0);assert.match(r.modal.textContent,/Graveyard is empty/);
+    const css=style.textContent;assert.match(css,/max-width:calc\(100vw - env\(safe-area-inset-left\) - env\(safe-area-inset-right\) - 36px\)/);
+    assert.match(css,/backdrop-filter:blur\(1px\)/);
   }finally{r.close();}
 });
