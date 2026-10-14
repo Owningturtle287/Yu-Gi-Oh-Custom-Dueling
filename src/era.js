@@ -1,4 +1,4 @@
-export const MIN_RELEASE_YEAR = 2002;
+export const MIN_RELEASE_YEAR = 1996;
 export const SUBTYPES = ['Spirit', 'Flip', 'Gemini', 'Ritual', 'Toon', 'Tuner', 'Union'];
 export const currentYear = (now = new Date()) => now.getFullYear();
 export function normalizeReleaseYear(value, now = new Date()) {
@@ -17,28 +17,30 @@ export function validReleaseDate(value) {
   const parsed = new Date(value + 'T00:00:00Z');
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value ? value : null;
 }
-export function cardReleaseDate(card) {
-  const misc = Array.isArray(card.misc_info) ? card.misc_info.find(info => info && info.tcg_date) : null;
-  return validReleaseDate(card.tcgDate) || validReleaseDate(misc?.tcg_date);
+export function cardReleaseDate(card, basis = 'tcg') {
+  const dates = (Array.isArray(card.misc_info) ? card.misc_info : []).flatMap(info => [info?.[basis+'_date']]);
+  return [card[basis+'Date'], ...dates].map(validReleaseDate).filter(Boolean).sort()[0] || null;
 }
-export function availableBy(card, cutoff) {
-  const date = card.tcgDate;
-  return typeof date === 'string' && date <= cutoff;
+export const dateForBasis=(card,basis='tcg')=>basis==='earliest'?[cardReleaseDate(card,'tcg'),cardReleaseDate(card,'ocg')].filter(Boolean).sort()[0]||null:cardReleaseDate(card,basis);
+export function availableBy(card, cutoff, {basis='tcg',allowUnknown=false}={}) {
+  const date = dateForBasis(card,basis);
+  return date ? date <= cutoff : allowUnknown;
 }
 export function hydrateDeckDates(deck, index) {
   return { ...deck, sections: Object.fromEntries(Object.entries(deck.sections).map(([section, entries]) => [section, entries.map(entry => {
     const current = index.get(entry.card.id);
-    return current ? { ...entry, card: { ...entry.card, tcgDate: current.tcgDate } } : entry;
+    return current ? { ...entry, card: { ...entry.card, tcgDate: current.tcgDate, ocgDate: current.ocgDate } } : entry;
   })])) };
 }
 // Context comes from the same dated archive as the filter, not a speculative timeline.
-export function buildYearHighlights(cards) {
+export function buildYearHighlights(cards,basis='tcg') {
   const groups = new Map(), archetypes = new Map(), counts = new Map();
   const today = releaseCutoff();
   const features = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link', ...SUBTYPES];
   for (const card of cards) {
-    if (!card.tcgDate || card.tcgDate > today || card.name === '???' || /Token|Skill Card/.test(card.type)) continue;
-    const year = Math.max(MIN_RELEASE_YEAR, Number(card.tcgDate.slice(0, 4)));
+    const date=basis==='earliest'?[cardReleaseDate(card),cardReleaseDate(card,'ocg')].filter(Boolean).sort()[0]:cardReleaseDate(card,basis);
+    if (!date || date > today || card.name === '???' || /Token|Skill Card/.test(card.type)) continue;
+    const year = Math.max(MIN_RELEASE_YEAR, Number(date.slice(0, 4)));
     counts.set(year, (counts.get(year) || 0) + 1);
     if (card.type.includes('Monster')) {
       const labels = features.filter(feature => card.type.toLowerCase().includes(feature.toLowerCase())).map(feature => `${feature} monsters`);

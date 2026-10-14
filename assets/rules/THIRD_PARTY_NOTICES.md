@@ -1,0 +1,17 @@
+# Rules runtime: licenses and corresponding source
+
+Duel Atlas runs these components locally. No duel service or game server is used.
+
+- **ocgcore-wasm 0.1.2**, by n1xx1 and contributors: npm package metadata specifies MIT. [Wrapper source and build scripts](https://github.com/n1xx1/ocgcore-wasm/tree/768af363e79bd5c646e9b59f4e74aaeac0625784). The exact npm integrity and source/submodule revisions are recorded in [runtime-sources.json](runtime-sources.json). `package-lock.json` pins the distributed package.
+- **EDOPro / ygopro-core**, by its contributors: GNU Affero General Public License version 3 or later; see [CORE-LICENSE.txt](CORE-LICENSE.txt). [Corresponding core source](https://github.com/edo9300/ygopro-core/tree/8e5f4e4f0ab6b8ca750e8e1c91c1a58f407e3272). The wrapper's pinned build scripts compile this submodule for synchronous WebAssembly.
+- **Project Ignis CardScripts**, by the authors identified in each Lua script: GNU Affero General Public License version 3 or later. See [AGPL-3.0.txt](AGPL-3.0.txt), [upstream README](CardScripts-README.md), and [complete corresponding source revision](https://github.com/ProjectIgnis/CardScripts/tree/5138eb120d9f6f6caa04dbba22b64ef451302b95). The scripts in `scripts-*.json` are the unmodified Lua source, including authorship headers. `manifest.json` records every shard's SHA-256.
+- **Lua 5.3**, by Lua.org, PUC-Rio: MIT; the copyright and complete permission notice are in [LUA-COPYRIGHT.txt](LUA-COPYRIGHT.txt). [Corresponding Lua source](https://github.com/lua/lua/tree/75ea9ccbea7c4886f30da147fb67b693b2624c26).
+- Numeric card data and effect option strings are derived from [BabelCDB at the recorded revision](https://github.com/ProjectIgnis/BabelCDB/tree/70e53af2dc6c5cecebd48ff4f945c560625c99a2). Card names and descriptions retain their respective rights holders' rights. Archive text and images are supplied at runtime by YGOPRODeck, as described in the app credits.
+
+## Local wrapper corrections
+
+`scripts/prepare-runtime.mjs` copies the exact pinned npm files into the ignored `vendor/` directory, then makes three documented corrections to its JavaScript protocol adapter: permutation replies omit a spurious length byte; sum-selection prompts decode mandatory cards before optional cards and include complete locations; Set-card shuffle messages decode their byte count and separate source/destination arrays. No WebAssembly binary or Lua card effect is modified. The script checks each source pattern before patching, and regression tests exercise these paths. The field adapter avoids the wrapper's unsupported TYPE query field.
+
+## Rebuild and inspect
+
+The complete application adapter and local patches are in this repository. `npm ci && npm test && npm run build` reconstructs the distributed JavaScript/WASM files from the pinned npm dependency, tests them, and includes the complete licenses, source links, original Lua sources, and manifest in the static output and offline shell. To rebuild the underlying WASM rather than use the npm binary, clone the pinned wrapper source with its recorded submodules and follow its Emscripten build instructions.

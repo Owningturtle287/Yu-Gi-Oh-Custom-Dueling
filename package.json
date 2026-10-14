@@ -1,10 +1,13 @@
 {
   "name": "duel-atlas",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "A mobile-first, static Yu-Gi-Oh! archive and local deck companion.",
   "scripts": {
+    "predev": "node scripts/prepare-runtime.mjs",
+    "pretest": "node scripts/prepare-runtime.mjs",
+    "prebuild": "node scripts/prepare-runtime.mjs",
     "dev": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.js",
     "test:live": "node scripts/check-api.mjs",
@@ -16,5 +19,8 @@
   },
   "devDependencies": {
     "happy-dom": "^21.0.1"
+  },
+  "dependencies": {
+    "ocgcore-wasm": "0.1.2"
   }
 }

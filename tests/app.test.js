@@ -13,7 +13,7 @@ async function boot(suffix, saved, fail = false, catalog = cards) {
   for (const key of ['window', 'document', 'localStorage', 'location', 'history', 'navigator', 'FormData', 'ResizeObserver', 'HTMLElement', 'URL', 'Blob']) Object.defineProperty(globalThis, key, { value: window[key], writable: true, configurable: true });
   globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window);
   globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(window);
-  globalThis.fetch = async () => { if (fail) throw new Error('Offline'); return { ok: true, json: async () => ({ data: catalog }) }; };
+  globalThis.fetch = async url => { if (String(url).startsWith('file:')) return new Response(await readFile(new globalThis.URL(String(url)).pathname)); if (fail) throw new Error('Offline'); return { ok: true, json: async () => ({ data: catalog }) }; };
   if (!window.HTMLDialogElement.prototype.showModal) window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
   if (!window.HTMLDialogElement.prototype.close) window.HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); };
   const app = await import(`../src/app.js?${suffix}`);
@@ -66,7 +66,7 @@ test('home, archive detail, named deck, save/reopen, format, and export menus wo
     assert.equal($('.preview-panel button').disabled, true);
     $('.bottom-nav [data-route="home"]').click(); $('.launch-card[data-route="solo"]').click();
     assert.equal(app.state.route, 'solo');
-    assert.match($('#main').textContent, /supported 2002 TCG cards/);
+    assert.match($('#main').textContent, /supported 2004 TCG cards/);
     assert.ok($('[data-duel="start"]'));
     $('#app-menu').click(); assert.ok($('[data-action="install"]')); assert.ok($('[data-action="settings"]'));
     $('[data-action="install"]').click(); assert.match($('#modal').textContent, /Add to Home Screen/);
@@ -264,7 +264,7 @@ test('Solo setup saves independent eligibility, difficulty, saved-deck choices a
     $('[data-duel-tab="2"]').click();change('#solo-difficulty','hard');change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
     assert.equal(app.state.route,'decks');assert.match($('.duel-design-banner').textContent,/AI Solo deck/);
-    assert.equal(app.state.draft.releaseYear,2002);assert.equal(app.state.filtered.length,24);
+    assert.equal(app.state.draft.releaseYear,2004);assert.equal(app.state.filtered.length,24);
     $('.card-tile [data-quick-add]').click();$('[data-action="return-solo"]').click();
     assert.equal(app.state.route,'solo');assert.equal($('#solo-source').value,'saved');
     config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
@@ -280,10 +280,10 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
     $('#solo-first').value='you';$('#solo-first').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('#solo-ai-speed').value='fast';$('#solo-ai-speed').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
-    $('[data-duel="start"]').click();assert.ok($('.duel-arena'));assert.equal(document.querySelectorAll('.duel-board .duel-zone').length,20);
+    $('[data-duel="start"]').click();await waitFor(()=>!!$('.duel-arena'));assert.ok($('.duel-arena'));assert.equal(document.querySelectorAll('.duel-board .duel-zone').length,20);
     assert.ok(document.documentElement.classList.contains('duel-playing'));
     assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
-    assert.equal($('.duel-phases [aria-current]').textContent,'DDraw');
+    assert.equal($('.duel-phases [aria-current]').textContent,'M1Main 1');
     await waitFor(()=>$('.duel-phases [aria-current]')?.textContent==='M1Main 1'&&Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
     assert.equal($('.duel-phases [aria-current]').textContent,'M1Main 1');
     assert.equal(document.querySelectorAll('.duel-hand-card').length,5,'The first player does not receive an extra automatic draw');
@@ -327,10 +327,10 @@ test('set generation loads real memberships and preserves a visible retry when d
     app.navigate('solo');globalThis.fetch=async()=>{throw new Error('Offline');};
     $('#solo-source').value='set';$('#solo-source').dispatchEvent(new window.Event('change',{bubbles:true}));
     await new Promise(resolve=>setImmediate(resolve));assert.ok($('[data-duel="sets-retry"]'));
-    globalThis.fetch=async()=>({ok:true,json:async()=>[{set_name:'Classic test set',tcg_date:'2002-06-26'},{set_name:'Too late',tcg_date:'2003-01-01'}]});
+    globalThis.fetch=async url=>String(url).startsWith('file:')?new Response(await readFile(new globalThis.URL(String(url)).pathname)):({ok:true,json:async()=>[{set_name:'Classic test set',tcg_date:'2002-06-26'},{set_name:'Too late',tcg_date:'2005-01-01'}]});
     $('[data-duel="sets-retry"]').click();await new Promise(resolve=>setImmediate(resolve));
     assert.match($('#solo-set').textContent,/Classic test set · 24 cards/);assert.doesNotMatch($('#solo-set').textContent,/Too late/);
-    $('[data-duel="start"]').click();assert.ok($('.duel-arena'));
+    $('[data-duel="start"]').click();await waitFor(()=>!!$('.duel-arena'));assert.ok($('.duel-arena'));
   }finally{app.navigate('home');window.close();}
 });
 test('opening phases pause in the expanded log and resume without an extra draw',async()=>{
@@ -339,11 +339,22 @@ test('opening phases pause in the expanded log and resume without an extra draw'
     app.navigate('solo');$('[data-duel-tab="2"]').click();
     $('#solo-first').value='you';$('#solo-first').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
-    $('[data-duel="start"]').click();$('.duel-log-open').click();
+    $('[data-duel="start"]').click();await waitFor(()=>!!$('.duel-log-open'));$('.duel-log-open').click();
     assert.ok($('.duel-log-body'));assert.equal($('#modal').open,true);
     await new Promise(resolve=>setTimeout(resolve,120));
-    assert.equal($('.duel-phases').dataset.phase,'draw');assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
+    assert.equal($('.duel-phases').dataset.phase,'main1');assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
     $('[data-action="close"]').click();await waitFor(()=>$('.duel-phases').dataset.phase==='main1'&&Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
     assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
+  }finally{app.navigate('home');window.close();}
+});
+test('archive region cutoffs survive saving, and searching all years retains the name query',async()=>{
+  const regional={...cards[0],id:700000,name:'Regional Dragon',misc_info:[{tcg_date:'2005-01-01',ocg_date:'2004-12-31'}],tcgDate:undefined};
+  const {window,app,$}=await boot('regional-cutoff',null,false,[regional]);
+  try{
+    app.navigate('archive');const search=$('#card-search');search.value='Regional Dragon';search.dispatchEvent(new window.Event('input',{bubbles:true}));
+    $('[data-action="filters"]').click();$('[data-filter-panel="year"]').click();$('#release-year').value='2004';document.querySelector('[name=releaseBasis]').value='tcg';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
+    assert.equal(app.state.filtered.length,0);assert.ok($('[data-action="all-years"]'));$('[data-action="all-years"]').click();assert.equal(app.state.filters.query,'Regional Dragon');assert.equal(app.state.filtered.length,1);
+    $('[data-action="filters"]').click();$('#release-year').value='2004';document.querySelector('[name=releaseBasis]').value='ocg';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(app.state.filtered.length,1);
+    $('.card-tile [data-quick-add]').click();app.navigate('decks');$('[data-action="save-deck"]').click();assert.equal(app.state.decks[0].releaseBasis,'ocg');assert.equal(app.state.decks[0].releaseYear,2004);
   }finally{app.navigate('home');window.close();}
 });

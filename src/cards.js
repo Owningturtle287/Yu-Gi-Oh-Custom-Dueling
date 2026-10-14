@@ -1,6 +1,6 @@
 import { normalizeCard } from './core.js';
 export const API_URL = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?misc=yes';
-export const CARD_CACHE_SCHEMA = 3;
+export const CARD_CACHE_SCHEMA = 4;
 export const CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 export function validateCardResponse(payload) {
   if (!payload || !Array.isArray(payload.data) || !payload.data.length) throw new Error('The card API returned an empty or invalid archive.');

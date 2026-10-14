@@ -1,181 +1,105 @@
-# Duel Atlas · v0.1.7
+# Duel Atlas · v0.2.0
 
-A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and a playable **Solo Duel · 2002 Lab**. Plain HTML, CSS, and ES-module JavaScript; static hosting, no custom backend or runtime dependencies.
+A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2004 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
-## v0.1.7 · Compact popups and a wider phone field
+Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
-- Card inspection is a compact 440px sheet with two columns, 32px controls, and a lightly dimmed backdrop that leaves the board visible. The complete type line includes monster race and subtypes (for example, **Beast / Normal** or **Insect / Flip / Effect**), plus attribute/level and current ATK/DEF. Typing stays visible on short landscape screens; the larger description reader remains scrollable.
-- Inspection immediately shows the thumbnail already displayed on the field or in a pile. Full art loads and decodes separately before covering that preview. Failed upgrades retain the preview; closing/navigation cancels callbacks so late images cannot change a different popup. Only API-supplied public-card URLs are used, with no bulk preloading.
-- Removed the mat width cap and spread both mats across the available field. Horizontal gutters scale from 5–10px. Each monster's ATK/DEF has its own bounded two-column readout, with labels above values and paint containment so adjacent stats cannot overlap.
-- LP moves to the bottom-left from each duelist's perspective: your lower-left corner and the AI's upper-right corner. Hand strips reserve space around those counters, and direct-attack highlights/movement use the new LP positions. The console gains the height previously used for LP.
-- Rounded the table, console, and popup corners. Camera/notch and home-indicator safe-area insets remain protected in either landscape direction; only the usable field width expands.
-- Tapping Graveyard, Extra Deck, or Banished opens a narrow 340px list for that pile, with its count and close control. Cross-pile tabs and the master summary are removed. Deck order and the AI's Extra Deck remain private.
+## This functionality-testing release
 
-## v0.1.6 · Closer field, live terminal, centered card art
+- A compact, styled duel settings panel with AI speed, motion toggle, log/rules shortcuts, deck saving, resume and surrender.
+- An 18px central phase tracker and 12px contained ATK/DEF strips return space to the card zones. Both players' ten zones, mirrored auxiliary piles, centered hands, POV life counters and iPhone safe areas remain in the bounded landscape arena.
+- A full EDOPro rules core replaces the production hand-written effect subset. The pinned pack covers the playable TCG pool through December 31, 2004, including Rituals, Fusion procedures, Chaos, Spirit, Union and Toon effects, counters, tokens, chains, costs, damage-step timing and alternate victories.
+- Archive dates retain both TCG and OCG metadata. Choose TCG, OCG or earliest playable release, with year context for that region. Current-year browsing includes undated cards; historical cutoffs require verified dates. An empty search offers **Search all years** while retaining the query.
+- All three Egyptian God Cards remain searchable in the current archive. The API records their playable editions after 2002; collector promos and anime appearances are not used as playable release dates. Their historical exclusion is intentional, not a missing archive entry.
 
-- Packed the zones into a centered mat with 2px gaps and larger portrait surfaces. ATK/DEF share a compact overlay instead of taking height from the card. Both complete Monster/Spell rows and the mirrored Field, Extra, Graveyard, Banished, and Deck spaces remain available.
-- Enlarged both hands and moved them to the outer edges: AI backs above its own back row, your cards along the bottom edge. The phase tracker now runs horizontally between the two Monster rows. LP has a smaller footprint; a legal direct-attack target expands to a 44px tap target.
-- The right console is a persistent terminal with slow sequential typing, event/turn/actor context, color cues, and a scrollable transcript. Reviewing earlier entries holds your scroll position. **Latest ↓** completes pending text and follows new events. Fast games catch up older queued messages, history stays bounded at 500 events, and reduced motion displays text immediately. Typing does not delay game rules or AI decisions. Screen readers receive completed messages instead of individual characters.
-- Tapping a public card opens large, centered official art, with legal action buttons beside it. **Read description** opens 18px scrollable text; **Back to card** restores the same art node. AI pauses during inspection. Closing, Escape, and portrait rotation resume safely or retain an unfinished field choice. Full art uses only API-supplied image URLs, with a small-image fallback.
-- Replaced destructive arena rebuilds with in-place updates. Phase changes retain unchanged card/image nodes and never reassign their image sources. Unaffected hand cards survive draws/plays, keyboard focus is retained, and failed-image placeholders stay stable until the displayed card face changes.
+## Run locally
 
-## v0.1.5 · Field visibility and centered hands
-
-- Fixed a CSS selector that applied grid sizing only to the AI board and collapsed the player’s contained cells. Both board containers now share the same two-row grid rule, with regression checks for the player and AI at five landscape sizes.
-- Removed visible zone captions and the center-line caption. Accessible zone names, pile counts, activity cues, and occupied monsters’ ATK/DEF remain. Empty slots and piles reclaim the height previously reserved for captions.
-- Both hands are centered in a dedicated strip below their own field. The player’s strip scrolls horizontally when needed; the AI’s strip shows backs without hidden names or images. Automatic margins keep the first card reachable when a strip overflows.
-- Added a small Banished pile beside each Graveyard, mirrored across the table, with public top cards, counts, direct pile views, and its own movement anchor.
-- Narrowed the right information rail. Tapping a card shows its text and legal actions there; **×** closes inspection and resumes play, while **↗** opens the larger card sheet. Card actions temporarily replace phase controls during inspection. The AI pauses while you read. Hidden AI hand/deck/Extra Deck cards never appear in the rail, and inspection clears if a public card returns to a hidden area.
-
-## v0.1.4 · Opposing game mats
-
-- The AI field is at the top and your field is at the bottom. Both Monster and Spell/Trap rows remain visible. The AI’s card columns and auxiliary zones mirror your perspective across the table.
-- Each duelist has a visible Deck and Graveyard on their right, plus a Field Spell and Extra Deck zone on their left. Your Graveyard/Field Spell align with the Monster row; your Deck/Extra Deck align with the Spell/Trap row. The AI layout rotates these positions by 180°. Placement follows the [official game-mat diagram](https://img.yugioh-card.com/en/downloads/rulebook/SD_RuleBook_EN_10.pdf#page=5).
-- Deck and Extra Deck stacks stay face-down with counts. Graveyard shows its top public card. Tap a stack for its own pile view, with tabs for Deck, Graveyard, Extra Deck, and Banished; only your Extra Deck contents are visible. Field Spells keep inspection, legal Effect shortcuts, and direct target highlighting.
-- A side console holds LP, phase tracking, the Log, and controls. Draws and other movements use the actual on-mat Deck, Graveyard, Field Spell, and Extra Deck anchors. Landscape requirements and portrait pause/resume continue to apply.
-
-## v0.1.3 · Landscape duel table
-
-- Duels require landscape. Setup and the rest of the app still work in portrait. Starting or rotating into portrait shows a rotate prompt and pauses phase progression, AI decisions, and card input. Rotating back resumes the same match and any pending target choice.
-- During a duel, the table uses the full app viewport with safe-area padding. App branding and bottom navigation give way to an explicit Home arrow and duel menu; leaving pauses the game and restores normal navigation.
-- Both duelists’ five Monster zones and five Spell/Trap zones remain visible together. Card surfaces scale with the available cell rather than a tiny fixed size.
-- LP values and meter bars stay outside the field. Direct-attack targeting, card activity highlights, both ATK/DEF values, AI card orientation, hidden-information protection, and all existing duel actions are retained.
-
-## v0.1.2 · Actions on the field
-
-- Legal **Attack**, **Effect**, and **Flip** shortcuts appear directly on cards. Tapping the card itself still opens its details. Shortcuts pause during movement and enable again when the action settles.
-- Choose field targets by tapping highlighted cards, including face-down cards, Field Spells, and Tribute combinations. A direct attack highlights the opponent’s LP. Optional selections can be cancelled; mandatory effect choices remain active. Graveyard, Extra Deck, and other off-field choices retain their picker.
-- Activity labels and distinct borders identify the acting card, attack/effect targets, eligible choices, and selected Tributes. Chains and incoming attacks retain their cues while you respond. No opposing face-down identity or hidden stat is revealed.
-- The AI hand is centered, AI card faces/backs rotate toward the AI, and direct-attack lunges and trails follow the target LP location. Defense cards remain sideways, with both ATK and DEF shown in an upright readout.
-
-## v0.1.1 · Movement and readability
-
-- Authentic card backs appear on Set cards, draw piles, and the AI hand. Both face-up and face-down Defense Position cards rotate sideways as one complete surface.
-- Player turns advance automatically through Draw and Standby to Main Phase 1. The engine still draws exactly once, preserves the first-player draw exception, and pauses for real chains/target choices.
-- AI decision speed is separate from difficulty and animation preferences: Fast (180ms), Normal (700ms), Relaxed (1.5s), or Deliberate (2.5s). Change it in Match setup or the turn menu. Empty response windows pass promptly without an artificial thinking delay.
-- Card movement uses a location-based animation layer: opening deals, deck-to-hand draws/searches, summons, Sets, flips/position changes, activations, revival, control transfers, returns, Graveyard/banish moves, attack lunges/trails/impacts, and LP counters. Moves finish before the next AI decision. Navigation, resizing, reduced motion, and unavailable animation APIs settle safely without applying another game action.
-- A visible **Log** button opens a larger sheet with turn groups, phase/actor labels, attack stats/results, explicit LP changes, event filters, and smooth **Jump to latest**. The last 500 events are retained. The duel pauses while the sheet is open.
-
-## Play the 2002 Lab
-
-Open **Solo Duel** in the bottom navigation or Home. The three setup panels work in either orientation and keep the controls within the phone viewport. Rotate to landscape to play; a portrait start waits at the rotate prompt:
-
-- **Your deck / AI deck:** independently choose a saved/custom deck, random cards, or random cards from a released set. Card eligibility offers a release-year cutoff through 2002, monster type/race, attribute, subtype, and Spell/Trap switches. Filters also apply to saved decks.
-- **Saved / custom deck → Design/Edit:** opens the existing deck builder with playable early cards. **Save & return to Solo** assigns the deck to that duelist. Main Decks need 40–60 cards; the Extra Deck allows supported Fusions, up to 15. Side Decks are not used in single games.
-- **Random cards / sets:** generates a 40-card deck with a three-copy limit, enough low-level monsters, and some higher-level cards where available. Set generation uses real API set memberships and set release dates, intersected with the card’s first TCG date, effect support, and the selected filters. Sets with insufficient cards are disabled; filters are never silently broadened. Eligible Fusions and Polymerization can be included when their materials are present.
-- **Match:** Easy, Normal, or Hard AI; independent AI decision speed; you/AI/coin-toss first; 8,000 or 4,000 LP; animations on/off. Hard changes action priorities and risk assessment. No difficulty receives opposing hidden cards or draw order for scoring.
-
-Tap a hand or field card to inspect its text and see currently legal actions, or use the legal Attack/Effect/Flip shortcuts on the card. Tap highlighted cards to choose field targets or Tributes; tap highlighted LP for a direct attack. Off-field choices use a picker. The phase tracker follows **Draw → Standby → Main 1 → Battle → Main 2 → End**. Your Draw and Standby Phases advance automatically; use **Next** for later phases, **End turn** to skip remaining Main/Battle actions, and **Responses / Pass** when a response is available. Windows without any possible response pass automatically.
-
-The landscape arena shows the AI above you, with five Monster and five Spell/Trap zones per player, portrait card surfaces, and both ATK/DEF visible. Deck/Graveyard and Field Spell/Extra Deck spaces flank each mat from that duelist’s perspective; a smaller Banished pile sits beside each Graveyard. Your enlarged hand is centered along the bottom edge; the AI’s enlarged hand sits above its back row, toward its seat. Tap a pile to open its compact card list; deck order and the opponent’s Extra Deck contents stay hidden. The phase tracker spans the field center. LP sits at the bottom-left of each duelist’s perspective (your lower-left, AI upper-right). The right rail contains a live terminal, controls, and a Home arrow to leave and pause the match. Cards open in a compact centered sheet with full typing, legal actions, an immediate preview that sharpens when full art is ready, and **Read description** for larger scrollable text. Close inspection with **×** or **Return to duel** to resume AI play. Portrait rotation also pauses play; returning to landscape preserves the field and selected targets. Reloading still ends the test match.
-
-The always-visible **↗** button in the terminal header opens the expanded chronological log; **Latest ↓** finishes typing and follows the newest events. The turn menu offers AI decision speed, the duel log, support/rules information, animation setting, surrender, and **Save your deck / Save AI deck** for retaining generated decks in local storage. Leaving Solo pauses the match; returning resumes it. **Reloading the page ends the current test match.** Decks and setup preferences persist.
-
-## Engine coverage and deliberate limits
-
-The API snapshot verified for the v0.1.1 engine contains **14,607 cards**, **607** with normalized TCG dates through December 31, 2002. **384** are admitted to duels: 243 Normal Monsters, 26 material-only Fusions, and 115 registered effect monsters, Spells, and Traps. This presentation release keeps that engine coverage. Counts can change when the API corrects its metadata. **Solo → 2002 Lab / Rules & cards → Browse card support** shows the current status of every early card.
-
-Implemented mechanics include Normal/Tribute/Flip/Set summons, one Normal Summon per turn, battle position restrictions, direct and monster attacks, ATK/DEF and piercing damage, multiple attacks where supported, turn-limited stat changes, Equip/Field/continuous bonuses, draw/heal/burn/destruction, revival, temporary control, registered FLIP and battle effects, named-material Fusion Summons, Spell/Trap response chains, counter speeds/costs, hand-limit discards, deck-out, LP victory, Exodia, and surrender. Tests exercise examples such as Man-Eater Bug, Mirror Force, Trap Hole, Jinzo, Waboku, Magic Jammer, Seven Tools of the Bandit, Monster Reborn, and Polymerization.
-
-**This is an early test engine, not complete Yu-Gi-Oh! rules compatibility.** Unsupported effects and summoning procedures are rejected, never silently played as Normal Monsters. Rituals, many complex early effects, and all post-2002 cards remain outside Solo. The full archive and general deck builder retain those cards.
-
-The engine uses current API card text and modern core turn rules: five opening cards, no first-turn draw or Battle Phase for the first player, six-card End Phase hand limit, and separate Field zones. It has a three-copy limit and **no historical banlist**. This is not an exact 2002 tournament format. Specific current simplifications:
-
-- Response chains resolve last-in-first-out, but simultaneous mandatory trigger ordering and optional timing are simplified. Registered FLIP effects use a target prompt after damage calculation, without a separate damage-step chain.
-- Main and phase transitions, summons, and attack declarations provide response windows. Full priority/timing rules between every possible action are not reconstructed.
-- If a responding effect removes an attack target, that declared attack stops rather than opening a full attack-replay ruling flow.
-- API set names can group later reprints of an eligible old card. Set generation filters card and set release dates, but does not reconstruct exact original pack printings.
-
-There is **no WebRTC, matchmaking, multiplayer connection, or dedicated game server**. Multiplayer remains an explicit coming-soon preview.
-
-## Archive and deck workshop
-
-- Full [YGOPRODeck archive](https://ygoprodeck.com/api-guide/), with one full request, local name/archetype/effect search, category/attribute/race/subtype/mechanic filters, and sorting. Continuous virtual results; no paginated sample list.
-- Normal archive release-year selection defaults to the device’s current year through today. Past years include December 31. Spirit is in the subtype filters. Data-derived year highlights identify introductions represented in the API.
-- Named local Main/Extra/Side decks; top saved-deck switcher, safe handling of unsaved edits, two-row visible deck tray, separate red/green quantity controls, and card inspection. Three copies across sections, section capacities 60/15/15, and placement validation.
-- Mechanic restrictions include Fusion, Synchro, Xyz, Pendulum, Link, All mechanics, and Pre-Synchro. These are mechanic switches, not historical banlists. Existing out-of-year/disabled cards are retained and flagged.
-- JSON/YDK import and export, all-deck backups/restoration, and legacy snapshot/date enrichment. JSON retains card details, year, and restrictions; YDK retains IDs, sections, and quantities and needs the archive for import.
-- Metadata cache schema 3 adds set memberships. Existing caches refresh once; failed requests can still fall back to older usable metadata. Deck storage remains compatible with v1.
-
-## Run and verify locally
-
-Use Node.js 22 or newer:
+Use Node.js 22 or later:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open `http://localhost:4173`. Use HTTP rather than a `file:` URL. Runtime files can also be served by any static server, without npm dependencies.
+Open http://localhost:4173. `predev`, `pretest` and `prebuild` prepare the pinned runtime automatically. Serve over HTTP rather than opening `index.html` as a file. To serve the production output:
 
 ```sh
-npm test                # deterministic model, DOM interaction, and PWA tests
-npm run test:live       # full archive, search/filter, storage and backup checks
-npm run test:duel-live  # full API + set dates, generators and 40 complete AI matches
-npm run build           # static output in dist/
+npm run build
+node scripts/serve.mjs dist
 ```
 
-The optional duel check can reuse downloaded API JSON for repeatable debugging without network traffic:
+Use HTTPS for installation on a phone. On iPhone, open the live link in Safari and choose **Share → Add to Home Screen**. Android Chrome offers **Install app** in its menu. The app includes standalone/maskable icons, a relative-scope manifest, service worker, viewport-fit and safe-area handling.
+
+## Archive and deck workshop
+
+The archive uses one complete `cardinfo.php?misc=yes` request to YGOPRODeck, caches normalized metadata in IndexedDB for a day, and retains an offline fallback. Name, archetype and text searches combine with Monster / Spell / Trap / Extra, attribute, race, Spirit and other subtypes, mechanic, date and sort filters. Results use a continuous virtualized grid with three columns on normal phone panels. Official card images are requested on demand, never mass-prefetched; the service worker paces uncached image requests to eight per second.
+
+Quick red/green quantity controls edit cards without opening them or resetting scroll. Tap the rest of a card to inspect its art, complete type line and effect. The deck workshop offers a saved-deck switcher, two-row horizontal tray, Main / Extra / Side, local names and storage, a three-copy cap, totals, JSON/YDK backups and mechanic presets. **Pre-Synchro** is a mechanic restriction, not a historical format. Saved release year and region are restored with JSON backups. Existing decks retain their cards when restrictions change and show warnings.
+
+Release-year filters use the earliest valid API date in the chosen region, including December 31. A missing date is not invented from a reprint set. Current-year browsing includes unverified dates so OCG-only and undated entries remain discoverable; dated future releases remain excluded. Historical filters use verified dates and current card text, without past banlists. API metadata can be corrected upstream; **Refresh archive** requests a new snapshot. Old cache schemas refresh once and still fall back safely offline.
+
+## Solo Duel · 2004 Lab
+
+Rotate the phone to landscape. Portrait pauses play and shows the rotation prompt. The AI stays above you, with mirrored Field/Extra on each player's left, Deck/Graveyard/Banished on their right, hands along the outer edges, phases across the center and a narrow terminal rail. Only hands, card/pile choices, effect descriptions and the terminal/log scroll. The main arena never scrolls.
+
+**Your deck / AI deck** independently select saved/custom decks, random cards or random cards from a released set. Eligibility includes TCG cutoff through 2004, monster race, attribute, subtype and Spell/Trap switches. Narrow/set pools may be incomplete; generation explains insufficient pools without relaxing filters. Saved decks are checked against canonical API records before starting. Difficulty changes action scoring; decision speed changes pauses independently of animations. AI choices use its own cards, public field information and selections revealed by rules, never hidden opposing stats.
+
+The player automatically draws and reaches Main 1. Tap a card to inspect it; legal shortcuts appear on field cards. Targets and Tributes highlight on the board. Multi-card costs show selected cards and **Confirm**; **All choices** opens a compact picker for mixed field/pile targets. Card declarations have a searchable picker. Effect ordering and counter allocations can be reset before confirming. The native core supplies legal actions and validates every actual response.
+
+The terminal types events chronologically and preserves your scroll when reviewing history. **Latest** resumes following; the expanded log has filters. Inspection, menus and portrait rotation pause AI. Motion respects reduced-motion preferences. Small card and pile sheets retain the field behind them; card art shows an immediate thumbnail while full art decodes. The arena patches existing image nodes across phase changes.
+
+### Coverage and limits
+
+The audited API snapshot contains 14,607 archive records and 1,558 records with TCG dates through 2004. **1,555 playable records are supported.** The remaining records are `???` and two non-duel World Championship prize cards, **Meteo the Matchless** and **Ulevo**; they remain searchable. The offline pack contains the earlier worldwide card scripts and transitive helper dependencies, including alternate card IDs. **Solo → Rules & cards → Browse card support** shows live archive coverage.
+
+Dueling uses the pinned upstream core/card scripts and their current errata, modern turn rules (five opening cards; first player skips the first draw and Battle Phase; six-card hand limit), separate Field zones, three copies and no banlist. **This is an early functionality-testing release, not an exact 2004 tournament emulator.** Exhaustive card-combination certification is not claimed. AI uses general scoring rather than deck-specific strategies. Side decking, historical text/rulings and multiplayer are not implemented. A match is kept in memory while navigating; reloading ends it. Saved decks and settings persist locally.
+
+The old pure engine remains as a regression fixture; production Solo uses `native-engine.js`. No unsupported card is silently converted into a Normal Monster.
+
+### Pinned runtime and source
+
+The browser uses `ocgcore-wasm@0.1.2` in synchronous mode; it requires neither JSPI nor cross-origin isolation. npm integrity is locked. EDOPro core, Lua and Project Ignis sources, licenses, revisions and local JavaScript protocol fixes are described in [THIRD_PARTY_NOTICES.md](assets/rules/THIRD_PARTY_NOTICES.md). Those notices, original Lua sources, numeric records, runtime and all shell modules are included in the static build and offline cache.
+
+Normal builds never fetch card scripts or SQL databases. To deliberately regenerate the rule pack, download the specified API snapshot, BabelCDB SQLite database and pinned CardScripts source archive, then run:
 
 ```sh
-DUEL_CARD_SNAPSHOT=/path/cardinfo.json DUEL_SET_SNAPSHOT=/path/cardsets.json npm run test:duel-live
+python scripts/update-rules.py --cards cards.json --database cards.cdb --scripts CardScripts.tar.gz --scripts-revision 5138eb120d9f6f6caa04dbba22b64ef451302b95 --database-revision 70e53af2dc6c5cecebd48ff4f945c560625c99a2
+npm test
+npm run build
 ```
 
-Happy DOM is development-only. The live API checks are separate from CI, so an upstream outage does not block normal source checks.
+Review generated changes before changing upstream revisions. The manifest records SHA-256 hashes. Keep core and scripts compatible; new scripts can require newer core APIs.
 
-## Deploy from GitHub
+## Verify
 
-The existing **Test and deploy Duel Atlas** workflow tests and builds pushes to `main`, uploads `dist/`, and deploys with the official GitHub Pages actions. Pull requests test/build without publishing. For a new repository, select **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+```sh
+npm test
+npm run build
+npm run test:live
+npm run test:duel-live
+```
 
-Live app: **https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/**
+The **129 automated tests** cover archive/filter/date/storage/import/export/menu flows, production native Solo interactions, bounded field layout contracts, stable image nodes, targeting, movement, hidden-card privacy, terminal typing, offline shell completeness, and legacy engine regressions. New native tests initialize every included early card, test Ritual/Fusion/Chaos/Spirit/Union/Toon/counter/token behavior, reject stale actions, preserve field identities, verify God Card/date handling and complete seeded AI games. A full-snapshot stress run completed 100 randomized matches without illegal replies or stalls. An additional full-catalog check generated 48 decks across 27 released set pools and completed 40 matches / 4,322 legal actions, exercising 189 named activations. These checks do not prove every possible card interaction.
 
-All asset/module/manifest/service-worker paths are relative, so the app works under a GitHub project subdirectory or another static HTTPS host. The service worker’s `shell-v0.1.7` cache includes every Solo module and stylesheet as one complete release. Bump the package, core, HTML, and shell-cache versions when publishing changed assets.
+Optional live checks access YGOPRODeck. For a repeatable offline full-catalog run, set `DUEL_CARD_SNAPSHOT` and `DUEL_SET_SNAPSHOT` to saved API JSON files when running `test:duel-live`.
 
-## Install, offline use, and layout
+Rendered browser/device QA was unavailable in this environment. DOM/style tests cannot establish actual Safari pixels, touch feel, motion smoothness or installation behavior. Device acceptance: try 844×390 and 390×844 on iPhone 14, rotate in both directions with the notch, inspect card and pile sheets, check adjacent four-digit stats and every field row, adjust AI speed, complete a duel, scroll/rejoin the live terminal, reopen saved decks, and check installed/offline use. No main page scrolling or zone overlap should occur.
 
-- **iPhone/iPad:** Safari → Share → Add to Home Screen. **Android:** Chrome → menu → Install app / Add to Home screen. The top-right app menu provides installation help.
-- Open the archive online once. Metadata is cached in IndexedDB, normally refreshed after 24 hours, and reused when requests fail. Set dates have a separate small local cache. Local Solo needs no network once required data and the shell are cached. Unviewed images still need a connection.
-- Only viewed card images are fetched/cached, with uncached image requests spaced to at most eight per second. Search, filtering, deck generation, AI, and game rules run locally. No bulk image downloads.
-- Saved decks and Solo preferences use this browser/device’s localStorage. Export backups before clearing data or moving devices. Storage failures are visible and do not silently overwrite corrupt deck data.
-- The page and main screen remain bounded by `100dvh` with safe-area padding and fixed bottom navigation outside the duel. A match uses the full app viewport in landscape, with a rotate-and-pause prompt in portrait. Only card results, deck/hand strips, saved decks, card-choice/pile/log lists, and long text have dedicated scroll containers. The arena itself does not scroll. The PWA manifest keeps normal orientation support for the archive and deck builder.
-- Primary controls use 44px targets, accessible names, visible focus, and native modal focus containment; deck quantity buttons use 30px. On-card shortcuts and compact field controls use smaller targets to fit the arena. Eligible field targets receive keyboard focus, and activity labels supplement their colors. Arena animations cover summons, activations, attacks, damage, and phase changes. Reduced-motion preferences disable them.
+## Deploy with GitHub Pages
 
-## Verification record
+The existing `.github/workflows/pages.yml` (workflow filename may differ) runs tests and builds on pushes to `main`, uploads `dist/` and deploys through the official Pages actions. In repository **Settings → Pages**, choose **GitHub Actions** as the source. A custom domain/backend is unnecessary. For another static host, publish `dist/` over HTTPS.
 
-The release passes **118 automated tests**. The suite covers existing archive/deck workflows plus setup filters, custom AI-deck design/return, set-load retry, starting a match, phase progression, real card actions, pause/resume, surrender, generated-deck saving, rules/effects, hidden-information invariance, card conservation, layout contracts, and complete seeded matches. Presentation checks exercise legal on-card shortcuts, their recovery after movement/AI responses, field targeting, direct LP targeting, Tributes, automatic mandatory targets, privacy, orientation, and directional movement. Rotation checks cover portrait starts, frozen AI timers, resume without an extra draw, retained targets, and navigation cleanup. New checks cover both board containers at five landscape sizes, all ten auxiliary/pile spaces, actual banishing effects, enlarged outer hands and central phases, centered inspection/actions, large description text, dialog-close AI resume, private-card cleanup, off-field choices, unchanged image/node identity across a real phase action, zero source rewrites, retained hand focus, and stable failed-image placeholders. Popup checks cover immediate thumbnails, delayed full-art decode, failed upgrades, cancellation, source reuse, full card typing, narrow card/pile sheets, and small controls. Field checks cover full-width mats, bounded stat columns, and mirrored LP corners across five landscape sizes. Deterministic terminal tests verify sequential typing, complete-entry announcements, retained scroll while reading history, Latest, pause/resume, reduced motion, safe text rendering, and bounded catch-up history.
-
-The v0.1.1 engine baseline check against the full API archive and set-date snapshot found **nine playable set pools**, performed **30 generation checks**, and completed **40 matches / 11,191 legal actions** while preserving every card instance. Another 12 seeded matches run in this release’s deterministic test suite. Presentation tests also cover automatic draws, chain/choice interruptions, AI speed persistence, hidden-image privacy, sideways backs, animation completion/cancellation, and log filtering/pause/resume. The static build and complete service-worker shell are checked before deployment.
-
-**Rendered browser/device QA was unavailable in the build environment.** DOM and CSS contract tests do not establish actual phone pixels, touch feel, animation smoothness, installation behavior, or Safari/Chrome offline behavior. Device acceptance:
-
-1. Start a duel in 390×844 portrait: the rotate prompt must pause all play. Rotate to 844×390; also try 568×320, 667×375, and 932×430 landscape. Keep the AI above the player, all twenty central zones, ten auxiliary/pile spaces, both centered hand strips, and the narrow side rail visible without page scrolling. Verify both player rows, mirrored piles, Banished views, card/stat readability, notch/home-indicator safe areas in both landscape directions, and browser bars. Confirm the mats use the available width, LP stays clear of the centered hands, and adjacent high-ATK/DEF readouts stay separate.
-2. Start random-card and random-set matches; change AI difficulty, decision speed, and eligibility; try an invalid saved deck. Confirm errors explain what to change.
-3. Design and save an AI deck, return to Solo, summon/Set/Tribute, inspect centered card art, verify the immediate preview and full race/subtype line, toggle the large description, and close the compact sheet, attack, respond, discard, and finish a game. Confirm inspection pauses AI, closing/Escape resumes play, long effect text scrolls, and overflowing hands keep their first and last cards reachable. Test generated-deck saving and a rematch.
-4. Confirm opponent hand, deck order, and face-down cards stay hidden during animations too. Verify automatic Draw → Main 1, AI card orientation, sideways Set cards, both stats, source/target labels, direct attacks toward the on-field LP corner, draw/summon/Graveyard movement, adjustable AI pace, and the slowly typed terminal/expanded log. Scroll back during an AI turn and confirm new text does not pull you to the bottom; use Latest to resume following. Watch unchanged card art through several phase transitions for flicker. Rotate during an AI turn and a pending target choice; verify the match pauses and resumes the same action. Check reduced motion, cancellation, Home navigation, and resume across tabs.
-5. Recheck archive search, quick edits, deck switching, filters, JSON/YDK backups, installation, and airplane-mode cached use. Multiplayer must remain inactive.
+All paths are relative for GitHub project subdirectories. Version package/core/HTML/service-worker caches together. A new worker caches the complete release before activation; viewed card images persist separately. Reload/reopen the installed app after deployment to receive the update. Browser storage stays local; export a backup before clearing site data.
 
 ## Project layout
 
-```text
-index.html / styles.css    Shared PWA shell and archive/deck layout
-src/app.js                 Navigation, archive, deck workshop, Solo bridge
-src/core.js / era.js        Card normalization, filters, deck storage/backups, dates
-src/cards.js               Full API loader and IndexedDB cache
-src/layout.js / icons.js   Grid geometry and original SVG control icons
-src/duel/catalog.js        Explicit card/effect capability registry
-src/duel/decks.js          Eligibility, validation, random decks, set metadata
-src/duel/engine.js         Pure deterministic rules/actions and observations
-src/duel/ai.js             Hidden-safe difficulty scoring
-src/duel/ui.js / duel.css  Solo setup, card choices, fixed arena, expanded log
-src/duel/field.js          Field selections, legal shortcuts, activity cues, orientation
-src/duel/motion.js         Hidden-safe movement plans, Web Animations, cancellation
-src/duel/flow.js / log.js   Automatic opening phases, AI speed, chronological log groups
-src/duel/dom.js             In-place arena/image updates and focus preservation
-src/duel/terminal.js        Bounded live typing, log following, reduced-motion handling
-src/duel/card-view.js       Full typing and immediate-preview/full-art enhancement
-assets/                   Original emblem and PWA icon sizes
-sw.js / manifest.*        Offline shell, viewed images, relative PWA scope
-scripts/ / tests/         Local server, build, live checks, automated tests
-```
+- `src/app.js`, `core.js`, `cards.js`, `era.js`: shell, archive, storage/backups, region/year filters.
+- `src/duel/native-loader.js`, `native-engine.js`, `rules-manifest.js`: pinned rules pack, core protocol adapter and legal/AI actions.
+- `src/duel/ui.js`, `field.js`, `motion.js`, `dom.js`, `terminal.js`, `card-view.js`, `duel.css`: setup, board targeting, movement, stable art, terminal and inspection.
+- `src/duel/decks.js`, `catalog.js`: eligible pools, deck generation/validation and rule coverage.
+- `src/duel/engine.js`, `ai.js`: retained deterministic legacy regression engine.
+- `assets/rules/`: original Lua/numeric shards, manifest, licenses and source links.
+- `scripts/prepare-runtime.mjs`, `update-rules.py`, `build.mjs`: pinned runtime preparation, intentional data generation and static build.
+- `tests/`: storage, archive, app/arena, native/legacy engine, motion, terminal and PWA checks.
 
-Card data and official card images come from YGOPRODeck; Yu-Gi-Oh! names, text, and images belong to their respective rights holders. This independent fan companion is unaffiliated with Konami. Branding and navigation artwork are original. The authentic gameplay card back is sourced from https://images.ygoprodeck.com/images/cards/back_high.jpg, cached locally with attribution in assets/CREDITS.md, and is not used as branding.
+Card names, text and official images retain their respective rights holders' rights. Data/images come from YGOPRODeck. This independent fan app is unaffiliated with Konami. Branding is original; the authentic gameplay card back is credited in [assets/CREDITS.md](assets/CREDITS.md) and is not branding.

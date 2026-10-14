@@ -19,7 +19,7 @@ export function cardLocations(state) {
 }
 function appearance(location) {
   const { side, zone, instance } = location;
-  const visible = publicZones.has(zone) || (fieldZones.has(zone) && instance.faceUp)
+  const visible = instance.public || (publicZones.has(zone) && (side===0 || instance.faceUp)) || (fieldZones.has(zone) && instance.faceUp)
     || (side === 0 && ['hand', 'extra'].includes(zone));
   // A motion plan never contains an opponent's hidden image URL or name.
   return { image: visible ? frontURL(instance.card) : CARD_BACK, back: !visible,

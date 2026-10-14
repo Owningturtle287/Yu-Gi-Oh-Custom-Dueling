@@ -31,7 +31,7 @@ function invariant(state,total){
 test('the capability boundary admits dated Normal Monsters and explicit effects, never silent vanilla effects',()=>{
   assert.equal(support(normal).ok,true);
   assert.equal(support(card('Unknown effect',{type:'Effect Monster'})).ok,false);
-  assert.equal(support({...normal,tcgDate:'2003-01-01'}).ok,false);
+  assert.equal(support({...normal,tcgDate:'2005-01-01'}).ok,false);
   assert.equal(support({...normal,tcgDate:null}).ok,false);
   assert.equal(support(spell('Pot of Greed')).ok,true);
   const fusion=card('Test fusion',{type:'Fusion Monster',desc:'"Test warrior" + "Test dragon"'});
@@ -46,7 +46,7 @@ test('side-specific filters combine dates, types, attributes, subtypes, and spel
 });
 test('random card/set decks honor exact pools, copy limits, cutoff dates, and insufficient-pool errors',()=>{
   const cards=Array.from({length:24},(_,i)=>card(`Candidate ${i}`,{atk:1000+i*50,setNames:i<20?['Early set']:['Late set']}));
-  const sets=[{name:'Early set',date:'2002-03-08'},{name:'Late set',date:'2003-01-01'}];
+  const sets=[{name:'Early set',date:'2002-03-08'},{name:'Late set',date:'2005-01-01'}];
   for(let seed=1;seed<=20;seed++){
     const settings={...defaultSide(),source:'set'};const deck=generateDeck(cards,settings,sets,seed);
     assert.equal(deck.sections.main.reduce((n,e)=>n+e.quantity,0),40);
@@ -70,7 +70,7 @@ test('saved decks validate all playable sections against canonical API cards',()
 });
 test('set metadata is fetched once, cached, and reused offline; failures are retryable',async()=>{
   const storage=memoryStorage();let calls=0;
-  const fetchImpl=async()=>{calls++;return{ok:true,json:async()=>[{set_name:'Early set',tcg_date:'2002-03-08'},{set_name:'Later',tcg_date:'2003-01-01'}]};};
+  const fetchImpl=async()=>{calls++;return{ok:true,json:async()=>[{set_name:'Early set',tcg_date:'2002-03-08'},{set_name:'Later',tcg_date:'2005-01-01'}]};};
   assert.equal((await loadSets({storage,fetchImpl,now:100})).sets.length,1);
   await loadSets({storage,fetchImpl,now:101});assert.equal(calls,1);
   const fail=async()=>{throw new Error('Offline');};
@@ -198,7 +198,7 @@ test('seeded full AI matches finish, conserve all cards and never select an ille
 test('Solo landscape layout keeps the complete arena bounded and reserves space for both field rows',async()=>{
   const css=await readFile(new URL('../duel.css',import.meta.url),'utf8');
   assert.match(css,/\.duel-arena \{[^}]*height:100%[^}]*min-height:0[^}]*overflow:hidden/);
-  assert.match(css,/\.duel-table \{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*grid-template-rows:minmax\(0,1fr\) 26px minmax\(0,1.12fr\)[^}]*min-height:0/);
+  assert.match(css,/\.duel-table \{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*grid-template-rows:minmax\(0,1fr\) 18px minmax\(0,1.12fr\)[^}]*min-height:0/);
   assert.match(css,/\.duel-hand \{[^}]*overflow-x:auto[^}]*overflow-y:hidden/);
   assert.match(css,/\.duel-board \{[^}]*grid-template-rows:repeat\(2,minmax\(0,1fr\)\)/);assert.match(css,/prefers-reduced-motion:reduce/);
   assert.match(css,/\.duel-playing \.topbar, \.duel-playing \.bottom-nav \{ display:none/);

@@ -32,7 +32,7 @@ export function seededRandom(seed) {
 }
 export function generationProblem(pool) {
   const main = pool.filter(c => !c.type.includes('Fusion'));
-  const low = main.filter(c => isMonster(c) && c.level <= 4);
+  const low = main.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||''));
   if (main.length * 3 < 40) return 'These filters leave fewer than 40 available card copies. Broaden them or choose another set.';
   if (low.length * 3 < 16) return 'These filters need at least 16 copies of Level 4 or lower monsters for a playable random deck.';
   return '';
@@ -55,9 +55,9 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
   }
   const problem = generationProblem(pool);
   if (problem) throw new Error(problem);
-  let deck = createDeck(label.slice(0,60)); deck.releaseYear = 2002;
-  const low = pool.filter(c => isMonster(c) && c.level <= 4 && !c.type.includes('Fusion'));
-  const high = pool.filter(c => isMonster(c) && c.level > 4 && !c.type.includes('Fusion'));
+  let deck = createDeck(label.slice(0,60)); deck.releaseYear = Number(settings.cutoff.slice(0,4));
+  const low = pool.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !c.type.includes('Fusion'));
+  const high = pool.filter(c => isMonster(c) && c.level > 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !c.type.includes('Fusion'));
   // Weighted sampling with a strict copy cap; no rejected filter is relaxed.
   const choose = list => {
     const candidates = list.filter(card => (deck.sections.main.find(e => e.card.id === card.id)?.quantity || 0) < 3);
@@ -75,7 +75,7 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
   }
   // Add only Fusions whose exact materials actually exist in this deck.
   const names = new Set(deck.sections.main.map(e => e.card.name));
-  const fusions = pool.filter(c => c.type === 'Fusion Monster' && support(c).rule.materials.every(name => names.has(name))).slice(0,15);
+  const fusions = pool.filter(c => c.type === 'Fusion Monster' && support(c).rule.materials?.length && support(c).rule.materials.every(name => names.has(name))).slice(0,15);
   for (const card of fusions) deck = addCard(deck,card,'extra');
   const polymer = pool.find(c => c.name === 'Polymerization');
   if (fusions.length && polymer) {
@@ -91,7 +91,7 @@ export function expandDeck(deck, cards) {
 }
 
 export async function loadSets({ fetchImpl = fetch, storage = globalThis.localStorage, now = Date.now(), force = false } = {}) {
-  const key = 'duel-atlas.sets.v1'; let cached;
+  const key = 'duel-atlas.sets.v2'; let cached;
   try { cached = JSON.parse(storage?.getItem(key) || 'null'); } catch { /* optional cache */ }
   const valid = value => Array.isArray(value) && value.every(set => typeof set.name === 'string' && /^\d{4}-\d\d-\d\d$/.test(set.date));
   if (!force && cached && valid(cached.sets) && now-cached.time<86400000) return {sets:cached.sets,offline:false};

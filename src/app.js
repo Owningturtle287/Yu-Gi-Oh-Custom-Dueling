@@ -23,7 +23,7 @@ const solo = createSoloController({ main, modal, getCards: () => state.cards, ge
   onDesign: (side, deck) => confirmReplace(() => {
     duelDesign = side;
     state.draft = deck ? structuredClone(deck) : createDeck(side === 0 ? 'My classic deck' : 'AI classic deck');
-    state.draft.releaseYear = 2002; state.dirty = !deck; state.section = 'main';
+    state.draft.releaseYear = 2004; state.dirty = !deck; state.section = 'main';
     state.filters = { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' };
     navigate('decks');
   }),
@@ -100,7 +100,7 @@ function renderHome() {
     <div class="home-grid">
       <button class="launch-card archive-launch" data-route="archive">${icon('archive')}<span class="arrow" aria-hidden="true">↗</span><strong>Card Archive</strong><small>Discover every possibility</small></button>
       <button class="launch-card" data-route="decks">${icon('deck')}<span class="arrow" aria-hidden="true">↗</span><strong>Deck Builder</strong><small>Your strategy, your rules</small></button>
-      <button class="launch-card" data-route="solo">${icon('solo')}<span class="soon-label">2002 LAB</span><strong>Solo Duel</strong><small>A classic deck. A new challenge.</small></button>
+      <button class="launch-card" data-route="solo">${icon('solo')}<span class="soon-label">2004 LAB</span><strong>Solo Duel</strong><small>A classic deck. A new challenge.</small></button>
       <button class="launch-card coming" data-route="multiplayer">${icon('people')}<span class="soon-label">COMING SOON</span><strong>Multiplayer</strong><small>A connection. A rivalry.</small></button>
     </div>
     <div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<br>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'} · stored on this device</span><a href="#solo" data-route="solo">Play Solo ↗</a></div>
@@ -150,16 +150,11 @@ function updateArchive() {
     panel.innerHTML = state.cardStatus === 'loading' ? `<div class="empty-state"><div class="loading-mark">${icon('deck')}</div><h3>Opening the archive</h3><p>Fetching the full card database. Search and filters will work on your device.</p></div>` : `<div class="empty-state">${icon('wifi')}<h3>Let’s reconnect</h3><p>${escape(state.cardError)}</p><button class="primary" data-action="retry">Retry card archive</button></div>`;
     return;
   }
-  if (!state.cards.some(card => card.tcgDate)) {
-    $('#result-meta').textContent = 'Cached cards need first-release dates';
-    panel.innerHTML = `<div class="empty-state">${icon('wifi')}<h3>Update release dates</h3><p>Connect once to download TCG release dates for year filtering. Your saved decks are still available.</p><button class="primary" data-action="retry">Retry archive update</button></div>`;
-    return;
-  }
   state.filtered = filterCardsForUI();
   const activeFilters = [state.filters.attribute, state.filters.race, state.filters.subtype, state.filters.mechanic].filter(Boolean).join(' · ');
   const source = state.source === 'offline' ? 'Offline cache' : state.source === 'cache' ? 'Saved archive' : 'Live archive';
-  $('#result-meta').innerHTML = `<span><strong>${state.filtered.length.toLocaleString()}</strong> cards · TCG ${state.draft.releaseYear ?? currentYear()}${activeFilters ? ` · ${escape(activeFilters)}` : ''}</span><button data-action="retry" aria-label="Refresh archive from the card API">${source} ↻</button>`;
-  if (!state.filtered.length) { panel.innerHTML = `<div class="empty-state">${icon('search')}<h3>No cards found</h3><p>Try another name or clear your filters.</p><button data-action="reset-filters">Clear search & filters</button></div>`; return; }
+  $('#result-meta').innerHTML = `<span><strong>${state.filtered.length.toLocaleString()}</strong> cards · ${escape((state.draft.releaseBasis||'tcg').toUpperCase())} ${state.draft.releaseYear ?? currentYear()}${activeFilters ? ` · ${escape(activeFilters)}` : ''}</span><button data-action="retry" aria-label="Refresh archive from the card API">${source} ↻</button>`;
+  if (!state.filtered.length) { panel.innerHTML = `<div class="empty-state">${icon('search')}<h3>No cards found</h3><p>Try another name or clear your filters. Historical years use the first playable edition in your selected region. ${/slifer|obelisk|winged dragon of ra|god card/i.test(state.filters.query)?'The God Cards’ playable TCG editions arrived after 2002.':''}</p><button data-action="all-years">Search all years</button><button data-action="reset-filters">Clear search & filters</button></div>`; return; }
   panel.scrollTop = 0;
   panel.innerHTML = '<div class="virtual-grid" id="virtual-grid"></div>';
   panel.onscroll = () => { cancelAnimationFrame(gridFrame); gridFrame = requestAnimationFrame(renderGrid); };
@@ -168,7 +163,7 @@ function updateArchive() {
 }
 // All results remain in one continuous scroll range; no next-page controls.
 function filterCardsForUI() {
-  const filtered = filterCards(state.cards, { ...state.filters, year: state.draft.releaseYear });
+  const filtered = filterCards(state.cards, { ...state.filters, year: state.draft.releaseYear, releaseBasis:state.draft.releaseBasis });
   if (state.route !== 'decks') return filtered;
   return filtered.filter(card => (!Number.isInteger(duelDesign) || support(card).ok) && !/Token|Skill Card/.test(card.type) && (state.section === 'side' || isExtra(card) === (state.section === 'extra')));
 }
@@ -224,15 +219,16 @@ async function requestArchive(force = false) {
   })();
   return cardRequest;
 }
-function yearContextHTML(value) {
+function yearContextHTML(value,basis=state.draft.releaseBasis||'tcg') {
+  const region=basis==='earliest'?'earliest TCG / OCG':basis.toUpperCase();
   const year = normalizeReleaseYear(value) ?? currentYear();
-  const context = state.yearHighlights.get(year);
-  if (!context) return `<strong>${year} · TCG context</strong><p>Load the archive to see this year’s additions.</p>`;
+  const context = (basis==='tcg'?state.yearHighlights:buildYearHighlights(state.cards,basis)).get(year);
+  if (!context) return `<strong>${year} · ${region} context</strong><p>Load the archive to see this year’s additions.</p>`;
   const lines = [];
   if (context.introduced.length) lines.push(`New types / mechanics: ${context.introduced.join(', ')}.`);
   if (context.archetypes.length) lines.push(`New archetypes: ${context.archetypes.join(', ')}.`);
-  if (!lines.length) lines.push(`${context.newCards.toLocaleString()} new cards with recorded TCG dates. No new type or mechanic is recorded for this year.`);
-  return `<strong>New in ${year} · from TCG release data</strong><ul>${lines.map(line => `<li>${escape(line)}</li>`).join('')}</ul>`;
+  if (!lines.length) lines.push(`${context.newCards.toLocaleString()} new cards with recorded ${region} dates. No new type or mechanic is recorded for this year.`);
+  return `<strong>New in ${year} · from ${region} release data</strong><ul>${lines.map(line => `<li>${escape(line)}</li>`).join('')}</ul>`;
 }
 function showFilters() {
   const options = (values, selected, title) => `<option value="">${title}</option>${values.map(value => `<option ${selected === value ? 'selected' : ''} value="${escape(value)}">${escape(value)}</option>`).join('')}`;
@@ -250,7 +246,7 @@ function showFilters() {
       <label>Mechanic<select name="mechanic">${options(MECHANICS, state.filters.mechanic, 'All mechanics')}</select></label>
       <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([value, label]) => `<option value="${value}" ${state.filters.sort === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
     </div>
-    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-year">Playable through year · first TCG release<select id="release-year" name="year">${yearOptions}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Saved with this deck. Undated cards are excluded. Historical banlists and past card text are not applied.</p></div>
+    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-year">Playable through year<select id="release-year" name="year">${yearOptions}</select></label><label>Release region<select name="releaseBasis">${[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']].map(([v,l])=>`<option value="${v}" ${(state.draft.releaseBasis||'tcg')===v?'selected':''}>${l}</option>`).join('')}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Historical years require a verified playable release date in this region. Current includes undated cards. Collector promos, anime dates, past card text and banlists are excluded.</p></div>
     <div class="dialog-actions"><button type="button" data-action="reset-filters">Reset filters</button><button class="primary" type="submit">Show cards</button></div>
   </form>`, 'filter-body');
   const activatePanel = panel => {
@@ -267,11 +263,14 @@ function showFilters() {
     };
   });
   $('#release-year').value = selectedYear === null ? 'current' : String(selectedYear);
-  $('#release-year').onchange = event => { $('#year-context').innerHTML = yearContextHTML(event.target.value); };
+  const updateYearContext=()=>{ $('#year-context').innerHTML=yearContextHTML($('#release-year').value,modal.querySelector('[name=releaseBasis]').value); };
+  $('#release-year').onchange=updateYearContext;modal.querySelector('[name=releaseBasis]').onchange=updateYearContext;
   $('#filters-form').addEventListener('submit', event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.target)), year = normalizeReleaseYear(data.year);
+    const releaseBasis=data.releaseBasis; delete data.releaseBasis;
     delete data.year; Object.assign(state.filters, data);
+    if(state.draft.releaseBasis!==releaseBasis){state.draft.releaseBasis=releaseBasis;state.dirty=true;}
     if (state.draft.releaseYear !== year) { state.draft = { ...state.draft, releaseYear: year }; state.dirty = true; }
     closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive();
   });
@@ -299,7 +298,7 @@ function deckPickerOptions() {
 function renderDeck() {
   gridObserver?.disconnect();
   main.innerHTML = `<section class="screen deck-screen" aria-label="Deck Builder">
-    ${Number.isInteger(duelDesign) ? `<div class="duel-design-banner"><span>${duelDesign === 0 ? 'Your' : 'AI'} Solo deck · playable 2002 cards</span><button data-action="return-solo">Save & return to Solo</button></div>` : ''}
+    ${Number.isInteger(duelDesign) ? `<div class="duel-design-banner"><span>${duelDesign === 0 ? 'Your' : 'AI'} Solo deck · playable 2004 cards</span><button data-action="return-solo">Save & return to Solo</button></div>` : ''}
     <div class="deck-switch-row"><label class="sr-only" for="deck-picker">Current deck · switch saved decks</label><select id="deck-picker">${deckPickerOptions()}</select><button class="icon-button new-deck-button" data-action="new-deck" aria-label="Create a new deck">${icon('plus')}</button><button class="primary compact-save" data-action="save-deck">Save</button><button class="icon-button deck-options-button" data-action="deck-options" aria-label="Deck options: rename, saved decks, rules, import and export" aria-haspopup="dialog">⋯</button></div>
     <div class="deck-tabs" aria-label="Visible deck section">${SECTIONS.map(section => `<button data-section="${section}" aria-pressed="${state.section === section}">${sectionName(section)} <span data-section-count="${section}"></span></button>`).join('')}</div>
     <div class="deck-list deck-tray" aria-label="Scrollable two-row ${sectionName(state.section)} Deck" tabindex="0"></div>
@@ -461,7 +460,7 @@ let installPrompt;
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
 window.addEventListener('appinstalled', () => { installPrompt = null; toast('Duel Atlas added to your home screen.'); });
 function showMenu() {
-  showDialog(`${dialogHeader('Your companion')}<p>Duel Atlas · v${VERSION}<br>A Yu-Gi-Oh! archive, deck workshop, and Solo arena.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Playable 2002 Lab · local AI</small></span></button>`, 'menu-body');
+  showDialog(`${dialogHeader('Your companion')}<p>Duel Atlas · v${VERSION}<br>A Yu-Gi-Oh! archive, deck workshop, and Solo arena.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Playable 2004 Lab · local AI</small></span></button>`, 'menu-body');
 }
 function showInstall() {
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -476,13 +475,14 @@ function showSettings() {
   };
 }
 function showAbout() {
-  showDialog(`${dialogHeader('Built for the duel table')}<span class="pill gold">v${VERSION} · PLAYABLE TEST</span><p>Browse the full archive, build and back up decks, and play local Solo duels with the supported 2002 TCG pool.</p><p>Solo includes AI, phase tracking, supported card effects, response windows, and animations. Unfinished effects are excluded from duels; inspect Rules & cards in Solo for exact coverage and simplified rulings. Multiplayer connections are planned for a later phase.</p><p>Card data and official card images are supplied by <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. Card names, text, and images belong to their respective rights holders. This independent companion is not affiliated with Konami.</p><p>The Duel Atlas emblem is original artwork. No official artwork is used as app branding.</p><button data-action="close">Back to the workshop</button>`, 'about-body');
+  showDialog(`${dialogHeader('Built for the duel table')}<span class="pill gold">v${VERSION} · PLAYABLE TEST</span><p>Browse the full archive, build and back up decks, and play local Solo duels with the supported 2004 TCG pool.</p><p>Solo includes AI, phase tracking, supported card effects, response windows, and animations. The offline EDOPro core and card scripts handle the early card pool. Inspect Rules & cards in Solo for scope and credits. Multiplayer connections are planned for a later phase.</p><p>Card data and official card images are supplied by <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. Card names, text, and images belong to their respective rights holders. This independent companion is not affiliated with Konami.</p><p>Rules use <a href="https://github.com/n1xx1/ocgcore-wasm">ocgcore-wasm</a>, the <a href="https://github.com/edo9300/ygopro-core">EDOPro core</a> and <a href="https://github.com/ProjectIgnis/CardScripts">Project Ignis card scripts</a>. <a href="./assets/rules/THIRD_PARTY_NOTICES.md">Licenses and corresponding source</a>.</p><p>The Duel Atlas emblem is original artwork. No official artwork is used as app branding.</p><button data-action="close">Back to the workshop</button>`, 'about-body');
 }
 const actions = {
  'return-solo': () => { if (persistDeck()) { solo.setDesignedDeck(duelDesign, state.draft.id); duelDesign = null; navigate('solo'); } },
  close: closeDialog, filters: showFilters, retry: () => requestArchive(true),
  'clear-search': () => { state.filters.query = ''; $('#card-search').value = ''; updateArchive(); $('#card-search').focus(); },
- 'reset-filters': () => { Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
+ 'all-years': () => { state.draft.releaseYear=null; state.dirty=true; closeDialog(); if(state.route==='decks')renderDeck();else renderArchive(); },
+ 'reset-filters': () => { state.draft.releaseBasis='tcg';Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
  'add-card': () => {
     try {
       const section = $('#add-section').value;

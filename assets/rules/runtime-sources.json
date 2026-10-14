@@ -1,0 +1,19 @@
+{
+  "wrapper": "768af363e79bd5c646e9b59f4e74aaeac0625784",
+  "submodules": [
+    {
+      "path": "cpp/lua",
+      "mode": "160000",
+      "type": "commit",
+      "sha": "75ea9ccbea7c4886f30da147fb67b693b2624c26"
+    },
+    {
+      "path": "cpp/ygo",
+      "mode": "160000",
+      "type": "commit",
+      "sha": "8e5f4e4f0ab6b8ca750e8e1c91c1a58f407e3272"
+    }
+  ],
+  "package": "ocgcore-wasm@0.1.2",
+  "integrity": "sha512-Zgjx2xIf2RJf1gjvHGR8lvcLRfw54Cq48QFMOrOxtt3SeAf+/h58IbVNoYpZbK7O5O23GCwLeNqS4T6zODHpWA=="
+}

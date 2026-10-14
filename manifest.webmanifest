@@ -18,6 +18,6 @@
   "shortcuts": [
     { "name": "Card Archive", "url": "./#archive", "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }] },
     { "name": "Deck Builder", "url": "./#decks", "icons": [{ "src": "./assets/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Solo Duel · 2002 Lab", "url": "./#solo" }
+    { "name": "Solo Duel · 2004 Lab", "url": "./#solo" }
   ]
 }

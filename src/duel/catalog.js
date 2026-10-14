@@ -1,5 +1,6 @@
 // Capability registry: unregistered effects are never admitted as vanilla monsters.
-export const ERA_END = '2002-12-31';
+import { NATIVE_CARD_IDS } from './rules-manifest.js';
+export const ERA_END = '2004-12-31';
 export const NORMAL = 'Normal Monster';
 export const effects = {};
 const define = (names, rule) => names.split('|').forEach(name => effects[name] = rule);
@@ -88,11 +89,13 @@ define('Thunder Dragon', { op: 'thunderSearch' });
 define('Exodia the Forbidden One', { op: 'passive', exodia: true });
 
 export function support(card) {
-  if (!card?.tcgDate || card.tcgDate > ERA_END) return { ok: false, reason: 'Outside the verified 2002 TCG pool' };
+  if (!card?.tcgDate || card.tcgDate > ERA_END) return { ok: false, reason: 'Outside the verified 2004 TCG pool' };
   if (card.type === NORMAL && Number.isFinite(card.atk) && card.atk >= 0 && Number.isFinite(card.def) && card.def >= 0) return { ok: true, rule: { op: 'normal' } };
   if (card.type === 'Fusion Monster' && /^"[^"]+"(?: \+ "[^"]+")+\s*$/.test(card.desc?.split(/\r?\n/)[0]) && !card.desc?.split(/\r?\n/).slice(1).join('').trim()) return { ok: true, rule: { op: 'fusionBody', materials: [...card.desc.matchAll(/"([^"\\]+)"/g)].map(m => m[1]) } };
   if (Object.hasOwn(effects, card.name)) return { ok: true, rule: effects[card.name] };
-  return { ok: false, reason: 'Effect or summoning procedure not implemented yet' };
+  if (['Meteo the Matchless', 'Ulevo', '???'].includes(card.name)) return {ok:false,reason:'Collector prize / non-duel card'};
+  if (NATIVE_CARD_IDS.has(card.id)) return {ok:true,rule:{op:'native',materials:[...(card.desc?.split(/\r?\n/)[0]||'').matchAll(/"([^"]+)"/g)].map(m=>m[1])}};
+  return { ok: false, reason: 'No verified rule script in this offline pack' };
 }
 export const ruleFor = card => support(card).rule || {};
 export const supportedPool = cards => cards.filter(card => support(card).ok);

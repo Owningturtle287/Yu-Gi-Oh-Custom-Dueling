@@ -1,5 +1,5 @@
-import { cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
-export const VERSION = '0.1.7';
+import { dateForBasis, cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
+export const VERSION = '0.2.0';
 export const MECHANICS = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link'];
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
@@ -12,6 +12,7 @@ export function normalizeCard(card) {
   const fields = ['id', 'name', 'type', 'humanReadableCardType', 'frameType', 'desc', 'race', 'attribute', 'archetype', 'atk', 'def', 'level', 'linkval', 'linkmarkers', 'scale'];
   const normalized = Object.fromEntries(fields.filter(k => card[k] !== undefined).map(k => [k, card[k]]));
   normalized.tcgDate = cardReleaseDate(card);
+  normalized.ocgDate = cardReleaseDate(card, 'ocg');
   normalized.setNames = [...new Set(card.setNames || (card.card_sets || []).map(set => set.set_name))].filter(name => typeof name === 'string');
   normalized.card_images = (card.card_images || []).slice(0, 1).map(img => Object.fromEntries(['id', 'image_url', 'image_url_small'].filter(k => img[k] !== undefined).map(k => [k, img[k]])));
   return normalized;
@@ -20,7 +21,7 @@ export function filterCards(cards, filters = {}) {
   const query = (filters.query || '').trim().toLocaleLowerCase();
   const cutoff = releaseCutoff(filters.year);
   const result = cards.filter(card => {
-    if (!availableBy(card, cutoff)) return false;
+    if (!availableBy(card, cutoff, {basis:filters.releaseBasis||'tcg',allowUnknown:filters.year==null||filters.year==='current'})) return false;
     if (query && ![card.name, card.archetype, card.desc].some(v => String(v || '').toLocaleLowerCase().includes(query))) return false;
     if (filters.category === 'Monster' && !card.type.includes('Monster')) return false;
     if (filters.category === 'Spell' && card.type !== 'Spell Card') return false;
@@ -40,7 +41,7 @@ export function filterCards(cards, filters = {}) {
   });
 }
 export function createDeck(name = 'Untitled deck', id = globalThis.crypto.randomUUID()) {
-  return { id, name: validName(name), releaseYear: null, mechanics: allMechanics(), sections: { main: [], extra: [], side: [] }, updatedAt: new Date().toISOString() };
+  return { id, name: validName(name), releaseYear: null, releaseBasis: 'tcg', mechanics: allMechanics(), sections: { main: [], extra: [], side: [] }, updatedAt: new Date().toISOString() };
 }
 export function validName(name) {
   if (typeof name !== 'string' || !name.trim() || name.trim().length > 60) throw new Error('Use a deck name between 1 and 60 characters.');
@@ -51,7 +52,8 @@ export function addCard(deck, card, section = isExtra(card) ? 'extra' : 'main', 
   if (!SECTIONS.includes(section)) throw new Error('Choose Main, Extra, or Side Deck.');
   if (/Token|Skill Card/.test(card.type)) throw new Error('Tokens and Skill Cards are not supported in this deck builder.');
   const normalized = normalizeCard(card);
-  if (!preserveExisting && !availableBy(normalized, releaseCutoff(deck.releaseYear))) throw new Error(normalized.tcgDate ? `This card was first released in the TCG on ${normalized.tcgDate}, after this deck’s cutoff of ${releaseCutoff(deck.releaseYear)}.` : 'This card has no verified TCG release date. Refresh the archive before adding it.');
+  const basis=deck.releaseBasis||'tcg',date=dateForBasis(normalized,basis),region=basis==='earliest'?'TCG / OCG':basis.toUpperCase();
+  if (!preserveExisting && !availableBy(normalized, releaseCutoff(deck.releaseYear), {basis,allowUnknown:deck.releaseYear==null})) throw new Error(date ? `This card was first released in the ${region} on ${date}, after this deck’s cutoff of ${releaseCutoff(deck.releaseYear)}.` : `This card has no verified ${region} release date for this historical cutoff. Refresh the archive before adding it.`);
   const blocked = cardMechanics(card).filter(m => !deck.mechanics[m]);
   if (blocked.length) throw new Error(`${blocked.join(' / ')} is disabled in this deck’s Rules / Format.`);
   if (section === 'main' && isExtra(card)) throw new Error('This card belongs in the Extra Deck or Side Deck.');
@@ -76,7 +78,7 @@ export function deckWarnings(deck) {
   if (totals(deck).main < 40) warnings.push('Main Deck has fewer than 40 cards. You can still save while building.');
   const restricted = SECTIONS.flatMap(s => deck.sections[s]).filter(e => cardMechanics(e.card).some(m => !deck.mechanics[m]));
   if (restricted.length) warnings.push(`${restricted.length} card type${restricted.length > 1 ? 's use' : ' uses'} a disabled mechanic. Remove them or update Rules / Format.`);
-  const outsideYear = SECTIONS.flatMap(section => deck.sections[section]).filter(entry => !availableBy(entry.card, releaseCutoff(deck.releaseYear)));
+  const outsideYear = SECTIONS.flatMap(section => deck.sections[section]).filter(entry => !availableBy(entry.card, releaseCutoff(deck.releaseYear), {basis:deck.releaseBasis||'tcg'}));
   if (outsideYear.length) warnings.push(`${outsideYear.length} card type${outsideYear.length === 1 ? '' : 's'} outside the release-year cutoff or missing a TCG date. Review Release year in Filters.`);
   return warnings;
 }
@@ -99,6 +101,8 @@ export function validateDeck(value) {
   }
   next.mechanics = desiredMechanics; // Preserve warnings on decks saved before a mechanic was disabled.
   next.releaseYear = desiredYear;
+  if(value.releaseBasis && !['tcg','ocg','earliest'].includes(value.releaseBasis))throw new Error('Invalid release region.');
+  next.releaseBasis = value.releaseBasis || 'tcg';
   next.updatedAt = typeof value.updatedAt === 'string' ? value.updatedAt : deck.updatedAt;
   return next;
 }

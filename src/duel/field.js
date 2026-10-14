@@ -15,6 +15,7 @@ export const cardRotation = (side, position, zone='monsters') => (side===1?180:0
 
 export function makeFieldSelection(state, actions, {title='Choose a target',sourceUid,mandatory=false,side=0}={}) {
   if(!actions.length)return null;
+  if(state.choice?.stage && actions.some(action=>fieldLocation(state,action.target)))return {actions:actions.filter(action=>fieldLocation(state,action.target)),title,sourceUid:sourceUid||state.choice.trigger?.uid,key:'target',selected:state.choice.selected||[],mandatory,side,native:true};
   let key;
   if(actions.every(action=>Object.hasOwn(action,'target')) && actions.every(action=>action.target===null&&action.type==='ATTACK'||fieldLocation(state,action.target)))key='target';
   else if(actions.every(action=>action.tribute&&fieldLocation(state,action.tribute)))key='tribute';
@@ -60,7 +61,7 @@ export function activityCue(previous, next, action) {
 }
 export function cardActivity(state, uid, cue, selection) {
   const candidates=fieldCandidates(selection);
-  if(candidates.selected.has(uid))return {role:'selected',label:'Tribute selected'};
+  if(candidates.selected.has(uid))return {role:'selected',label:'Selected'};
   if(candidates.uids.has(uid))return {role:'eligible',label:selection.sourceUid===uid?'Source / target':selection.key==='tributes'||selection.key==='tribute'?'Choose tribute':'Choose target'};
   if(selection?.sourceUid===uid)return {role:'source',label:'Choosing target'};
   if(state.choice?.trigger?.uid===uid)return {role:'source',label:'Effect'};

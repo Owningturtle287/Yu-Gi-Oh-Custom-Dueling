@@ -1,0 +1,99 @@
+{
+  "eraEnd": "2004-12-31",
+  "scriptsRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+  "databaseRevision": "70e53af2dc6c5cecebd48ff4f945c560625c99a2",
+  "apiSnapshotCards": 14607,
+  "earlyCards": 2029,
+  "supportedCards": 2026,
+  "scripts": 1464,
+  "files": [
+    {
+      "path": "scripts-00.json",
+      "sha256": "14bdf568f8bb2bda958bb064a798d346767d257d7bcc9f6e8633d6b22466ae68"
+    },
+    {
+      "path": "scripts-01.json",
+      "sha256": "05f8dd965ee619d479d4051cfe758793b56319eee5b1752957a34c94962d8fb6"
+    },
+    {
+      "path": "scripts-02.json",
+      "sha256": "174db462e958bb843044eda7aa801b40a58d6219b1360d7fc32a296797a5d2c5"
+    },
+    {
+      "path": "scripts-03.json",
+      "sha256": "e387cba6587a2170243a04439d309eaf414e03cdf7c1aefde39c7bd1dcf2f672"
+    },
+    {
+      "path": "scripts-04.json",
+      "sha256": "d28634b15bf29cb71d9408ee3ef64fa697b060513427dadd6dd713b4755c5549"
+    },
+    {
+      "path": "scripts-05.json",
+      "sha256": "bc313e9437319da59ee9a73a7f77733c4ca4424a05daf3eae90a60c92e42fa89"
+    },
+    {
+      "path": "scripts-06.json",
+      "sha256": "2e3dd98d61938c47af496a0075e32716a1ad6eaeeffdbe8daef75fd3064fd216"
+    },
+    {
+      "path": "scripts-07.json",
+      "sha256": "4f7a23fc059027570daf93ce04ed090111caf55ba4b9038130d4be4493868e02"
+    },
+    {
+      "path": "scripts-08.json",
+      "sha256": "e972a2ff6f7cfa1dc2caff9477c7aa8f63eafb32139ca7ad45b34509d08c1b09"
+    },
+    {
+      "path": "scripts-09.json",
+      "sha256": "3b1908ee747e56a9f21b8fb733f31a71febd4f8bdbaa762bc0e2ef676e4c32d5"
+    },
+    {
+      "path": "scripts-10.json",
+      "sha256": "ae8366d4d38fb79d85e7e7519666a46d3adaa91287df5d9e3baef0876c23b339"
+    },
+    {
+      "path": "scripts-11.json",
+      "sha256": "42c7aef09bb814784a5fe214e8fe5032c03f7c67463d47b068dd80d96510c44a"
+    },
+    {
+      "path": "scripts-12.json",
+      "sha256": "a2bb8129157c5fe87add6c01f540f745ed5d903f170eea290712b289785a5c8b"
+    },
+    {
+      "path": "scripts-13.json",
+      "sha256": "cf774882efc7eba1a4556d12d09aa6428b7f4e834aa3c00ddb17fe340ab44965"
+    },
+    {
+      "path": "cards-00.json",
+      "sha256": "f2deaf442c85e9e88d6f4849b830fed1c2f54e2b639e9bec67b92e1bcd547cb7"
+    },
+    {
+      "path": "cards-01.json",
+      "sha256": "b5cc1eda6fd4f262702eb17280bb6c91597e9433c001ba33047dfa8611b0e821"
+    },
+    {
+      "path": "cards-02.json",
+      "sha256": "6c653f9b14118bbfc149e7da619474d35a402972fed78b96098b71de27e5bda9"
+    },
+    {
+      "path": "cards-03.json",
+      "sha256": "e7c0823a18e5a0d9b0c00a70e04efaff9718706c326e899459cee072bfbff380"
+    },
+    {
+      "path": "cards-04.json",
+      "sha256": "4dd43b21ecee4f65bf7fdcd0948894a86ac3943518471bab6fdc9ffaaaba3548"
+    },
+    {
+      "path": "cards-05.json",
+      "sha256": "ec2a3bbd74faffbda04907ccc089a9d25b3a639b5918d95e3d57bb1e82ea73a2"
+    },
+    {
+      "path": "cards-06.json",
+      "sha256": "e80e2b7a67524b46cda04fd8fe963b3213dba3fbcedd5eb1d9a7f613f7aa28a4"
+    },
+    {
+      "path": "cards-07.json",
+      "sha256": "fbf6e19385503339841287cbd4bcec8b550e5915418e348fb8fc942e4601ff8d"
+    }
+  ]
+}

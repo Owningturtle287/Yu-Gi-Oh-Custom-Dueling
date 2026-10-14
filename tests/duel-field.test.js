@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Window } from 'happy-dom';
 import { createDeck } from '../src/core.js';
-import { createMatch } from '../src/duel/engine.js';
+import * as legacyEngine from '../src/duel/engine.js';
+const { createMatch }=legacyEngine;
 import { ruleFor } from '../src/duel/catalog.js';
 import { defaultSide } from '../src/duel/decks.js';
 import { createSoloController } from '../src/duel/ui.js';
@@ -74,7 +75,7 @@ async function rig({width=1024,height=768}={}){
   const closeDialog=()=>modal.removeAttribute('open');
   const showDialog=(content,className='')=>{modal.innerHTML=`<div class="dialog-body ${className}">${content}</div>`;modal.setAttribute('open','');};
   const closeEvent=event=>{if(event.target.closest('[data-action="close"]'))closeDialog();};window.document.addEventListener('click',closeEvent);
-  const controller=createSoloController({main,modal,getCards:()=>[...normals,mst,trap,bug,field,high],getDecks:()=>[deck],getStatus:()=>'ready',showDialog,dialogHeader:title=>`<h2>${title}</h2><button data-action="close">Close</button>`,closeDialog,toast:message=>messages.push(message),onDesign:()=>{},onKeepDeck:()=>{}});
+  const controller=createSoloController({engine:legacyEngine,main,modal,getCards:()=>[...normals,mst,trap,bug,field,high],getDecks:()=>[deck],getStatus:()=>'ready',showDialog,dialogHeader:title=>`<h2>${title}</h2><button data-action="close">Close</button>`,closeDialog,toast:message=>messages.push(message),onDesign:()=>{},onKeepDeck:()=>{}});
   controller.enter();main.querySelector('[data-duel="start"]').click();
   await waitFor(()=>main.querySelector('.duel-arena')?.dataset.moving==='false'&&(height>width||controller.getMatch()?.phase==='main1'&&!controller.getMatch().window));
   return {window,main,modal,controller,messages,$:selector=>window.document.querySelector(selector),close(){controller.destroy();window.close();}};
