@@ -5,7 +5,7 @@ import { chooseAIAction } from './ai.js';
 import { AI_SPEEDS, decisionDelay, automaticOpeningAction } from './flow.js';
 import { CARD_BACK, planMotion, captureArena, createMotionPlayer } from './motion.js';
 import { groupedLog, logKindLabel } from './log.js';
-import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, selectionLayer, activityLayer, quickCardActions, activityCue, cardActivity } from './field.js';
+import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, quickCardActions, activityCue, cardActivity } from './field.js';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
 const option=(value,label,selected)=>`<option value="${escape(value)}" ${value===selected?'selected':''}>${escape(label)}</option>`;
@@ -18,10 +18,17 @@ const image=card=>{
 };
 
 export function createSoloController({main,modal,getCards,getDecks,getStatus,showDialog,dialogHeader,closeDialog,toast,onDesign,onKeepDeck}) {
-  let config={sides:[defaultSide(),defaultSide()],difficulty:'normal',aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',setsError='',selection=[],lastPaint=0,fieldLayer='monsters',moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[];
+  let config={sides:[defaultSide(),defaultSide()],difficulty:'normal',aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',setsError='',selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[];
   const motion=createMotionPlayer(main), reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const isPortrait=()=>window.innerHeight>window.innerWidth;
+  let portrait=isPortrait();
   const cancelMotion=()=>motion.cancel();
-  window.addEventListener('resize',cancelMotion);
+  const resize=()=>{
+    motion.cancel();
+    const changed=portrait!==isPortrait();portrait=isPortrait();
+    if(active&&match&&changed){clearTimeout(timer);if(portrait)closeDialog();render();}
+  };
+  window.addEventListener('resize',resize);
   reducedMotion.addEventListener?.('change',cancelMotion);
   try {
     const saved=JSON.parse(localStorage.getItem(CONFIG)||'null');
@@ -34,7 +41,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   const selectedDeck=side=>getDecks().find(deck=>deck.id===config.sides[side].deckId);
   const candidateSets=side=>eligibleSets(getCards(),sets,config.sides[side]);
   const header=title=>dialogHeader(escape(title));
-  function render(){if(!active)return;if(match)renderArena();else renderSetup();}
+  function render(){if(!active)return;document.documentElement.classList.toggle('duel-playing',!!match);if(match)renderArena();else renderSetup();}
   async function requestSets(force=false){
     if(setsStatus==='loading')return;
     setsStatus='loading';render();
@@ -60,7 +67,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
          <div class="solo-settings-grid"><label>Goes first<select id="solo-first">${[['coin','Coin toss'],['you','You'],['ai','AI']].map(([v,l])=>option(v,l,config.first)).join('')}</select></label><label>Life Points<select id="solo-lp">${[8000,4000].map(n=>option(n,String(n),config.lp)).join('')}</select></label></div>
          <label class="solo-checkbox"><input id="solo-animations" type="checkbox" ${config.animations?'checked':''}> Duel animations</label><p class="solo-note">Your Draw and Standby Phases advance automatically to Main 1. The first player still skips the first draw and Battle Phase. Hand limit: six.</p>`}
       </div>
-      <div class="solo-launch"><p role="status">${ready?'Early engine · supported 2002 TCG cards · no banlist':getStatus()==='error'?'The archive needs a connection. Open Archive to retry.':'Preparing card data…'}</p><button class="primary" data-duel="start" ${!ready?'disabled':''}>Start duel <span aria-hidden="true">→</span></button></div>
+      <div class="solo-launch"><p role="status">${ready?'Duel in landscape · supported 2002 TCG cards · no banlist':getStatus()==='error'?'The archive needs a connection. Open Archive to retry.':'Preparing card data…'}</p><button class="primary" data-duel="start" ${!ready?'disabled':''}>Start duel <span aria-hidden="true">→</span></button></div>
     </section>`;
     // Assign values explicitly as well as option attributes, including after a
     // saved deck is created while this screen is unmounted.
@@ -102,7 +109,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       if(issues.length){showDialog(`${header('Decks need a quick review')}<div class="duel-choice-list" aria-label="Deck issues">${issues.map(issue=>`<p class="support-row">${escape(issue)}</p>`).join('')}</div><button data-action="close">Back to setup</button>`,'duel-list-body');return;}
       const first=config.first==='you'?0:config.first==='ai'?1:seed%2;
       const next=createMatch(decks.map(deck=>({...expandDeck(deck,getCards()),name:deck.name})),{seed,first,lp:config.lp});
-      next.deckBackups=decks;lastPaint=0;
+      next.deckBackups=decks;
       await present(null,next);
     }catch(error){toast(error.message,true);}
   }
@@ -126,7 +133,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(!actions.length){toast('That action is no longer available.');render();return;}
     motion.cancel();
     const session=!skipField&&makeFieldSelection(match,actions,{title,sourceUid:actions[0]?.uid,mandatory:!!match.choice});
-    if(session){clearTimeout(timer);fieldSelection=session;fieldLayer=selectionLayer(match,session)||fieldLayer;closeDialog();render();focusFieldTarget();return;}
+    if(session){clearTimeout(timer);fieldSelection=session;closeDialog();render();focusFieldTarget();return;}
     if(actions.length===1){step(actions[0]);return;}
     selection=actions;
     showDialog(`${header(title)}<p class="solo-note">Choose a card from the relevant pile. Field targets are selected directly on the board.</p><div class="duel-choice-list" aria-label="Card choices">${actions.map((action,index)=>`<button data-duel-choice="${index}"><strong>${escape(actionDetail(action))}</strong></button>`).join('')}</div><button data-action="close">Cancel</button>`,'duel-list-body');
@@ -162,40 +169,45 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const hidden=side===1&&card&&!card.faceUp,available=card&&arenaActions.some(action=>action.uid===card.uid),activity=card?cardActivity(match,card.uid,cue,fieldSelection):{role:'',label:''};
     const label=card?(hidden?`Opponent’s face-down card, zone ${index+1}`:card.card.name):`${zone==='monsters'?'Monster':'Spell / Trap'} Zone ${index+1}`;
     const values=card&&zone==='monsters'?(hidden?{atk:'?',def:'?'}:card.faceUp?stats(match,card):{atk:card.card.atk,def:card.card.def}):null;
-    return `<article class="duel-zone-shell ${zone==='monsters'?'monster-slot':'spell-slot'}" data-role="${activity.role}"><button class="duel-zone ${card?'occupied':''} ${card&&!card.faceUp?'face-down':''} ${card?.position==='defense'?'defense':''} ${available?'actionable':''}" ${card?`data-duel-card="${card.uid}" data-motion-uid="${card.uid}"`:''} data-role="${activity.role}" data-motion-zone="${side}:${zone}:${index}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${escape(label)}${card?.position==='defense'?' · Defense Position':''}${values?` · ATK ${values.atk} DEF ${values.def}`:''}">${card?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,card.position,zone)}deg">${hidden||!card.faceUp?cardBack():image(card.card)}</span>${activityHTML(card.uid)}`:'<span class="duel-empty-mark" aria-hidden="true">◇</span>'}</button>${values?`<div class="duel-card-stats" aria-hidden="true"><span>A <b>${values.atk}</b></span><span>D <b>${values.def}</b></span></div>`:'<span class="duel-slot-label" aria-hidden="true">SPELL / TRAP</span>'}${card?`<div class="duel-inline-actions">${quickButtons(card.uid)}</div>`:''}</article>`;
+    return `<article class="duel-zone-shell ${zone==='monsters'?'monster-slot':'spell-slot'}" data-role="${activity.role}"><div class="duel-zone-surface"><button class="duel-zone ${card?'occupied':''} ${card&&!card.faceUp?'face-down':''} ${card?.position==='defense'?'defense':''} ${available?'actionable':''}" ${card?`data-duel-card="${card.uid}" data-motion-uid="${card.uid}"`:''} data-role="${activity.role}" data-motion-zone="${side}:${zone}:${index}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${escape(label)}${card?.position==='defense'?' · Defense Position':''}${values?` · ATK ${values.atk} DEF ${values.def}`:''}">${card?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,card.position,zone)}deg">${hidden||!card.faceUp?cardBack():image(card.card)}</span>${activityHTML(card.uid)}`:'<span class="duel-empty-mark" aria-hidden="true">◇</span>'}</button>${card?`<div class="duel-inline-actions">${quickButtons(card.uid)}</div>`:''}</div>${values?`<div class="duel-card-stats" aria-hidden="true"><span>A <b>${values.atk}</b></span><span>D <b>${values.def}</b></span></div>`:'<span class="duel-slot-label" aria-hidden="true">SPELL / TRAP</span>'}</article>`;
+  }
+  function renderLife(side){
+    const player=match.players[side],direct=fieldCandidates(fieldSelection).directSide===side;
+    const hit=match.pending?.kind==='attack'&&!match.pending.target&&match.pending.side!==side||cue?.directSide===side;
+    const percent=Math.max(0,Math.min(100,player.lp/config.lp*100));
+    return `<button class="duel-life ${side?'opponent-life':'player-life'}" data-duelist="${side}" data-field-lp="${side}" tabindex="${direct?0:-1}" aria-disabled="${!direct}" data-motion-zone="${side}:lp" data-role="${direct?'eligible':hit?'target':''}" aria-label="${direct?'Legal direct attack target: ':''}${side?'AI':'Your'} Life Points: ${Math.max(0,player.lp)}"><span>${side?'AI':'YOU'} <small>LP</small></span><strong data-lp-value="${side}">${Math.max(0,player.lp).toLocaleString()}</strong><i class="duel-life-meter" aria-hidden="true"><i style="width:${percent}%"></i></i>${direct?'<em>Tap to attack</em>':''}</button>`;
   }
   function renderSideMeta(side){
-    const player=match.players[side],candidates=fieldCandidates(fieldSelection),direct=candidates.directSide===side;
-    const hit=match.pending?.kind==='attack'&&!match.pending.target&&match.pending.side!==side||cue?.directSide===side;
+    const player=match.players[side];
     const pileActivity=[...player.grave,...player.banished].map(card=>cardActivity(match,card.uid,cue,fieldSelection)).find(activity=>['source','target'].includes(activity.role));
     const field=player.field,hidden=side===1&&field&&!field.faceUp,activity=field?cardActivity(match,field.uid,cue,fieldSelection):{role:''};
-    return `<div class="duel-side-meta"><button class="duel-pile-button" data-role="${pileActivity?.role||''}" data-duel-pile="${side}" data-motion-zone="${side}:piles" aria-label="${side?'AI':'Your'} deck and Graveyard"><span class="duel-deck-stack" data-motion-zone="${side}:deck" aria-hidden="true">${cardBack()}</span><span><b>${player.deck.length} deck</b><small data-motion-zone="${side}:grave">${player.grave.length} GY</small></span></button><button class="duel-life" data-field-lp="${side}" tabindex="${direct?0:-1}" aria-disabled="${!direct}" data-motion-zone="${side}:lp" data-role="${direct?'eligible':hit?'target':''}" aria-label="${direct?'Legal direct attack target: ':''}${side?'AI':'Your'} Life Points: ${Math.max(0,player.lp)}"><span>${side?'AI':'YOU'} <small>LP</small></span><strong data-lp-value="${side}">${Math.max(0,player.lp).toLocaleString()}</strong>${direct?'<em>Tap to attack</em>':''}</button><div class="duel-field-slot" data-role="${activity.role}"><button class="duel-field-zone ${field?'occupied':''}" ${field?`data-duel-card="${field.uid}" data-motion-uid="${field.uid}"`:''} data-motion-zone="${side}:field" data-role="${activity.role}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${field?hidden?'Opponent’s Set Field Spell':escape(field.card.name):'Empty Field Spell zone'}">${field?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,null,'field')}deg">${hidden||!field.faceUp?cardBack():image(field.card)}</span>`:'<span>Field</span>'}</button>${field?`<div class="duel-inline-actions">${quickButtons(field.uid)}</div>`:''}</div></div>`;
+    return `<div class="duel-board-heading"><h2>${side?'AI':'YOU'}</h2>${side?`<div class="duel-opponent-hand" data-motion-zone="1:hand" aria-label="AI hand: ${player.hand.length} hidden cards"><div aria-hidden="true">${Array.from({length:Math.min(player.hand.length,10)},()=>cardBack()).join('')}</div><span>${player.hand.length}</span></div>`:'<span class="duel-board-note">YOUR FIELD</span>'}<button class="duel-pile-button" data-role="${pileActivity?.role||''}" data-duel-pile="${side}" data-motion-zone="${side}:piles" aria-label="${side?'AI':'Your'} deck and Graveyard"><span class="duel-deck-stack" data-motion-zone="${side}:deck" aria-hidden="true">${cardBack()}</span><span><b>${player.deck.length} deck</b><small data-motion-zone="${side}:grave">${player.grave.length} GY</small></span></button><div class="duel-field-slot" data-role="${activity.role}"><button class="duel-field-zone ${field?'occupied':''}" ${field?`data-duel-card="${field.uid}" data-motion-uid="${field.uid}"`:''} data-motion-zone="${side}:field" data-role="${activity.role}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${field?hidden?'Opponent’s Set Field Spell':escape(field.card.name):'Empty Field Spell zone'}">${field?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,null,'field')}deg">${hidden||!field.faceUp?cardBack():image(field.card)}</span>`:'<span>Field</span>'}</button>${field?`<div class="duel-inline-actions">${quickButtons(field.uid)}</div>`:''}</div></div>`;
   }
   function renderArena(){
     const handScroll=main.querySelector('.duel-hand')?.scrollLeft||0, previousPhase=main.querySelector('.duel-phases')?.dataset.phase;
     clearTimeout(timer);
-    if(match.choice?.side===0&&!fieldSelection){fieldSelection=makeFieldSelection(match,match.choice.options,{title:match.choice.title,sourceUid:match.choice.trigger?.uid,mandatory:true});if(fieldSelection)fieldLayer=selectionLayer(match,fieldSelection)||fieldLayer;}
-    const player=match.players[0],foe=match.players[1],actions=legalActions(match,0),aiActions=legalActions(match,1),needsChoice=match.choice?.side===0,respond=match.window?.priority===0,canPass=actions.some(a=>a.type==='PASS'),canNext=actions.some(a=>a.type==='NEXT'),canEnd=actions.some(a=>a.type==='END'),discard=actions.some(a=>a.type==='DISCARD'),won=match.winner!==null;
+    if(match.choice?.side===0&&!fieldSelection)fieldSelection=makeFieldSelection(match,match.choice.options,{title:match.choice.title,sourceUid:match.choice.trigger?.uid,mandatory:true});
+    const player=match.players[0],foe=match.players[1],actions=legalActions(match,0),aiActions=legalActions(match,1),needsChoice=match.choice?.side===0,respond=match.window?.priority===0,canPass=actions.some(a=>a.type==='PASS'),canNext=actions.some(a=>a.type==='NEXT'),canEnd=actions.some(a=>a.type==='END'),discard=actions.some(a=>a.type==='DISCARD'),won=match.winner!==null,blocked=isPortrait();
     arenaActions=actions;
     const busy=aiActions.length>0,candidates=fieldCandidates(fieldSelection);
     const prompt=won?match.winner==='draw'?'A hard-fought draw.':match.winner===0?'Victory. Your strategy paid off.':'Defeat. A new strategy awaits.':fieldSelection?`${fieldSelection.title} · ${fieldSelection.key==='tributes'?`choose ${candidates.remaining} more tribute${candidates.remaining===1?'':'s'}`:'tap a highlighted card'+(candidates.directSide!==null?' or the AI’s LP':'')}.`:needsChoice?match.choice.title:discard?'Hand limit: choose a card to discard until six remain.':respond?match.chain.length?`Respond to ${match.chain.at(-1).card.name}, or pass.`:match.pending?.kind==='attack'?'An attack is incoming. Respond or pass.':'Response window · play a fast effect or pass.':busy?'AI is considering its next move…':mainPhaseLabel(match);
     const summary=cue?.source?`${cue.label}: ${visibleName(cue.source)}`:match.lastEvent?.message||'';
     const phases=`<ol class="duel-phases" data-phase="${match.phase}" data-changed="${previousPhase!==match.phase}" aria-label="Phase tracker">${PHASES.map((phase,index)=>`<li ${match.phase===phase?'aria-current="step"':''} class="${index<PHASES.indexOf(match.phase)?'complete':''}"><span>${['D','S','M1','B','M2','E'][index]}</span><small>${PHASE_LABELS[phase]}</small></li>`).join('')}</ol>`;
-    main.innerHTML=`<section class="screen duel-arena ${config.animations&&!reducedMotion.matches?'animated':''}" data-field-layer="${fieldLayer}" data-selecting="${!!fieldSelection}" aria-label="Solo Duel arena">
-      <div class="duel-toolbar"><button data-duel="duel-menu" aria-label="Duel settings, log, and surrender">Turn ${match.turn}<span>${match.active===0?'YOUR TURN':'AI TURN'} · ⋯</span></button>${phases}</div>
-      <div class="duel-table" aria-label="Duel field">
-        <div class="duel-opponent-hand" data-motion-zone="1:hand" aria-label="AI hand: ${foe.hand.length} hidden cards"><span>AI · ${foe.hand.length}</span><div aria-hidden="true">${Array.from({length:Math.min(foe.hand.length,10)},()=>cardBack()).join('')}</div></div>
+    main.innerHTML=`<div class="duel-session">
+      <section class="duel-orientation" ${blocked?'':'hidden'} aria-label="Landscape required" role="status"><div class="duel-rotate-icon" aria-hidden="true">↻<i></i></div><div class="eyebrow">A SEAT AT THE TABLE</div><h1>Turn your phone sideways</h1><p>Dueling uses landscape so every zone has room.<br>Your match is paused. Rotate to continue.</p><button data-route="home">Back to Home</button></section>
+      <section class="screen duel-arena ${config.animations&&!reducedMotion.matches?'animated':''}" ${blocked?'hidden inert':''} data-orientation-paused="${blocked}" data-selecting="${!!fieldSelection}" aria-label="Solo Duel arena">
+      <header class="duel-hud"><button class="duel-exit" data-route="home" aria-label="Back to Home; pause this duel">←</button>${renderLife(1)}<div class="duel-toolbar"><div class="duel-turn">TURN ${match.turn} <span>${match.active===0?'YOUR TURN':'AI TURN'}</span></div>${phases}</div>${renderLife(0)}<button class="duel-menu-button" data-duel="duel-menu" aria-label="Duel settings, log, and surrender">•••</button></header>
+      <div class="duel-table" aria-label="Duel field · all Monster and Spell/Trap zones visible">
         <section class="duel-side opponent-side" data-field-side="1" aria-label="AI side of the field">${renderSideMeta(1)}<div class="duel-board opponent" aria-label="Opponent field"><div class="duel-zone-row backrow-zones" data-motion-zone="1:spells">${foe.spells.map((c,i)=>renderZone(c,1,'spells',i)).join('')}</div><div class="duel-zone-row monster-zones" data-motion-zone="1:monsters">${foe.monsters.map((c,i)=>renderZone(c,1,'monsters',i)).join('')}</div></div></section>
-        <div class="duel-center-line"><div class="duel-field-tabs" aria-label="Visible field rows"><button data-duel-layer="monsters" ${fieldSelection&&selectionLayer(match,fieldSelection)&&selectionLayer(match,fieldSelection)!=='monsters'?'disabled':''} aria-pressed="${fieldLayer==='monsters'}">Monsters <span>${player.monsters.filter(Boolean).length} / ${foe.monsters.filter(Boolean).length}</span></button><button data-duel-layer="backrow" ${fieldSelection&&selectionLayer(match,fieldSelection)&&selectionLayer(match,fieldSelection)!=='backrow'?'disabled':''} aria-pressed="${fieldLayer==='backrow'}">Spells & traps <span>${player.spells.filter(Boolean).length} / ${foe.spells.filter(Boolean).length}</span></button></div><span class="duel-divider-mark" aria-hidden="true">◇</span></div>
-        <section class="duel-side player-side" data-field-side="0" aria-label="Your side of the field"><div class="duel-board yours" aria-label="Your field"><div class="duel-zone-row monster-zones" data-motion-zone="0:monsters">${player.monsters.map((c,i)=>renderZone(c,0,'monsters',i)).join('')}</div><div class="duel-zone-row backrow-zones" data-motion-zone="0:spells">${player.spells.map((c,i)=>renderZone(c,0,'spells',i)).join('')}</div></div>${renderSideMeta(0)}</section>
+        <div class="duel-center-line" aria-hidden="true"><span>◇</span></div>
+        <section class="duel-side player-side" data-field-side="0" aria-label="Your side of the field">${renderSideMeta(0)}<div class="duel-board yours" aria-label="Your field"><div class="duel-zone-row monster-zones" data-motion-zone="0:monsters">${player.monsters.map((c,i)=>renderZone(c,0,'monsters',i)).join('')}</div><div class="duel-zone-row backrow-zones" data-motion-zone="0:spells">${player.spells.map((c,i)=>renderZone(c,0,'spells',i)).join('')}</div></div></section>
       </div>
-      <div class="duel-hand-label"><span>YOUR HAND · ${player.hand.length}</span><span>${match.chain.length?`CHAIN ${match.chain.length}`:'Attack / Effect buttons appear when legal'}</span></div>
-      <div class="duel-hand" data-motion-zone="0:hand" aria-label="Your hand · horizontally scrollable cards" tabindex="0">${player.hand.map(card=>{const activity=cardActivity(match,card.uid,cue,fieldSelection);return `<article class="duel-hand-shell" data-role="${activity.role}"><button class="duel-hand-card ${actions.some(a=>a.uid===card.uid)?'actionable':''}" data-duel-card="${card.uid}" data-motion-uid="${card.uid}" data-role="${activity.role}" aria-label="${escape(card.card.name)}${activity.label?' · '+activity.label:''}">${image(card.card)}<strong>${escape(card.card.name)}</strong></button>${activityHTML(card.uid)}<div class="duel-inline-actions">${quickButtons(card.uid)}</div></article>`;}).join('')||'<p class="solo-note">Your hand is empty.</p>'}</div>
-      <div class="duel-status-row"><div class="duel-state-copy"><p class="duel-prompt" role="status" aria-live="polite">${escape(prompt)}</p><p class="duel-event-line">${escape(summary)}</p></div><button data-duel="log" class="duel-log-open" aria-label="Open expanded duel log">Log <span aria-hidden="true">↗</span></button></div>
-      <div class="duel-controls">${won?'<button class="primary" data-duel="rematch">New duel</button><button data-duel="duel-menu">Match details</button>':fieldSelection?`<button class="primary" data-duel="inspect-source" ${!fieldSelection.sourceUid?'disabled':''}>View effect / card</button>${fieldSelection.mandatory?'<button data-duel="log">Duel log</button>':'<button data-duel="cancel-target">Cancel selection</button>'}`:needsChoice||discard?`<button class="primary" data-duel="resolve-choice">${discard?'Choose discard':'Choose from pile'}</button><button data-duel="log">Duel log</button>`:respond?`<button class="primary" data-duel="respond" ${actions.length<2?'disabled':''}>Show responses (${Math.max(0,new Set(actions.filter(a=>a.uid).map(a=>a.uid)).size)})</button><button data-duel="pass" ${!canPass?'disabled':''}>Pass</button>`:`<button class="primary" data-duel="next" ${!canNext?'disabled':''}>${busy?'AI turn…':match.phase==='end'?'Next turn':`Next: ${nextLabel(match)}`}</button><button data-duel="end" ${!canEnd?'disabled':''}>End turn</button>`}</div>
-    </section>`;
+      <footer class="duel-dock"><div class="duel-hand-area"><div class="duel-hand-label"><span>YOUR HAND · ${player.hand.length}</span><span>${match.chain.length?`CHAIN ${match.chain.length}`:'Tap a card to inspect / play'}</span></div>
+      <div class="duel-hand" data-motion-zone="0:hand" aria-label="Your hand · horizontally scrollable cards" tabindex="0">${player.hand.map(card=>{const activity=cardActivity(match,card.uid,cue,fieldSelection);return `<article class="duel-hand-shell" data-role="${activity.role}"><button class="duel-hand-card ${actions.some(a=>a.uid===card.uid)?'actionable':''}" data-duel-card="${card.uid}" data-motion-uid="${card.uid}" data-role="${activity.role}" aria-label="${escape(card.card.name)}${activity.label?' · '+activity.label:''}">${image(card.card)}<strong>${escape(card.card.name)}</strong></button>${activityHTML(card.uid)}<div class="duel-inline-actions">${quickButtons(card.uid)}</div></article>`;}).join('')||'<p class="solo-note">Your hand is empty.</p>'}</div></div>
+      <div class="duel-action-area"><div class="duel-status-row"><div class="duel-state-copy"><p class="duel-prompt" role="status" aria-live="polite">${escape(prompt)}</p><p class="duel-event-line">${escape(summary)}</p></div></div><div class="duel-command-row">
+      <div class="duel-controls">${won?'<button class="primary" data-duel="rematch">New duel</button><button data-duel="duel-menu">Match details</button>':fieldSelection?`<button class="primary" data-duel="inspect-source" ${!fieldSelection.sourceUid?'disabled':''}>View effect / card</button>${fieldSelection.mandatory?'<button data-duel="log">Duel log</button>':'<button data-duel="cancel-target">Cancel selection</button>'}`:needsChoice||discard?`<button class="primary" data-duel="resolve-choice">${discard?'Choose discard':'Choose from pile'}</button><button data-duel="log">Duel log</button>`:respond?`<button class="primary" data-duel="respond" ${actions.length<2?'disabled':''}>Responses (${Math.max(0,new Set(actions.filter(a=>a.uid).map(a=>a.uid)).size)})</button><button data-duel="pass" ${!canPass?'disabled':''}>Pass</button>`:`<button class="primary" data-duel="next" ${!canNext?'disabled':''}>${busy?'AI turn…':match.phase==='end'?'Next turn':`Next: ${nextLabel(match)}`}</button><button data-duel="end" ${!canEnd?'disabled':''}>End turn</button>`}</div><button data-duel="log" class="duel-log-open" aria-label="Open expanded duel log">Log</button></div></div></footer>
+      </section></div>`;
     main.querySelector('.duel-hand').scrollLeft=handScroll;
-    lastPaint=match.lastEvent?.id||0;
     setMoving(moving);schedule();
   }
   function setMoving(value){
@@ -208,7 +220,6 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     clearTimeout(timer);const before=captureArena(main), motions=planMotion(previous,next,action), token=++presentation;
     const nextCue=activityCue(previous,next,action);
     cue=nextCue||(previous?.phase===next.phase?cue:null);
-    if(nextCue)fieldLayer=activityLayer(previous,next,nextCue)||fieldLayer;
     fieldSelection=null;match=next;
     if(match.active===0&&match.phase==='draw')openingTurn=match.turn;
     moving=true;closeDialog();render();
@@ -218,13 +229,13 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     finally{if(token===presentation){moving=false;setMoving(false);if(active)schedule();}}
   }
   async function step(action,side=0){
-    if(moving)return;
+    if(moving||isPortrait())return;
     try{await present(match,applyAction(match,action,side),action);}
     catch(error){toast(error.message,true);render();}
   }
   function schedule(){
     clearTimeout(timer);
-    if(!active||moving||!match||match.winner!==null||fieldSelection)return;
+    if(!active||moving||!match||match.winner!==null||fieldSelection||isPortrait())return;
     if(modal.open){timer=setTimeout(schedule,100);return;}
     if(match.active===0&&match.phase==='draw')openingTurn=match.turn;
     if(match.phase==='main1'&&!match.window&&!match.choice)openingTurn=null;
@@ -257,11 +268,10 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     select.onchange=event=>{config.aiSpeed=event.target.value;persist();schedule();};
   }
   function handleClick(event){
-    if(!active)return;const target=event.target.closest('button');if(!target)return;
+    if(!active||match&&isPortrait())return;const target=event.target.closest('button');if(!target)return;
     if(target.dataset.duelTab!==undefined){tab=Number(target.dataset.duelTab);render();if(tab<2&&config.sides[tab].source==='set'&&setsStatus==='idle')requestSets();return;}
     if(target.dataset.duelQuick){if(moving)return;const actions=legalActions(match,0).filter(action=>action.uid===target.dataset.duelQuick&&action.type===target.dataset.duelQuickType);choose(actions,`${labelFor(actions[0]||{})}: ${visibleName(target.dataset.duelQuick)}`);return;}
     if(target.dataset.fieldLp!==undefined){if(fieldSelection&&fieldCandidates(fieldSelection).directSide===Number(target.dataset.fieldLp))pickTarget(null);return;}
-    if(target.dataset.duelLayer){motion.cancel();fieldLayer=target.dataset.duelLayer;render();return;}
     if(target.dataset.duelCard){if(fieldSelection)pickTarget(target.dataset.duelCard);else inspect(target.dataset.duelCard);return;}
     if(target.dataset.duelPile!==undefined){showPiles(Number(target.dataset.duelPile));return;}
     if(target.dataset.duelLogFilter){logFilter=target.dataset.duelLogFilter;showLog();return;}
@@ -274,7 +284,6 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(action==='cancel-target'){if(!fieldSelection?.mandatory){fieldSelection=null;render();}return;}
     if(action==='inspect-source'){if(fieldSelection?.sourceUid)inspect(fieldSelection.sourceUid);return;}
     if(action==='duel-menu')duelMenu();if(action==='log')showLog();if(action==='log-latest')jumpToLatest();
-    if(action==='layer'){motion.cancel();fieldLayer=fieldLayer==='monsters'?'backrow':'monsters';render();}
     if(action==='toggle-motion'){config.animations=!config.animations;persist();duelMenu();}
     if(action==='rematch'){match=null;closeDialog();render();}
     if(action==='surrender'){
@@ -282,18 +291,18 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     }
     if(action==='confirm-surrender')step({type:'SURRENDER'});
     if(action==='next')step({type:'NEXT'});if(action==='end')step({type:'END'});if(action==='pass')step({type:'PASS'});
-    if(action==='respond'){fieldLayer='backrow';render();toast('Tap Effect on a highlighted card to respond.');}
+    if(action==='respond'){render();toast('Tap Effect on a highlighted card to respond.');}
     if(action==='resolve-choice')choose(legalActions(match,0).filter(a=>['CHOOSE','DISCARD'].includes(a.type)),match.choice?.title||'Discard to six cards');
   }
   document.addEventListener('click',handleClick);
   return {
     enter(){active=true;render();if(!match&&config.sides.some(s=>s.source==='set')&&setsStatus==='idle')requestSets();},
-    leave(){active=false;presentation++;moving=false;motion.cancel();clearTimeout(timer);},
+    leave(){active=false;presentation++;moving=false;motion.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');},
     refresh:render,
     setDesignedDeck:saveSide,
     getMatch:()=>match,
     getConfig:()=>structuredClone(config),
-    destroy(){active=false;presentation++;moving=false;motion.cancel();clearTimeout(timer);document.removeEventListener('click',handleClick);window.removeEventListener('resize',cancelMotion);reducedMotion.removeEventListener?.('change',cancelMotion);}
+    destroy(){active=false;presentation++;moving=false;motion.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);reducedMotion.removeEventListener?.('change',cancelMotion);}
   };
 }
 function mainPhaseLabel(state){return ['main1','main2'].includes(state.phase)?'Summon, Set, or activate a card. Tap your hand to begin.':state.phase==='battle'?'Tap your Attack Position monster to choose an attack.':state.phase==='end'?'End Phase. Continue to your opponent’s turn.':`${PHASE_LABELS[state.phase]} Phase · continue when ready.`;}

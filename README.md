@@ -1,14 +1,20 @@
-# Duel Atlas · v0.1.2
+# Duel Atlas · v0.1.3
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and a playable **Solo Duel · 2002 Lab**. Plain HTML, CSS, and ES-module JavaScript; static hosting, no custom backend or runtime dependencies.
+
+## v0.1.3 · Landscape duel table
+
+- Duels require landscape. Setup and the rest of the app still work in portrait. Starting or rotating into portrait shows a rotate prompt and pauses phase progression, AI decisions, and card input. Rotating back resumes the same match and any pending target choice.
+- During a duel, the table uses the full app viewport with safe-area padding. App branding and bottom navigation give way to an explicit Home arrow and duel menu; leaving pauses the game and restores normal navigation.
+- Both duelists’ five Monster zones and five Spell/Trap zones remain visible together, with the AI field on the left and yours on the right. The field owns the remaining height; a compact bottom dock holds your hand, current action, Log, and phase controls. Card surfaces scale with the available cell rather than a tiny fixed size.
+- LP values and meter bars sit in a separate top HUD, outside the field. The phase tracker stays between them. Direct-attack targeting, card activity highlights, both ATK/DEF values, AI card orientation, hidden-information protection, and all existing duel actions are retained.
 
 ## v0.1.2 · Actions on the field
 
 - Legal **Attack**, **Effect**, and **Flip** shortcuts appear directly on cards. Tapping the card itself still opens its details. Shortcuts pause during movement and enable again when the action settles.
 - Choose field targets by tapping highlighted cards, including face-down cards, Field Spells, and Tribute combinations. A direct attack highlights the opponent’s LP. Optional selections can be cancelled; mandatory effect choices remain active. Graveyard, Extra Deck, and other off-field choices retain their picker.
 - Activity labels and distinct borders identify the acting card, attack/effect targets, eligible choices, and selected Tributes. Chains and incoming attacks retain their cues while you respond. No opposing face-down identity or hidden stat is revealed.
-- The AI hand is centered, AI card faces/backs rotate toward the AI, and LP sits on each player’s side of the field. Direct-attack lunges and trails move toward that player’s LP location. Defense cards remain sideways, with both ATK and DEF shown in an upright readout.
-- Portrait card zones and larger status text improve readability. Phones use a **Monsters / Spells & traps** row switch, which automatically reveals the relevant action or target row. Larger screens show both rows; short landscape screens put the player fields beside one another. The arena stays fixed within the viewport.
+- The AI hand is centered, AI card faces/backs rotate toward the AI, and direct-attack lunges and trails follow the target LP location. Defense cards remain sideways, with both ATK and DEF shown in an upright readout.
 
 ## v0.1.1 · Movement and readability
 
@@ -20,16 +26,16 @@ A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and 
 
 ## Play the 2002 Lab
 
-Open **Solo Duel** in the bottom navigation or Home. The three setup panels keep the controls within the phone viewport:
+Open **Solo Duel** in the bottom navigation or Home. The three setup panels work in either orientation and keep the controls within the phone viewport. Rotate to landscape to play; a portrait start waits at the rotate prompt:
 
 - **Your deck / AI deck:** independently choose a saved/custom deck, random cards, or random cards from a released set. Card eligibility offers a release-year cutoff through 2002, monster type/race, attribute, subtype, and Spell/Trap switches. Filters also apply to saved decks.
 - **Saved / custom deck → Design/Edit:** opens the existing deck builder with playable early cards. **Save & return to Solo** assigns the deck to that duelist. Main Decks need 40–60 cards; the Extra Deck allows supported Fusions, up to 15. Side Decks are not used in single games.
 - **Random cards / sets:** generates a 40-card deck with a three-copy limit, enough low-level monsters, and some higher-level cards where available. Set generation uses real API set memberships and set release dates, intersected with the card’s first TCG date, effect support, and the selected filters. Sets with insufficient cards are disabled; filters are never silently broadened. Eligible Fusions and Polymerization can be included when their materials are present.
 - **Match:** Easy, Normal, or Hard AI; independent AI decision speed; you/AI/coin-toss first; 8,000 or 4,000 LP; animations on/off. Hard changes action priorities and risk assessment. No difficulty receives opposing hidden cards or draw order for scoring.
 
-Tap a hand or field card to inspect its text and see currently legal actions, or use the legal Attack/Effect/Flip shortcuts on the card. Tap highlighted cards to choose field targets or Tributes; tap highlighted LP for a direct attack. Off-field choices use a picker. The phase tracker follows **Draw → Standby → Main 1 → Battle → Main 2 → End**. Your Draw and Standby Phases advance automatically; use **Next** for later phases, **End turn** to skip remaining Main/Battle actions, and **Show responses / Pass** when a response is available. Windows without any possible response pass automatically.
+Tap a hand or field card to inspect its text and see currently legal actions, or use the legal Attack/Effect/Flip shortcuts on the card. Tap highlighted cards to choose field targets or Tributes; tap highlighted LP for a direct attack. Off-field choices use a picker. The phase tracker follows **Draw → Standby → Main 1 → Battle → Main 2 → End**. Your Draw and Standby Phases advance automatically; use **Next** for later phases, **End turn** to skip remaining Main/Battle actions, and **Responses / Pass** when a response is available. Windows without any possible response pass automatically.
 
-The arena has five Monster and five Spell/Trap zones per player, with portrait zones and both ATK/DEF visible. Each side has its own LP, deck/Graveyard control, and Field Spell slot. Open the deck/Graveyard control for public piles and your Extra Deck. Deck order and opposing face-down cards stay hidden. Portrait phones use **Monsters / Spells & traps** to switch rows and preserve usable targets. Larger screens show both rows; short landscape viewports put the fields beside the hand and controls.
+The landscape arena shows five Monster and five Spell/Trap zones per player at the same time, with portrait card surfaces and both ATK/DEF visible. LP is in the outside HUD. Each field has a deck/Graveyard control and Field Spell slot; open the deck/Graveyard control for public piles and your Extra Deck. Deck order and opposing face-down cards stay hidden. Use the top-left Home arrow to leave and pause the match. Portrait rotation also pauses play; returning to landscape preserves the field and selected targets. Reloading still ends the test match.
 
 The always-visible **Log** button opens the expanded chronological log. The turn menu offers AI decision speed, the duel log, support/rules information, animation setting, surrender, and **Save your deck / Save AI deck** for retaining generated decks in local storage. Leaving Solo pauses the match; returning resumes it. **Reloading the page ends the current test match.** Decks and setup preferences persist.
 
@@ -91,7 +97,7 @@ The existing **Test and deploy Duel Atlas** workflow tests and builds pushes to 
 
 Live app: **https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/**
 
-All asset/module/manifest/service-worker paths are relative, so the app works under a GitHub project subdirectory or another static HTTPS host. The service worker’s `shell-v0.1.2` cache includes every Solo module and stylesheet as one complete release. Bump the package, core, HTML, and shell-cache versions when publishing changed assets.
+All asset/module/manifest/service-worker paths are relative, so the app works under a GitHub project subdirectory or another static HTTPS host. The service worker’s `shell-v0.1.3` cache includes every Solo module and stylesheet as one complete release. Bump the package, core, HTML, and shell-cache versions when publishing changed assets.
 
 ## Install, offline use, and layout
 
@@ -99,21 +105,21 @@ All asset/module/manifest/service-worker paths are relative, so the app works un
 - Open the archive online once. Metadata is cached in IndexedDB, normally refreshed after 24 hours, and reused when requests fail. Set dates have a separate small local cache. Local Solo needs no network once required data and the shell are cached. Unviewed images still need a connection.
 - Only viewed card images are fetched/cached, with uncached image requests spaced to at most eight per second. Search, filtering, deck generation, AI, and game rules run locally. No bulk image downloads.
 - Saved decks and Solo preferences use this browser/device’s localStorage. Export backups before clearing data or moving devices. Storage failures are visible and do not silently overwrite corrupt deck data.
-- The page and main screen remain bounded by `100dvh` with safe-area padding and fixed bottom navigation. Only card results, deck/hand strips, saved decks, card-choice/pile/log lists, and long text have dedicated scroll containers. The arena itself does not scroll.
+- The page and main screen remain bounded by `100dvh` with safe-area padding and fixed bottom navigation outside the duel. A match uses the full app viewport in landscape, with a rotate-and-pause prompt in portrait. Only card results, deck/hand strips, saved decks, card-choice/pile/log lists, and long text have dedicated scroll containers. The arena itself does not scroll. The PWA manifest keeps normal orientation support for the archive and deck builder.
 - Primary controls use 44px targets, accessible names, visible focus, and native modal focus containment; deck quantity buttons use 30px. On-card shortcuts and compact field controls use smaller targets to fit the arena. Eligible field targets receive keyboard focus, and activity labels supplement their colors. Arena animations cover summons, activations, attacks, damage, and phase changes. Reduced-motion preferences disable them.
 
 ## Verification record
 
-The release passes **89 automated tests**. The suite covers existing archive/deck workflows plus setup filters, custom AI-deck design/return, set-load retry, starting a match, phase progression, real card actions, pause/resume, surrender, generated-deck saving, rules/effects, hidden-information invariance, card conservation, layout contracts, and complete seeded matches. New interaction checks exercise legal on-card shortcuts, their recovery after movement/AI responses, field target selection, direct LP targeting, multi-Tribute choices, automatic mandatory targets, row switching, hidden-card privacy, AI orientation, and directional attack movement.
+The release passes **93 automated tests**. The suite covers existing archive/deck workflows plus setup filters, custom AI-deck design/return, set-load retry, starting a match, phase progression, real card actions, pause/resume, surrender, generated-deck saving, rules/effects, hidden-information invariance, card conservation, layout contracts, and complete seeded matches. Presentation checks exercise legal on-card shortcuts, their recovery after movement/AI responses, field target selection, direct LP targeting, multi-Tribute choices, automatic mandatory targets, hidden-card privacy, AI orientation, and directional attack movement. New checks cover portrait starts, frozen AI timers, resume without an extra draw, preserving target selection through rotation, Home navigation restoring the app shell, the outside LP HUD, and computed row visibility at five landscape sizes.
 
 The v0.1.1 engine baseline check against the full API archive and set-date snapshot found **nine playable set pools**, performed **30 generation checks**, and completed **40 matches / 11,191 legal actions** while preserving every card instance. Another 12 seeded matches run in this release’s deterministic test suite. Presentation tests also cover automatic draws, chain/choice interruptions, AI speed persistence, hidden-image privacy, sideways backs, animation completion/cancellation, and log filtering/pause/resume. The static build and complete service-worker shell are checked before deployment.
 
 **Rendered browser/device QA was unavailable in the build environment.** DOM and CSS contract tests do not establish actual phone pixels, touch feel, animation smoothness, installation behavior, or Safari/Chrome offline behavior. Device acceptance:
 
-1. Test 320×568 and 390×844 portrait plus landscape. Keep the arena, phase tracker, hand, and action controls visible without page scrolling. Switch Monster / S/T layers and confirm target selection reveals the correct row.
+1. Start a duel in 390×844 portrait: the rotate prompt must pause all play. Rotate to 844×390; also try 568×320, 667×375, and 932×430 landscape. Keep all twenty zones, both field rows, the HUD, phase tracker, hand, and controls visible without page scrolling. Check card and stat readability, notch/home-indicator safe areas, and browser bars.
 2. Start random-card and random-set matches; change AI difficulty, decision speed, and eligibility; try an invalid saved deck. Confirm errors explain what to change.
 3. Design and save an AI deck, return to Solo, summon/Set/Tribute, inspect targets, attack, respond, discard, and finish a game. Test generated-deck saving and a rematch.
-4. Confirm opponent hand, deck order, and face-down cards stay hidden during animations too. Verify automatic Draw → Main 1, AI card orientation, sideways Set cards, both stats, source/target labels, direct attacks toward LP, draw/summon/Graveyard movement, adjustable AI pace, and the expanded log. Check reduced motion, rotation, cancellation, and pause/resume across tabs.
+4. Confirm opponent hand, deck order, and face-down cards stay hidden during animations too. Verify automatic Draw → Main 1, AI card orientation, sideways Set cards, both stats, source/target labels, direct attacks toward the HUD LP target, draw/summon/Graveyard movement, adjustable AI pace, and the expanded log. Rotate during an AI turn and a pending target choice; verify the match pauses and resumes the same action. Check reduced motion, cancellation, Home navigation, and resume across tabs.
 5. Recheck archive search, quick edits, deck switching, filters, JSON/YDK backups, installation, and airplane-mode cached use. Multiplayer must remain inactive.
 
 ## Project layout

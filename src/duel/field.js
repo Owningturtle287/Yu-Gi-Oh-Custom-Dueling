@@ -41,18 +41,6 @@ export function pickFieldCandidate(session, uid) {
   const next={...session,selected},actions=remainingActions(next);
   return selected.length===(actions[0]?.tributes.length||0)?{session:null,actions}:{session:next,actions:null};
 }
-export function selectionLayer(state, session) {
-  const locations=[...fieldCandidates(session).uids].map(uid=>fieldLocation(state,uid));
-  return locations.some(location=>location?.zone==='monsters')?'monsters':locations.some(location=>location?.zone==='spells')?'backrow':null;
-}
-export function activityLayer(previous, next, cue) {
-  for(const uid of [...(cue?.targets||[]),cue?.source]){
-    const location=fieldLocation(next,uid)||(previous&&fieldLocation(previous,uid));
-    if(location?.zone==='monsters')return 'monsters';
-    if(location?.zone==='spells')return 'backrow';
-  }
-  return null;
-}
 export function quickCardActions(actions, uid) {
   const own=actions.filter(action=>action.uid===uid),groups=[];
   for(const [types,label,tone] of [[['ATTACK'],'Attack','attack'],[['ACTIVATE','EFFECT'],'Effect','effect'],[['FLIP'],'Flip','flip']]){

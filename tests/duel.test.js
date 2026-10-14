@@ -195,11 +195,12 @@ test('seeded full AI matches finish, conserve all cards and never select an ille
     assert.notEqual(state.winner,null,`Seed ${seed} did not finish in ${steps} actions`);
   }
 });
-test('Solo layout keeps the arena bounded and offers a compact field switch on short phones',async()=>{
+test('Solo landscape layout keeps the complete arena bounded and reserves space for both field rows',async()=>{
   const css=await readFile(new URL('../duel.css',import.meta.url),'utf8');
   assert.match(css,/\.duel-arena \{[^}]*height:100%[^}]*min-height:0[^}]*overflow:hidden/);
-  assert.match(css,/\.duel-table \{[^}]*min-height:0[^}]*flex:1/);
+  assert.match(css,/\.duel-table \{[^}]*grid-template-columns:minmax\(0,1fr\) 14px minmax\(0,1fr\)[^}]*min-height:0/);
   assert.match(css,/\.duel-hand \{[^}]*overflow-x:auto[^}]*overflow-y:hidden/);
-  assert.match(css,/data-field-layer=monsters/);assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(css,/\.duel-board \{[^}]*grid-template-rows:repeat\(2,minmax\(0,1fr\)\)/);assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(css,/\.duel-playing \.topbar, \.duel-playing \.bottom-nav \{ display:none/);
   assert.match(css,/orientation:landscape/);assert.match(css,/min-height:44px/);
 });

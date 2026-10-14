@@ -1,6 +1,6 @@
 {
   "name": "duel-atlas",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "description": "A mobile-first, static Yu-Gi-Oh! archive and local deck companion.",

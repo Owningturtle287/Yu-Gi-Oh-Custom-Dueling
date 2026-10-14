@@ -281,6 +281,7 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
     $('#solo-ai-speed').value='fast';$('#solo-ai-speed').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('[data-duel="start"]').click();assert.ok($('.duel-arena'));assert.equal(document.querySelectorAll('.duel-zone').length,20);
+    assert.ok(document.documentElement.classList.contains('duel-playing'));
     assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
     assert.equal($('.duel-phases [aria-current]').textContent,'DDraw');
     await waitFor(()=>$('.duel-phases [aria-current]')?.textContent==='M1Main 1'&&Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
@@ -289,6 +290,7 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
     $('.duel-hand-card').click();assert.match($('#modal').textContent,/Normal Summon/);
     [...document.querySelectorAll('[data-duel-group]')].find(b=>b.textContent==='Normal Summon').click();
     assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
+    $('.duel-exit').click();assert.equal(app.state.route,'home');assert.equal(document.documentElement.classList.contains('duel-playing'),false);
     app.navigate('archive');assert.equal($('.duel-arena'),null);app.navigate('solo');
     assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
     $('[data-duel="duel-menu"]').click();$('[data-duel="surrender"]').click();$('[data-duel="confirm-surrender"]').click();
