@@ -1,0 +1,146 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { Window } from 'happy-dom';
+import { createDeck } from '../src/core.js';
+import { createMatch } from '../src/duel/engine.js';
+import { ruleFor } from '../src/duel/catalog.js';
+import { defaultSide } from '../src/duel/decks.js';
+import { createSoloController } from '../src/duel/ui.js';
+import { cardRotation, fieldLocation, makeFieldSelection, fieldCandidates, pickFieldCandidate, selectionLayer, activityLayer, quickCardActions, activityCue, cardActivity } from '../src/duel/field.js';
+import { planMotion } from '../src/duel/motion.js';
+
+const normals=Array.from({length:14},(_,index)=>({id:80000+index,name:`Warrior ${index}`,type:'Normal Monster',tcgDate:'2002-03-08',race:'Warrior',attribute:'EARTH',atk:1800,def:1200,level:4,desc:'A classic warrior.',card_images:[]}));
+const monster=normals[0],mst={id:5318639,name:'Mystical Space Typhoon',type:'Spell Card',race:'Quick-Play',tcgDate:'2002-09-16',desc:'Target 1 Spell/Trap on the field; destroy that target.',card_images:[]};
+const trap={...mst,id:44095762,name:'Mirror Force',type:'Trap Card',race:'Normal'};
+const bug={...monster,id:54652250,name:'Man-Eater Bug',type:'Flip Effect Monster',race:'Insect',atk:450,def:600,desc:'FLIP: Target 1 monster on the field; destroy it.'};
+const field={...mst,id:22702055,name:'Umi',race:'Field'};
+const high={...monster,id:80099,name:'Tribute champion',level:7,atk:2600};
+const game=()=>createMatch([{main:Array(40).fill(monster)},{main:Array(40).fill(monster)}],{seed:41});
+let serial=0;
+function put(state,side,card,zone='monsters',extra={}){
+  const instance={uid:`field-test-${++serial}`,owner:side,controller:side,card,faceUp:true,position:'attack',summonedTurn:0,changedTurn:0,attacks:0,...extra};
+  if(zone==='field')state.players[side].field=instance;
+  else if(['monsters','spells'].includes(zone))state.players[side][zone][state.players[side][zone].indexOf(null)]=instance;
+  else state.players[side][zone].push(instance);
+  return instance;
+}
+test('opponent card orientation and all movement plans use the owner’s perspective',()=>{
+  assert.equal(cardRotation(0,'attack'),0);assert.equal(cardRotation(0,'defense'),90);
+  assert.equal(cardRotation(1,'attack'),180);assert.equal(cardRotation(1,'defense'),270);
+  assert.equal(cardRotation(1,null,'hand'),180);
+  const s=game(),next=structuredClone(s),card=next.players[1].hand.shift();next.players[1].monsters[0]={...card,faceUp:false,position:'defense'};
+  const motion=planMotion(s,next).find(item=>item.uid===card.uid);assert.equal(motion.start.rotation,180);assert.equal(motion.end.rotation,270);
+});
+test('field target sessions expose exact legal IDs, keep face-down identities private, and choose LP directly',()=>{
+  const s=game(),one=put(s,1,{...monster,name:'Hidden defender'},'monsters',{faceUp:false,position:'defense'}),two=put(s,1,monster);
+  const actions=[{type:'ATTACK',uid:'attacker',target:one.uid},{type:'ATTACK',uid:'attacker',target:two.uid},{type:'ATTACK',uid:'attacker',target:null}];
+  const session=makeFieldSelection(s,actions);assert.equal(fieldCandidates(session).uids.size,2);assert.equal(fieldCandidates(session).directSide,1);
+  assert.equal(pickFieldCandidate(session,one.uid).actions[0].target,one.uid);
+  assert.equal(pickFieldCandidate(session,null).actions[0].target,null);
+  assert.equal(pickFieldCandidate(session,'not-legal'),null);assert.ok(!JSON.stringify(session).includes('Hidden defender'));
+  assert.equal(fieldLocation(s,undefined),null);
+});
+test('Tribute selection supports compatible combinations and deselecting without committing',()=>{
+  const s=game(),ids=Array.from({length:3},()=>put(s,0,monster).uid),actions=[[ids[0],ids[1]],[ids[0],ids[2]],[ids[1],ids[2]]].map(tributes=>({type:'SUMMON',uid:'boss',tributes,set:false}));
+  const session=makeFieldSelection(s,actions),first=pickFieldCandidate(session,ids[0]);
+  assert.equal(first.actions,null);assert.equal(fieldCandidates(first.session).remaining,1);assert.ok(fieldCandidates(first.session).selected.has(ids[0]));
+  const reset=pickFieldCandidate(first.session,ids[0]);assert.equal(reset.session.selected.length,0);
+  const chosen=pickFieldCandidate(first.session,ids[2]);assert.deepEqual(chosen.actions,[actions[1]]);
+});
+test('selection automatically reveals the correct row while off-field targets retain their picker',()=>{
+  const s=game(),spell=put(s,1,trap,'spells',{faceUp:false}),card=put(s,1,monster),grave=put(s,0,monster,'grave');
+  assert.equal(selectionLayer(s,makeFieldSelection(s,[{type:'ACTIVATE',uid:'source',target:spell.uid}])),'backrow');
+  assert.equal(selectionLayer(s,makeFieldSelection(s,[{type:'CHOOSE',target:card.uid}])),'monsters');
+  assert.equal(makeFieldSelection(s,[{type:'ACTIVATE',uid:'reborn',target:grave.uid}]),null);
+  assert.equal(activityLayer(s,s,{source:spell.uid,targets:[]}),'backrow');
+  assert.equal(activityLayer(s,s,{source:spell.uid,targets:[card.uid]}),'monsters');
+});
+test('on-card shortcuts only reflect supplied legal actions and activity identifies sources and targets',()=>{
+  const s=game(),source=put(s,0,monster),target=put(s,1,monster),actions=[{type:'ATTACK',uid:source.uid,target:target.uid},{type:'NEXT'}];
+  assert.equal(quickCardActions(actions,source.uid)[0].label,'Attack');assert.deepEqual(quickCardActions(actions,target.uid),[]);
+  s.pending={kind:'attack',uid:source.uid,target:target.uid,side:0};
+  assert.equal(cardActivity(s,source.uid,null,null).role,'source');assert.equal(cardActivity(s,target.uid,null,null).role,'target');
+  const cue=activityCue(s,s,actions[0]);assert.equal(cue.source,source.uid);
+  const session=makeFieldSelection(s,actions.slice(0,1));assert.equal(cardActivity(s,target.uid,cue,session).role,'eligible');
+});
+
+async function waitFor(predicate){const end=Date.now()+3000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,10));assert.ok(predicate(),'Duel did not reach the expected state');}
+async function rig(){
+  const window=new Window({url:'https://example.com/repo/'});window.document.body.innerHTML='<main id="main"></main><dialog id="modal"></dialog>';
+  for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],configurable:true,writable:true});
+  const deck=createDeck('Classic','classic');deck.sections.main=normals.map((card,index)=>({card,quantity:index===13?1:3}));
+  window.localStorage.setItem('duel-atlas.solo-config.v1',JSON.stringify({sides:[{...defaultSide(),source:'saved',deckId:'classic'},{...defaultSide(),source:'saved',deckId:'classic'}],first:'you',animations:false,aiSpeed:'fast'}));
+  const main=window.document.querySelector('main'),modal=window.document.querySelector('dialog'),messages=[];
+  const closeDialog=()=>modal.removeAttribute('open');
+  const showDialog=(content,className='')=>{modal.innerHTML=`<div class="dialog-body ${className}">${content}</div>`;modal.setAttribute('open','');};
+  const closeEvent=event=>{if(event.target.closest('[data-action="close"]'))closeDialog();};window.document.addEventListener('click',closeEvent);
+  const controller=createSoloController({main,modal,getCards:()=>[...normals,mst,trap,bug,field,high],getDecks:()=>[deck],getStatus:()=>'ready',showDialog,dialogHeader:title=>`<h2>${title}</h2><button data-action="close">Close</button>`,closeDialog,toast:message=>messages.push(message),onDesign:()=>{},onKeepDeck:()=>{}});
+  controller.enter();main.querySelector('[data-duel="start"]').click();
+  await waitFor(()=>controller.getMatch()?.phase==='main1'&&!controller.getMatch().window&&main.querySelector('.duel-arena')?.dataset.moving==='false');
+  return {window,main,modal,controller,messages,$:selector=>window.document.querySelector(selector),close(){controller.destroy();window.close();}};
+}
+test('Attack shortcut selects a highlighted Set monster on the board without a target list',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster),target=put(s,1,{...monster,name:'Secret defender'},'monsters',{faceUp:false,position:'defense'});put(s,1,monster);r.controller.refresh();
+    r.$(`[data-duel-quick="${attacker.uid}"]`).click();assert.equal(r.modal.hasAttribute('open'),false);assert.equal(r.$('.duel-arena').dataset.selecting,'true');
+    assert.equal(r.window.document.querySelectorAll('.opponent .duel-zone[data-role="eligible"]').length,2);
+    assert.doesNotMatch(r.main.textContent,/Secret defender/);assert.match(r.$(`[data-duel-card="${target.uid}"]`).getAttribute('aria-label'),/Legal target.*face-down.*ATK \? DEF \?/);
+    r.$(`[data-duel-card="${target.uid}"]`).click();assert.equal(r.controller.getMatch().pending.target,target.uid);
+    assert.equal(r.$(`[data-duel-card="${attacker.uid}"]`).dataset.role,'source');assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'target');
+  }finally{r.close();}
+});
+test('direct attacks target the opponent’s LP on its own side; card faces and stats are oriented separately',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster);r.controller.refresh();
+    r.$(`[data-duel-quick="${attacker.uid}"]`).click();const lp=r.$('[data-field-lp="1"]');assert.equal(lp.dataset.role,'eligible');assert.equal(lp.closest('[data-field-side]').dataset.fieldSide,'1');
+    assert.equal(r.$('[data-field-lp="0"]').closest('[data-field-side]').dataset.fieldSide,'0');
+    lp.click();assert.equal(r.controller.getMatch().pending.target,null);
+    r.controller.getMatch().window=null;r.controller.getMatch().pending=null;const enemy=put(r.controller.getMatch(),1,monster,'monsters',{position:'defense'});r.controller.refresh();
+    assert.equal(r.$(`[data-duel-card="${enemy.uid}"] .duel-card-visual`).style.getPropertyValue('--card-rotation'),'270deg');
+    assert.match(r.$(`[data-duel-card="${enemy.uid}"]`).parentElement.querySelector('.duel-card-stats').textContent,/A 1800D 1200/);
+  }finally{r.close();}
+});
+test('Effect shortcut switches rows, highlights legal Spell/Trap and Field targets, and rejects another card',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),spell=put(s,0,mst,'hand'),target=put(s,1,trap,'spells',{faceUp:false,setTurn:0}),fieldCard=put(s,1,field,'field'),invalid=put(s,1,monster);
+    r.controller.refresh();r.$(`[data-duel-quick="${spell.uid}"]`).click();
+    assert.equal(r.$('.duel-arena').dataset.fieldLayer,'backrow');assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'eligible');assert.equal(r.$(`[data-duel-card="${fieldCard.uid}"]`).dataset.role,'eligible');
+    r.$(`[data-duel-card="${invalid.uid}"]`).click();assert.equal(r.$('.duel-arena').dataset.selecting,'true');assert.equal(r.controller.getMatch().chain.length,0);
+    r.$(`[data-duel-card="${target.uid}"]`).click();assert.equal(r.controller.getMatch().chain[0].action.target,target.uid);assert.equal(r.modal.hasAttribute('open'),false);
+  }finally{r.close();}
+});
+test('a Tribute Summon chooses compatible monsters directly and pays the selected costs once',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),boss=put(s,0,high,'hand'),one=put(s,0,monster),two=put(s,0,monster),three=put(s,0,monster);r.controller.refresh();
+    r.$(`[data-duel-card="${boss.uid}"]`).click();[...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Normal Summon…').click();
+    assert.equal(r.modal.hasAttribute('open'),false);r.$(`[data-duel-card="${one.uid}"]`).click();assert.equal(r.$(`[data-duel-card="${one.uid}"]`).dataset.role,'selected');
+    r.$(`[data-duel-card="${three.uid}"]`).click();const next=r.controller.getMatch();assert.ok(next.players[0].grave.some(c=>c.uid===one.uid));assert.ok(next.players[0].grave.some(c=>c.uid===three.uid));
+    assert.ok(next.players[0].monsters.some(c=>c?.uid===two.uid));assert.ok(next.players[0].monsters.some(c=>c?.uid===boss.uid));
+  }finally{r.close();}
+});
+test('on-card shortcuts enable again after actions and AI response movement settle',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),first=put(s,0,mst,'hand'),second=put(s,0,mst,'hand'),target=put(s,1,trap,'spells',{faceUp:false,setTurn:0});
+    r.controller.refresh();r.$(`[data-duel-quick="${first.uid}"]`).click();r.$(`[data-duel-card="${target.uid}"]`).click();
+    await waitFor(()=>r.controller.getMatch().window?.priority===0&&r.$('.duel-arena').dataset.moving==='false');
+    const shortcut=r.$(`[data-duel-quick="${second.uid}"]`);assert.ok(shortcut);assert.equal(shortcut.disabled,false);
+    shortcut.click();assert.equal(r.$('.duel-arena').dataset.selecting,'true');assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'eligible');
+  }finally{r.close();}
+});
+test('mandatory effect targets appear on the board automatically and cannot be cancelled away',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),source=put(s,0,bug),target=put(s,1,monster);
+    s.choice={side:0,title:'Man-Eater Bug: choose a target',trigger:{side:0,uid:source.uid,card:bug,rule:ruleFor(bug)},options:[{type:'CHOOSE',target:source.uid},{type:'CHOOSE',target:target.uid}]};r.controller.refresh();
+    assert.equal(r.$('.duel-arena').dataset.selecting,'true');assert.equal(r.$('[data-duel="cancel-target"]'),null);
+    r.$(`[data-duel-card="${target.uid}"]`).click();assert.equal(r.controller.getMatch().choice,null);assert.ok(r.controller.getMatch().players[1].grave.some(c=>c.uid===target.uid));
+  }finally{r.close();}
+});
+test('the responsive arena reserves portrait zones, centers the opponent hand, and keeps field selections non-scrolling',async()=>{
+  const css=await readFile(new URL('../duel.css',import.meta.url),'utf8');
+  assert.match(css,/\.duel-opponent-hand \{[^}]*justify-content:center/);
+  assert.match(css,/\.duel-zone-shell \{[^}]*grid-template-rows:minmax\(0,1fr\) 15px/);
+  assert.match(css,/100cqh - 16px\) \* \.70/);
+  assert.match(css,/\.duel-status-row \.duel-prompt \{[^}]*font-size:12px/);
+  assert.match(css,/data-role=eligible/);assert.match(css,/data-field-side|\.duel-side-meta/);
+});

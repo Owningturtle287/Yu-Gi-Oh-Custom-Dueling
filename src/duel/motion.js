@@ -1,3 +1,4 @@
+import { cardRotation } from './field.js';
 export const CARD_BACK = './assets/card-back.jpg';
 const fieldZones = new Set(['monsters', 'spells', 'field']);
 const publicZones = new Set(['grave', 'banished']);
@@ -22,7 +23,7 @@ function appearance(location) {
     || (side === 0 && ['hand', 'extra'].includes(zone));
   // A motion plan never contains an opponent's hidden image URL or name.
   return { image: visible ? frontURL(instance.card) : CARD_BACK, back: !visible,
-    rotation: zone === 'monsters' && instance.position === 'defense' ? 90 : 0 };
+    rotation: cardRotation(side,instance.position,zone) };
 }
 export function planMotion(previous, next, action = null) {
   const before = cardLocations(previous), after = cardLocations(next), motions = [];
@@ -139,8 +140,9 @@ export function createMotionPlayer(root) {
       const fromCard = before.cards.has(motion.uid), toCard = after.cards.has(motion.uid);
       const ghost = document.createElement('div'); ghost.className = `duel-moving-card ${motion.type === 'attack' ? 'attacking' : ''}`;
       // width/height describe the unrotated card; a sideways field rect swaps them.
-      const width = motion.start.rotation ? from.height : fromCard ? from.width : 42;
-      const height = motion.start.rotation ? from.width : fromCard ? from.height : 61;
+      const sideways=motion.start.rotation%180!==0;
+      const width = sideways ? from.height : fromCard ? from.width : 42;
+      const height = sideways ? from.width : fromCard ? from.height : 61;
       ghost.style.width = `${Math.max(20, Math.min(width, 100))}px`;
       ghost.style.height = `${Math.max(29, Math.min(height, 146))}px`;
       const inner = document.createElement('div'); inner.className = 'duel-moving-faces';
@@ -155,7 +157,8 @@ export function createMotionPlayer(root) {
       let frames, duration;
       if (motion.type === 'attack') {
         const near = { ...to, x: from.x + (to.x - from.x) * .88, y: from.y + (to.y - from.y) * .88 };
-        frames = [{ transform: transform(from, motion.start.rotation), offset: 0 }, { transform: transform({ ...from, y: from.y + 5 }, motion.start.rotation, 1.06), offset: .18 }, { transform: transform(near, motion.start.rotation, 1.15), offset: .58 }, { transform: transform(from, motion.start.rotation), offset: 1 }]; duration = 680;
+        const distance=Math.hypot(to.x-from.x,to.y-from.y)||1,windup={x:from.x-(to.x-from.x)/distance*6,y:from.y-(to.y-from.y)/distance*6};
+        frames = [{ transform: transform(from, motion.start.rotation), offset: 0 }, { transform: transform(windup, motion.start.rotation, 1.06), offset: .18 }, { transform: transform(near, motion.start.rotation, 1.15), offset: .58 }, { transform: transform(from, motion.start.rotation), offset: 1 }]; duration = 680;
         const trail = document.createElement('div'); trail.className = 'duel-attack-trail';
         const dx = to.x - from.x, dy = to.y - from.y;
         trail.style.cssText = `left:${from.x}px;top:${from.y}px;width:${Math.hypot(dx, dy)}px;transform:rotate(${Math.atan2(dy, dx)}rad);`;
@@ -163,7 +166,7 @@ export function createMotionPlayer(root) {
         run(trail, [{ opacity: 0, clipPath: 'inset(0 100% 0 0)' }, { opacity: .95, clipPath: 'inset(0 0 0 0)', offset: .5 }, { opacity: 0, clipPath: 'inset(0 0 0 100%)' }], { duration: 620, easing: ease, fill: 'both' });
       } else {
         const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 - (motion.type === 'move' ? 24 : 0) };
-        const targetWidth = motion.end.rotation ? to.height : toCard ? to.width : 34;
+        const targetWidth = motion.end.rotation%180!==0 ? to.height : toCard ? to.width : 34;
         const scale = Math.max(.45, Math.min(1.8, targetWidth / Math.max(width, 1)));
         frames = [{ transform: transform(from, motion.start.rotation), opacity: 1 }, { transform: transform(mid, (motion.start.rotation + motion.end.rotation) / 2 - (motion.draw ? 8 : 0), 1.08), opacity: 1, offset: .48 }, { transform: transform(to, motion.end.rotation, scale), opacity: toCard ? 1 : .3 }];
         duration = motion.type === 'move' ? 600 : 480;

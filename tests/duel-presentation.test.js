@@ -119,6 +119,19 @@ test('completed animation restores the card once; disabled motion creates no ove
     const count=calls.length;await player.play([move],before,{enabled:false});assert.equal(calls.length,count);assert.equal(window.document.querySelector('.duel-motion-layer'),null);
   }finally{window.close();}
 });
+test('upside-down cards retain portrait dimensions and direct attack paths follow the LP side',async()=>{
+  const {window,root,calls}=rig();try{
+    for(const [side,top] of [[0,400],[1,0]]){const point=window.document.createElement('div');point.dataset.motionZone=side+':lp';point.dataset.rect=`40,${top},100,32`;root.append(point);}
+    const player=createMotionPlayer(root),before=captureArena(root),origin=before.cards.get('c1');
+    for(const side of [0,1]){
+      const previous=calls.length,pending=player.play([{type:'attack',uid:'c1',target:null,to:side+':lp',start:{image:CARD_BACK,rotation:180},end:{image:CARD_BACK,rotation:180}}],before);
+      const ghost=window.document.querySelector('.duel-moving-card');assert.equal(ghost.style.width,'44px');assert.equal(ghost.style.height,'64px');
+      const flight=calls.slice(previous).find(call=>call.element===ghost);
+      const y=Number(flight.keyframes[2].transform.match(/translate\([^,]+,([^p]+)px\)/)[1]);assert.ok(side===0?y>origin.y:y<origin.y);
+      calls.slice(previous).forEach(call=>call.finish());await pending;
+    }
+  }finally{window.close();}
+});
 test('defense rotates the complete card surface; the authentic back and motion modules are cached offline',async()=>{
   const css=await readFile(new URL('../duel.css',import.meta.url),'utf8'),worker=await readFile(new URL('../sw.js',import.meta.url),'utf8');
   assert.match(css,/\.duel-zone\.defense \.duel-card-visual \{[^}]*rotate\(90deg\)/);
