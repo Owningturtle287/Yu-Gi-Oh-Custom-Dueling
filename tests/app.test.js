@@ -261,7 +261,7 @@ test('Solo setup saves independent eligibility, difficulty, saved-deck choices a
     $('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
     let config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
     assert.equal(config.sides[1].race,'Warrior');assert.equal(config.sides[1].traps,false);assert.equal(config.sides[0].race,'');
-    $('[data-duel-tab="2"]').click();change('#solo-difficulty','hard');change('#solo-first','you');
+    $('[data-duel-tab="2"]').click();change('#solo-difficulty','hard');change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
     assert.equal(app.state.route,'decks');assert.match($('.duel-design-banner').textContent,/AI Solo deck/);
     assert.equal(app.state.draft.releaseYear,2002);assert.equal(app.state.filtered.length,24);
@@ -269,6 +269,7 @@ test('Solo setup saves independent eligibility, difficulty, saved-deck choices a
     assert.equal(app.state.route,'solo');assert.equal($('#solo-source').value,'saved');
     config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
     assert.equal(config.difficulty,'hard');assert.equal(config.sides[1].deckId,app.state.draft.id);
+    assert.equal(config.aiSpeed,'relaxed');
     $('[data-duel="start"]').click();assert.match($('#modal').textContent,/AI deck: Main Deck needs 40–60/);
   }finally{app.navigate('home');window.close();}
 });
@@ -277,14 +278,14 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
   try{
     app.navigate('solo');$('[data-duel-tab="2"]').click();
     $('#solo-first').value='you';$('#solo-first').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('#solo-ai-speed').value='fast';$('#solo-ai-speed').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('[data-duel="start"]').click();assert.ok($('.duel-arena'));assert.equal(document.querySelectorAll('.duel-zone').length,20);
     assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
     assert.equal($('.duel-phases [aria-current]').textContent,'DDraw');
-    $('[data-duel="next"]').click();await waitFor(()=>Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
-    assert.equal($('.duel-phases [aria-current]').textContent,'SStandby');
-    $('[data-duel="next"]').click();await waitFor(()=>Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
+    await waitFor(()=>$('.duel-phases [aria-current]')?.textContent==='M1Main 1'&&Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
     assert.equal($('.duel-phases [aria-current]').textContent,'M1Main 1');
+    assert.equal(document.querySelectorAll('.duel-hand-card').length,5,'The first player does not receive an extra automatic draw');
     $('.duel-hand-card').click();assert.match($('#modal').textContent,/Normal Summon/);
     [...document.querySelectorAll('[data-duel-group]')].find(b=>b.textContent==='Normal Summon').click();
     assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
@@ -292,9 +293,30 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
     assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
     $('[data-duel="duel-menu"]').click();$('[data-duel="surrender"]').click();$('[data-duel="confirm-surrender"]').click();
     assert.match($('.duel-prompt').textContent,/Defeat/);assert.ok($('[data-duel="rematch"]'));
+    await waitFor(()=>$('.duel-arena').dataset.moving==='false');
     $('[data-duel="duel-menu"]').click();$('[data-duel-keep="0"]').click();
     assert.ok(app.state.decks.some(deck=>deck.sections.main.reduce((n,e)=>n+e.quantity,0)===40));
     $('[data-action="close"]').click();$('[data-duel="rematch"]').click();assert.ok($('.solo-setup'));
+  }finally{app.navigate('home');window.close();}
+});
+test('Set monsters use the authentic sideways card back; AI speed and the expanded log work in a match',async()=>{
+  const {window,app,$}=await boot('solo-presentation',null,false,soloCatalog);
+  const change=(selector,value)=>{const input=$(selector);input.value=value;input.dispatchEvent(new window.Event('change',{bubbles:true}));};
+  try{
+    app.navigate('solo');$('[data-duel-tab="2"]').click();change('#solo-first','you');change('#solo-ai-speed','fast');
+    $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('[data-duel="start"]').click();await waitFor(()=>$('.duel-phases [aria-current]')?.textContent==='M1Main 1'&&Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
+    $('.duel-hand-card').click();[...document.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Set in Defense').click();
+    const monster=$('.yours .duel-zone.occupied');assert.ok(monster.classList.contains('defense'));assert.ok(monster.classList.contains('face-down'));
+    assert.match($('.yours .duel-zone.occupied .duel-card-visual img').getAttribute('src'),/assets\/card-back.jpg$/);
+    assert.match(monster.getAttribute('aria-label'),/Defense Position/);
+    $('.duel-log-open').click();assert.ok($('.duel-log-body'));assert.ok($('.duel-log-turn'));
+    assert.match($('#duel-log-scroll').textContent,/Turn 1/);assert.match($('#duel-log-scroll').textContent,/Set a monster/);
+    assert.ok($('[data-duel="log-latest"]'));$('[data-duel-log-filter="battle"]').click();
+    assert.equal($('[data-duel-log-filter="battle"]').getAttribute('aria-pressed'),'true');
+    assert.doesNotMatch($('#duel-log-scroll').textContent,/Set a monster/);
+    $('[data-action="close"]').click();$('[data-duel="duel-menu"]').click();change('#duel-ai-speed','deliberate');
+    assert.equal(JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1')).aiSpeed,'deliberate');
   }finally{app.navigate('home');window.close();}
 });
 test('set generation loads real memberships and preserves a visible retry when dates fail', async()=>{
@@ -307,5 +329,19 @@ test('set generation loads real memberships and preserves a visible retry when d
     $('[data-duel="sets-retry"]').click();await new Promise(resolve=>setImmediate(resolve));
     assert.match($('#solo-set').textContent,/Classic test set · 24 cards/);assert.doesNotMatch($('#solo-set').textContent,/Too late/);
     $('[data-duel="start"]').click();assert.ok($('.duel-arena'));
+  }finally{app.navigate('home');window.close();}
+});
+test('opening phases pause in the expanded log and resume without an extra draw',async()=>{
+  const {window,app,$}=await boot('solo-opening-pause',null,false,soloCatalog);
+  try{
+    app.navigate('solo');$('[data-duel-tab="2"]').click();
+    $('#solo-first').value='you';$('#solo-first').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('[data-duel="start"]').click();$('.duel-log-open').click();
+    assert.ok($('.duel-log-body'));assert.equal($('#modal').open,true);
+    await new Promise(resolve=>setTimeout(resolve,120));
+    assert.equal($('.duel-phases').dataset.phase,'draw');assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
+    $('[data-action="close"]').click();await waitFor(()=>$('.duel-phases').dataset.phase==='main1'&&Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
+    assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
   }finally{app.navigate('home');window.close();}
 });

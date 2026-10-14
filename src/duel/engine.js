@@ -18,8 +18,8 @@ const locate = (state, uid) => {
   return null;
 };
 export const findCard = (state,uid) => locate(state,uid)?.instance;
-const log = (state,message,kind='action',uids=[]) => {
-  const entry={id:++state.serial,message,kind,uids}; state.log.push(entry); state.log=state.log.slice(-160); state.lastEvent=entry;
+const log = (state,message,kind='action',uids=[],details={}) => {
+  const entry={id:++state.serial,turn:state.turn,phase:state.phase,side:state.active,message,kind,uids,...details}; state.log.push(entry); state.log=state.log.slice(-500); state.lastEvent=entry;
 };
 const rng = state => {state.seed=(Math.imul(state.seed,1664525)+1013904223)>>>0;return state.seed/4294967296;};
 function shuffle(state,list) { for(let n=list.length-1;n>0;n--){const i=Math.floor(rng(state)*(n+1));[list[n],list[i]]=[list[i],list[n]];} }
@@ -48,7 +48,7 @@ function send(state,uid,{bounce=false,tribute=false}={}) {
   if(onField) {
     // Equip cards lose their target immediately, including when it is Tributed.
     for(const equip of backrow(state).filter(c=>c.equipTarget===uid)) send(state,equip.uid);
-    log(state,`${value.card.name} ${bounce?'returned to hand':banish?'was banished':tribute?'was Tributed':'went to the Graveyard'}.`,'leave',[uid]);
+    log(state,`${value.card.name} ${bounce?(value.card.type.includes('Fusion')?'returned to the Extra Deck':'returned to hand'):banish?'was banished':rule.returnTop?'returned to the top of the Deck':tribute?'was Tributed':'went to the Graveyard'}.`,'leave',[uid],{side:found.side});
   }
 }
 function reset(instance) {return {uid:instance.uid,card:instance.card,owner:instance.owner,proper:instance.proper||false};}
@@ -65,7 +65,7 @@ function draw(state,side,count=1) {
     if(!state.players[side].deck.length){state.winner=1-side;log(state,`${who(side)} could not draw. ${who(1-side)} won!`,'victory');return;}
     state.players[side].hand.push(state.players[side].deck.shift());
   }
-  log(state,`${who(side)} drew ${count} card${count===1?'':'s'}.`,'draw');checkWinner(state);
+  log(state,`${who(side)} drew ${count} card${count===1?'':'s'}.`,'draw',[],{side});checkWinner(state);
 }
 function placeMonster(state,side,uid,{faceUp=true,position='attack',proper=false}={}) {
   const player=state.players[side],index=player.monsters.indexOf(null);
@@ -78,7 +78,7 @@ export function createMatch(decks,{seed=Date.now(),first=0,lp=8000}={}) {
   let id=0;
   state.players=decks.map((deck,side)=>({name:deck.name||who(side),lp,deck:deck.main.map(card=>({uid:`c${++id}`,card,owner:side})),extra:(deck.extra||[]).map(card=>({uid:`c${++id}`,card,owner:side})),hand:[],monsters:Array(5).fill(null),spells:Array(5).fill(null),field:null,grave:[],banished:[],waboku:false}));
   for(let side=0;side<2;side++){shuffle(state,state.players[side].deck);draw(state,side,5);}
-  log(state,`${who(first)} go first. No first-turn draw or Battle Phase.`,'phase');
+  log(state,`${first===0?'You go':'AI goes'} first. No first-turn draw or Battle Phase.`,'phase');
   return state;
 }
 export function stats(state,instance) {
@@ -208,7 +208,7 @@ function activate(state,side,action) {
   }else card.faceUp=true;
   const negate=rule.op==='negate'?state.chain.at(-1)?.id:null;
   state.chain.push({id:++state.chainSerial,uid:card.uid,card:card.card,side,rule,speed:rule.speed||(isTrap(card.card)?2:1),action,negate});
-  log(state,`${who(side)} activated ${card.card.name}.`,'activate',[card.uid,action.target].filter(Boolean));
+  log(state,`${who(side)} activated ${card.card.name}.`,'activate',[card.uid,action.target].filter(Boolean),{side});
   if(state.window){state.window.priority=1-side;state.window.passes=0;}
   else openWindow(state,{kind:'effect',side},1-side);
 }
@@ -269,13 +269,13 @@ function applyEffect(state,link) {
     }break;
     case 'thunderSearch':for(let n=0;n<action.count;n++){const card=player.deck.find(c=>c.card.name==='Thunder Dragon');if(card){take(state,card.uid);player.hand.push(card);}}shuffle(state,player.deck);break;
   }
-  log(state,`${link.card.name} resolved.`,'effect',[link.uid,action.target].filter(Boolean));
+  log(state,`${link.card.name} resolved.`,'effect',[link.uid,action.target].filter(Boolean),{side});
 }
 function resolveChain(state) {
   while(state.chain.length&&state.winner===null){
     const link=state.chain.pop();
     if(!link.negated&&!(isTrap(link.card)&&!liveTrap(state)))applyEffect(state,link);
-    else log(state,`${link.card.name} was negated.`,'effect');
+    else log(state,`${link.card.name} was negated.`,'effect',[],{side:link.side});
     if(isSpell(link.card)||isTrap(link.card)){
       if(!['field','continuous','equip'].includes(link.rule.op)&&findCard(state,link.uid))send(state,link.uid);
     }
@@ -304,7 +304,7 @@ function battle(state,event) {
     if(delta>0){if(!foe.waboku)destroyed.push(target.uid);const pierce=rule.pierce||backrow(state).some(c=>c.faceUp&&c.equipTarget===attacker.uid&&ruleFor(c.card).pierce);if(pierce&&!foe.waboku){foe.lp-=delta;onDamage(state,attacker,1-side,delta);}}
     else if(delta<0)player.lp-=player.waboku?0:-delta;
   }
-  log(state,`${attacker.card.name} battled ${target.card.name}.`,'battle',[attacker.uid,target.uid]);
+  log(state,`${attacker.card.name} (${attack} ATK) attacked ${target.card.name} (${target.position==='defense'?defense.def+' DEF':defense.atk+' ATK'}). ${destroyed.length?destroyed.map(uid=>findCard(state,uid)?.card.name||'Monster').join(' and ')+' destroyed.':'No monster was destroyed.'}`,'battle',[attacker.uid,target.uid],{side});
   if(flipped)queueFlip(state,1-side,target);
   if(ruleFor(target.card).battleBounce)state.queue.push({side:1-side,card:target.card,uid:target.uid,rule:{op:'bounce',target:'monster'},fixedTarget:attacker.uid});
   state.pending={kind:'cleanupBattle',destroyed};
@@ -333,7 +333,7 @@ function drain(state) {
   if(trigger.rule.target&&!trigger.fixedTarget){
     const choices=targets(state,trigger.side,trigger.rule).map(c=>({type:'CHOOSE',target:c.uid}));
     if(choices.length){state.choice={side:trigger.side,title:`${trigger.card.name}: choose a target`,trigger,options:choices};return;}
-    log(state,`${trigger.card.name}: no legal target.`,'effect');drain(state);return;
+    log(state,`${trigger.card.name}: no legal target.`,'effect',[],{side:trigger.side});drain(state);return;
   }
   applyEffect(state,{...trigger,action:{target:trigger.fixedTarget}});checkWinner(state);drain(state);
 }
@@ -361,7 +361,7 @@ function advancePhase(state) {
 export function applyAction(previous,action,side=previous.active) {
   if(action.type==='SURRENDER'){
     if(previous.winner!==null)return previous;
-    const next=structuredClone(previous);next.winner=1-side;log(next,`${who(side)} surrendered.`,'victory');return next;
+    const next=structuredClone(previous);next.winner=1-side;log(next,`${who(side)} surrendered.`,'victory',[],{side});return next;
   }
   const key=JSON.stringify(action);
   if(!legalActions(previous,side).some(a=>JSON.stringify(a)===key))throw new Error('That action is not legal in this phase.');
@@ -377,7 +377,7 @@ export function applyAction(previous,action,side=previous.active) {
       log(state,action.set?`${who(side)} Set a monster.`:`${who(side)} summoned ${card.card.name}.`,'summon',[action.uid]);
       state.pending={kind:'summon',side,uid:action.uid,faceUp:!action.set};openWindow(state,{...state.pending},1-side);
     }break;
-    case 'POSITION':card.position=card.position==='attack'?'defense':'attack';card.changedTurn=state.turn;log(state,`${card.card.name} changed position.`,'position',[card.uid]);openWindow(state,{kind:'phase',side},1-side);break;
+    case 'POSITION':card.position=card.position==='attack'?'defense':'attack';card.changedTurn=state.turn;log(state,`${card.card.name} changed to ${card.position==='defense'?'Defense':'Attack'} Position.`,'position',[card.uid]);openWindow(state,{kind:'phase',side},1-side);break;
     case 'FLIP':card.faceUp=true;card.position='attack';card.changedTurn=state.turn;state.pending={kind:'summon',side,uid:card.uid,faceUp:true,flip:true};log(state,`${who(side)} Flip Summoned ${card.card.name}.`,'summon',[card.uid]);openWindow(state,{...state.pending},1-side);break;
     case 'SET':{
       take(state,card.uid);
@@ -395,11 +395,19 @@ export function applyAction(previous,action,side=previous.active) {
       if(rule.op==='tributeBoost'){send(state,action.tribute,{tribute:true});effectRule={op:'boost',atk:rule.amount,def:0};action={...action,target:card.uid};}
       state.chain.push({id:++state.chainSerial,uid:card.uid,card:card.card,side,rule:effectRule,speed:1,action});openWindow(state,{kind:'effect',side},1-side);log(state,`${who(side)} used ${card.card.name}.`,'activate',[card.uid]);
     }break;
-    case 'ATTACK':card.attacks=(card.attacks||0)+1;player.lp-=ruleFor(card.card).attackCost||0;state.pending={kind:'attack',side,uid:card.uid,target:action.target};openWindow(state,{...state.pending},1-side);log(state,`${who(side)} declared an attack.`,'attack',[card.uid,action.target].filter(Boolean));break;
+    case 'ATTACK':{
+      card.attacks=(card.attacks||0)+1;player.lp-=ruleFor(card.card).attackCost||0;state.pending={kind:'attack',side,uid:card.uid,target:action.target};openWindow(state,{...state.pending},1-side);
+      const target=findCard(state,action.target),name=target?(target.faceUp?target.card.name:'a face-down Defense Position monster'):`${side===0?'AI’s':'your'} Life Points`;
+      log(state,`${who(side)} declared an attack with ${card.card.name} against ${name}.`,'attack',[card.uid,action.target].filter(Boolean),{side});
+    }break;
     case 'CHOOSE':{
       const trigger=state.choice.trigger;state.choice=null;applyEffect(state,{...trigger,action});drain(state);
     }break;
   }
+  state.players.forEach((p,index)=>{
+    const delta=p.lp-previous.players[index].lp;
+    if(delta)log(state,`${index===0?'Your':'AI’s'} LP ${delta<0?'−':'+'}${Math.abs(delta).toLocaleString()}: ${Math.max(0,p.lp).toLocaleString()} remaining.`,delta<0?'damage':'heal',[],{side:index,lpDelta:delta});
+  });
   checkWinner(state);return state;
 }
 

@@ -1,6 +1,14 @@
-# Duel Atlas · v0.1.0
+# Duel Atlas · v0.1.1
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and a playable **Solo Duel · 2002 Lab**. Plain HTML, CSS, and ES-module JavaScript; static hosting, no custom backend or runtime dependencies.
+
+## v0.1.1 · Movement and readability
+
+- Authentic card backs appear on Set cards, draw piles, and the AI hand. Both face-up and face-down Defense Position cards rotate sideways as one complete surface.
+- Player turns advance automatically through Draw and Standby to Main Phase 1. The engine still draws exactly once, preserves the first-player draw exception, and pauses for real chains/target choices.
+- AI decision speed is separate from difficulty and animation preferences: Fast (180ms), Normal (700ms), Relaxed (1.5s), or Deliberate (2.5s). Change it in Match setup or the turn menu. Empty response windows pass promptly without an artificial thinking delay.
+- Card movement uses a location-based animation layer: opening deals, deck-to-hand draws/searches, summons, Sets, flips/position changes, activations, revival, control transfers, returns, Graveyard/banish moves, attack lunges/trails/impacts, and LP counters. Moves finish before the next AI decision. Navigation, resizing, reduced motion, and unavailable animation APIs settle safely without applying another game action.
+- A visible **Log** button opens a larger sheet with turn groups, phase/actor labels, attack stats/results, explicit LP changes, event filters, and smooth **Jump to latest**. The last 500 events are retained. The duel pauses while the sheet is open.
 
 ## Play the 2002 Lab
 
@@ -9,13 +17,13 @@ Open **Solo Duel** in the bottom navigation or Home. The three setup panels keep
 - **Your deck / AI deck:** independently choose a saved/custom deck, random cards, or random cards from a released set. Card eligibility offers a release-year cutoff through 2002, monster type/race, attribute, subtype, and Spell/Trap switches. Filters also apply to saved decks.
 - **Saved / custom deck → Design/Edit:** opens the existing deck builder with playable early cards. **Save & return to Solo** assigns the deck to that duelist. Main Decks need 40–60 cards; the Extra Deck allows supported Fusions, up to 15. Side Decks are not used in single games.
 - **Random cards / sets:** generates a 40-card deck with a three-copy limit, enough low-level monsters, and some higher-level cards where available. Set generation uses real API set memberships and set release dates, intersected with the card’s first TCG date, effect support, and the selected filters. Sets with insufficient cards are disabled; filters are never silently broadened. Eligible Fusions and Polymerization can be included when their materials are present.
-- **Match:** Easy, Normal, or Hard AI; you/AI/coin-toss first; 8,000 or 4,000 LP; animations on/off. Hard changes action priorities and risk assessment. No difficulty receives opposing hidden cards or draw order for scoring.
+- **Match:** Easy, Normal, or Hard AI; independent AI decision speed; you/AI/coin-toss first; 8,000 or 4,000 LP; animations on/off. Hard changes action priorities and risk assessment. No difficulty receives opposing hidden cards or draw order for scoring.
 
-Tap a hand or field card to inspect its text and see currently legal actions. Target and Tribute choices have explicit lists. The phase tracker follows **Draw → Standby → Main 1 → Battle → Main 2 → End**. Use **Next** to advance, **End turn** to skip remaining Main/Battle actions, and **Respond / Pass** when a response is available. Windows without any possible response pass automatically.
+Tap a hand or field card to inspect its text and see currently legal actions. Target and Tribute choices have explicit lists. The phase tracker follows **Draw → Standby → Main 1 → Battle → Main 2 → End**. Your Draw and Standby Phases advance automatically; use **Next** for later phases, **End turn** to skip remaining Main/Battle actions, and **Respond / Pass** when a response is available. Windows without any possible response pass automatically.
 
 The arena has five Monster and five Spell/Trap zones per player. Field Spells, the Graveyard, banished cards, and your Extra Deck are accessible through the visible **Your piles / AI piles** controls. Deck order and opposing face-down cards stay hidden. On short portrait viewports, **Show S/T / Show monsters** switches the board layer to preserve usable targets. Taller phones show both rows; landscape puts the fields beside the hand and controls.
 
-The turn menu offers the duel log, support/rules information, animation setting, surrender, and **Save your deck / Save AI deck** for retaining generated decks in local storage. Leaving Solo pauses the match; returning resumes it. **Reloading the page ends the current test match.** Decks and setup preferences persist.
+The always-visible **Log** button opens the expanded chronological log. The turn menu offers AI decision speed, the duel log, support/rules information, animation setting, surrender, and **Save your deck / Save AI deck** for retaining generated decks in local storage. Leaving Solo pauses the match; returning resumes it. **Reloading the page ends the current test match.** Decks and setup preferences persist.
 
 ## Engine coverage and deliberate limits
 
@@ -75,7 +83,7 @@ The existing **Test and deploy Duel Atlas** workflow tests and builds pushes to 
 
 Live app: **https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/**
 
-All asset/module/manifest/service-worker paths are relative, so the app works under a GitHub project subdirectory or another static HTTPS host. The service worker’s `shell-v0.1.0` cache includes every Solo module and stylesheet as one complete release. Bump the package, core, HTML, and shell-cache versions when publishing changed assets.
+All asset/module/manifest/service-worker paths are relative, so the app works under a GitHub project subdirectory or another static HTTPS host. The service worker’s `shell-v0.1.1` cache includes every Solo module and stylesheet as one complete release. Bump the package, core, HTML, and shell-cache versions when publishing changed assets.
 
 ## Install, offline use, and layout
 
@@ -88,16 +96,16 @@ All asset/module/manifest/service-worker paths are relative, so the app works un
 
 ## Verification record
 
-The release passes **62 automated tests**. The suite covers existing archive/deck workflows plus setup filters, custom AI-deck design/return, set-load retry, starting a match, phase progression, real card actions, pause/resume, surrender, generated-deck saving, rules/effects, hidden-information invariance, card conservation, layout contracts, and complete seeded matches.
+The release passes **76 automated tests**. The suite covers existing archive/deck workflows plus setup filters, custom AI-deck design/return, set-load retry, starting a match, phase progression, real card actions, pause/resume, surrender, generated-deck saving, rules/effects, hidden-information invariance, card conservation, layout contracts, and complete seeded matches.
 
-A fresh live check loaded the full archive and set list, found **nine playable set pools**, performed **30 generation checks**, and completed **40 matches / 11,400 legal actions** while preserving every card instance. Another 12 seeded matches run in the deterministic test suite. The static build and complete service-worker shell are checked before deployment.
+A check against the full API archive and set-date snapshot found **nine playable set pools**, performed **30 generation checks**, and completed **40 matches / 11,191 legal actions** while preserving every card instance. Another 12 seeded matches run in the deterministic test suite. Presentation tests cover automatic draws, chain/choice interruptions, AI speed persistence, hidden-image privacy, sideways backs, animation completion/cancellation, and log filtering/pause/resume. The static build and complete service-worker shell are checked before deployment.
 
 **Rendered browser/device QA was unavailable in the build environment.** DOM and CSS contract tests do not establish actual phone pixels, touch feel, animation smoothness, installation behavior, or Safari/Chrome offline behavior. Device acceptance:
 
 1. Test 320×568 and 390×844 portrait plus landscape. Keep the arena, phase tracker, hand, and action controls visible without page scrolling. On short phones, switch Monster / S/T layers.
-2. Start random-card and random-set matches; change AI difficulty and eligibility; try an invalid saved deck. Confirm errors explain what to change.
+2. Start random-card and random-set matches; change AI difficulty, decision speed, and eligibility; try an invalid saved deck. Confirm errors explain what to change.
 3. Design and save an AI deck, return to Solo, summon/Set/Tribute, inspect targets, attack, respond, discard, and finish a game. Test generated-deck saving and a rematch.
-4. Confirm opponent hand, deck order, and face-down cards stay hidden. Check animations, reduced-motion mode, and pause/resume across tabs.
+4. Confirm opponent hand, deck order, and face-down cards stay hidden during animations too. Verify automatic Draw → Main 1, sideways Set cards, draw/summon/attack/Graveyard movement, adjustable AI pace, and the expanded log. Check reduced motion, rotation, cancellation, and pause/resume across tabs.
 5. Recheck archive search, quick edits, deck switching, filters, JSON/YDK backups, installation, and airplane-mode cached use. Multiplayer must remain inactive.
 
 ## Project layout
@@ -112,10 +120,12 @@ src/duel/catalog.js        Explicit card/effect capability registry
 src/duel/decks.js          Eligibility, validation, random decks, set metadata
 src/duel/engine.js         Pure deterministic rules/actions and observations
 src/duel/ai.js             Hidden-safe difficulty scoring
-src/duel/ui.js / duel.css  Solo setup, card choices, fixed arena, animations
+src/duel/ui.js / duel.css  Solo setup, card choices, fixed arena, expanded log
+src/duel/motion.js         Hidden-safe movement plans, Web Animations, cancellation
+src/duel/flow.js / log.js   Automatic opening phases, AI speed, chronological log groups
 assets/                   Original emblem and PWA icon sizes
 sw.js / manifest.*        Offline shell, viewed images, relative PWA scope
 scripts/ / tests/         Local server, build, live checks, automated tests
 ```
 
-Card data and official card images come from YGOPRODeck; Yu-Gi-Oh! names, text, and images belong to their respective rights holders. This independent fan companion is unaffiliated with Konami. Branding and navigation artwork are original.
+Card data and official card images come from YGOPRODeck; Yu-Gi-Oh! names, text, and images belong to their respective rights holders. This independent fan companion is unaffiliated with Konami. Branding and navigation artwork are original. The authentic gameplay card back is sourced from https://images.ygoprodeck.com/images/cards/back_high.jpg, cached locally with attribution in assets/CREDITS.md, and is not used as branding.

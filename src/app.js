@@ -526,7 +526,7 @@ main.addEventListener('change', event => {
 });
 $('#app-menu').onclick = showMenu;
 $('#import-file').onchange = event => handleImport(event.target.files[0]);
-window.addEventListener('hashchange', () => navigate(location.hash.slice(1)));
+window.addEventListener('hashchange', () => { const route = location.hash.slice(1); if (route !== state.route) navigate(route); });
 window.addEventListener('beforeunload', event => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
 document.querySelectorAll('[data-icon]').forEach(element => element.innerHTML = icon(element.dataset.icon));
 navigate(location.hash.slice(1) || 'home', false);
