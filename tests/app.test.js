@@ -280,7 +280,7 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
     $('#solo-first').value='you';$('#solo-first').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('#solo-ai-speed').value='fast';$('#solo-ai-speed').dispatchEvent(new window.Event('change',{bubbles:true}));
     $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
-    $('[data-duel="start"]').click();assert.ok($('.duel-arena'));assert.equal(document.querySelectorAll('.duel-zone').length,20);
+    $('[data-duel="start"]').click();assert.ok($('.duel-arena'));assert.equal(document.querySelectorAll('.duel-board .duel-zone').length,20);
     assert.ok(document.documentElement.classList.contains('duel-playing'));
     assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
     assert.equal($('.duel-phases [aria-current]').textContent,'DDraw');

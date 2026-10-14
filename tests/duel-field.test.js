@@ -8,7 +8,7 @@ import { ruleFor } from '../src/duel/catalog.js';
 import { defaultSide } from '../src/duel/decks.js';
 import { createSoloController } from '../src/duel/ui.js';
 import { cardRotation, fieldLocation, makeFieldSelection, fieldCandidates, pickFieldCandidate, quickCardActions, activityCue, cardActivity } from '../src/duel/field.js';
-import { planMotion } from '../src/duel/motion.js';
+import { planMotion, captureArena } from '../src/duel/motion.js';
 
 const normals=Array.from({length:14},(_,index)=>({id:80000+index,name:`Warrior ${index}`,type:'Normal Monster',tcgDate:'2002-03-08',race:'Warrior',attribute:'EARTH',atk:1800,def:1200,level:4,desc:'A classic warrior.',card_images:[]}));
 const monster=normals[0],mst={id:5318639,name:'Mystical Space Typhoon',type:'Spell Card',race:'Quick-Play',tcgDate:'2002-09-16',desc:'Target 1 Spell/Trap on the field; destroy that target.',card_images:[]};
@@ -189,11 +189,67 @@ test('all twenty zones and both rows keep their grid display across landscape ph
     for(const [width,height] of [[568,320],[667,375],[844,390],[932,430],[1024,768]]){
       rotate(r,width,height);
       assert.equal(r.$('.duel-arena').hidden,false,`${width}×${height}`);
-      assert.equal(r.main.querySelectorAll('.duel-zone').length,20);
+      assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
+      assert.equal(r.main.querySelectorAll('[data-pile-zone]').length,8);
       for(const row of r.main.querySelectorAll('.monster-zones, .backrow-zones'))assert.equal(r.window.getComputedStyle(row).display,'grid',`${width}×${height}: each row is present`);
       assert.equal(r.main.querySelectorAll('.duel-table .duel-life').length,0);
       assert.equal(r.main.querySelectorAll('.duel-hud .duel-life').length,2);
       assert.equal(r.main.querySelector('[data-duel-layer]'),null);
     }
+  }finally{r.close();}
+});
+test('the game mats oppose vertically and mirror auxiliary and pile positions for each duelist',async()=>{
+  const r=await rig();try{
+    const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
+    const computed=selector=>r.window.getComputedStyle(r.$(selector));
+    assert.equal(computed('.opponent-side').gridRow,'2');assert.equal(computed('.player-side').gridRow,'4');
+    for(const [prefix,leftColumn,rightColumn,auxAreas,pileAreas] of [['.player-side','1','3','"field" "extra"','"grave" "deck"'],['.opponent-side','3','1','"extra" "field"','"deck" "grave"']]){
+      assert.equal(computed(prefix+' .duel-auxiliary-zones').gridColumn,leftColumn);
+      assert.equal(computed(prefix+' .duel-pile-zones').gridColumn,rightColumn);
+      assert.equal(computed(prefix+' .duel-auxiliary-zones').gridTemplateAreas,auxAreas);
+      assert.equal(computed(prefix+' .duel-pile-zones').gridTemplateAreas,pileAreas);
+      assert.equal(r.main.querySelectorAll(prefix+' [data-pile-zone]').length,4);
+    }
+    assert.deepEqual([...r.main.querySelectorAll('.opponent .monster-zones .duel-zone')].map(node=>node.dataset.motionZone),[4,3,2,1,0].map(index=>'1:monsters:'+index));
+    assert.deepEqual([...r.main.querySelectorAll('.yours .monster-zones .duel-zone')].map(node=>node.dataset.motionZone),[0,1,2,3,4].map(index=>'0:monsters:'+index));
+    assert.equal(r.$('.duel-console').contains(r.$('.duel-hand')),true);
+    assert.equal(r.$('.duel-table').contains(r.$('.duel-hand')),false);
+  }finally{r.close();}
+});
+test('separate Deck, Graveyard and Extra Deck zones open the correct pile and preserve private contents',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),old=put(s,0,{...monster,name:'First fallen'},'grave'),recent=put(s,0,{...monster,name:'Latest fallen'},'grave');
+    put(s,0,{...monster,name:'Known Fusion',type:'Fusion Monster'},'extra');
+    const secret=put(s,1,{...monster,name:'Private AI Fusion',type:'Fusion Monster',card_images:[{image_url_small:'https://images.ygoprodeck.com/images/cards_small/12345678.jpg'}]},'extra');
+    r.controller.refresh();
+    assert.doesNotMatch(r.main.innerHTML,/Private AI Fusion|12345678.jpg/);
+    const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,recent.uid);assert.equal(grave.querySelector('.duel-pile-count').textContent,'2');grave.click();
+    assert.match(r.modal.querySelector('h2').textContent,/Your Graveyard/);
+    assert.deepEqual([...r.modal.querySelectorAll('.duel-public-card')].map(node=>node.dataset.duelCard),[old.uid,recent.uid]);
+    r.modal.querySelector('[data-duel-pile-zone="extra"]').click();assert.match(r.modal.textContent,/Known Fusion/);assert.doesNotMatch(r.modal.textContent,/First fallen/);
+    r.$('[data-motion-zone="1:extra"]').click();assert.match(r.modal.textContent,/AI’s Extra Deck stays face-down/);
+    assert.doesNotMatch(r.modal.innerHTML,new RegExp(secret.card.name+'|12345678.jpg'));assert.equal(r.modal.querySelectorAll('.duel-public-card').length,0);
+    r.$('[data-motion-zone="0:deck"]').click();assert.match(r.modal.querySelector('h2').textContent,/Your Deck/);assert.equal(r.modal.querySelectorAll('.duel-public-card').length,0);
+  }finally{r.close();}
+});
+test('draw, Graveyard, Extra Deck and Field Spell movement anchors are the on-mat zones',async()=>{
+  const r=await rig();try{
+    const anchors=['deck','grave','extra','field'];
+    for(const side of [0,1])for(const [index,zone] of anchors.entries()){
+      const node=r.$(`[data-motion-zone="${side}:${zone}"]`);assert.ok(node.closest(`[data-field-side="${side}"]`));
+      node.getBoundingClientRect=()=>({left:40+index*60,top:side?30:210,width:40,height:60});
+    }
+    const snapshot=captureArena(r.main);
+    for(const side of [0,1])for(const [index,zone] of anchors.entries())assert.deepEqual(snapshot.zones.get(`${side}:${zone}`),{x:60+index*60,y:side?60:240,width:40,height:60});
+  }finally{r.close();}
+});
+test('resolved card movement updates the actual Graveyard stack and its public pile view',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),source=put(s,0,mst,'hand'),target=put(s,1,trap,'spells',{faceUp:false,setTurn:0});
+    r.controller.refresh();r.$(`[data-duel-quick="${source.uid}"]`).click();r.$(`[data-duel-card="${target.uid}"]`).click();
+    await waitFor(()=>r.controller.getMatch().players[0].grave.some(card=>card.uid===source.uid)&&r.$('.duel-arena').dataset.moving==='false');
+    const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,source.uid);assert.equal(grave.querySelector('.duel-pile-count').textContent,'1');
+    assert.equal(r.$('[data-motion-zone="1:grave"]').dataset.motionUid,target.uid);
+    grave.click();assert.match(r.modal.textContent,/Mystical Space Typhoon/);
   }finally{r.close();}
 });

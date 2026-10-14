@@ -1,13 +1,20 @@
-# Duel Atlas · v0.1.3
+# Duel Atlas · v0.1.4
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and a playable **Solo Duel · 2002 Lab**. Plain HTML, CSS, and ES-module JavaScript; static hosting, no custom backend or runtime dependencies.
+
+## v0.1.4 · Opposing game mats
+
+- The AI field is at the top and your field is at the bottom. Both Monster and Spell/Trap rows remain visible. The AI’s card columns and auxiliary zones mirror your perspective across the table.
+- Each duelist has a visible Deck and Graveyard on their right, plus a Field Spell and Extra Deck zone on their left. Your Graveyard/Field Spell align with the Monster row; your Deck/Extra Deck align with the Spell/Trap row. The AI layout rotates these positions by 180°. Placement follows the [official game-mat diagram](https://img.yugioh-card.com/en/downloads/rulebook/SD_RuleBook_EN_10.pdf#page=5).
+- Deck and Extra Deck stacks stay face-down with counts. Graveyard shows its top public card. Tap a stack for its own pile view, with tabs for Deck, Graveyard, Extra Deck, and Banished; only your Extra Deck contents are visible. Field Spells keep inspection, legal Effect shortcuts, and direct target highlighting.
+- A side console holds LP, phase tracking, your hand, the Log, and controls so the opposing mats can use the full viewport height. Draws and other movements use the actual on-mat Deck, Graveyard, Field Spell, and Extra Deck anchors. Landscape requirements and portrait pause/resume continue to apply.
 
 ## v0.1.3 · Landscape duel table
 
 - Duels require landscape. Setup and the rest of the app still work in portrait. Starting or rotating into portrait shows a rotate prompt and pauses phase progression, AI decisions, and card input. Rotating back resumes the same match and any pending target choice.
 - During a duel, the table uses the full app viewport with safe-area padding. App branding and bottom navigation give way to an explicit Home arrow and duel menu; leaving pauses the game and restores normal navigation.
-- Both duelists’ five Monster zones and five Spell/Trap zones remain visible together, with the AI field on the left and yours on the right. The field owns the remaining height; a compact bottom dock holds your hand, current action, Log, and phase controls. Card surfaces scale with the available cell rather than a tiny fixed size.
-- LP values and meter bars sit in a separate top HUD, outside the field. The phase tracker stays between them. Direct-attack targeting, card activity highlights, both ATK/DEF values, AI card orientation, hidden-information protection, and all existing duel actions are retained.
+- Both duelists’ five Monster zones and five Spell/Trap zones remain visible together. Card surfaces scale with the available cell rather than a tiny fixed size.
+- LP values and meter bars stay outside the field. Direct-attack targeting, card activity highlights, both ATK/DEF values, AI card orientation, hidden-information protection, and all existing duel actions are retained.
 
 ## v0.1.2 · Actions on the field
 
@@ -35,7 +42,7 @@ Open **Solo Duel** in the bottom navigation or Home. The three setup panels work
 
 Tap a hand or field card to inspect its text and see currently legal actions, or use the legal Attack/Effect/Flip shortcuts on the card. Tap highlighted cards to choose field targets or Tributes; tap highlighted LP for a direct attack. Off-field choices use a picker. The phase tracker follows **Draw → Standby → Main 1 → Battle → Main 2 → End**. Your Draw and Standby Phases advance automatically; use **Next** for later phases, **End turn** to skip remaining Main/Battle actions, and **Responses / Pass** when a response is available. Windows without any possible response pass automatically.
 
-The landscape arena shows five Monster and five Spell/Trap zones per player at the same time, with portrait card surfaces and both ATK/DEF visible. LP is in the outside HUD. Each field has a deck/Graveyard control and Field Spell slot; open the deck/Graveyard control for public piles and your Extra Deck. Deck order and opposing face-down cards stay hidden. Use the top-left Home arrow to leave and pause the match. Portrait rotation also pauses play; returning to landscape preserves the field and selected targets. Reloading still ends the test match.
+The landscape arena shows the AI above you, with five Monster and five Spell/Trap zones per player, portrait card surfaces, and both ATK/DEF visible. Deck/Graveyard and Field Spell/Extra Deck spaces flank each mat from that duelist’s perspective. Tap a pile to open its matching view; deck order and the opponent’s Extra Deck contents stay hidden. The side console contains LP, phase tracking, your hand, controls, and a Home arrow to leave and pause the match. Portrait rotation also pauses play; returning to landscape preserves the field and selected targets. Reloading still ends the test match.
 
 The always-visible **Log** button opens the expanded chronological log. The turn menu offers AI decision speed, the duel log, support/rules information, animation setting, surrender, and **Save your deck / Save AI deck** for retaining generated decks in local storage. Leaving Solo pauses the match; returning resumes it. **Reloading the page ends the current test match.** Decks and setup preferences persist.
 
@@ -97,7 +104,7 @@ The existing **Test and deploy Duel Atlas** workflow tests and builds pushes to 
 
 Live app: **https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/**
 
-All asset/module/manifest/service-worker paths are relative, so the app works under a GitHub project subdirectory or another static HTTPS host. The service worker’s `shell-v0.1.3` cache includes every Solo module and stylesheet as one complete release. Bump the package, core, HTML, and shell-cache versions when publishing changed assets.
+All asset/module/manifest/service-worker paths are relative, so the app works under a GitHub project subdirectory or another static HTTPS host. The service worker’s `shell-v0.1.4` cache includes every Solo module and stylesheet as one complete release. Bump the package, core, HTML, and shell-cache versions when publishing changed assets.
 
 ## Install, offline use, and layout
 
@@ -110,13 +117,13 @@ All asset/module/manifest/service-worker paths are relative, so the app works un
 
 ## Verification record
 
-The release passes **93 automated tests**. The suite covers existing archive/deck workflows plus setup filters, custom AI-deck design/return, set-load retry, starting a match, phase progression, real card actions, pause/resume, surrender, generated-deck saving, rules/effects, hidden-information invariance, card conservation, layout contracts, and complete seeded matches. Presentation checks exercise legal on-card shortcuts, their recovery after movement/AI responses, field target selection, direct LP targeting, multi-Tribute choices, automatic mandatory targets, hidden-card privacy, AI orientation, and directional attack movement. New checks cover portrait starts, frozen AI timers, resume without an extra draw, preserving target selection through rotation, Home navigation restoring the app shell, the outside LP HUD, and computed row visibility at five landscape sizes.
+The release passes **97 automated tests**. The suite covers existing archive/deck workflows plus setup filters, custom AI-deck design/return, set-load retry, starting a match, phase progression, real card actions, pause/resume, surrender, generated-deck saving, rules/effects, hidden-information invariance, card conservation, layout contracts, and complete seeded matches. Presentation checks exercise legal on-card shortcuts, their recovery after movement/AI responses, field target selection, direct LP targeting, multi-Tribute choices, automatic mandatory targets, hidden-card privacy, AI orientation, and directional attack movement. Rotation checks cover portrait starts, frozen AI timers, resume without an extra draw, retained targets, and navigation cleanup. New checks cover opposing mat rows and mirrored columns, eight auxiliary/pile spaces, distinct pile views, private Extra Deck contents, real animation-anchor geometry, Graveyard stack updates after an effect, and computed row visibility at five landscape sizes.
 
 The v0.1.1 engine baseline check against the full API archive and set-date snapshot found **nine playable set pools**, performed **30 generation checks**, and completed **40 matches / 11,191 legal actions** while preserving every card instance. Another 12 seeded matches run in this release’s deterministic test suite. Presentation tests also cover automatic draws, chain/choice interruptions, AI speed persistence, hidden-image privacy, sideways backs, animation completion/cancellation, and log filtering/pause/resume. The static build and complete service-worker shell are checked before deployment.
 
 **Rendered browser/device QA was unavailable in the build environment.** DOM and CSS contract tests do not establish actual phone pixels, touch feel, animation smoothness, installation behavior, or Safari/Chrome offline behavior. Device acceptance:
 
-1. Start a duel in 390×844 portrait: the rotate prompt must pause all play. Rotate to 844×390; also try 568×320, 667×375, and 932×430 landscape. Keep all twenty zones, both field rows, the HUD, phase tracker, hand, and controls visible without page scrolling. Check card and stat readability, notch/home-indicator safe areas, and browser bars.
+1. Start a duel in 390×844 portrait: the rotate prompt must pause all play. Rotate to 844×390; also try 568×320, 667×375, and 932×430 landscape. Keep the AI above the player, all twenty central zones, eight auxiliary/pile spaces, and the side console visible without page scrolling. Verify mirrored pile placement, pile views, card/stat readability, notch/home-indicator safe areas, and browser bars.
 2. Start random-card and random-set matches; change AI difficulty, decision speed, and eligibility; try an invalid saved deck. Confirm errors explain what to change.
 3. Design and save an AI deck, return to Solo, summon/Set/Tribute, inspect targets, attack, respond, discard, and finish a game. Test generated-deck saving and a rematch.
 4. Confirm opponent hand, deck order, and face-down cards stay hidden during animations too. Verify automatic Draw → Main 1, AI card orientation, sideways Set cards, both stats, source/target labels, direct attacks toward the HUD LP target, draw/summon/Graveyard movement, adjustable AI pace, and the expanded log. Rotate during an AI turn and a pending target choice; verify the match pauses and resumes the same action. Check reduced motion, cancellation, Home navigation, and resume across tabs.
