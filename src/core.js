@@ -1,4 +1,4 @@
-export const VERSION = '0.0.1';
+export const VERSION = '0.0.2';
 export const MECHANICS = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link'];
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };

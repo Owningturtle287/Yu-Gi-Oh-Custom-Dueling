@@ -1,6 +1,16 @@
-# Duel Atlas · v0.0.1
+# Duel Atlas · v0.0.2
 
 A mobile-first Yu-Gi-Oh! companion built for early functionality testing. Plain HTML, CSS, and ES-module JavaScript; no framework, custom backend, or runtime dependencies.
+
+## v0.0.2 · Faster deck building
+
+- Saved-deck selector, New, Save, and deck options sit directly below the app header. Clean decks swap immediately; unsaved changes are protected.
+- The current deck stays visible in a horizontal, two-row card tray while searching the full archive below it. Main / Extra / Side switches change both the visible section and eligible search results. Search terms and filters are retained.
+- Every archive/result card and tray entry has separate green + and red − buttons in its bottom-right corner. Tapping the image/name still opens card details. Quantity badges and section totals update immediately; the three-copy and mechanic restrictions still apply.
+- Quick edits and Save retain search, result scroll position, and tray scroll position. Successful quick edits use quantity feedback and a screen-reader announcement instead of covering the cards with a toast.
+- Bottom navigation is 54px high (52px on shorter screens), plus device safe-area padding, compared with 74px / 65px before. Tap targets remain at least 44px.
+- Navy panels now contrast with jade, warmer gold, violet, and rose accents. Red/green controls have distinct accessible labels in addition to their colors.
+- The card-list container no longer draws a focus border. Card/button focus stays inside tile boundaries, archive scrolling is vertical only, and the deck tray is the only horizontal scrolling surface. Mobile search/select fields use 16px text to avoid automatic iPhone input zoom.
 
 ## What this release does
 
@@ -60,20 +70,20 @@ The manifest, service-worker registration, CSS, module imports, and image assets
 
 ## Phone layout and accessibility
 
-The application shell occupies `100dvh`; the page and main region cannot scroll. The bottom navigation is fixed by the viewport-sized flex layout. Only archive results, deck contents, saved-deck results, and long effect text have scroll containers. Forms and primary controls stay outside those containers.
+The application shell occupies `100dvh`; the page and main region cannot scroll. The bottom navigation is fixed by the viewport-sized flex layout. Only archive results, the horizontal two-row deck tray, saved-deck results, and long effect text have scroll containers. The page itself cannot move horizontally. Forms and primary controls stay outside those containers.
 
 Portrait styles cover narrow phones, with shorter-height adjustments and a landscape two-panel layout. Controls have accessible names, visible keyboard focus, and 44px tap targets; native dialogs provide focus containment. The phone keyboard may reduce the usable area, so try names/search and dialogs as part of device testing.
 
 ## Verification record and manual acceptance
 
-Initial automated verification passed all 20 tests. A live API run loaded **14,607 cards** and passed search, Spell/Link/Xyz filters, local save/reopen, and JSON/YDK round trips. The static build completed successfully. Source-level layout checks verify viewport containment, safe areas, and the four allowed scroll regions.
+The v0.0.2 automated suite contains 27 tests, including quick edits, safe deck switching, section-aware search, retained scroll positions, builder loading, and overflow/focus contracts. The initial release passed all 20 original tests. A live API run loaded **14,607 cards** and passed search, Spell/Link/Xyz filters, local save/reopen, and JSON/YDK round trips. The static build completed successfully. Source-level layout checks verify viewport containment, safe areas, and the four allowed scroll regions.
 
 **Rendered browser/device QA was unavailable in the build environment.** DOM tests do not establish pixel layout, actual installability, real touch behavior, or offline behavior on Safari/Chrome. Before using this as a daily companion, test on a phone:
 
 1. At 320×568 and 390×844 portrait, confirm Home and navigation fit without page scrolling.
 2. Open Archive; verify loading/empty/error states; search by name and effect text, combine filters, and browse far down the continuous results.
-3. Inspect a monster, Spell, Link, and Xyz card. Confirm only long effect text scrolls in the detail dialog.
-4. Create/rename a deck; add to Main, Extra, and Side; try a fourth copy; save, reload, and reopen.
+3. Use red/green card controls without opening details, then tap the card image/name to inspect a monster, Spell, Link, and Xyz card. Confirm only long effect text scrolls in the detail dialog.
+4. Create/rename a deck; add to Main, Extra, and Side; try a fourth copy; save, reload, and reopen. Swap decks with the top selector, inspect both tray rows, and confirm only the tray moves horizontally. Check that quick edits retain your search and scroll positions.
 5. Export and import both JSON and YDK. Change to Pre-Synchro and confirm the restriction message on a blocked mechanic.
 6. Rotate the device; try the top-right menus and name/search keyboard. Confirm important controls stay visible.
 7. Install the PWA, view some images online, close/reopen it in airplane mode, and confirm cached archive, saved decks, and viewed images remain accessible.

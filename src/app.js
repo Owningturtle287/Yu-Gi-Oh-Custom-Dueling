@@ -13,7 +13,7 @@ try {
   state.showStats = localStorage.getItem('duel-atlas.show-stats') !== 'false';
 } catch (error) { state.storageError = error.message; }
 try { cache = browserCardCache(); } catch { /* API browsing can work without IndexedDB. */ }
-let toastTimer, gridObserver, gridFrame, previousFocus, deckIntent = false, detailCard, cardRequest;
+let toastTimer, gridObserver, gridFrame, previousFocus, detailCard, cardRequest;
 const sectionName = section => ({ main: 'Main', extra: 'Extra', side: 'Side' })[section];
 const cardLabel = card => card.humanReadableCardType || card.type;
 const imageURL = (card, small = false) => {
@@ -38,7 +38,7 @@ function showDialog(content, className = '') {
   if (!modal.open) modal.showModal();
 }
 function dialogHeader(title) { return `<div class="dialog-header"><h2 id="dialog-title">${title}</h2><button class="icon-button" data-action="close" aria-label="Close dialog">${icon('close')}</button></div>`; }
-function closeDialog() { modal.close(); detailCard = null; previousFocus?.isConnected && previousFocus.focus(); }
+function closeDialog() { modal.close(); detailCard = null; previousFocus?.isConnected && previousFocus.focus({ preventScroll: true }); }
 modal.addEventListener('cancel', event => { event.preventDefault(); closeDialog(); });
 modal.addEventListener('click', event => { if (event.target === modal) { const r = modal.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) closeDialog(); } });
 document.addEventListener('error', event => {
@@ -90,6 +90,30 @@ function renderArchive() {
   $('#card-search').addEventListener('input', event => { state.filters.query = event.target.value; updateArchive(); });
   updateArchive();
 }
+function searchControls() {
+  const filtered = Boolean(state.filters.attribute || state.filters.race || state.filters.mechanic || state.filters.sort !== 'az' || state.filters.category !== 'All');
+  return `<div class="search-row"><div class="search-wrap">${icon('search')}<label class="sr-only" for="card-search">Search card name, archetype, or effect text</label><input id="card-search" type="search" placeholder="Find cards for your deck…" value="${escape(state.filters.query)}" autocomplete="off"><button class="search-clear" data-action="clear-search" aria-label="Clear search">×</button></div><button class="filter-toggle" data-action="filters" data-active="${filtered}" aria-haspopup="dialog" aria-label="Filter and sort cards">${icon('filter')}</button></div>`;
+}
+function defaultCardSection(card) {
+  return state.route === 'decks' && state.section === 'side' ? 'side' : isExtra(card) ? 'extra' : 'main';
+}
+function sectionCopies(card, section) {
+  return state.draft.sections[section].find(entry => entry.card.id === card.id)?.quantity || 0;
+}
+function cardAccent(card) {
+  return isExtra(card) ? 'extra' : card.type === 'Spell Card' ? 'spell' : card.type === 'Trap Card' ? 'trap' : 'monster';
+}
+function quickControls(card, section, tray = false) {
+  const quantity = sectionCopies(card, section);
+  const supported = !/Token|Skill Card/.test(card.type);
+  return `<span class="copy-count" ${quantity ? '' : 'hidden'} aria-label="${quantity} copies in ${sectionName(section)} Deck">×${quantity}</span><div class="quick-controls" aria-label="Change ${escape(card.name)} quantity in ${sectionName(section)} Deck"><button class="quick-remove" data-quick-remove="${card.id}" data-target-section="${section}" ${tray ? 'data-in-tray="true"' : ''} aria-label="Remove one ${escape(card.name)} from ${sectionName(section)} Deck" ${quantity ? '' : 'disabled'}>−</button><button class="quick-add" data-quick-add="${card.id}" data-target-section="${section}" ${tray ? 'data-in-tray="true"' : ''} aria-label="Add one ${escape(card.name)} to ${sectionName(section)} Deck" ${supported ? '' : 'disabled'}>+</button></div>`;
+}
+function syncQuickControls(tile, card, section) {
+  const quantity = sectionCopies(card, section), badge = $('.copy-count', tile);
+  badge.textContent = '×' + quantity; badge.hidden = !quantity;
+  badge.setAttribute('aria-label', `${quantity} copies in ${sectionName(section)} Deck`);
+  $('.quick-remove', tile).disabled = !quantity;
+}
 function updateArchive() {
   const panel = $('#archive-panel');
   if (!panel) return;
@@ -111,18 +135,24 @@ function updateArchive() {
   renderGrid();
 }
 // All results remain in one continuous scroll range; no next-page controls.
-function filterCardsForUI() { return filterCards(state.cards, state.filters); }
+function filterCardsForUI() {
+  const filtered = filterCards(state.cards, state.filters);
+  if (state.route !== 'decks') return filtered;
+  return filtered.filter(card => !/Token|Skill Card/.test(card.type) && (state.section === 'side' || isExtra(card) === (state.section === 'extra')));
+}
 function renderGrid() {
   const panel = $('#archive-panel'), grid = $('#virtual-grid');
   if (!panel || !grid) return;
   const width = panel.clientWidth || 350;
-  const columns = Math.max(2, Math.floor((width + 10) / 118));
+  const columns = Math.max(2, Math.floor((width + 10) / 126));
   const gap = 10, tileWidth = (width - gap * (columns - 1)) / columns;
-  const tileHeight = Math.round((tileWidth - 14) * 1.455 + 66), stride = tileHeight + gap;
+  const naturalHeight = Math.round((tileWidth - 14) * 1.455 + 100);
+  const tileHeight = state.route === 'decks' ? Math.min(naturalHeight, Math.max(148, panel.clientHeight || 240)) : naturalHeight;
+  const stride = tileHeight + gap;
   const startRow = Math.max(0, Math.floor(panel.scrollTop / stride) - 1);
   const endRow = Math.min(Math.ceil(state.filtered.length / columns), Math.ceil((panel.scrollTop + (panel.clientHeight || 500)) / stride) + 1);
   grid.style.height = `${Math.ceil(state.filtered.length / columns) * stride - gap}px`;
-  const existing = new Map([...grid.children].map(element => [element.dataset.card, element]));
+  const existing = new Map([...grid.children].map(element => [element.dataset.cardId, element]));
   const needed = new Set();
   state.filtered.slice(startRow * columns, endRow * columns).forEach((card, offset) => {
     const index = startRow * columns + offset;
@@ -131,18 +161,19 @@ function renderGrid() {
     let tile = existing.get(key);
     if (!tile) {
       const template = document.createElement('template');
-      template.innerHTML = `<button class="card-tile" data-card="${card.id}" aria-label="Inspect ${escape(card.name)}">${imageTag(card, true, 'card-image')}<strong>${escape(card.name)}</strong><small>${escape(subtitle)}</small></button>`;
+      template.innerHTML = `<article class="card-tile" data-card-id="${card.id}" data-kind="${cardAccent(card)}"><button class="card-inspect" data-card="${card.id}" aria-label="Inspect ${escape(card.name)}">${imageTag(card, true, 'card-image')}<strong>${escape(card.name)}</strong><small>${escape(subtitle)}</small></button>${quickControls(card, defaultCardSection(card))}</article>`;
       tile = template.content.firstElementChild;
       grid.append(tile);
     }
     tile.style.cssText = `width:${tileWidth}px;height:${tileHeight}px;left:${(index % columns) * (tileWidth + gap)}px;top:${Math.floor(index / columns) * stride}px`;
+    syncQuickControls(tile, card, defaultCardSection(card));
   });
-  for (const [key, tile] of existing) if (!needed.has(key) && tile !== document.activeElement) tile.remove();
+  for (const [key, tile] of existing) if (!needed.has(key) && !tile.contains(document.activeElement)) tile.remove();
 }
 async function requestArchive(force = false) {
   if (cardRequest) return cardRequest;
   state.cardStatus = 'loading';
-  if (state.route === 'archive') updateArchive();
+  if (state.route === 'archive' || state.route === 'decks') updateArchive();
   if (state.route === 'home') renderHome();
   cardRequest = (async () => {
     try {
@@ -154,7 +185,7 @@ async function requestArchive(force = false) {
     } catch (error) { state.cardStatus = 'error'; state.cardError = error.message; }
     finally {
       cardRequest = null;
-      if (state.route === 'archive') updateArchive();
+      if (state.route === 'archive' || state.route === 'decks') updateArchive();
       if (state.route === 'home') renderHome();
     }
   })();
@@ -164,13 +195,14 @@ function showFilters() {
   const options = (values, selected, title) => `<option value="">${title}</option>${values.map(v => `<option ${selected === v ? 'selected' : ''} value="${escape(v)}">${escape(v)}</option>`).join('')}`;
   const races = [...new Set(state.cards.map(c => c.race).filter(Boolean))].sort();
   showDialog(`${dialogHeader('Archive filters')}<form id="filters-form"><div class="field-grid">
+    <label class="full">Card category<select name="category">${['All', 'Monster', 'Spell', 'Trap', 'Extra'].map(category => `<option value="${category}" ${state.filters.category === category ? 'selected' : ''}>${category === 'Extra' ? 'Extra Deck' : category === 'All' ? 'All cards' : category}</option>`).join('')}</select></label>
     <label>Attribute<select name="attribute">${options(['DARK', 'LIGHT', 'EARTH', 'WATER', 'FIRE', 'WIND', 'DIVINE'], state.filters.attribute, 'All attributes')}</select></label>
     <label>Card type / race<select name="race">${options(races, state.filters.race, 'All types')}</select></label>
     <label>Summoning mechanic<select name="mechanic">${options(MECHANICS, state.filters.mechanic, 'All mechanics')}</select></label>
     <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([v, label]) => `<option value="${v}" ${state.filters.sort === v ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
   </div><div class="dialog-actions" style="margin-top:16px"><button type="button" data-action="reset-filters">Reset all</button><button class="primary" type="submit">Show cards</button></div></form>`);
   $('#filters-form').addEventListener('submit', event => {
-    event.preventDefault(); Object.assign(state.filters, Object.fromEntries(new FormData(event.target))); closeDialog(); renderArchive();
+    event.preventDefault(); Object.assign(state.filters, Object.fromEntries(new FormData(event.target))); closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive();
   });
 }
 function inspectCard(card) {
@@ -181,7 +213,7 @@ function inspectCard(card) {
   if (card.linkval !== undefined) stats.push(['LINK', card.linkval]);
   if (card.level !== undefined) stats.push([/xyz/i.test(card.type) ? 'RANK' : 'LEVEL', card.level]);
   if (card.scale !== undefined) stats.push(['SCALE', card.scale]);
-  const defaultSection = deckIntent && state.section === 'side' ? 'side' : isExtra(card) ? 'extra' : 'main';
+  const defaultSection = defaultCardSection(card);
   const supported = !/Token|Skill Card/.test(card.type);
   showDialog(`${dialogHeader(escape(card.name))}<div class="detail-top">${imageTag(card)}<div class="detail-meta"><p class="type">${escape(cardLabel(card))}</p><div class="attribute">${escape([card.attribute, card.race, card.archetype].filter(Boolean).join(' · '))}</div><div class="card-stats">${stats.map(([label, value]) => `<span>${label}<b>${escape(value)}</b></span>`).join('')}</div>${card.linkmarkers?.length ? `<div class="attribute">Arrows: ${escape(card.linkmarkers.join(', '))}</div>` : ''}</div></div>
     <div class="effect-label">CARD TEXT</div><div class="effect-text" tabindex="0" aria-label="Scrollable card effect text">${escape(card.desc || 'No effect text available.')}</div>
@@ -189,17 +221,64 @@ function inspectCard(card) {
     <div class="detail-deck">Adding to: <strong>${escape(state.draft.name)}</strong>${state.dirty ? ' · unsaved changes' : ''}</div>
     <div class="detail-add"><label class="sr-only" for="add-section">Deck section</label><select id="add-section">${SECTIONS.map(s => `<option value="${s}" ${s === defaultSection ? 'selected' : ''} ${s === 'main' && isExtra(card) || s === 'extra' && !isExtra(card) ? 'disabled' : ''}>${sectionName(s)} Deck</option>`).join('')}</select><button class="primary" data-action="add-card" ${!supported ? 'disabled' : ''}>${supported ? 'Add to Deck' : 'Not supported'}</button></div>`, 'detail-body');
 }
+function deckPickerOptions() {
+  const decks = [state.draft, ...state.decks.filter(deck => deck.id !== state.draft.id)];
+  return decks.map(deck => `<option value="${escape(deck.id)}" ${deck.id === state.draft.id ? 'selected' : ''}>${escape(deck.name)}${deck.id === state.draft.id && state.dirty ? ' · unsaved' : ''}</option>`).join('');
+}
 function renderDeck() {
-  const deck = state.draft, counts = totals(deck), warnings = deckWarnings(deck);
-  const blocked = warnings.find(w => w.includes('disabled'));
-  main.innerHTML = `<section class="screen deck-screen" aria-label="Deck Builder"><div class="page-heading"><div style="min-width:0"><div class="eyebrow">THE DECK WORKSHOP</div><div class="deck-title-row"><h1>${escape(deck.name)}</h1><button class="icon-button" data-action="rename" aria-label="Rename deck">${icon('edit')}</button></div><div class="deck-state">${state.dirty ? 'Unsaved changes' : state.decks.some(d => d.id === deck.id) ? 'Saved on this device' : 'New deck · not yet saved'}</div></div><div class="deck-top-actions"><button data-action="new-deck">New</button><button data-action="open-decks">Open${state.decks.length ? ' · ' + state.decks.length : ''}</button></div></div>
-    <div class="deck-summary" aria-label="Deck card totals">${SECTIONS.map(s => `<div><strong>${counts[s]}</strong><span> / ${LIMITS[s]}</span><small>${sectionName(s)} Deck</small></div>`).join('')}</div>
-    <div class="deck-tabs" aria-label="Deck sections">${SECTIONS.map(s => `<button data-section="${s}" aria-pressed="${state.section === s}">${sectionName(s)} <span class="muted">${counts[s]}</span></button>`).join('')}</div>
-    <div class="deck-list" aria-label="Scrollable ${sectionName(state.section)} Deck cards" tabindex="0">${deck.sections[state.section].length ? deck.sections[state.section].map(entry => `<div class="deck-row"><button class="deck-inspect" data-card="${entry.card.id}">${imageTag(entry.card, true)}<span><strong>${escape(entry.card.name)}</strong><small>${escape(cardLabel(entry.card))}</small></span></button><div class="quantity-controls"><button data-remove="${entry.card.id}" aria-label="Remove one ${escape(entry.card.name)}">−</button><span aria-label="${entry.quantity} copies">${entry.quantity}</span><button data-increment="${entry.card.id}" aria-label="Add one ${escape(entry.card.name)}">+</button></div></div>`).join('') : `<div class="empty-state">${icon('deck')}<h3>Your ${sectionName(state.section)} Deck awaits</h3><p>${state.section === 'extra' ? 'Fusion, Synchro, Xyz, and Link monsters go here.' : state.section === 'side' ? 'Keep options for a different strategy here.' : 'Find a card in the archive, then tap Add to Deck.'}</p></div>`}</div>
-    <div class="deck-toolbar"><button data-action="rules">${icon('rules')}Rules / Format</button><button data-action="backups">${icon('backup')}Import / Export</button></div>
-    <div class="deck-footer-actions"><button data-action="find-cards">${icon('plus')} Find cards</button><button class="primary" data-action="save-deck">Save deck</button></div>
-    <p class="deck-notice ${blocked ? 'restricted' : ''}">${state.storageError ? 'Storage unavailable · export a backup to keep this deck.' : blocked ? escape(blocked) : counts.main < 40 ? 'Main Deck: aim for 40–60 cards. Save at any size while building.' : '3-copy limit across sections · no banlist or duel rules enforced.'}</p>
+  gridObserver?.disconnect();
+  main.innerHTML = `<section class="screen deck-screen" aria-label="Deck Builder">
+    <div class="deck-switch-row"><label class="sr-only" for="deck-picker">Current deck · switch saved decks</label><select id="deck-picker">${deckPickerOptions()}</select><button class="icon-button new-deck-button" data-action="new-deck" aria-label="Create a new deck">${icon('plus')}</button><button class="primary compact-save" data-action="save-deck">Save</button><button class="icon-button deck-options-button" data-action="deck-options" aria-label="Deck options: rename, saved decks, rules, import and export" aria-haspopup="dialog">⋯</button></div>
+    <div class="deck-tabs" aria-label="Visible deck section">${SECTIONS.map(section => `<button data-section="${section}" aria-pressed="${state.section === section}">${sectionName(section)} <span data-section-count="${section}"></span></button>`).join('')}</div>
+    <div class="deck-list deck-tray" aria-label="Scrollable two-row ${sectionName(state.section)} Deck" tabindex="0"></div>
+    <div class="workspace-caption"><span class="deck-state" role="status"></span><span>FIND & ADD CARDS</span></div>
+    ${searchControls()}
+    <div class="result-meta" id="result-meta" role="status"></div>
+    <div class="archive-panel" id="archive-panel" aria-label="Scrollable cards to add to your deck" tabindex="0"></div>
   </section>`;
+  $('#card-search').addEventListener('input', event => { state.filters.query = event.target.value; updateArchive(); });
+  refreshDeckWorkspace();
+  updateArchive();
+}
+function refreshDeckWorkspace({ resetTray = false } = {}) {
+  if (state.route !== 'decks' || !$('.deck-tray')) { if (state.route === 'archive') renderGrid(); return; }
+  const tray = $('.deck-tray'), scrollLeft = resetTray ? 0 : tray.scrollLeft;
+  const focused = tray.contains(document.activeElement) ? document.activeElement : null;
+  const focusedAction = focused?.dataset.quickAdd ? 'quick-add' : focused?.dataset.quickRemove ? 'quick-remove' : focused?.dataset.card ? 'card' : null;
+  const focusedId = focusedAction ? focused.getAttribute('data-' + focusedAction) : null;
+  const counts = totals(state.draft), warnings = deckWarnings(state.draft);
+  $('#deck-picker').innerHTML = deckPickerOptions();
+  const status = $('.deck-state');
+  status.textContent = state.storageError ? 'Storage unavailable · export a backup' : warnings.some(w => w.includes('disabled')) ? 'Review disabled mechanics in Deck options' : state.dirty ? 'Unsaved changes' : state.decks.some(deck => deck.id === state.draft.id) ? 'Saved on this device' : 'New deck · tap Save to keep it';
+  status.classList.toggle('restricted', warnings.some(w => w.includes('disabled')) || Boolean(state.storageError));
+  SECTIONS.forEach(section => {
+    $(`[data-section-count="${section}"]`).textContent = `${counts[section]}/${LIMITS[section]}`;
+    $(`[data-section="${section}"]`).setAttribute('aria-pressed', state.section === section);
+  });
+  tray.setAttribute('aria-label', `Scrollable two-row ${sectionName(state.section)} Deck`);
+  const entries = state.draft.sections[state.section];
+  tray.classList.toggle('is-empty', !entries.length);
+  tray.innerHTML = entries.length ? entries.map(entry => `<article class="tray-card" data-kind="${cardAccent(entry.card)}"><button class="deck-inspect" data-card="${entry.card.id}" aria-label="Inspect ${escape(entry.card.name)}">${imageTag(entry.card, true)}<strong>${escape(entry.card.name)}</strong></button>${quickControls(entry.card, state.section, true)}</article>`).join('') : `<div class="tray-empty">${icon('deck')}<span><strong>${sectionName(state.section)} Deck is empty</strong><small>${state.section === 'extra' ? 'Fusion, Synchro, Xyz, and Link monsters' : state.section === 'side' ? 'Keep alternate options here' : 'Search below, then tap the green + on a card'}</small></span></div>`;
+  tray.scrollLeft = scrollLeft;
+  if (focusedAction) {
+    const replacement = $(`[data-${focusedAction}="${focusedId}"]`, tray);
+    if (replacement && !replacement.disabled) replacement.focus({ preventScroll: true });
+  }
+  renderGrid();
+}
+function showDeckOptions() {
+  showDialog(`${dialogHeader('Deck options')}<p>${escape(state.draft.name)} · ${state.dirty ? 'unsaved changes' : 'current deck'}</p><button class="menu-item" data-action="rename">${icon('edit')}<span>Rename deck</span></button><button class="menu-item" data-action="open-decks">${icon('deck')}<span>Manage saved decks<small>Open or delete saved decks</small></span></button><button class="menu-item" data-action="rules">${icon('rules')}<span>Rules / Format<small>Summoning mechanic restrictions</small></span></button><button class="menu-item" data-action="backups">${icon('backup')}<span>Import / Export<small>JSON and YDK backups</small></span></button>`, 'menu-body');
+}
+function changeCardQuantity(cardId, section, remove = false) {
+  const card = state.cardIndex.get(cardId) || SECTIONS.flatMap(s => state.draft.sections[s]).find(entry => entry.card.id === cardId)?.card;
+  if (!card) return;
+  try {
+    if (remove && !sectionCopies(card, section)) return;
+    state.draft = remove ? removeCard(state.draft, cardId, section) : addCard(state.draft, card, section);
+    state.dirty = true;
+    refreshDeckWorkspace();
+    $('#card-announcement').textContent = `${card.name}: ${sectionCopies(card, section)} copies in ${sectionName(section)} Deck.`;
+  } catch (error) { toast(error.message, true); }
 }
 function confirmReplace(callback) {
   if (!state.dirty) { callback(); return; }
@@ -228,7 +307,7 @@ function persistDeck() {
     if (state.storageError) throw new Error('Deck storage is unavailable. Export a JSON backup from Import / Export.');
     state.decks = saveDeck(localStorage, state.decks, state.draft);
     state.draft = structuredClone(state.decks.find(d => d.id === state.draft.id)); state.dirty = false;
-    if (state.route === 'decks') renderDeck();
+    if (state.route === 'decks') refreshDeckWorkspace();
     toast('Deck saved on this device.'); return true;
   } catch (error) { toast(error.message || 'Could not save. Export a JSON backup.', true); return false; }
 }
@@ -258,7 +337,7 @@ function showRules() {
   showDialog(`${dialogHeader('Rules / Format')}<p>Choose which summoning mechanics this deck allows.</p><div class="button-row"><button data-preset="all">All mechanics</button><button data-preset="pre">Pre-Synchro</button></div><div class="mechanic-list">${MECHANICS.map(m => `<label><input type="checkbox" name="${m}" ${state.draft.mechanics[m] ? 'checked' : ''}><span>${m}</span></label>`).join('')}</div><p class="help-note">These are mechanic restrictions, not historical release-date formats. Pre-Synchro enables Fusion only. No banlist or duel rules are enforced.</p><p class="muted">Existing cards stay in your deck; disabled mechanics are flagged for review.</p><div class="dialog-actions"><button data-action="close">Cancel</button><button class="primary" id="apply-rules">Apply to deck</button></div>`);
   $('#apply-rules').onclick = () => {
     state.draft.mechanics = Object.fromEntries(MECHANICS.map(m => [m, $(`input[name="${m}"]`, modal).checked]));
-    state.dirty = true; closeDialog(); if (state.route === 'decks') renderDeck(); toast('Mechanic restrictions updated. Tap Save deck to keep them.');
+    state.dirty = true; closeDialog(); if (state.route === 'decks') refreshDeckWorkspace(); toast('Mechanic restrictions updated. Tap Save deck to keep them.');
   };
 }
 function download(content, filename, type = 'application/json') {
@@ -333,7 +412,7 @@ function showAbout() {
 const actions = {
  close: closeDialog, filters: showFilters, retry: () => requestArchive(true),
  'clear-search': () => { state.filters.query = ''; $('#card-search').value = ''; updateArchive(); $('#card-search').focus(); },
- 'reset-filters': () => { Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', mechanic: '', sort: 'az' }); closeDialog(); renderArchive(); },
+ 'reset-filters': () => { Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', mechanic: '', sort: 'az' }); closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
  'add-card': () => {
     try {
       const section = $('#add-section').value;
@@ -341,11 +420,11 @@ const actions = {
       $('#detail-error').textContent = '';
       $('.detail-deck').textContent = `Adding to: ${state.draft.name} · unsaved changes`;
       toast(`${detailCard.name} added to ${sectionName(section)} Deck.`);
-      if (state.route === 'decks') renderDeck();
+      refreshDeckWorkspace();
     } catch (error) { $('#detail-error').textContent = error.message; }
  },
  rename: () => showNameDialog(true), 'new-deck': () => showNameDialog(false), 'save-deck': persistDeck, 'open-decks': showSavedDecks,
- rules: showRules, backups: showBackups, 'find-cards': () => { deckIntent = true; navigate('archive'); },
+ rules: showRules, backups: showBackups, 'deck-options': showDeckOptions, 'find-cards': () => { navigate('decks'); $('#card-search').focus({ preventScroll: true }); },
  'export-json': () => download(exportJSON(state.draft), safeFilename() + '.json'),
  'export-ydk': () => download(exportYDK(state.draft), safeFilename() + '.ydk', 'text/plain'),
  import: () => $('#import-file').click(), install: showInstall, settings: showSettings, about: showAbout,
@@ -359,27 +438,28 @@ function safeFilename() { return state.draft.name.replace(/[^a-zA-Z0-9_-]+/g, '-
 document.addEventListener('click', event => {
   const target = event.target.closest('button, a[data-route]');
   if (!target || target.disabled) return;
-  if (target.dataset.route) { event.preventDefault(); if (target.dataset.route === 'archive' && state.route !== 'decks') deckIntent = false; navigate(target.dataset.route); return; }
+  if (target.dataset.route) { event.preventDefault(); navigate(target.dataset.route); return; }
   if (target.dataset.action) { actions[target.dataset.action]?.(); return; }
   if (target.dataset.category) { state.filters.category = target.dataset.category; document.querySelectorAll('[data-category]').forEach(b => b.setAttribute('aria-pressed', b === target)); updateArchive(); return; }
-  if (target.dataset.section) { state.section = target.dataset.section; renderDeck(); return; }
+  if (target.dataset.section) { state.section = target.dataset.section; refreshDeckWorkspace({ resetTray: true }); updateArchive(); return; }
   if (target.dataset.card) {
     const id = Number(target.dataset.card);
     const card = state.cardIndex.get(id) || SECTIONS.flatMap(s => state.draft.sections[s]).find(e => e.card.id === id)?.card;
     if (card) inspectCard(card); return;
   }
-  if (target.dataset.remove || target.dataset.increment) {
-    const id = Number(target.dataset.remove || target.dataset.increment);
-    try {
-      const scroll = $('.deck-list').scrollTop;
-      const card = state.draft.sections[state.section].find(e => e.card.id === id)?.card;
-      state.draft = target.dataset.remove ? removeCard(state.draft, id, state.section) : addCard(state.draft, card, state.section);
-      state.dirty = true; renderDeck(); $('.deck-list').scrollTop = scroll;
-    } catch (error) { toast(error.message, true); } return;
+  if (target.dataset.quickAdd || target.dataset.quickRemove) {
+    changeCardQuantity(Number(target.dataset.quickAdd || target.dataset.quickRemove), target.dataset.targetSection, Boolean(target.dataset.quickRemove));
+    return;
   }
   if (target.dataset.openDeck) { openDeck(target.dataset.openDeck); return; }
   if (target.dataset.deleteDeck) { deleteDeck(target.dataset.deleteDeck); return; }
   if (target.dataset.preset) MECHANICS.forEach(m => $(`input[name="${m}"]`, modal).checked = target.dataset.preset === 'all' || m === 'Fusion');
+});
+main.addEventListener('change', event => {
+  if (event.target.id !== 'deck-picker') return;
+  const id = event.target.value;
+  event.target.value = state.draft.id;
+  if (id !== state.draft.id) openDeck(id);
 });
 $('#app-menu').onclick = showMenu;
 $('#import-file').onchange = event => handleImport(event.target.files[0]);

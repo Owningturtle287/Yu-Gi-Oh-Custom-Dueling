@@ -32,9 +32,19 @@ test('mobile layout contains page overflow and limits scroll regions', async () 
   assert.match(css, /safe-area-inset-bottom/);
   assert.match(css, /orientation:landscape/);
   assert.match(css, /\.archive-panel\s*\{[^}]*overflow:auto/);
-  assert.match(css, /\.deck-list\s*\{[^}]*overflow:auto/);
+  assert.match(css, /\.deck-list\s*\{[^}]*overflow-x:auto[^}]*overflow-y:hidden/);
+  assert.match(css, /\.deck-list\s*\{[^}]*grid-template-rows:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /\.effect-text\s*\{[^}]*overflow:auto/);
   assert.match(css, /\.saved-list\s*\{[^}]*overflow:auto/);
-  const autoScrolls = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /overflow:auto/.test(m[2])).map(m => m[1].trim());
-  assert.deepEqual(autoScrolls.sort(), ['.archive-panel', '.deck-list', '.effect-text', '.saved-list'].sort());
+  const autoScrolls = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /overflow(?:-[xy])?:auto/.test(m[2])).map(m => m[1].trim());
+  assert.deepEqual([...new Set(autoScrolls)].sort(), ['.archive-panel', '.deck-list', '.effect-text', '.saved-list'].sort());
+});
+test('compact controls preserve tap targets and contain list focus and horizontal panning', async () => {
+  const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+  assert.match(css, /height:calc\(54px \+ env\(safe-area-inset-bottom\)\)/);
+  assert.match(css, /\.quick-controls button\s*\{[^}]*width:44px[^}]*height:44px/);
+  assert.match(css, /\.archive-panel\s*\{[^}]*overflow-x:hidden[^}]*overflow-y:auto[^}]*touch-action:pan-y/);
+  assert.match(css, /\.archive-panel:focus[^}]*\{[^}]*outline:none;[^}]*box-shadow:none/);
+  assert.match(css, /input, select\s*\{[^}]*font-size:16px/);
+  assert.match(css, /\.card-inspect:focus-visible[^}]*outline-offset:-3px/);
 });
