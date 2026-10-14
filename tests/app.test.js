@@ -287,7 +287,7 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
     await waitFor(()=>$('.duel-phases [aria-current]')?.textContent==='M1Main 1'&&Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
     assert.equal($('.duel-phases [aria-current]').textContent,'M1Main 1');
     assert.equal(document.querySelectorAll('.duel-hand-card').length,5,'The first player does not receive an extra automatic draw');
-    $('.duel-hand-card').click();assert.match($('#modal').textContent,/Normal Summon/);
+    $('.duel-hand-card').click();assert.match($('.duel-context-controls').textContent,/Normal Summon/);assert.equal($('#modal').open,false);
     [...document.querySelectorAll('[data-duel-group]')].find(b=>b.textContent==='Normal Summon').click();
     assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
     $('.duel-exit').click();assert.equal(app.state.route,'home');assert.equal(document.documentElement.classList.contains('duel-playing'),false);
