@@ -21,6 +21,15 @@ test('service worker installs a complete shell and removes only this app’s old
   assert.ok(installed.includes('./src/core.js'));
   assert.ok(installed.includes('./src/era.js'));
   assert.ok(installed.includes('./src/layout.js'));
+  const shellFiles = new Set(installed.map(path => new URL('../' + path, import.meta.url).href));
+  for (const path of installed.filter(path => path.endsWith('.js'))) {
+    const file = new URL('../' + path, import.meta.url);
+    const source = await readFile(file, 'utf8');
+    for (const match of source.matchAll(/import\s[^;]*?from\s*['"]([^'"]+)['"]/g)) {
+      if (match[1].startsWith('.')) assert.ok(shellFiles.has(new URL(match[1], file).href), `${path} imports an uncached module: ${match[1]}`);
+    }
+  }
+  assert.ok(installed.includes('./duel.css'));
   listeners.activate({ waitUntil: promise => pending = promise }); await pending;
   assert.deepEqual(removed, [`duel-atlas:${scope}:shell-v0.0.0`]);
 });

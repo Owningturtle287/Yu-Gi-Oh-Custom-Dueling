@@ -1,8 +1,8 @@
 /* App shell updates with each release; card images persist independently. */
 const PREFIX = 'duel-atlas:' + self.registration.scope;
-const SHELL_CACHE = PREFIX + ':shell-v0.0.3';
+const SHELL_CACHE = PREFIX + ':shell-v0.1.0';
 const IMAGE_CACHE = PREFIX + ':images-v1';
-const SHELL = ['./', './index.html', './styles.css', './src/app.js', './src/core.js', './src/cards.js', './src/era.js', './src/layout.js', './src/icons.js', './manifest.webmanifest', './assets/emblem.svg', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png'];
+const SHELL = ['./', './index.html', './styles.css', './duel.css', './src/app.js', './src/core.js', './src/cards.js', './src/era.js', './src/layout.js', './src/icons.js', './src/duel/catalog.js', './src/duel/decks.js', './src/duel/engine.js', './src/duel/ai.js', './src/duel/ui.js', './manifest.webmanifest', './assets/emblem.svg', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png'];
 const shellURLs = new Set(SHELL.map(path => new URL(path, self.registration.scope).href));
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(SHELL_CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));

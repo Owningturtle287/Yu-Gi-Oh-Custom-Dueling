@@ -3,6 +3,8 @@ import { loadCards, browserCardCache } from './cards.js';
 import { icon } from './icons.js';
 import { SUBTYPES, MIN_RELEASE_YEAR, currentYear, normalizeReleaseYear, releaseCutoff, hydrateDeckDates, buildYearHighlights } from './era.js';
 import { cardGridLayout } from './layout.js';
+import { createSoloController } from './duel/ui.js';
+import { support } from './duel/catalog.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -16,6 +18,20 @@ try {
 } catch (error) { state.storageError = error.message; }
 try { cache = browserCardCache(); } catch { /* API browsing can work without IndexedDB. */ }
 let toastTimer, gridObserver, gridFrame, previousFocus, detailCard, cardRequest;
+let duelDesign = null;
+const solo = createSoloController({ main, modal, getCards: () => state.cards, getDecks: () => state.decks, getStatus: () => state.cardStatus, showDialog, dialogHeader, closeDialog, toast,
+  onDesign: (side, deck) => confirmReplace(() => {
+    duelDesign = side;
+    state.draft = deck ? structuredClone(deck) : createDeck(side === 0 ? 'My classic deck' : 'AI classic deck');
+    state.draft.releaseYear = 2002; state.dirty = !deck; state.section = 'main';
+    state.filters = { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' };
+    navigate('decks');
+  }),
+  onKeepDeck: deck => {
+    try { state.decks = saveDeck(localStorage, state.decks, deck); toast('Saved ' + deck.name + ' on this device.'); }
+    catch (error) { toast(error.message, true); }
+  }
+});
 const sectionName = section => ({ main: 'Main', extra: 'Extra', side: 'Side' })[section];
 const cardLabel = card => card.humanReadableCardType || card.type;
 const imageURL = (card, small = false) => {
@@ -53,6 +69,7 @@ document.addEventListener('error', event => {
   }
 }, true);
 function navigate(route, focus = true) {
+  solo.leave();
   const routes = ['home', 'archive', 'decks', 'multiplayer', 'solo'];
   state.route = routes.includes(route) ? route : 'home';
   if (location.hash !== '#' + state.route) history.replaceState(null, '', '#' + state.route);
@@ -64,7 +81,8 @@ function navigate(route, focus = true) {
   if (state.route === 'home') renderHome();
   if (state.route === 'archive') renderArchive();
   if (state.route === 'decks') renderDeck();
-  if (state.route === 'multiplayer' || state.route === 'solo') renderPlaceholder();
+  if (state.route === 'multiplayer') renderMultiplayer();
+  if (state.route === 'solo') solo.enter();
   if (focus) main.focus({ preventScroll: true });
 }
 function renderHome() {
@@ -75,10 +93,10 @@ function renderHome() {
     <div class="home-grid">
       <button class="launch-card archive-launch" data-route="archive">${icon('archive')}<span class="arrow" aria-hidden="true">↗</span><strong>Card Archive</strong><small>Discover every possibility</small></button>
       <button class="launch-card" data-route="decks">${icon('deck')}<span class="arrow" aria-hidden="true">↗</span><strong>Deck Builder</strong><small>Your strategy, your rules</small></button>
-      <button class="launch-card coming" data-route="solo">${icon('solo')}<span class="soon-label">COMING SOON</span><strong>Solo Duel</strong><small>Practice on your terms</small></button>
+      <button class="launch-card" data-route="solo">${icon('solo')}<span class="soon-label">2002 LAB</span><strong>Solo Duel</strong><small>A classic deck. A new challenge.</small></button>
       <button class="launch-card coming" data-route="multiplayer">${icon('people')}<span class="soon-label">COMING SOON</span><strong>Multiplayer</strong><small>A connection. A rivalry.</small></button>
     </div>
-    <div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<br>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'} · stored on this device</span><a href="#solo" data-route="solo">Release scope ↗</a></div>
+    <div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<br>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'} · stored on this device</span><a href="#solo" data-route="solo">Play Solo ↗</a></div>
   </section>`;
 }
 function renderArchive() {
@@ -145,7 +163,7 @@ function updateArchive() {
 function filterCardsForUI() {
   const filtered = filterCards(state.cards, { ...state.filters, year: state.draft.releaseYear });
   if (state.route !== 'decks') return filtered;
-  return filtered.filter(card => !/Token|Skill Card/.test(card.type) && (state.section === 'side' || isExtra(card) === (state.section === 'extra')));
+  return filtered.filter(card => (!Number.isInteger(duelDesign) || support(card).ok) && !/Token|Skill Card/.test(card.type) && (state.section === 'side' || isExtra(card) === (state.section === 'extra')));
 }
 function renderGrid() {
   const panel = $('#archive-panel'), grid = $('#virtual-grid');
@@ -194,6 +212,7 @@ async function requestArchive(force = false) {
       cardRequest = null;
       if (state.route === 'archive' || state.route === 'decks') updateArchive();
       if (state.route === 'home') renderHome();
+      if (state.route === 'solo') solo.refresh();
     }
   })();
   return cardRequest;
@@ -273,6 +292,7 @@ function deckPickerOptions() {
 function renderDeck() {
   gridObserver?.disconnect();
   main.innerHTML = `<section class="screen deck-screen" aria-label="Deck Builder">
+    ${Number.isInteger(duelDesign) ? `<div class="duel-design-banner"><span>${duelDesign === 0 ? 'Your' : 'AI'} Solo deck · playable 2002 cards</span><button data-action="return-solo">Save & return to Solo</button></div>` : ''}
     <div class="deck-switch-row"><label class="sr-only" for="deck-picker">Current deck · switch saved decks</label><select id="deck-picker">${deckPickerOptions()}</select><button class="icon-button new-deck-button" data-action="new-deck" aria-label="Create a new deck">${icon('plus')}</button><button class="primary compact-save" data-action="save-deck">Save</button><button class="icon-button deck-options-button" data-action="deck-options" aria-label="Deck options: rename, saved decks, rules, import and export" aria-haspopup="dialog">⋯</button></div>
     <div class="deck-tabs" aria-label="Visible deck section">${SECTIONS.map(section => `<button data-section="${section}" aria-pressed="${state.section === section}">${sectionName(section)} <span data-section-count="${section}"></span></button>`).join('')}</div>
     <div class="deck-list deck-tray" aria-label="Scrollable two-row ${sectionName(state.section)} Deck" tabindex="0"></div>
@@ -379,7 +399,7 @@ function deleteDeck(id) {
   };
 }
 function showRules() {
-  showDialog(`${dialogHeader('Rules / Format')}<p>Choose which summoning mechanics this deck allows.</p><div class="button-row"><button data-preset="all">All mechanics</button><button data-preset="pre">Pre-Synchro</button></div><div class="mechanic-list">${MECHANICS.map(m => `<label><input type="checkbox" name="${m}" ${state.draft.mechanics[m] ? 'checked' : ''}><span>${m}</span></label>`).join('')}</div><p class="help-note">These are mechanic restrictions, not historical release-date formats. Pre-Synchro enables Fusion only. No banlist or duel rules are enforced.</p><p class="muted">Existing cards stay in your deck; disabled mechanics are flagged for review.</p><div class="dialog-actions"><button data-action="close">Cancel</button><button class="primary" id="apply-rules">Apply to deck</button></div>`);
+  showDialog(`${dialogHeader('Rules / Format')}<p>Choose which summoning mechanics this deck allows.</p><div class="button-row"><button data-preset="all">All mechanics</button><button data-preset="pre">Pre-Synchro</button></div><div class="mechanic-list">${MECHANICS.map(m => `<label><input type="checkbox" name="${m}" ${state.draft.mechanics[m] ? 'checked' : ''}><span>${m}</span></label>`).join('')}</div><p class="help-note">These are mechanic restrictions, not historical release-date formats. Pre-Synchro enables Fusion only. These editor switches do not apply a banlist. Solo validates supported cards separately.</p><p class="muted">Existing cards stay in your deck; disabled mechanics are flagged for review.</p><div class="dialog-actions"><button data-action="close">Cancel</button><button class="primary" id="apply-rules">Apply to deck</button></div>`);
   $('#apply-rules').onclick = () => {
     state.draft.mechanics = Object.fromEntries(MECHANICS.map(m => [m, $(`input[name="${m}"]`, modal).checked]));
     state.dirty = true; closeDialog(); if (state.route === 'decks') refreshDeckWorkspace(); toast('Mechanic restrictions updated. Tap Save deck to keep them.');
@@ -427,17 +447,14 @@ async function handleImport(file) {
   } catch (error) { toast(error.message || 'This backup could not be imported.', true); }
   finally { $('#import-file').value = ''; }
 }
-function renderPlaceholder() {
-  const multi = state.route === 'multiplayer';
-  main.innerHTML = `<section class="screen placeholder-screen" aria-label="${multi ? 'Multiplayer' : 'Solo Duel'} coming soon"><div class="placeholder-art">${icon(multi ? 'people' : 'solo')}</div><span class="pill gold">COMING IN A LATER PHASE</span><h1>${multi ? 'A duel. A direct connection.' : 'Your practice arena.'}</h1><p>${multi ? 'Direct peer-to-peer duels are planned, without requiring a dedicated game server. For now, build a deck and get ready to meet your rival.' : 'Solo dueling, AI opponents, rules enforcement, and duel animations are planned for a later phase. This release is your card archive and deck workshop.'}</p>
-    ${multi ? `<div class="preview-panel"><div class="button-row"><button disabled>Create room</button><button disabled>Join room</button></div><label for="room-code">Room code · preview only<input id="room-code" placeholder="— — — — — —" maxlength="6" disabled aria-label="Room code preview, coming soon"></label><small>Rooms and connections are not active in v${VERSION}.</small></div>` : '<div class="feature-tags"><span>AI opponents</span><span>Duel rules</span><span>Card effects</span><span>Duel animations</span></div>'}
-    <button class="primary" data-route="decks">Build a deck in the meantime</button><small class="muted">Functionality testing release · v${VERSION}</small></section>`;
+function renderMultiplayer() {
+  main.innerHTML = `<section class="screen placeholder-screen" aria-label="Multiplayer coming soon"><div class="placeholder-art">${icon('people')}</div><span class="pill gold">COMING IN A LATER PHASE</span><h1>A duel. A direct connection.</h1><p>Direct peer-to-peer duels are planned, without requiring a dedicated game server. Practice against the local AI in Solo Duel while connections are being built.</p><div class="preview-panel"><div class="button-row"><button disabled>Create room</button><button disabled>Join room</button></div><label for="room-code">Room code · preview only<input id="room-code" placeholder="— — — — — —" maxlength="6" disabled aria-label="Room code preview, coming soon"></label><small>Rooms and connections are not active in v${VERSION}.</small></div><button class="primary" data-route="solo">Play Solo Duel</button><small class="muted">Functionality testing release · v${VERSION}</small></section>`;
 }
 let installPrompt;
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
 window.addEventListener('appinstalled', () => { installPrompt = null; toast('Duel Atlas added to your home screen.'); });
 function showMenu() {
-  showDialog(`${dialogHeader('Your companion')}<p>Duel Atlas · v${VERSION}<br>A Yu-Gi-Oh! archive and deck workshop.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Coming in a later phase</small></span></button>`, 'menu-body');
+  showDialog(`${dialogHeader('Your companion')}<p>Duel Atlas · v${VERSION}<br>A Yu-Gi-Oh! archive, deck workshop, and Solo arena.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Playable 2002 Lab · local AI</small></span></button>`, 'menu-body');
 }
 function showInstall() {
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -452,9 +469,10 @@ function showSettings() {
   };
 }
 function showAbout() {
-  showDialog(`${dialogHeader('Built for the deck workshop')}<span class="pill gold">v${VERSION} · FUNCTIONALITY TEST</span><p>Browse the full available card archive, build decks, choose mechanic restrictions, and keep local backups.</p><p>Dueling, card effects, AI, rules enforcement, animations, and multiplayer connections are planned for a later phase.</p><p>Card data and official card images are supplied by <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. Card names, text, and images belong to their respective rights holders. This independent companion is not affiliated with Konami.</p><p>The Duel Atlas emblem is original artwork. No official artwork is used as app branding.</p><button data-action="close">Back to the workshop</button>`, 'about-body');
+  showDialog(`${dialogHeader('Built for the duel table')}<span class="pill gold">v${VERSION} · PLAYABLE TEST</span><p>Browse the full archive, build and back up decks, and play local Solo duels with the supported 2002 TCG pool.</p><p>Solo includes AI, phase tracking, supported card effects, response windows, and animations. Unfinished effects are excluded from duels; inspect Rules & cards in Solo for exact coverage and simplified rulings. Multiplayer connections are planned for a later phase.</p><p>Card data and official card images are supplied by <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. Card names, text, and images belong to their respective rights holders. This independent companion is not affiliated with Konami.</p><p>The Duel Atlas emblem is original artwork. No official artwork is used as app branding.</p><button data-action="close">Back to the workshop</button>`, 'about-body');
 }
 const actions = {
+ 'return-solo': () => { if (persistDeck()) { solo.setDesignedDeck(duelDesign, state.draft.id); duelDesign = null; navigate('solo'); } },
  close: closeDialog, filters: showFilters, retry: () => requestArchive(true),
  'clear-search': () => { state.filters.query = ''; $('#card-search').value = ''; updateArchive(); $('#card-search').focus(); },
  'reset-filters': () => { Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },

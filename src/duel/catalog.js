@@ -1,0 +1,101 @@
+// Capability registry: unregistered effects are never admitted as vanilla monsters.
+export const ERA_END = '2002-12-31';
+export const NORMAL = 'Normal Monster';
+export const effects = {};
+const define = (names, rule) => names.split('|').forEach(name => effects[name] = rule);
+define('Pot of Greed', { op: 'draw', amount: 2 });
+define('Upstart Goblin', { op: 'upstart' });
+define('Raigeki', { op: 'destroyMonsters', scope: 'foe' });
+define('Dark Hole', { op: 'destroyMonsters', scope: 'all' });
+define('Heavy Storm', { op: 'storm' });
+define('Fissure', { op: 'fissure', target: 'lowest' });
+define('Mystical Space Typhoon', { op: 'destroy', target: 'backrow', speed: 2 });
+define('Monster Reborn', { op: 'revive', target: 'grave' });
+define('Change of Heart', { op: 'control', target: 'enemyMonster' });
+define('Block Attack', { op: 'position', target: 'enemyAttack', position: 'defense' });
+define('Stop Defense', { op: 'position', target: 'enemyDefense', position: 'attack' });
+define('Polymerization', { op: 'fusion' });
+for (const [name, amount] of Object.entries({ Sparks: 200, Hinotama: 500, 'Final Flame': 600, Ookazi: 800 })) effects[name] = { op: 'burn', amount };
+define('Tremendous Fire', { op: 'burn', amount: 1000, self: 500 });
+for (const [name, amount] of Object.entries({ 'Blue Medicine': 400, 'Red Medicine': 500, "Goblin's Secret Remedy": 600, 'Dian Keto the Cure Master': 1000 })) effects[name] = { op: 'heal', amount };
+const equips = {
+  'Beast Fangs': 'Beast', 'Book of Secret Arts': 'Spellcaster', 'Dark Energy': 'Fiend', 'Dragon Treasure': 'Dragon', 'Electro-Whip': 'Thunder', 'Follow Wind': 'Winged Beast', 'Laser Cannon Armor': 'Insect', 'Legendary Sword': 'Warrior', 'Machine Conversion Factory': 'Machine', 'Vile Germs': 'Plant', 'Violet Crystal': 'Zombie'
+};
+for (const [name, race] of Object.entries(equips)) effects[name] = { op: 'equip', target: 'equip', race, atk: 300, def: 300 };
+for (const [name, attribute] of Object.entries({ 'Burning Spear': 'FIRE', "Elf's Light": 'LIGHT', 'Gust Fan': 'WIND', Invigoration: 'EARTH', 'Sword of Dark Destruction': 'DARK' })) effects[name] = { op: 'equip', target: 'equip', attribute, atk: 400, def: -200 };
+define('Black Pendant', { op: 'equip', target: 'equip', atk: 500, def: 0, graveBurn: 500 });
+define('Sword of Deep-Seated', { op: 'equip', target: 'equip', atk: 500, def: 500, returnTop: true });
+define('Horn of the Unicorn', { op: 'equip', target: 'equip', atk: 700, def: 700, returnTop: true });
+define('Fairy Meteor Crush', { op: 'equip', target: 'equip', pierce: true });
+const fields = {
+  Forest: ['Insect', 'Beast', 'Plant', 'Beast-Warrior'], Wasteland: ['Dinosaur', 'Zombie', 'Rock'], Mountain: ['Dragon', 'Winged Beast', 'Thunder'], Sogen: ['Warrior', 'Beast-Warrior'], Umi: ['Fish', 'Sea Serpent', 'Thunder', 'Aqua'], Yami: ['Fiend', 'Spellcaster']
+};
+for (const [name, races] of Object.entries(fields)) effects[name] = { op: 'field', races, atk: 200, def: 200, penalties: name === 'Umi' ? ['Machine', 'Pyro'] : name === 'Yami' ? ['Fairy'] : [] };
+for (const [name, attribute] of Object.entries({ 'Gaia Power': 'EARTH', 'Luminous Spark': 'LIGHT', Umiiruka: 'WATER', 'Mystic Plasma Zone': 'DARK', 'Rising Air Current': 'WIND', 'Molten Destruction': 'FIRE' })) effects[name] = { op: 'field', attribute, atk: 500, def: -400 };
+define('Chorus of Sanctuary', { op: 'field', defenseOnly: true, atk: 0, def: 500 });
+define('Mirror Force', { op: 'mirror', event: 'attack' });
+define('Negate Attack', { op: 'negateAttack', event: 'attack', speed: 3 });
+define('Trap Hole', { op: 'trapHole', event: 'summon' });
+define('Waboku', { op: 'waboku', speed: 2 });
+define('Reinforcements', { op: 'boost', target: 'faceupMonster', atk: 500, def: 0, speed: 2 });
+define('Castle Walls', { op: 'boost', target: 'faceupMonster', atk: 0, def: 500, speed: 2 });
+define('The Reliable Guardian', { op: 'boost', target: 'faceupMonster', atk: 0, def: 700, speed: 2 });
+define('Just Desserts', { op: 'desserts', speed: 2 });
+define('Gift of the Mystical Elf', { op: 'gift', speed: 2 });
+define('Magic Jammer', { op: 'negate', counter: 'spell', discard: true, speed: 3 });
+define('Seven Tools of the Bandit', { op: 'negate', counter: 'trap', cost: 1000, speed: 3 });
+define('Solemn Judgment', { op: 'negate', counter: 'any', half: true, speed: 3 });
+define('Gravity Bind', { op: 'continuous', binding: true, speed: 2 });
+
+define('Man-Eater Bug', { op: 'flipDestroy', target: 'monster', flip: true });
+define('Hane-Hane', { op: 'bounce', target: 'monster', flip: true });
+define('Magician of Faith', { op: 'recover', target: 'ownGraveSpell', flip: true });
+define('Mask of Darkness', { op: 'recover', target: 'ownGraveTrap', flip: true });
+define('4-Starred Ladybug of Doom', { op: 'ladybug', flip: true });
+define('Princess of Tsurugi', { op: 'princess', flip: true });
+define('Morphing Jar', { op: 'jar', flip: true });
+define('The Immortal of Thunder', { op: 'immortal', flip: true });
+define('Armed Ninja', { op: 'revealDestroy', target: 'backrow', kind: 'Spell Card', flip: true });
+define('Trap Master|Reaper of the Cards', { op: 'revealDestroy', target: 'backrow', kind: 'Trap Card', flip: true });
+define('Bite Shoes', { op: 'turnPosition', target: 'faceupMonster', flip: true });
+define('Jinzo #7|Leghul|Mystic Lamp|Ooguchi|Queen’s Double|Queen\'s Double|Rainbow Flower', { op: 'passive', direct: true });
+define('Hayabusa Knight', { op: 'passive', attacks: 2 });
+define('Mad Sword Beast', { op: 'passive', pierce: true });
+define('Jinzo', { op: 'passive', noTraps: true });
+define('Banisher of the Light', { op: 'passive', banish: true });
+define('Flash Assailant', { op: 'passive', handBonus: -400 });
+define('Muka Muka', { op: 'passive', handBonus: 300 });
+define('Buster Blader', { op: 'passive', dragons: 500 });
+define('Shadow Ghoul', { op: 'passive', graveBonus: 100 });
+define('Wodan the Resident of the Forest', { op: 'passive', plants: 100 });
+define('Lava Battleguard', { op: 'passive', partner: 'Swamp Battleguard' });
+define('Swamp Battleguard', { op: 'passive', partner: 'Lava Battleguard' });
+define('Maha Vailo', { op: 'passive', equipBonus: 500 });
+for (const [name, buff, debuff] of [['Bladefly', 'WIND', 'EARTH'], ['Hoshiningen', 'LIGHT', 'DARK'], ['Little Chimera', 'FIRE', 'WATER'], ['Milus Radiant', 'EARTH', 'WIND'], ['Star Boy', 'WATER', 'FIRE'], ["Witch's Apprentice", 'DARK', 'LIGHT']]) effects[name] = { op: 'passive', buff, debuff };
+define('Cannon Soldier', { op: 'tributeBurn', amount: 500 });
+define('Catapult Turtle', { op: 'tributeBurn', halfAttack: true, once: true });
+define('The Little Swordsman of Aile', { op: 'tributeBoost', amount: 700 });
+define('Barrel Dragon', { op: 'coinDestroy', target: 'enemyMonster', once: true });
+define('Dark Elf', { op: 'passive', attackCost: 1000 });
+define('Masked Sorcerer', { op: 'passive', battleDraw: 1 });
+define('The Bistro Butcher', { op: 'passive', opponentDraw: 2 });
+define('White Magical Hat', { op: 'passive', randomDiscard: true });
+define('Wall of Illusion', { op: 'passive', battleBounce: true });
+define('The Unhappy Maiden', { op: 'passive', endBattle: true });
+define('The Wicked Worm Beast', { op: 'passive', endReturn: true });
+define('Cockroach Knight', { op: 'passive', returnTop: true });
+define('Thunder Dragon', { op: 'thunderSearch' });
+define('Exodia the Forbidden One', { op: 'passive', exodia: true });
+
+export function support(card) {
+  if (!card?.tcgDate || card.tcgDate > ERA_END) return { ok: false, reason: 'Outside the verified 2002 TCG pool' };
+  if (card.type === NORMAL && Number.isFinite(card.atk) && card.atk >= 0 && Number.isFinite(card.def) && card.def >= 0) return { ok: true, rule: { op: 'normal' } };
+  if (card.type === 'Fusion Monster' && /^"[^"]+"(?: \+ "[^"]+")+\s*$/.test(card.desc?.split(/\r?\n/)[0]) && !card.desc?.split(/\r?\n/).slice(1).join('').trim()) return { ok: true, rule: { op: 'fusionBody', materials: [...card.desc.matchAll(/"([^"\\]+)"/g)].map(m => m[1]) } };
+  if (Object.hasOwn(effects, card.name)) return { ok: true, rule: effects[card.name] };
+  return { ok: false, reason: 'Effect or summoning procedure not implemented yet' };
+}
+export const ruleFor = card => support(card).rule || {};
+export const supportedPool = cards => cards.filter(card => support(card).ok);
+export const isMonster = card => card?.type?.includes('Monster');
+export const isSpell = card => card?.type === 'Spell Card';
+export const isTrap = card => card?.type === 'Trap Card';

@@ -1,5 +1,5 @@
 import { cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
-export const VERSION = '0.0.3';
+export const VERSION = '0.1.0';
 export const MECHANICS = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link'];
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
@@ -12,6 +12,7 @@ export function normalizeCard(card) {
   const fields = ['id', 'name', 'type', 'humanReadableCardType', 'frameType', 'desc', 'race', 'attribute', 'archetype', 'atk', 'def', 'level', 'linkval', 'linkmarkers', 'scale'];
   const normalized = Object.fromEntries(fields.filter(k => card[k] !== undefined).map(k => [k, card[k]]));
   normalized.tcgDate = cardReleaseDate(card);
+  normalized.setNames = [...new Set(card.setNames || (card.card_sets || []).map(set => set.set_name))].filter(name => typeof name === 'string');
   normalized.card_images = (card.card_images || []).slice(0, 1).map(img => Object.fromEntries(['id', 'image_url', 'image_url_small'].filter(k => img[k] !== undefined).map(k => [k, img[k]])));
   return normalized;
 }

@@ -1,6 +1,6 @@
 {
   "name": "duel-atlas",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "A mobile-first, static Yu-Gi-Oh! archive and local deck companion.",
@@ -8,6 +8,7 @@
     "dev": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.js",
     "test:live": "node scripts/check-api.mjs",
+    "test:duel-live": "node scripts/check-duel-api.mjs",
     "build": "node scripts/build.mjs"
   },
   "engines": {

@@ -66,7 +66,8 @@ test('home, archive detail, named deck, save/reopen, format, and export menus wo
     assert.equal($('.preview-panel button').disabled, true);
     $('.bottom-nav [data-route="home"]').click(); $('.launch-card[data-route="solo"]').click();
     assert.equal(app.state.route, 'solo');
-    assert.match($('#main').textContent, /rules enforcement.*later phase/);
+    assert.match($('#main').textContent, /supported 2002 TCG cards/);
+    assert.ok($('[data-duel="start"]'));
     $('#app-menu').click(); assert.ok($('[data-action="install"]')); assert.ok($('[data-action="settings"]'));
     $('[data-action="install"]').click(); assert.match($('#modal').textContent, /Add to Home Screen/);
     $('[data-action="close"]').click();
@@ -246,4 +247,65 @@ test('card tiles render a third phone column and do not nest compact controls in
     assert.notEqual(tiles[2].style.left, tiles[1].style.left);
     assert.equal($('.card-inspect .quick-controls'), null);
   } finally { window.close(); }
+});
+const soloCatalog = Array.from({length:24},(_,index)=>({...cards[0],id:500000+index,name:`Classic warrior ${index}`,type:'Normal Monster',race:'Warrior',attribute:'EARTH',level:4,atk:1000+index*40,def:900,desc:'A classic test warrior.',setNames:['Classic test set'],card_images:[]}));
+async function waitFor(predicate){const end=Date.now()+2000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,10));assert.ok(predicate(),'UI did not reach its expected ready state');}
+test('Solo setup saves independent eligibility, difficulty, saved-deck choices and builder return', async () => {
+  const {window,app,$}=await boot('solo-setup',null,false,soloCatalog);
+  const change=(selector,value)=>{const input=$(selector);input.value=value;input.dispatchEvent(new window.Event('change',{bubbles:true}));};
+  try{
+    $('.bottom-nav [data-route="solo"]').click();assert.ok($('.solo-setup'));
+    $('[data-duel-tab="1"]').click();$('[data-duel="filters"]').click();
+    change('#duel-filters [name="race"]','Warrior');change('#duel-filters [name="attribute"]','EARTH');
+    $('#duel-filters [name="traps"]').checked=false;
+    $('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
+    let config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
+    assert.equal(config.sides[1].race,'Warrior');assert.equal(config.sides[1].traps,false);assert.equal(config.sides[0].race,'');
+    $('[data-duel-tab="2"]').click();change('#solo-difficulty','hard');change('#solo-first','you');
+    $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
+    assert.equal(app.state.route,'decks');assert.match($('.duel-design-banner').textContent,/AI Solo deck/);
+    assert.equal(app.state.draft.releaseYear,2002);assert.equal(app.state.filtered.length,24);
+    $('.card-tile [data-quick-add]').click();$('[data-action="return-solo"]').click();
+    assert.equal(app.state.route,'solo');assert.equal($('#solo-source').value,'saved');
+    config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
+    assert.equal(config.difficulty,'hard');assert.equal(config.sides[1].deckId,app.state.draft.id);
+    $('[data-duel="start"]').click();assert.match($('#modal').textContent,/AI deck: Main Deck needs 40–60/);
+  }finally{app.navigate('home');window.close();}
+});
+test('a Solo match starts, tracks phases, offers real summon actions, pauses, resumes and surrenders', async () => {
+  const {window,app,$}=await boot('solo-play',null,false,soloCatalog);
+  try{
+    app.navigate('solo');$('[data-duel-tab="2"]').click();
+    $('#solo-first').value='you';$('#solo-first').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('[data-duel="start"]').click();assert.ok($('.duel-arena'));assert.equal(document.querySelectorAll('.duel-zone').length,20);
+    assert.equal(document.querySelectorAll('.duel-hand-card').length,5);
+    assert.equal($('.duel-phases [aria-current]').textContent,'DDraw');
+    $('[data-duel="next"]').click();await waitFor(()=>Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
+    assert.equal($('.duel-phases [aria-current]').textContent,'SStandby');
+    $('[data-duel="next"]').click();await waitFor(()=>Boolean($('[data-duel="next"]')&&!$('[data-duel="next"]').disabled));
+    assert.equal($('.duel-phases [aria-current]').textContent,'M1Main 1');
+    $('.duel-hand-card').click();assert.match($('#modal').textContent,/Normal Summon/);
+    [...document.querySelectorAll('[data-duel-group]')].find(b=>b.textContent==='Normal Summon').click();
+    assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
+    app.navigate('archive');assert.equal($('.duel-arena'),null);app.navigate('solo');
+    assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
+    $('[data-duel="duel-menu"]').click();$('[data-duel="surrender"]').click();$('[data-duel="confirm-surrender"]').click();
+    assert.match($('.duel-prompt').textContent,/Defeat/);assert.ok($('[data-duel="rematch"]'));
+    $('[data-duel="duel-menu"]').click();$('[data-duel-keep="0"]').click();
+    assert.ok(app.state.decks.some(deck=>deck.sections.main.reduce((n,e)=>n+e.quantity,0)===40));
+    $('[data-action="close"]').click();$('[data-duel="rematch"]').click();assert.ok($('.solo-setup'));
+  }finally{app.navigate('home');window.close();}
+});
+test('set generation loads real memberships and preserves a visible retry when dates fail', async()=>{
+  const {window,app,$}=await boot('solo-sets',null,false,soloCatalog);
+  try{
+    app.navigate('solo');globalThis.fetch=async()=>{throw new Error('Offline');};
+    $('#solo-source').value='set';$('#solo-source').dispatchEvent(new window.Event('change',{bubbles:true}));
+    await new Promise(resolve=>setImmediate(resolve));assert.ok($('[data-duel="sets-retry"]'));
+    globalThis.fetch=async()=>({ok:true,json:async()=>[{set_name:'Classic test set',tcg_date:'2002-06-26'},{set_name:'Too late',tcg_date:'2003-01-01'}]});
+    $('[data-duel="sets-retry"]').click();await new Promise(resolve=>setImmediate(resolve));
+    assert.match($('#solo-set').textContent,/Classic test set · 24 cards/);assert.doesNotMatch($('#solo-set').textContent,/Too late/);
+    $('[data-duel="start"]').click();assert.ok($('.duel-arena'));
+  }finally{app.navigate('home');window.close();}
 });
