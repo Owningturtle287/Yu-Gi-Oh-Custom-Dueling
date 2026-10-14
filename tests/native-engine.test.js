@@ -83,3 +83,37 @@ test('a full-rule Exodia opening ends the duel and public hand effects are queri
   state=await game([[],['Blue-Eyes White Dragon']],[{spells:[{...body('The Eye of Truth'),faceUp:false}]},{}]);
   try{state=settle(move(state,'ACTIVATE','The Eye of Truth'));assert.equal(state.players[1].hand[0].public,true);}finally{engine.destroyMatch(state);}
 });
+
+async function resolvedTributeToDoomed(){
+  let state=await engine.createMatch([0,1].map(()=>({name:'Regression',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:23,first:1,cards,openingHands:[['Tribute to the Doomed','Summoned Skull'].map(get),[]],initialFields:[{}, {monsters:[body('Mystical Elf')]}]});
+  // The AI goes first, so the human can legally use Battle Phase on turn 2.
+  state=engine.applyAction(state,state.actions[1].find(a=>a.type==='END'),1);
+  state=settle(move(state,'ACTIVATE','Tribute to the Doomed'));
+  assert.equal(state.phase,'main1');assert.equal(state.active,0);assert.equal(state.choice,null);
+  assert.equal(state.players[1].monsters.filter(Boolean).length,0);
+  assert.ok(state.players[0].grave.some(c=>c.card.name==='Tribute to the Doomed'));
+  assert.ok(state.players[0].grave.some(c=>c.card.name==='Summoned Skull'));
+  return state;
+}
+test('phase toolbar commands resolve current legal response IDs after Tribute to the Doomed',async()=>{
+  let state=await resolvedTributeToDoomed();
+  try{
+    assert.ok(engine.legalActions(state,0).some(a=>a.type==='NEXT'&&a.label==='Battle'));
+    state=engine.applyAction(state,{type:'NEXT'},0);assert.equal(state.phase,'battle');
+    state=engine.applyAction(state,{type:'NEXT'},0);assert.equal(state.phase,'main2');
+    state=engine.applyAction(state,{type:'END'},0);assert.equal(state.active,1);
+  }finally{engine.destroyMatch(state);}
+  state=await resolvedTributeToDoomed();
+  try{state=engine.applyAction(state,{type:'END'},0);assert.equal(state.active,1);}finally{engine.destroyMatch(state);}
+});
+test('generic Pass uses the active chain response without bypassing a choice or accepting a stale ID',async()=>{
+  let state=await game([['Pot of Greed'],[]],[{}, {spells:[{...body('Solemn Judgment'),faceUp:false}]}]);
+  try{
+    const stale=state.actions[0].find(a=>a.type==='END');
+    state=move(state,'ACTIVATE','Pot of Greed');assert.equal(state.window?.priority,1);
+    assert.throws(()=>engine.applyAction(state,{type:'NEXT'},0),/no longer legal/);
+    assert.throws(()=>engine.applyAction(state,stale,0),/no longer legal/);
+    state=engine.applyAction(state,{type:'PASS'},1);assert.equal(state.window,null);assert.equal(state.phase,'main1');
+    state=engine.applyAction(state,{type:'END'},0);assert.equal(state.active,1);
+  }finally{engine.destroyMatch(state);}
+});

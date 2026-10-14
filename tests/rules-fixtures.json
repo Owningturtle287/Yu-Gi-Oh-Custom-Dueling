@@ -40,6 +40,14 @@
           "has_effect": 0,
           "md_rarity": "Common"
         }
+      ],
+      "card_images": [
+        {
+          "id": 15025844,
+          "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/15025844.jpg"
+        }
       ]
     },
     {
@@ -83,6 +91,14 @@
           "konami_id": 4028,
           "has_effect": 0,
           "md_rarity": "Super Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 70781052,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70781052.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70781052.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70781052.jpg"
         }
       ]
     },
@@ -128,6 +144,14 @@
           "konami_id": 4007,
           "has_effect": 0,
           "md_rarity": "Ultra Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 89631139,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631139.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631139.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631139.jpg"
         }
       ]
     },
@@ -613,6 +637,14 @@
           "konami_id": 4887,
           "has_effect": 1,
           "md_rarity": "Super Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 44095762,
+          "image_url": "https://images.ygoprodeck.com/images/cards/44095762.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/44095762.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/44095762.jpg"
         }
       ]
     },
@@ -2668,6 +2700,38 @@
           "konami_id": 4900,
           "has_effect": 1,
           "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 79759861,
+      "name": "Tribute to the Doomed",
+      "type": "Spell Card",
+      "humanReadableCardType": "Normal Spell",
+      "frameType": "spell",
+      "desc": "Discard 1 card, then target 1 monster on the field; destroy it.",
+      "race": "Normal",
+      "tcgDate": "2002-06-26",
+      "ocgDate": "1999-09-23",
+      "setNames": [
+        "Battle Pack: Epic Dawn",
+        "Dark Beginning 1",
+        "Metal Raiders",
+        "Speed Duel Starter Decks: Twisted Nightmares",
+        "Starter Deck 2006",
+        "Starter Deck: Kaiba Evolution",
+        "Starter Deck: Kaiba Reloaded",
+        "Starter Deck: Yu-Gi-Oh! 5D's 2009",
+        "Structure Deck: Blaze of Destruction",
+        "War of the Giants Reinforcements",
+        "War of the Giants: Round 2"
+      ],
+      "card_images": [
+        {
+          "id": 79759861,
+          "image_url": "https://images.ygoprodeck.com/images/cards/79759861.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/79759861.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/79759861.jpg"
         }
       ]
     }

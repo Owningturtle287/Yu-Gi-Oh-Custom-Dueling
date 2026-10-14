@@ -18,8 +18,8 @@ function patch(current, next) {
   for (const attribute of next.attributes) {
     if (current.getAttribute(attribute.name) !== attribute.value) current.setAttribute(attribute.name, attribute.value);
   }
-  // The terminal owns its text, scroll position, and typing cursor.
-  if (current.hasAttribute('data-live-terminal')) return;
+  // Stateful subviews own their transcript or picker contents and scroll.
+  if (current.hasAttribute('data-live-terminal') || current.hasAttribute('data-owned-content')) return;
   children(current, next);
 }
 

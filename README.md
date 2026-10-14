@@ -1,10 +1,13 @@
-# Duel Atlas · v0.2.0
+# Duel Atlas · v0.2.1
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2004 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- Fixed Battle, End Turn and Pass commands being rejected after effects. Toolbar commands now use the current legal response ID; stale explicit responses are still rejected. A regression resolves Tribute to the Doomed, then enters Battle / Main 2 or ends the turn through the actual arena controls.
+- Duel choice sheets now show official card thumbnails, locations/types, a source-card preview and labeled action colors: red for discard/destruction, gold for Tributes/materials, purple for effects and green for confirmation. Confirm / Cancel / Reset stay outside the scrolling results. Hidden opposing choices use card backs. Single-card choices replace the prior selection, while staging preserves displayed art nodes, search, keyboard focus and scroll.
 
 - A compact, styled duel settings panel with AI speed, motion toggle, log/rules shortcuts, deck saving, resume and surrender.
 - An 18px central phase tracker and 12px contained ATK/DEF strips return space to the card zones. Both players' ten zones, mirrored auxiliary piles, centered hands, POV life counters and iPhone safe areas remain in the bounded landscape arena.
@@ -79,7 +82,7 @@ npm run test:live
 npm run test:duel-live
 ```
 
-The **129 automated tests** cover archive/filter/date/storage/import/export/menu flows, production native Solo interactions, bounded field layout contracts, stable image nodes, targeting, movement, hidden-card privacy, terminal typing, offline shell completeness, and legacy engine regressions. New native tests initialize every included early card, test Ritual/Fusion/Chaos/Spirit/Union/Toon/counter/token behavior, reject stale actions, preserve field identities, verify God Card/date handling and complete seeded AI games. A full-snapshot stress run completed 100 randomized matches without illegal replies or stalls. An additional full-catalog check generated 48 decks across 27 released set pools and completed 40 matches / 4,322 legal actions, exercising 189 named activations. These checks do not prove every possible card interaction.
+The **134 automated tests** cover archive/filter/date/storage/import/export/menu flows, production native Solo interactions, bounded field layout contracts, stable image nodes, targeting, movement, hidden-card privacy, terminal typing, offline shell completeness, and legacy engine regressions. New native tests initialize every included early card, test Ritual/Fusion/Chaos/Spirit/Union/Toon/counter/token behavior, reject stale actions, preserve field identities, verify God Card/date handling and complete seeded AI games. A full-snapshot stress run completed 100 randomized matches without illegal replies or stalls. An additional full-catalog check generated 48 decks across 27 released set pools and completed 40 matches / 4,322 legal actions, exercising 189 named activations. These checks do not prove every possible card interaction.
 
 Optional live checks access YGOPRODeck. For a repeatable offline full-catalog run, set `DUEL_CARD_SNAPSHOT` and `DUEL_SET_SNAPSHOT` to saved API JSON files when running `test:duel-live`.
 

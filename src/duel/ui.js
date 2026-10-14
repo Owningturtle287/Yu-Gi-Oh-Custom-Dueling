@@ -8,6 +8,7 @@ import { CARD_BACK, planMotion, captureArena, createMotionPlayer } from './motio
 import { groupedLog, logKindLabel } from './log.js';
 import { patchArena } from './dom.js';
 import { createDuelTerminal } from './terminal.js';
+import { choiceIntent, choiceVisuals } from './choice-view.js';
 import { cardArtURLs, cardTypeLabel, sharpenCardArt } from './card-view.js';
 import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, quickCardActions, activityCue, cardActivity } from './field.js';
 
@@ -142,17 +143,34 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(action.count)parts.push(`Add ${action.count} Thunder Dragon${action.count===1?'':'s'}`);
     return parts.join(' · ')||labelFor(action);
   }
-  function choose(actions,title,skipField=false){
+  function choose(actions,title,skipField=false,reuse=false){
     if(!actions.length){toast('That action is no longer available.');render();return;}
     motion.cancel();cancelArt();inspectedUid=null;
     const session=!skipField&&makeFieldSelection(match,actions,{title,sourceUid:actions[0]?.uid,mandatory:!!match.choice});
     if(session){clearTimeout(timer);fieldSelection=session;closeDialog();render();focusFieldTarget();return;}
-    if(actions.length===1){step(actions[0]);return;}
+    if(actions.length===1&&!match.choice){step(actions[0]);return;}
     selection=actions;
-    const staged=!!match.choice?.stage;
-    showDialog(`${header(title)}${actions.length>50?'<label>Find a card<input id="duel-choice-search" type="search" autocomplete="off" placeholder="Card name…"></label>':''}<p class="solo-note">${staged?'Select cards, then confirm. Field cards can also be selected on the board.':'Choose a legal option.'}</p><div class="duel-choice-list" id="duel-options-list" aria-label="Card choices"></div><button data-action="close">Return to field</button>`,'duel-list-body');
-    const update=()=>{const query=modal.querySelector('#duel-choice-search')?.value.toLowerCase()||'';modal.querySelector('#duel-options-list').innerHTML=actions.map((action,index)=>({action,index})).filter(({action})=>!query||actionDetail(action).toLowerCase().includes(query)).slice(0,100).map(({action,index})=>`<button data-duel-choice="${index}" ${action.selected?'aria-pressed="true"':''}><strong>${escape(actionDetail(action))}</strong></button>`).join('');};
-    modal.querySelector('#duel-choice-search')?.addEventListener('input',update);update();
+    const staged=!!match.choice?.stage,purpose=match.choice?.purpose||title,archive=new Map(getCards().map(card=>[card.id,card]));
+    const source=match.choice?.trigger?.uid?choiceVisuals(match,{uid:match.choice.trigger.uid},{isHidden,archive})[0]:null;
+    const context=source?`<div class="duel-choice-source"><span class="duel-choice-source-art">${source.hidden?cardBack():image(source.card)}</span><span><small>Resolving card</small><strong>${escape(source.name)}</strong></span></div>`:'';
+    const utilities=actions.map((action,index)=>({action,index})).filter(({action})=>action.finish||action.cancel||action.reset);
+    const footer=utilities.map(({action,index})=>`<button data-duel-choice="${index}" data-choice-tone="${choiceIntent(action,purpose).tone}">${escape(action.label||actionDetail(action))}</button>`).join('');
+    const markup=`${header(title)}${context}${actions.length>50?'<label class="duel-choice-search-label">Find a card<input id="duel-choice-search" type="search" autocomplete="off" placeholder="Card name…"></label>':''}<p class="duel-choice-help">${escape(match.choice?.instructions||(staged?'Tap cards to select or deselect. Confirm when ready.':'Choose a card or action.'))}</p><div class="duel-choice-list duel-choice-grid" id="duel-options-list" data-owned-content aria-label="Card choices"></div><div class="duel-choice-footer">${footer}${staged&&!match.choice.canFinish?'<button data-choice-tone="teal" disabled>Confirm selection</button>':''}<button data-action="close">Return to field</button></div>`;
+    if(reuse&&modal.open&&modal.querySelector('.duel-picker-body'))patchArena(modal,`<div class="dialog-body duel-picker-body">${markup}</div>`);else showDialog(markup,'duel-picker-body');
+    const update=()=>{
+      const query=modal.querySelector('#duel-choice-search')?.value.toLowerCase()||'';
+      const options=actions.map((action,index)=>({action,index})).filter(({action})=>!action.finish&&!action.cancel&&!action.reset).map(({action,index})=>({action,index,visuals:choiceVisuals(match,action,{isHidden,archive})})).filter(({action,visuals})=>!query||[actionDetail(action),...visuals.map(v=>v.name)].some(text=>text.toLowerCase().includes(query))).slice(0,100);
+      const list=modal.querySelector('#duel-options-list');
+      const content=options.map(({action,index,visuals})=>{
+        const intent=choiceIntent(action,purpose),primary=visuals[0],selected=!!action.selected;
+        const art=visuals.map(visual=>`<span class="duel-choice-thumb">${visual.hidden?cardBack():image(visual.card)}</span>`).join('');
+        const detail=primary?[primary.place,primary.type].filter(Boolean).join(' · '):action.effectText||'';
+        return `<button class="${primary?'duel-choice-card':'duel-choice-action'}" data-render-key="choice:${primary?.uid||action.cardId||'option'}:${index}" data-duel-choice="${index}" data-choice-tone="${intent.tone}" ${staged?`aria-pressed="${selected}"`:''} aria-label="${escape((selected?'Selected: ':'')+(primary?.name||actionDetail(action))+' · '+intent.label)}">${primary?`<span class="duel-choice-art">${art}</span>`:`<span class="duel-choice-symbol" aria-hidden="true">${action.yes===false?'×':action.yes===true?'✦':action.defense!==undefined?'↻':'◇'}</span>`}<span class="duel-choice-copy"><strong>${escape(primary?.name||actionDetail(action))}</strong>${detail?`<small>${escape(detail)}</small>`:''}<span class="duel-choice-badge">${selected?'✓ Selected':escape(intent.label)}</span></span></button>`;
+      }).join('')||'<p class="duel-choice-empty">No matching cards. Try another name.</p>';
+      patchArena(list,content);
+      list.dataset.hasCards=String(options.some(option=>option.visuals.length));
+    };
+    const search=modal.querySelector('#duel-choice-search');if(search)search.oninput=update;update();
   }
   function pickTarget(uid){
     if(moving||!fieldSelection)return;
@@ -182,7 +200,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const values=isMonster(card.card)?stats(match,card):null;
     cancelArt();
     const source=main.querySelector(`[data-motion-uid="${card.uid}"] img:not(.card-back-image)`)||modal.querySelector(`[data-duel-card="${card.uid}"] img`);
-    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(card.card))}</strong>${values?`<br>Level ${card.card.level} · ${escape(card.card.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><button data-duel="read-card" aria-controls="duel-card-description" aria-expanded="false">Read description</button><div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div><button data-duel="close-card">${fieldSelection?'Back to targets':'Return to duel'}</button></aside><section class="duel-card-reader" id="duel-card-description" hidden><div class="effect-text" tabindex="0" aria-label="Card description">${escape(card.card.desc).replace(/\n/g,'<br>')}</div><button data-duel="card-art">Back to card</button></section>`,'duel-card-viewer');
+    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(card.card))}</strong>${values?`<br>Level ${card.card.level} · ${escape(card.card.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><button data-duel="read-card" aria-controls="duel-card-description" aria-expanded="false">Read description</button><div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div><button data-duel="close-card">${fieldSelection?'Back to targets':'Return to duel'}</button></aside><section class="duel-card-reader" id="duel-card-description" hidden><div class="effect-text" tabindex="0" aria-label="Card description">${escape(card.card.desc).replace(/\n/g,'<br>')}</div><button data-duel="card-art">Back to card</button></section>`,'duel-card-viewer');
     cancelArt=sharpenCardArt(modal.querySelector('.duel-inspect-art'),card.card,{source});
   }
   function cardDescription(show){
@@ -275,17 +293,37 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     else for(const button of arena.querySelectorAll('[data-motion-disabled]')){button.disabled=false;delete button.dataset.motionDisabled;}
   }
   async function present(previous,next,action=null){
-    clearTimeout(timer);const reopenChoice=!!modal.querySelector('#duel-options-list');const before=captureArena(main), motions=planMotion(previous,next,next.version===2?(next.visualAction||(action?.type==='ATTACK'?null:action)):action), token=++presentation;
+    clearTimeout(timer);
+    const previousList=modal.open?modal.querySelector('#duel-options-list'):null;
+    const keepPicker=!!(previousList&&previous?.choice?.promptId&&previous.choice.promptId===next.choice?.promptId);
+    const choiceScroll=previousList?.scrollTop||0,choiceQuery=modal.querySelector('#duel-choice-search')?.value||'';
+    const before=captureArena(main),motions=planMotion(previous,next,next.version===2?(next.visualAction||(action?.type==='ATTACK'?null:action)):action),token=++presentation;
     const nextCue=activityCue(previous,next,next.visualAction||action);
     cue=nextCue||(previous?.phase===next.phase?cue:null);
     fieldSelection=null;cancelArt();inspectedUid=null;match=next;
     if(match.active===0&&match.phase==='draw')openingTurn=match.turn;
-    moving=true;closeDialog();render();
-    if(motions.some(item=>item.draw&&item.to==='0:hand')){const hand=main.querySelector('.duel-hand');if(hand)hand.scrollLeft=Math.max(0,hand.scrollWidth-hand.clientWidth);}
+    moving=true;if(!keepPicker)closeDialog();render();
+    if(motions.some(item=>item.draw&&item.to==='0:hand')){
+      const hand=main.querySelector('.duel-hand');if(hand)hand.scrollLeft=Math.max(0,hand.scrollWidth-hand.clientWidth);
+    }
     try{await motion.play(motions,before,{enabled:config.animations&&!reducedMotion.matches});}
     catch{motion.cancel();} // An unavailable animation API must never block a legal move.
-    finally{if(token===presentation){moving=false;setMoving(false);if(active&&reopenChoice&&match.choice?.side===0)choose(legalActions(match,0),match.choice.title,true);if(active)schedule();}}
+    finally{
+      if(token===presentation){
+        moving=false;setMoving(false);
+        if(active&&!isPortrait()&&match.choice?.side===0&&(keepPicker||!fieldSelection)){
+          choose(legalActions(match,0),match.choice.title,true,keepPicker);
+          if(keepPicker){
+            const search=modal.querySelector('#duel-choice-search');
+            if(search){search.value=choiceQuery;search.dispatchEvent(new window.Event('input'));}
+            const list=modal.querySelector('#duel-options-list');if(list)list.scrollTop=choiceScroll;
+          }
+        }
+        if(active)schedule();
+      }
+    }
   }
+
   async function step(action,side=0){
     if(moving||isPortrait())return;
     try{await present(match,applyAction(match,action,side),action);}
