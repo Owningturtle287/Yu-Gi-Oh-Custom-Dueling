@@ -112,7 +112,7 @@ test('Effect shortcut highlights Spell/Trap and Field targets while both rows re
 test('a Tribute Summon chooses compatible monsters directly and pays the selected costs once',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch(),boss=put(s,0,high,'hand'),one=put(s,0,monster),two=put(s,0,monster),three=put(s,0,monster);r.controller.refresh();
-    r.$(`[data-duel-card="${boss.uid}"]`).click();[...r.main.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Normal Summon…').click();
+    r.$(`[data-duel-card="${boss.uid}"]`).click();[...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Normal Summon…').click();
     assert.equal(r.modal.hasAttribute('open'),false);r.$(`[data-duel-card="${one.uid}"]`).click();assert.equal(r.$(`[data-duel-card="${one.uid}"]`).dataset.role,'selected');
     r.$(`[data-duel-card="${three.uid}"]`).click();const next=r.controller.getMatch();assert.ok(next.players[0].grave.some(c=>c.uid===one.uid));assert.ok(next.players[0].grave.some(c=>c.uid===three.uid));
     assert.ok(next.players[0].monsters.some(c=>c?.uid===two.uid));assert.ok(next.players[0].monsters.some(c=>c?.uid===boss.uid));
@@ -138,8 +138,8 @@ test('mandatory effect targets appear on the board automatically and cannot be c
 test('the landscape arena reserves portrait card surfaces and keeps both rows visible without a layer switch',async()=>{
   const css=await readFile(new URL('../duel.css',import.meta.url),'utf8');
   assert.match(css,/\.duel-hand-shell:first-child, \.duel-opponent-card:first-child \{[^}]*margin-inline-start:auto/);
-  assert.match(css,/\.duel-zone-surface \{[^}]*aspect-ratio:59\/86/);
-  assert.match(css,/100cqh - var\(--slot-footer\)\) \* \.686/);
+  assert.match(css,/\.duel-zone-surface \{[^}]*aspect-ratio:59\/78/);
+  assert.match(css,/100cqh - var\(--slot-footer\)\) \* \.756/);
   assert.match(css,/\.duel-status-row \.duel-prompt \{[^}]*font-size:12px/);
   assert.match(css,/data-role=eligible/);assert.match(css,/\.duel-hud/);
   assert.doesNotMatch(css,/data-field-layer|duel-layer-switch|duel-field-tabs/);
@@ -174,10 +174,10 @@ test('rotation cancels a pending AI decision and resumes it only after landscape
     assert.equal(r.$('.duel-arena').hidden,false);
   }finally{r.close();}
 });
-test('rotation keeps an unfinished field choice and its side inspection without losing legal targets',async()=>{
+test('rotation closes card inspection and keeps an unfinished field choice without losing legal targets',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster),target=put(s,1,monster);r.controller.refresh();
-    r.$(`[data-duel-quick="${attacker.uid}"]`).click();r.$('[data-duel="inspect-source"]').click();assert.ok(r.$('.duel-selected-card:not(.empty)'));assert.equal(r.modal.hasAttribute('open'),false);
+    r.$(`[data-duel-quick="${attacker.uid}"]`).click();r.$('[data-duel="inspect-source"]').click();assert.ok(r.$('.duel-card-viewer'));assert.equal(r.modal.hasAttribute('open'),true);
     rotate(r,390,844);assert.equal(r.modal.hasAttribute('open'),false);assert.equal(r.$('.duel-arena').dataset.selecting,'true');
     rotate(r,844,390);assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'eligible');
     r.$(`[data-duel-card="${target.uid}"]`).click();assert.equal(r.controller.getMatch().pending.target,target.uid);
@@ -219,7 +219,11 @@ test('the game mats oppose vertically and mirror auxiliary and pile positions fo
     assert.equal(r.$('.duel-console').contains(r.$('.duel-hand')),false);
     assert.equal(r.$('.duel-table').contains(r.$('.duel-hand')),true);
     assert.ok(r.$('.duel-hand').closest('.player-side'));assert.ok(r.$('.duel-opponent-hand').closest('.opponent-side'));
-    assert.equal(computed('.duel-hand-area').gridRow,'2');assert.equal(computed('.duel-opponent-hand').gridRow,'2');
+    assert.equal(computed('.duel-hand-area').gridRow,'2');assert.equal(computed('.duel-opponent-hand').gridRow,'1');
+    assert.equal(computed('.opponent-side .duel-mat').gridRow,'2');
+    assert.equal(computed('.opponent-side').gridTemplateRows,'clamp(32px,10dvh,56px) minmax(0,1fr)');
+    assert.equal(r.$('.duel-center-line').contains(r.$('.duel-phases')),true);
+    assert.equal(r.$('.duel-console').contains(r.$('.duel-phases')),false);
   }finally{r.close();}
 });
 test('separate Deck, Graveyard and Extra Deck zones open the correct pile and preserve private contents',async()=>{
@@ -292,19 +296,22 @@ test('Banished zones flank each Graveyard and update after an actual banishing e
     r.$('[data-motion-zone="0:banished"]').click();assert.match(r.modal.querySelector('h2').textContent,/Your Banished/);assert.match(r.modal.textContent,/Mystical Space Typhoon/);
   }finally{r.close();}
 });
-test('hand inspection shows details and legal actions in the rail, can expand, and plays a Summon',async()=>{
+test('hand inspection opens centered art, toggles large text without replacing art, and plays a Summon',async()=>{
   const r=await rig();try{
     const uid=r.controller.getMatch().players[0].hand[0].uid,name=r.controller.getMatch().players[0].hand[0].card.name;
-    r.$(`[data-duel-card="${uid}"]`).click();assert.equal(r.modal.hasAttribute('open'),false);
-    assert.equal(r.$('.duel-selected-heading h2').textContent,name);assert.match(r.$('.duel-selected-card .effect-text').textContent,/classic warrior/);
-    assert.ok([...r.main.querySelectorAll('[data-duel-group]')].some(button=>button.textContent==='Normal Summon'));
-    r.$('[data-duel="expand-card"]').click();assert.ok(r.modal.hasAttribute('open'));assert.equal(r.modal.querySelector('h2').textContent,name);
-    r.modal.querySelector('[data-action="close"]').click();assert.equal(r.$('.duel-selected-heading h2').textContent,name);
-    [...r.main.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Normal Summon').click();
-    assert.ok(r.controller.getMatch().players[0].monsters.some(card=>card?.uid===uid));assert.ok(r.$('.duel-selected-card.empty'));
+    r.$(`[data-duel-card="${uid}"]`).click();assert.equal(r.modal.hasAttribute('open'),true);
+    assert.equal(r.modal.querySelector('h2').textContent,name);assert.equal(r.$('.duel-card-reader').hidden,true);
+    assert.equal(r.main.querySelector('.duel-selected-card'),null);assert.ok(r.$('.duel-terminal'));
+    const art=r.$('.duel-inspect-art').firstChild;
+    r.$('[data-duel="read-card"]').click();assert.equal(r.$('.duel-card-reader').hidden,false);
+    assert.match(r.$('.duel-card-reader .effect-text').textContent,/classic warrior/);
+    assert.equal(r.window.document.activeElement,r.$('.duel-card-reader .effect-text'));
+    r.$('[data-duel="card-art"]').click();assert.equal(r.$('.duel-inspect-art').hidden,false);assert.equal(r.$('.duel-inspect-art').firstChild,art);
+    [...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Normal Summon').click();
+    assert.ok(r.controller.getMatch().players[0].monsters.some(card=>card?.uid===uid));assert.equal(r.modal.hasAttribute('open'),false);
   }finally{r.close();}
 });
-test('reading a card in the rail pauses AI and closing it resumes the pending decision',async()=>{
+test('reading a centered card pauses AI and closing it resumes the pending decision',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch();s.active=1;s.turn=2;s.phase='main1';r.controller.refresh();
     r.$('.duel-hand-card').click();const frozen=JSON.stringify(r.controller.getMatch());
@@ -315,20 +322,57 @@ test('reading a card in the rail pauses AI and closing it resumes the pending de
 test('card inspection clears when a public AI card moves to its hidden hand',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch(),secret=put(s,1,{...monster,name:'Formerly public rival',card_images:[{image_url_small:'https://images.ygoprodeck.com/images/cards_small/12345678.jpg'}]});
-    r.controller.refresh();r.$(`[data-duel-card="${secret.uid}"]`).click();assert.match(r.$('.duel-selected-card').textContent,/Formerly public rival/);
+    r.controller.refresh();r.$(`[data-duel-card="${secret.uid}"]`).click();assert.match(r.modal.textContent,/Formerly public rival/);
     s.players[1].monsters[0]=null;s.players[1].hand.push(secret);r.controller.refresh();
-    assert.ok(r.$('.duel-selected-card.empty'));assert.doesNotMatch(r.main.innerHTML,/Formerly public rival|12345678.jpg/);
+    assert.equal(r.modal.hasAttribute('open'),false);assert.doesNotMatch(r.main.innerHTML,/Formerly public rival|12345678.jpg/);
     assert.ok(r.$(`.duel-opponent-hand [data-motion-uid="${secret.uid}"] .card-back-image`));
   }finally{r.close();}
 });
-test('off-field choices retain exact actions when the card rail refreshes behind the picker',async()=>{
+test('off-field choices retain exact actions when the arena refreshes behind the picker',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch(),source=put(s,0,{...mst,name:'Monster Reborn',race:'Normal'},'hand'),first=put(s,0,monster,'grave'),second=put(s,0,normals[1],'grave');
     r.controller.refresh();r.$(`[data-duel-card="${source.uid}"]`).click();
-    [...r.main.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Activate card…').click();
+    [...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Activate card…').click();
     assert.equal(r.modal.querySelectorAll('[data-duel-choice]').length,2);r.controller.refresh();
     r.modal.querySelector('[data-duel-choice="1"]').click();
     await waitFor(()=>r.controller.getMatch().players[0].monsters.some(card=>card?.uid===second.uid)&&r.$('.duel-arena').dataset.moving==='false');
     assert.ok(r.controller.getMatch().players[0].grave.some(card=>card.uid===first.uid));
+  }finally{r.close();}
+});
+
+test('phase changes preserve every unchanged field, hand, pile image and the terminal scroll node',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),shown=put(s,0,{...monster,card_images:[{image_url_small:'https://images.ygoprodeck.com/images/cards_small/123.jpg'}]}),set=put(s,1,monster,'monsters',{faceUp:false,position:'defense'});
+    r.controller.refresh();
+    const image=r.$(`[data-duel-card="${shown.uid}"] img`),back=r.$(`[data-duel-card="${set.uid}"] img`),hand=r.$('.duel-hand-card'),pile=r.$('[data-motion-zone="0:deck"] img'),terminal=r.$('[data-live-terminal]');
+    let sourceWrites=0;const observer=new r.window.MutationObserver(records=>{sourceWrites+=records.filter(record=>record.attributeName==='src').length;});observer.observe(image,{attributes:true});
+    r.$('[data-duel="next"]').click();
+    await waitFor(()=>r.controller.getMatch().phase==='main2'&&!r.controller.getMatch().window&&r.$('.duel-arena').dataset.moving==='false');
+    assert.equal(r.$(`[data-duel-card="${shown.uid}"] img`),image);assert.equal(r.$(`[data-duel-card="${set.uid}"] img`),back);
+    assert.equal(r.$('.duel-hand-card'),hand);assert.equal(r.$('[data-motion-zone="0:deck"] img'),pile);assert.equal(r.$('[data-live-terminal]'),terminal);
+    assert.equal(sourceWrites,0);assert.equal(image.getAttribute('loading'),'eager');observer.disconnect();
+    assert.equal(r.$('.duel-phases [aria-current]').textContent,'M2Main 2');
+  }finally{r.close();}
+});
+test('large inspection uses supplied full art; closing by the dialog close event resumes AI',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch(),card=put(s,0,{...monster,card_images:[{image_url:'https://images.ygoprodeck.com/images/cards/123.jpg',image_url_small:'https://images.ygoprodeck.com/images/cards_small/123.jpg'}]},'hand');
+    s.active=1;s.turn=2;s.phase='main1';r.controller.refresh();r.$(`[data-duel-card="${card.uid}"]`).click();
+    assert.equal(r.$('.duel-inspect-art img').getAttribute('src'),card.card.card_images[0].image_url);
+    assert.equal(r.$('.duel-inspect-art img').dataset.imageFallback,card.card.card_images[0].image_url_small);
+    const frozen=JSON.stringify(r.controller.getMatch());r.modal.removeAttribute('open');r.modal.dispatchEvent(new r.window.Event('close'));
+    await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);
+  }finally{r.close();}
+});
+test('terminal presentation is scrollable with a large effect reader and smaller noninteractive LP',async()=>{
+  const r=await rig();try{
+    const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
+    const computed=selector=>r.window.getComputedStyle(r.$(selector));
+    assert.equal(computed('.duel-terminal-scroll').overflowY,'auto');assert.equal(computed('.duel-terminal-scroll').overflowX,'hidden');
+    assert.equal(r.$('[data-live-terminal]').getAttribute('aria-live'),'off');assert.equal(r.$('[data-terminal-announcement]').getAttribute('aria-live'),'polite');
+    assert.equal(computed('.duel-life').minHeight,'32px');
+    r.$('.duel-hand-card').click();r.$('[data-duel="read-card"]').click();
+    assert.equal(computed('.duel-card-reader .effect-text').fontSize,'18px');assert.equal(computed('.duel-card-reader .effect-text').overflowY,'auto');
+    assert.ok(r.$('.duel-card-reader .effect-text').closest('.duel-card-viewer'));
   }finally{r.close();}
 });

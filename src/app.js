@@ -61,8 +61,15 @@ modal.addEventListener('cancel', event => { event.preventDefault(); closeDialog(
 modal.addEventListener('click', event => { if (event.target === modal) { const r = modal.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) closeDialog(); } });
 document.addEventListener('error', event => {
   if (event.target.tagName === 'IMG' && event.target.src.includes('images.ygoprodeck.com')) {
+    if (event.target.dataset.imageFallback) {
+      const fallback = event.target.dataset.imageFallback;
+      delete event.target.dataset.imageFallback;
+      event.target.src = fallback;
+      return;
+    }
     const placeholder = document.createElement('span');
     placeholder.className = 'image-fallback ' + event.target.className;
+    placeholder.dataset.failedImage = event.target.getAttribute('src');
     placeholder.setAttribute('aria-label', 'Card image unavailable');
     placeholder.innerHTML = icon('deck');
     event.target.replaceWith(placeholder);
