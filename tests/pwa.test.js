@@ -46,5 +46,6 @@ test('compact controls preserve tap targets and contain list focus and horizonta
   assert.match(css, /\.archive-panel\s*\{[^}]*overflow-x:hidden[^}]*overflow-y:auto[^}]*touch-action:pan-y/);
   assert.match(css, /\.archive-panel:focus[^}]*\{[^}]*outline:none;[^}]*box-shadow:none/);
   assert.match(css, /input, select\s*\{[^}]*font-size:16px/);
+  assert.match(css, /\.detail-add select\s*\{[^}]*font-size:16px/);
   assert.match(css, /\.card-inspect:focus-visible[^}]*outline-offset:-3px/);
 });

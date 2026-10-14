@@ -922,7 +922,7 @@ dialog::backdrop {
 }
 .detail-add select {
   flex:1;
-  font-size:11px
+  font-size:16px
 }
 .detail-add button {
   flex:1;
