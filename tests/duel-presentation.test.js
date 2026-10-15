@@ -108,7 +108,7 @@ function rig(){
   const window=new Window();window.document.body.innerHTML='<main><div data-motion-zone="0:hand" data-rect="0,200,200,80"></div><div data-motion-zone="0:monsters" data-rect="20,100,200,80"><button data-motion-uid="c1" data-rect="40,120,44,64"><span class="duel-card-visual"></span></button></div></main>';
   const calls=[];
   window.HTMLElement.prototype.getBoundingClientRect=function(){const element=this.dataset.rect?this:this.parentElement;const [left,top,width,height]=(element?.dataset.rect||'0,0,0,0').split(',').map(Number);return {left,top,width,height,right:left+width,bottom:top+height};};
-  window.HTMLElement.prototype.animate=function(keyframes,options){let resolve,reject;const finished=new Promise((yes,no)=>{resolve=yes;reject=no;});const value={element:this,keyframes,options,finished,finish:resolve,cancel:()=>reject(new Error('Cancelled'))};calls.push(value);return value;};
+  window.Element.prototype.animate=function(keyframes,options){let resolve,reject;const finished=new Promise((yes,no)=>{resolve=yes;reject=no;});const value={element:this,keyframes,options,finished,finish:resolve,cancel:()=>reject(new Error('Cancelled'))};calls.push(value);return value;};
   return {window,root:window.document.querySelector('main'),calls};
 }
 const move={type:'move',uid:'c1',from:'0:hand',to:'0:monsters',start:{image:CARD_BACK,rotation:0,back:true},end:{image:normal.card_images[0].image_url_small,rotation:90,back:false}};
@@ -139,6 +139,19 @@ test('upside-down cards retain portrait dimensions and direct attack paths follo
       const y=Number(flight.keyframes[2].transform.match(/translate\([^,]+,([^p]+)px\)/)[1]);assert.ok(side===0?y>origin.y:y<origin.y);
       calls.slice(previous).forEach(call=>call.finish());await pending;
     }
+  }finally{window.close();}
+});
+test('a strike keeps its arrow and lunge aimed at a destroyed victim’s original field position',async()=>{
+  const {window,root,calls}=rig();try{
+    const victim=window.document.createElement('button');victim.dataset.motionUid='victim';victim.dataset.rect='180,10,44,64';root.append(victim);
+    const player=createMotionPlayer(root),before=captureArena(root);victim.remove();
+    const pending=player.play([{type:'attack',uid:'c1',target:'victim',side:0,start:{image:CARD_BACK,rotation:0},end:{image:CARD_BACK,rotation:0}}],before);
+    const arrow=window.document.querySelector('.duel-strike-arrow');assert.ok(arrow);assert.equal(arrow.querySelector('marker').getAttribute('orient'),'auto');
+    const [sx,sy,tx,ty]=arrow.querySelector('.duel-arrow-shaft').getAttribute('d').match(/-?[\d.]+/g).map(Number);assert.ok(tx>sx&&ty<sy);
+    const ghost=window.document.querySelector('.duel-moving-card'),flight=calls.find(c=>c.element===ghost);
+    const [x,y]=flight.keyframes[2].transform.match(/translate\(([^,]+)px,([^p]+)px\)/).slice(1).map(Number);assert.ok(x>before.cards.get('c1').x&&y<before.cards.get('c1').y);
+    const reveal=calls.find(c=>c.element.classList?.contains('duel-arrow-shaft'));assert.ok(reveal.keyframes[0].strokeDashoffset>reveal.keyframes[1].strokeDashoffset);
+    calls.forEach(c=>c.finish());await pending;assert.equal(window.document.querySelector('.duel-motion-layer'),null);
   }finally{window.close();}
 });
 test('defense rotates the complete card surface; the authentic back and motion modules are cached offline',async()=>{

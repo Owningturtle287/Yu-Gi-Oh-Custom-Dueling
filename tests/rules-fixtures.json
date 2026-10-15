@@ -2750,6 +2750,103 @@
           "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/79759861.jpg"
         }
       ]
+    },
+    {
+      "id": 5556668,
+      "name": "Exchange",
+      "type": "Spell Card",
+      "humanReadableCardType": "Normal Spell",
+      "frameType": "spell",
+      "desc": "Both players reveal their hands and add 1 card from each other's hand to their hand.",
+      "race": "Normal",
+      "tcgDate": "2002-10-15",
+      "ocgDate": "2001-07-05",
+      "setNames": [
+        "Dark Beginning 1",
+        "Duelist Pack: Yugi",
+        "Legendary Collection 3: Yugi's World Mega Pack",
+        "Speed Duel: Streets of Battle City",
+        "Yu-Gi-Oh! The Eternal Duelist Soul promotional cards",
+        "Yu-Gi-Oh! The Sacred Cards promotional cards",
+        "Yugi's Legendary Decks"
+      ],
+      "card_images": [
+        {
+          "id": 5556668,
+          "image_url": "https://images.ygoprodeck.com/images/cards/5556668.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/5556668.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/5556668.jpg"
+        }
+      ]
+    },
+    {
+      "id": 6368038,
+      "name": "Gaia The Fierce Knight",
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "''A knight whose horse travels faster than the wind. His battle-charge is a force to be reckoned with.''",
+      "race": "Warrior",
+      "attribute": "EARTH",
+      "archetype": "Gaia The Fierce Knight",
+      "atk": 2300,
+      "def": 2100,
+      "level": 7,
+      "tcgDate": "2004-03-01",
+      "ocgDate": "1999-02-04",
+      "setNames": [
+        "Dark Beginning 1",
+        "Dark Legends",
+        "Legend of Blue Eyes White Dragon",
+        "Legendary Collection 3: Yugi's World Mega Pack",
+        "Maze of Muertos",
+        "Millennium Pack",
+        "Retro Pack",
+        "Speed Duel Starter Decks: Match of the Millennium",
+        "Starter Deck: Yugi",
+        "Starter Deck: Yugi Evolution",
+        "Yugi's Legendary Decks"
+      ],
+      "card_images": [
+        {
+          "id": 6368038,
+          "image_url": "https://images.ygoprodeck.com/images/cards/6368038.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/6368038.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/6368038.jpg"
+        },
+        {
+          "id": 6368039,
+          "image_url": "https://images.ygoprodeck.com/images/cards/6368039.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/6368039.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/6368039.jpg"
+        }
+      ]
+    },
+    {
+      "id": 19523799,
+      "name": "Ookazi",
+      "type": "Spell Card",
+      "humanReadableCardType": "Normal Spell",
+      "frameType": "spell",
+      "desc": "Inflict 800 damage to your opponent.",
+      "race": "Normal",
+      "tcgDate": "2002-03-29",
+      "ocgDate": "1999-05-25",
+      "setNames": [
+        "Magic Ruler",
+        "Starter Deck 2006",
+        "Starter Deck: Kaiba",
+        "Starter Deck: Kaiba Evolution",
+        "Starter Deck: Yu-Gi-Oh! 5D's 2009"
+      ],
+      "card_images": [
+        {
+          "id": 19523799,
+          "image_url": "https://images.ygoprodeck.com/images/cards/19523799.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/19523799.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/19523799.jpg"
+        }
+      ]
     }
   ]
 }

@@ -113,7 +113,7 @@ test('Effect shortcut highlights Spell/Trap and Field targets while both rows re
 test('a Tribute Summon chooses compatible monsters directly and pays the selected costs once',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch(),boss=put(s,0,high,'hand'),one=put(s,0,monster),two=put(s,0,monster),three=put(s,0,monster);r.controller.refresh();
-    r.$(`[data-duel-card="${boss.uid}"]`).click();[...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Normal Summon…').click();
+    r.$(`[data-duel-card="${boss.uid}"]`).click();[...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Tribute Summon…').click();
     assert.equal(r.modal.hasAttribute('open'),false);r.$(`[data-duel-card="${one.uid}"]`).click();assert.equal(r.$(`[data-duel-card="${one.uid}"]`).dataset.role,'selected');
     r.$(`[data-duel-card="${three.uid}"]`).click();const next=r.controller.getMatch();assert.ok(next.players[0].grave.some(c=>c.uid===one.uid));assert.ok(next.players[0].grave.some(c=>c.uid===three.uid));
     assert.ok(next.players[0].monsters.some(c=>c?.uid===two.uid));assert.ok(next.players[0].monsters.some(c=>c?.uid===boss.uid));
@@ -298,17 +298,18 @@ test('Banished zones flank each Graveyard and update after an actual banishing e
     r.$('[data-motion-zone="0:banished"]').click();assert.match(r.modal.querySelector('h2').textContent,/Your Banished/);assert.match(r.modal.textContent,/Mystical Space Typhoon/);
   }finally{r.close();}
 });
-test('hand inspection opens centered art, toggles large text without replacing art, and plays a Summon',async()=>{
+test('hand inspection shows art and readable description together above actions, and plays a Summon',async()=>{
   const r=await rig();try{
     const uid=r.controller.getMatch().players[0].hand[0].uid,name=r.controller.getMatch().players[0].hand[0].card.name;
     r.$(`[data-duel-card="${uid}"]`).click();assert.equal(r.modal.hasAttribute('open'),true);
-    assert.equal(r.modal.querySelector('h2').textContent,name);assert.equal(r.$('.duel-card-reader').hidden,true);
+    assert.equal(r.modal.querySelector('h2').textContent,name);assert.equal(r.$('.duel-card-reader'),null);
     assert.equal(r.main.querySelector('.duel-selected-card'),null);assert.ok(r.$('.duel-terminal'));
     const art=r.$('.duel-inspect-art').firstChild;
-    r.$('[data-duel="read-card"]').click();assert.equal(r.$('.duel-card-reader').hidden,false);
-    assert.match(r.$('.duel-card-reader .effect-text').textContent,/classic warrior/);
-    assert.equal(r.window.document.activeElement,r.$('.duel-card-reader .effect-text'));
-    r.$('[data-duel="card-art"]').click();assert.equal(r.$('.duel-inspect-art').hidden,false);assert.equal(r.$('.duel-inspect-art').firstChild,art);
+    assert.match(r.$('.duel-inspect-description').textContent,/classic warrior/);
+    assert.equal(r.$('.duel-inspect-description').getAttribute('tabindex'),'0');
+    assert.ok(r.$('.duel-inspect-description').compareDocumentPosition(r.$('.duel-card-actions'))&4);
+    assert.equal(r.$('[data-duel="read-card"]'),null);assert.equal(r.$('[data-duel="close-card"]'),null);
+    assert.equal(r.$('.duel-inspect-art').firstChild,art);
     [...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent==='Normal Summon').click();
     assert.ok(r.controller.getMatch().players[0].monsters.some(card=>card?.uid===uid));assert.equal(r.modal.hasAttribute('open'),false);
   }finally{r.close();}
@@ -318,7 +319,7 @@ test('reading a centered card pauses AI and closing it resumes the pending decis
     const s=r.controller.getMatch();s.active=1;s.turn=2;s.phase='main1';r.controller.refresh();
     r.$('.duel-hand-card').click();const frozen=JSON.stringify(r.controller.getMatch());
     await new Promise(resolve=>setTimeout(resolve,260));assert.equal(JSON.stringify(r.controller.getMatch()),frozen);
-    r.$('[data-duel="close-card"]').click();await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);
+    r.$('[data-action="close"]').click();await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);
   }finally{r.close();}
 });
 test('card inspection clears when a public AI card moves to its hidden hand',async()=>{
@@ -373,9 +374,9 @@ test('terminal presentation is scrollable with a large effect reader and smaller
     assert.equal(computed('.duel-terminal-scroll').overflowY,'auto');assert.equal(computed('.duel-terminal-scroll').overflowX,'hidden');
     assert.equal(r.$('[data-live-terminal]').getAttribute('aria-live'),'off');assert.equal(r.$('[data-terminal-announcement]').getAttribute('aria-live'),'polite');
     assert.equal(computed('.duel-life').minHeight,'32px');
-    r.$('.duel-hand-card').click();r.$('[data-duel="read-card"]').click();
-    assert.equal(computed('.duel-card-reader .effect-text').fontSize,'18px');assert.equal(computed('.duel-card-reader .effect-text').overflowY,'auto');
-    assert.ok(r.$('.duel-card-reader .effect-text').closest('.duel-card-viewer'));
+    r.$('.duel-hand-card').click();
+    assert.equal(computed('.duel-inspect-description').fontSize,'14px');assert.equal(computed('.duel-inspect-description').overflowY,'auto');
+    assert.ok(r.$('.duel-inspect-description').closest('.duel-card-viewer'));
   }finally{r.close();}
 });
 
@@ -406,11 +407,11 @@ test('compact card and pile sheets retain visible full typing, small buttons and
     const s=r.controller.getMatch(),beast=put(s,0,{...monster,name:'Mystic Horseman',race:'Beast'},'hand');r.controller.refresh();
     r.$(`[data-duel-card="${beast.uid}"]`).click();
     assert.equal(r.$('.duel-card-typing').textContent,'Beast / Normal');
-    assert.equal(r.window.getComputedStyle(r.modal).width,'440px');
-    assert.equal(r.window.getComputedStyle(r.$('[data-duel="read-card"]')).minHeight,'32px');
+    assert.equal(r.window.getComputedStyle(r.modal).width,'580px');
+    assert.equal(r.$('[data-duel="read-card"]'),null);assert.equal(r.$('[data-duel="close-card"]'),null);
     rotate(r,568,320);r.$(`[data-duel-card="${beast.uid}"]`).click();
     assert.notEqual(r.window.getComputedStyle(r.$('.duel-inspect-meta')).display,'none','Typing must remain visible on short phones');
-    r.$('[data-duel="close-card"]').click();r.$('[data-motion-zone="0:grave"]').click();
+    r.$('[data-action="close"]').click();r.$('[data-motion-zone="0:grave"]').click();
     assert.equal(r.window.getComputedStyle(r.modal).width,'340px');assert.equal(r.modal.querySelectorAll('.duel-pile-tabs, [data-duel-pile]').length,0);assert.match(r.modal.textContent,/Graveyard is empty/);
     const css=style.textContent;assert.match(css,/max-width:calc\(100vw - env\(safe-area-inset-left\) - env\(safe-area-inset-right\) - 36px\)/);
     assert.match(css,/backdrop-filter:blur\(1px\)/);

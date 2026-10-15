@@ -12,12 +12,17 @@ const cards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.met
 const get=name=>cards.find(card=>card.name===name);
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
 const waitFor=async predicate=>{const end=Date.now()+2000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,5));assert.ok(predicate(),'Duel UI ready');};
-async function rig({search=false}={}){
+async function rig({search=false,exchange=false,alreadySummoned=false}={}){
   const engine=createNativeBackend({rules:()=>pack});
   const discardCards=search?Array.from({length:55},(_,i)=>({...get('Summoned Skull'),id:700000+i,name:`Backup card ${String(i).padStart(2,'0')}`})):['Summoned Skull','Blue-Eyes White Dragon'].map(get);
   const catalog=[...cards,...discardCards];
-  let state=await engine.createMatch([0,1].map(()=>({name:'Prompt test',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,first:1,cards:catalog,openingHands:[[get('Tribute to the Doomed'),...discardCards],[]],initialFields:[{}, {monsters:[{card:get('Mystical Elf')}]}]});
+  let state=await engine.createMatch([0,1].map(()=>({name:'Prompt test',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,first:1,cards:catalog,openingHands:exchange?[['Exchange','Mystical Elf','Blue-Eyes White Dragon'].map(get),[get('Gaia The Fierce Knight')]]:[[get('Tribute to the Doomed'),...discardCards],[]],initialFields:exchange?[{monsters:Array(alreadySummoned?1:2).fill(null).map(()=>({card:get('Mystical Elf')}))},{}]:[{}, {monsters:[{card:get('Mystical Elf')}]}]});
   state=engine.applyAction(state,{type:'END'},1);
+  if(exchange){
+    if(alreadySummoned)state=engine.applyAction(state,state.actions[0].find(a=>a.type==='SUMMON'&&!a.set),0);
+    state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ACTIVATE'&&engine.findCard(state,a.uid)?.card.name==='Exchange'),0);
+    while(state.choice||state.window){const side=state.actions[0].length?0:1;state=engine.applyAction(state,engine.chooseAIAction(state,side),side);}
+  }
   const window=new Window({url:'https://example.com/repo/'});window.happyDOM.setWindowSize({width:844,height:390});
   window.document.body.innerHTML='<main id="main"></main><dialog id="modal"></dialog>';
   for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],writable:true,configurable:true});
@@ -85,4 +90,26 @@ test('hidden opposing choices use only a card back and safe metadata; declaratio
   assert.equal(choiceVisuals(state,{tributes:['one','two']}).length,2);
   const archive=new Map(cards.map(c=>[c.id,c]));assert.equal(choiceVisuals(state,{cardId:get('Mystical Elf').id},{archive})[0].card.card_images.length,1);
   assert.equal(choiceIntent({type:'CHOOSE'},'Select discard').tone,'danger');assert.equal(choiceIntent({type:'CHOOSE'},'Select release').tone,'gold');assert.equal(choiceIntent({finish:true}).tone,'teal');assert.equal(choiceIntent({cancel:true}).tone,'danger');
+});
+test('Gaia obtained by Exchange can be Tribute Summoned through the arena’s two-card selection',async()=>{
+  const r=await rig({exchange:true});try{
+    const gaia=r.state.players[0].hand.find(c=>c.card.name==='Gaia The Fierce Knight');
+    r.$(`[data-duel-card="${gaia.uid}"]`).click();assert.ok(r.$('.duel-inspect-description'));assert.equal(r.$('.duel-summon-note'),null);
+    [...r.modal.querySelectorAll('[data-duel-group]')].find(b=>b.textContent==='Tribute Summon').click();
+    await waitFor(()=>r.$('.duel-arena').dataset.selecting==='true'&&r.$('.duel-arena').dataset.moving==='false');
+    assert.match(r.$('.duel-prompt').textContent,/at least 2/);
+    const tributes=r.state.players[0].monsters.filter(Boolean).map(c=>c.uid);
+    for(const uid of tributes){r.$(`[data-duel-card="${uid}"]`).click();await waitFor(()=>r.state.choice.selected.includes(uid)&&r.$('.duel-arena').dataset.moving==='false');}
+    assert.equal(r.$('[data-duel="confirm-choice"]').disabled,false);r.$('[data-duel="confirm-choice"]').click();
+    await waitFor(()=>r.state.players[0].monsters.filter(Boolean).some(c=>c.card.name==='Gaia The Fierce Knight')&&r.$('.duel-arena').dataset.moving==='false');
+    assert.equal(r.state.players[0].grave.filter(c=>c.card.name==='Mystical Elf').length,2);
+    r.$('[data-duel="next"]').click();await waitFor(()=>r.state.phase==='battle');assert.deepEqual(r.messages,[]);
+  }finally{r.close();}
+});
+test('an exchanged monster explains the Normal Summon limit when the allowance was already used',async()=>{
+  const r=await rig({exchange:true,alreadySummoned:true});try{
+    const gaia=r.state.players[0].hand.find(c=>c.card.name==='Gaia The Fierce Knight');r.$(`[data-duel-card="${gaia.uid}"]`).click();
+    assert.match(r.$('.duel-summon-note').textContent,/already Normal Summoned\/Set this turn/);
+    assert.equal(r.modal.querySelectorAll('[data-duel-group]').length,0);assert.match(r.$('.duel-inspect-description').textContent,/horse/);
+  }finally{r.close();}
 });

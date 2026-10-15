@@ -10,6 +10,7 @@ import { patchArena } from './dom.js';
 import { createDuelTerminal } from './terminal.js';
 import { choiceIntent, choiceVisuals } from './choice-view.js';
 import { effectBrief, responseOffer, createResponsePolicy } from './responses.js';
+import { createAttackArrows } from './attack-arrows.js';
 import { cardArtURLs, cardTypeLabel, sharpenCardArt } from './card-view.js';
 import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, quickCardActions, activityCue, cardActivity } from './field.js';
 
@@ -28,6 +29,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   const chooseAIAction=engine.chooseAIAction||legacyAI;
   let config={sides:[defaultSide(),defaultSide()],difficulty:'normal',aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',setsError='',starting=false,selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[],inspectedUid=null,cardGroups=[],cancelArt=()=>{};
   const motion=createMotionPlayer(main), reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const attackArrows=createAttackArrows(main);
   const terminal=createDuelTerminal({getRoot:()=>main.querySelector('[data-live-terminal]'),reduced:()=>reducedMotion.matches});
   const responsePolicy=createResponsePolicy();
   let responseSeen=null,responseIndex=0;
@@ -38,6 +40,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     motion.cancel();
     const changed=portrait!==isPortrait();portrait=isPortrait();
     if(active&&match&&changed){clearTimeout(timer);if(portrait){cancelArt();inspectedUid=null;responseSeen=null;closeDialog();}render();}
+    else if(active&&match)attackArrows.refresh();
   };
   window.addEventListener('resize',resize);
   reducedMotion.addEventListener?.('change',cancelMotion);
@@ -207,7 +210,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const card=findCard(match,inspectedUid);
     if(!card||isHidden(inspectedUid)){inspectedUid=null;return null;}
     const actions=fieldSelection?[]:legalActions(match,0).filter(action=>action.uid===inspectedUid||action.type==='CHOOSE'&&action.target===inspectedUid),groups=[];
-    for(const action of actions){const key=action.type+':'+!!action.set+':'+!!action.special;let group=groups.find(group=>group.key===key);if(!group){group={key,label:labelFor(action),actions:[]};groups.push(group);}group.actions.push(action);}
+    for(const action of actions){const key=action.type+':'+!!action.set+':'+!!action.special;let group=groups.find(group=>group.key===key);if(!group){group={key,label:action.type==='SUMMON'&&!action.special&&card.card.level>=5?(action.set?'Tribute Set':'Tribute Summon'):labelFor(action),actions:[]};groups.push(group);}group.actions.push(action);}
     return {card,groups};
   }
   function inspect(uid){
@@ -218,18 +221,13 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   function openInspection(){
     const selected=inspection();if(!selected)return;const {card,groups}=selected;cardGroups=groups;
     const values=isMonster(card.card)?stats(match,card):null;
+    const ownHand=match.players[0].hand.some(c=>c.uid===card.uid);
+    const usedNormal=match.normalSummons?.[0]||match.normalUsed;
+    const summonNote=ownHand&&values&&match.active===0&&['main1','main2'].includes(match.phase)&&!match.window&&!match.choice&&!groups.some(g=>g.actions.some(a=>a.type==='SUMMON'))&&usedNormal?'You already Normal Summoned/Set this turn. Tribute Summons normally share that limit; another summon needs a card effect.':'';
     cancelArt();
     const source=main.querySelector(`[data-motion-uid="${card.uid}"] img:not(.card-back-image)`)||modal.querySelector(`[data-duel-card="${card.uid}"] img`);
-    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(card.card))}</strong>${values?`<br>Level ${card.card.level} · ${escape(card.card.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><button data-duel="read-card" aria-controls="duel-card-description" aria-expanded="false">Read description</button><div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div><button data-duel="close-card">${fieldSelection?'Back to targets':'Return to duel'}</button></aside><section class="duel-card-reader" id="duel-card-description" hidden><div class="effect-text" tabindex="0" aria-label="Card description">${escape(card.card.desc).replace(/\n/g,'<br>')}</div><button data-duel="card-art">Back to card</button></section>`,'duel-card-viewer');
+    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(card.card))}</strong>${values?`<br>Level ${card.card.level} · ${escape(card.card.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
     cancelArt=sharpenCardArt(modal.querySelector('.duel-inspect-art'),card.card,{source});
-  }
-  function cardDescription(show){
-    const reader=modal.querySelector('.duel-card-reader');if(!reader)return;
-    reader.hidden=!show;
-    modal.querySelector('.duel-inspect-art').hidden=show;
-    modal.querySelector('.duel-inspect-options').hidden=show;
-    modal.querySelector('[data-duel="read-card"]').setAttribute('aria-expanded',String(show));
-    modal.querySelector(show?'.duel-card-reader .effect-text':'[data-duel="read-card"]')?.focus({preventScroll:true});
   }
   function dismissInspection(){
     if(!inspectedUid)return;
@@ -287,7 +285,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     arenaActions=actions;
     const busy=aiActions.length>0,candidates=fieldCandidates(fieldSelection),selected=inspection();
     if(!selected&&modal.querySelector('.duel-card-viewer')&&modal.open){cancelArt();closeDialog();}
-    const prompt=won?match.winner==='draw'?'A hard-fought draw.':match.winner===0?'Victory. Your strategy paid off.':'Defeat. A new strategy awaits.':fieldSelection?`${fieldSelection.title} · ${fieldSelection.key==='tributes'?`choose ${candidates.remaining} more tribute${candidates.remaining===1?'':'s'}`:'tap a highlighted card'+(candidates.directSide!==null?' or the AI’s LP':'')}.`:inspectedUid?cardGroups.length?'Choose an action on the card. Close it to return.':'Duel paused · close card details to continue.':needsChoice?match.choice.title:discard?'Hand limit: choose a card to discard until six remain.':respond?match.chain.length?`Respond to ${match.chain.at(-1).card.name}, or pass.`:match.pending?.kind==='attack'?'An attack is incoming. Respond or pass.':'Response window · play a fast effect or pass.':busy?'AI is considering its next move…':mainPhaseLabel(match);
+    const prompt=won?match.winner==='draw'?'A hard-fought draw.':match.winner===0?'Victory. Your strategy paid off.':'Defeat. A new strategy awaits.':fieldSelection?fieldSelection.native&&fieldSelection.kind==='tribute'?match.choice.instructions:`${fieldSelection.title} · ${fieldSelection.key==='tributes'?`choose ${candidates.remaining} more tribute${candidates.remaining===1?'':'s'}`:'tap a highlighted card'+(candidates.directSide!==null?' or the AI’s LP':'')}.`:inspectedUid?cardGroups.length?'Choose an action on the card. Close it to return.':'Duel paused · close card details to continue.':needsChoice?match.choice.title:discard?'Hand limit: choose a card to discard until six remain.':respond?match.chain.length?`Respond to ${match.chain.at(-1).card.name}, or pass.`:match.pending?.kind==='attack'?'An attack is incoming. Respond or pass.':'Response window · play a fast effect or pass.':busy?'AI is considering its next move…':mainPhaseLabel(match);
     const passing=responsePolicy.isPassing(match);
     const summary=cue?.source?`${cue.label}: ${visibleName(cue.source)}`:match.lastEvent?.message||'';
     const phases=`<ol class="duel-phases" data-phase="${match.phase}" data-changed="${previousPhase!==match.phase}" aria-label="Phase tracker">${PHASES.map((phase,index)=>`<li ${match.phase===phase?'aria-current="step"':''} class="${index<PHASES.indexOf(match.phase)?'complete':''}"><span>${['D','S','M1','B','M2','E'][index]}</span><small>${PHASE_LABELS[phase]}</small></li>`).join('')}</ol>`;
@@ -295,7 +293,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       <section class="duel-orientation" ${blocked?'':'hidden'} aria-label="Landscape required" role="status"><div class="duel-rotate-icon" aria-hidden="true">↻<i></i></div><div class="eyebrow">A SEAT AT THE TABLE</div><h1>Turn your phone sideways</h1><p>Dueling uses landscape so every zone has room.<br>Your match is paused. Rotate to continue.</p><button data-route="home">Back to Home</button></section>
       <section class="screen duel-arena ${config.animations&&!reducedMotion.matches?'animated':''}" ${blocked?'hidden inert':''} data-orientation-paused="${blocked}" data-selecting="${!!fieldSelection}" aria-label="Solo Duel arena">
       <div class="duel-table" aria-label="Duel field · AI at top, you at bottom; all Monster and Spell/Trap zones visible">
-        ${renderSide(1)}<div class="duel-center-line">${phases}</div>${renderSide(0)}
+        ${renderSide(1)}<div class="duel-center-line">${phases}</div>${renderSide(0)}<svg class="duel-target-arrows" data-owned-content aria-hidden="true"></svg>
       </div>
       <aside class="duel-console" aria-label="Live game terminal and duel controls">
       <header class="duel-hud"><button class="duel-exit" data-route="home" aria-label="Back to Home; pause this duel">←</button><div class="duel-toolbar"><div class="duel-turn">TURN ${match.turn} <span>${match.active===0?'YOUR TURN':'AI TURN'}</span></div></div><button class="duel-menu-button" data-duel="duel-menu" aria-label="Duel settings, log, and surrender">•••</button></header>
@@ -309,6 +307,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function setMoving(value){
     const arena=main.querySelector('.duel-arena');if(!arena)return;
+    attackArrows.sync(match,fieldSelection,{hidden:isPortrait()||value});
     arena.dataset.moving=String(value);arena.setAttribute('aria-busy',String(value));
     if(value)for(const button of arena.querySelectorAll('.duel-controls button:not([disabled]), .duel-quick-action:not([disabled])')){button.disabled=true;button.dataset.motionDisabled='true';}
     else for(const button of arena.querySelectorAll('[data-motion-disabled]')){button.disabled=false;delete button.dataset.motionDisabled;}
@@ -416,9 +415,6 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       button.textContent=description.hidden?'Read full text':'Brief explanation';button.setAttribute('aria-expanded',String(!description.hidden));
       if(!description.hidden)description.focus({preventScroll:true});return;
     }
-    if(action==='close-card'){closeDialog();dismissInspection();return;}
-    if(action==='read-card'){cardDescription(true);return;}
-    if(action==='card-art'){cardDescription(false);return;}
     if(action==='terminal-latest'){terminal.finish();terminal.latest();return;}
     if(action==='filters')filters();if(action==='coverage')coverage();if(action==='support-list')coverage(true);if(action==='start')start();if(action==='sets-retry')requestSets(true);
     if(action==='design')onDesign(tab,selectedDeck(tab));
@@ -439,12 +435,12 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   document.addEventListener('click',handleClick);
   return {
     enter(){active=true;render();if(!match&&config.sides.some(s=>s.source==='set')&&setsStatus==='idle')requestSets();},
-    leave(){cancelArt();terminal.pause();responseSeen=null;active=false;inspectedUid=null;presentation++;moving=false;motion.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');},
+    leave(){cancelArt();terminal.pause();attackArrows.sync(null,null,{hidden:true});responseSeen=null;active=false;inspectedUid=null;presentation++;moving=false;motion.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');},
     refresh:render,
     setDesignedDeck:saveSide,
     getMatch:()=>match,
     getConfig:()=>structuredClone(config),
-    destroy(){engine.destroyMatch?.(match);cancelArt();terminal.destroy();modal.removeEventListener('close',dialogClosed);active=false;presentation++;moving=false;motion.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);reducedMotion.removeEventListener?.('change',cancelMotion);}
+    destroy(){engine.destroyMatch?.(match);cancelArt();terminal.destroy();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);active=false;presentation++;moving=false;motion.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);reducedMotion.removeEventListener?.('change',cancelMotion);}
   };
 }
 function mainPhaseLabel(state){return ['main1','main2'].includes(state.phase)?'Summon, Set, or activate a card. Tap your hand to begin.':state.phase==='battle'?'Tap your Attack Position monster to choose an attack.':state.phase==='end'?'End Phase. Continue to your opponent’s turn.':`${PHASE_LABELS[state.phase]} Phase · continue when ready.`;}

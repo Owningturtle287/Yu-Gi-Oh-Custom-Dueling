@@ -138,3 +138,62 @@ test('chain negation names the effect and LP costs name their source without cla
     assert.ok(!state.log.some(e=>e.kind==='draw'&&/Pot of Greed/.test(e.message)));
   }finally{engine.destroyMatch(state);}
 });
+test('lethal battle and effect damage clamp signed core LP to zero and retain the winner',async()=>{
+  for(const effect of [false,true]){
+    let state=await engine.createMatch([0,1].map(()=>({name:'Overkill',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:9,first:effect?0:1,lp:500,cards,openingHands:[effect?[get('Ookazi')]:[],[]],initialFields:effect?null:[{monsters:[body('Blue-Eyes White Dragon')]},{}]});
+    try{
+      if(effect)state=settle(move(state,'ACTIVATE','Ookazi'));
+      else{
+        state=engine.applyAction(state,{type:'END'},1);state=engine.applyAction(state,{type:'NEXT'},0);
+        state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ATTACK'),0);state=settle(state);
+      }
+      assert.equal(state.players[1].lp,0);assert.equal(state.winner,0);assert.ok(state.players.every(p=>p.lp>=0&&p.lp<=500));
+    }finally{engine.destroyMatch(state);}
+  }
+});
+test('opening decks are shuffled independently for each seed without mutating saved order',async()=>{
+  const normals=cards.filter(c=>c.type==='Normal Monster'),main=Array.from({length:40},(_,i)=>normals[Math.floor(i/5)%normals.length]);
+  const original=main.map(c=>c.id),snapshots=[];
+  for(const seed of [41,41,42]){
+    let state=await engine.createMatch([0,1].map(()=>({name:'Saved custom deck',main,extra:[]})),{seed,cards});
+    try{
+      const shape=state.players.map(p=>({hand:p.hand.map(c=>c.card.id),deck:p.deck.map(c=>c.card.id)}));snapshots.push(shape);
+      for(const p of state.players)assert.deepEqual([...p.deck,...p.hand].map(c=>c.card.id).sort((a,b)=>a-b),[...original].sort((a,b)=>a-b));
+      assert.deepEqual(main.map(c=>c.id),original);assert.notDeepEqual(shape[0].hand,original.slice(-5));
+      assert.notDeepEqual(shape[0].hand,shape[1].hand,'Players get independent shuffles');
+    }finally{engine.destroyMatch(state);}
+  }
+  assert.deepEqual(snapshots[0],snapshots[1],'A replay seed remains reproducible');assert.notDeepEqual(snapshots[0],snapshots[2]);
+});
+test('Exchange allows a two-Tribute Gaia Summon when unused and does not grant a second Normal Summon',async()=>{
+  for(const alreadySummoned of [false,true]){
+    let state=await game([['Exchange','Mystical Elf','Blue-Eyes White Dragon'],['Gaia The Fierce Knight']],[{monsters:Array(alreadySummoned?1:2).fill(null).map(()=>body('Mystical Elf'))},{}]);
+    try{
+      if(alreadySummoned)state=move(state,'SUMMON','Mystical Elf');
+      state=settle(move(state,'ACTIVATE','Exchange'));
+      const gaia=state.players[0].hand.find(c=>c.card.name==='Gaia The Fierce Knight');assert.ok(gaia);assert.equal(gaia.owner,1);assert.equal(gaia.controller,0);
+      const summon=state.actions[0].find(a=>a.type==='SUMMON'&&!a.set&&a.uid===gaia.uid);
+      if(alreadySummoned){assert.equal(summon,undefined);assert.equal(state.normalSummons[0],1);}
+      else{
+        assert.ok(summon);state=engine.applyAction(state,summon,0);assert.match(state.choice.instructions,/at least 2/);
+        state=settle(state);assert.deepEqual(names(state),['Gaia The Fierce Knight']);assert.equal(state.players[0].grave.filter(c=>c.card.name==='Mystical Elf').length,2);
+      }
+      assert.ok(state.log.some(e=>/Exchange.*does not grant an additional Normal Summon/.test(e.message)));
+    }finally{engine.destroyMatch(state);}
+  }
+});
+test('native attack targeting retains the attacker through selection and commits the selected victim',async()=>{
+  let state=await engine.createMatch([0,1].map(()=>({name:'Attack target',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:31,first:1,cards,openingHands:[[],[]],initialFields:[{monsters:[body('Blue-Eyes White Dragon')]},{monsters:[body('Mystical Elf'),body('Mystical Elf')]}]});
+  try{
+    state=engine.applyAction(state,{type:'END'},1);state=engine.applyAction(state,{type:'NEXT'},0);
+    const attacker=state.players[0].monsters.find(Boolean),victim=state.players[1].monsters[1];
+    state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ATTACK'),0);
+    assert.equal(state.choice.attackUid,attacker.uid);assert.equal(state.choice.trigger.uid,attacker.uid);
+    assert.match(state.choice.instructions,/Arrows point from your attacker/);
+    state=engine.applyAction(state,state.actions[0].find(a=>a.target===victim.uid),0);
+    assert.equal(state.choice.attackUid,attacker.uid);assert.ok(state.choice.selected.includes(victim.uid));
+    state=engine.applyAction(state,state.actions[0].find(a=>a.finish),0);
+    assert.equal(state.visualAction.uid,attacker.uid);assert.equal(state.visualAction.target,victim.uid);
+    assert.ok(state.players[1].grave.some(c=>c.uid===victim.uid));
+  }finally{engine.destroyMatch(state);}
+});
