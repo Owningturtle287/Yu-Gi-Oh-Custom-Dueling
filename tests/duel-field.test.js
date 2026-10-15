@@ -65,19 +65,19 @@ test('on-card shortcuts only reflect supplied legal actions and activity identif
 });
 
 async function waitFor(predicate){const end=Date.now()+3000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,10));assert.ok(predicate(),'Duel did not reach the expected state');}
-async function rig({width=1024,height=768}={}){
+async function rig({width=1024,height=768,animations=false,opening=false}={}){
   const window=new Window({url:'https://example.com/repo/'});window.document.body.innerHTML='<main id="main"></main><dialog id="modal"></dialog>';
   window.happyDOM.setWindowSize({width,height});
   for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],configurable:true,writable:true});
   const deck=createDeck('Classic','classic');deck.sections.main=normals.map((card,index)=>({card,quantity:index===13?1:3}));
-  window.localStorage.setItem('duel-atlas.solo-config.v1',JSON.stringify({sides:[{...defaultSide(),source:'saved',deckId:'classic'},{...defaultSide(),source:'saved',deckId:'classic'}],first:'you',animations:false,aiSpeed:'fast'}));
+  window.localStorage.setItem('duel-atlas.solo-config.v1',JSON.stringify({sides:[{...defaultSide(),source:'saved',deckId:'classic'},{...defaultSide(),source:'saved',deckId:'classic'}],first:'you',animations,aiSpeed:'fast'}));
   const main=window.document.querySelector('main'),modal=window.document.querySelector('dialog'),messages=[];
   const closeDialog=()=>modal.removeAttribute('open');
   const showDialog=(content,className='')=>{modal.innerHTML=`<div class="dialog-body ${className}">${content}</div>`;modal.setAttribute('open','');};
   const closeEvent=event=>{if(event.target.closest('[data-action="close"]'))closeDialog();};window.document.addEventListener('click',closeEvent);
   const controller=createSoloController({engine:legacyEngine,main,modal,getCards:()=>[...normals,mst,trap,bug,field,high],getDecks:()=>[deck],getStatus:()=>'ready',showDialog,dialogHeader:title=>`<h2>${title}</h2><button data-action="close">Close</button>`,closeDialog,toast:message=>messages.push(message),onDesign:()=>{},onKeepDeck:()=>{}});
   controller.enter();main.querySelector('[data-duel="start"]').click();
-  await waitFor(()=>main.querySelector('.duel-arena')?.dataset.moving==='false'&&(height>width||controller.getMatch()?.phase==='main1'&&!controller.getMatch().window));
+  await waitFor(()=>opening?main.querySelector('.duel-intro'):main.querySelector('.duel-arena')?.dataset.moving==='false'&&(height>width||controller.getMatch()?.phase==='main1'&&!controller.getMatch().window));
   return {window,main,modal,controller,messages,$:selector=>window.document.querySelector(selector),close(){controller.destroy();window.close();}};
 }
 test('Attack shortcut selects a highlighted Set monster on the board without a target list',async()=>{
@@ -88,6 +88,19 @@ test('Attack shortcut selects a highlighted Set monster on the board without a t
     assert.doesNotMatch(r.main.textContent,/Secret defender/);assert.match(r.$(`[data-duel-card="${target.uid}"]`).getAttribute('aria-label'),/Legal target.*face-down.*ATK \? DEF \?/);
     r.$(`[data-duel-card="${target.uid}"]`).click();assert.equal(r.controller.getMatch().pending.target,target.uid);
     assert.equal(r.$(`[data-duel-card="${attacker.uid}"]`).dataset.role,'source');assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'target');
+  }finally{r.close();}
+});
+test('opening banner blocks phase decisions, can be skipped, and navigation resumes the same unshuffled match',async()=>{
+  const r=await rig({width:844,height:390,animations:true,opening:true});try{
+    const initial=r.controller.getMatch(),frozen=JSON.stringify(initial);assert.ok(r.$('.duel-table .duel-intro'));assert.equal(r.$('.duel-arena').dataset.intro,'true');
+    assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,2);
+    await new Promise(resolve=>setTimeout(resolve,100));assert.equal(JSON.stringify(r.controller.getMatch()),frozen);
+    r.controller.leave();assert.equal(r.$('.duel-intro'),null);r.controller.enter();await waitFor(()=>r.$('.duel-intro'));
+    assert.equal(r.controller.getMatch(),initial);assert.equal(initial.players[0].hand.length,5);
+    r.$('.duel-intro-skip').click();await waitFor(()=>r.controller.getMatch().phase==='main1'&&!r.controller.getMatch().window&&r.$('.duel-arena').dataset.moving==='false');
+    assert.equal(r.$('.duel-intro'),null);assert.equal(r.controller.getMatch().players[0].hand.length,5);assert.equal(r.controller.getMatch().log.filter(e=>e.message==='You go first.').length,1);
+    assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,0);
+    r.controller.leave();r.controller.enter();assert.equal(r.$('.duel-intro'),null);
   }finally{r.close();}
 });
 test('direct attacks target the AI’s own bottom-left LP corner; card faces and stats are oriented separately',async()=>{

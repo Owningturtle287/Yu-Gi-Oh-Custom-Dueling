@@ -1,5 +1,5 @@
 import { dateForBasis, cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
-export const VERSION = '0.2.4';
+export const VERSION = '0.2.5';
 export const MECHANICS = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link'];
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
@@ -116,6 +116,13 @@ export function readDecks(storage) {
 export function saveDeck(storage, decks, deck) {
   const valid = validateDeck({ ...deck, updatedAt: new Date().toISOString() });
   const next = [...decks.filter(d => d.id !== valid.id), valid].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, decks: next }));
+  return next;
+}
+export function deleteSavedDeck(storage, id) {
+  // Read the current persisted list so deleting from an older tab cannot erase
+  // decks saved by another tab. Commit storage before changing any UI state.
+  const next = readDecks(storage).filter(deck => deck.id !== id);
   storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, decks: next }));
   return next;
 }

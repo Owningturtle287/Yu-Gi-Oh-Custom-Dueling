@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { filterCards, createDeck, addCard, removeCard, totals, saveDeck, readDecks, exportJSON, importJSON, exportYDK, importYDK, validateDeck, deckWarnings, STORAGE_KEY } from '../src/core.js';
+import { filterCards, createDeck, addCard, removeCard, totals, saveDeck, readDecks, deleteSavedDeck, exportJSON, importJSON, exportYDK, importYDK, validateDeck, deckWarnings, STORAGE_KEY } from '../src/core.js';
 import { dragon, fusion, xyz, link, spell, cards, memoryStorage } from './fixtures.js';
 
 test('search covers names, archetypes, and card text without changing the archive', () => {
@@ -79,6 +79,15 @@ test('storage errors and corrupt payloads never silently overwrite existing deck
   assert.equal(storage.getItem(STORAGE_KEY), '{broken');
   const fail = { setItem() { throw new Error('Quota exceeded'); } };
   assert.throws(() => saveDeck(fail, [], createDeck('Unsaved')), /Quota exceeded/);
+});
+test('deletion reads the latest saved list, removes only its ID, and preserves the old state on storage failure',()=>{
+  const storage=memoryStorage(),first=createDeck('First','first'),second=createDeck('Second','second');
+  saveDeck(storage,[],first);saveDeck(storage,[first],second);
+  assert.deepEqual(deleteSavedDeck(storage,'first').map(d=>d.id),['second']);
+  const before=storage.getItem(STORAGE_KEY),fail={getItem:storage.getItem,setItem(){throw new Error('Storage full');}};
+  assert.throws(()=>deleteSavedDeck(fail,'second'),/Storage full/);assert.equal(storage.getItem(STORAGE_KEY),before);
+  assert.deepEqual(deleteSavedDeck(storage,'second'),[]);assert.deepEqual(readDecks(storage),[]);
+  storage.setItem(STORAGE_KEY,'{broken');assert.throws(()=>deleteSavedDeck(storage,'first'));assert.equal(storage.getItem(STORAGE_KEY),'{broken');
 });
 test('JSON preserves restrictions and snapshots; YDK preserves IDs, sections, and copies', () => {
   let deck = addCard(addCard(addCard(createDeck('Backup'), dragon), fusion), spell, 'side');

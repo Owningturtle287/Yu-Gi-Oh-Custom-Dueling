@@ -1,8 +1,10 @@
-import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, saveDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
+import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, saveDeck, deleteSavedDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
 import { loadCards, browserCardCache } from './cards.js';
 import { icon } from './icons.js';
 import { SUBTYPES, MIN_RELEASE_YEAR, currentYear, normalizeReleaseYear, releaseCutoff, hydrateDeckDates, buildYearHighlights } from './era.js';
 import { cardGridLayout } from './layout.js';
+import { visibleDeckEntries } from './deck-view.js';
+import { patchArena as patchContent } from './duel/dom.js';
 import { createSoloController } from './duel/ui.js';
 import { support } from './duel/catalog.js';
 
@@ -19,6 +21,7 @@ try {
 try { cache = browserCardCache(); } catch { /* API browsing can work without IndexedDB. */ }
 let toastTimer, gridObserver, gridFrame, previousFocus, detailCard, cardRequest;
 let duelDesign = null;
+const deckView = {workspace:'browse',query:'',category:'All',sort:'type'};
 const solo = createSoloController({ main, modal, getCards: () => state.cards, getDecks: () => state.decks, getStatus: () => state.cardStatus, showDialog, dialogHeader, closeDialog, toast,
   onDesign: (side, deck) => confirmReplace(() => {
     duelDesign = side;
@@ -297,10 +300,12 @@ function deckPickerOptions() {
 }
 function renderDeck() {
   gridObserver?.disconnect();
-  main.innerHTML = `<section class="screen deck-screen" aria-label="Deck Builder">
+  main.innerHTML = `<section class="screen deck-screen" data-workspace="${deckView.workspace}" aria-label="Deck Builder">
     ${Number.isInteger(duelDesign) ? `<div class="duel-design-banner"><span>${duelDesign === 0 ? 'Your' : 'AI'} Solo deck · playable 2004 cards</span><button data-action="return-solo">Save & return to Solo</button></div>` : ''}
     <div class="deck-switch-row"><label class="sr-only" for="deck-picker">Current deck · switch saved decks</label><select id="deck-picker">${deckPickerOptions()}</select><button class="icon-button new-deck-button" data-action="new-deck" aria-label="Create a new deck">${icon('plus')}</button><button class="primary compact-save" data-action="save-deck">Save</button><button class="icon-button deck-options-button" data-action="deck-options" aria-label="Deck options: rename, saved decks, rules, import and export" aria-haspopup="dialog">⋯</button></div>
+    <nav class="deck-workspace-tabs" aria-label="Deck workspace"><button data-workspace="browse" aria-pressed="${deckView.workspace==='browse'}">${icon('search')} Find & add</button><button data-workspace="deck" aria-pressed="${deckView.workspace==='deck'}">${icon('deck')} Your deck <span id="deck-total"></span></button></nav>
     <div class="deck-tabs" aria-label="Visible deck section">${SECTIONS.map(section => `<button data-section="${section}" aria-pressed="${state.section === section}">${sectionName(section)} <span data-section-count="${section}"></span></button>`).join('')}</div>
+    <div class="deck-view-tools" ${deckView.workspace==='deck'?'':'hidden'}><label class="deck-query">${icon('search')}<span class="sr-only">Search this deck</span><input id="deck-query" type="search" placeholder="Search this deck…" value="${escape(deckView.query)}" autocomplete="off"></label><div class="deck-view-filters"><label>Show<select id="deck-category">${['All','Monster','Spell','Trap'].map(value=>`<option value="${value}" ${deckView.category===value?'selected':''}>${value==='All'?'All cards':value+'s'}</option>`).join('')}</select></label><label>Order<select id="deck-sort">${[['type','Card type'],['az','Name A–Z'],['atk','Highest ATK'],['def','Highest DEF'],['level','Highest Level / Rank']].map(([value,label])=>`<option value="${value}" ${deckView.sort===value?'selected':''}>${label}</option>`).join('')}</select></label></div><div class="deck-view-summary" role="status"></div></div>
     <div class="deck-list deck-tray" aria-label="Scrollable two-row ${sectionName(state.section)} Deck" tabindex="0"></div>
     <div class="workspace-caption"><span class="deck-state" role="status"></span><span>FIND & ADD CARDS</span></div>
     ${searchControls()}
@@ -308,12 +313,14 @@ function renderDeck() {
     <div class="archive-panel" id="archive-panel" aria-label="Scrollable cards to add to your deck" tabindex="0"></div>
   </section>`;
   $('#card-search').addEventListener('input', event => { state.filters.query = event.target.value; updateArchive(); });
+  $('#deck-query').addEventListener('input', event => { deckView.query=event.target.value; refreshDeckWorkspace({resetTray:true}); });
+  for(const [id,key] of [['deck-category','category'],['deck-sort','sort']])$('#'+id).addEventListener('change', event => { deckView[key]=event.target.value; refreshDeckWorkspace({resetTray:true}); });
   refreshDeckWorkspace();
   updateArchive();
 }
 function refreshDeckWorkspace({ resetTray = false } = {}) {
   if (state.route !== 'decks' || !$('.deck-tray')) { if (state.route === 'archive') renderGrid(); return; }
-  const tray = $('.deck-tray'), scrollLeft = resetTray ? 0 : tray.scrollLeft;
+  const tray = $('.deck-tray'), scrollLeft = resetTray ? 0 : tray.scrollLeft, scrollTop = resetTray ? 0 : tray.scrollTop;
   const focused = tray.contains(document.activeElement) ? document.activeElement : null;
   const focusedAction = focused?.dataset.quickAdd ? 'quick-add' : focused?.dataset.quickRemove ? 'quick-remove' : focused?.dataset.card ? 'card' : null;
   const focusedId = focusedAction ? focused.getAttribute('data-' + focusedAction) : null;
@@ -326,11 +333,19 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
     $(`[data-section-count="${section}"]`).textContent = `${counts[section]}/${LIMITS[section]}`;
     $(`[data-section="${section}"]`).setAttribute('aria-pressed', state.section === section);
   });
-  tray.setAttribute('aria-label', `Scrollable two-row ${sectionName(state.section)} Deck`);
-  const entries = state.draft.sections[state.section];
+  $('.deck-screen').dataset.workspace=deckView.workspace;
+  document.querySelectorAll('[data-workspace]').forEach(button=>{if(button.tagName==='BUTTON')button.setAttribute('aria-pressed',button.dataset.workspace===deckView.workspace);});
+  $('.deck-view-tools').hidden=deckView.workspace!=='deck';
+  $('#deck-total').textContent=counts.main+counts.extra+counts.side;
+  tray.setAttribute('aria-label', `Scrollable ${deckView.workspace==='deck'?'four-column':'two-row'} ${sectionName(state.section)} Deck`);
+  const allEntries = state.draft.sections[state.section];
+  const entries = deckView.workspace==='deck'?visibleDeckEntries(allEntries,deckView):allEntries;
+  const visibleCopies=entries.reduce((sum,entry)=>sum+entry.quantity,0);
+  $('.deck-view-summary').textContent=`${visibleCopies} of ${counts[state.section]} cards · ${entries.length} unique · ${sectionName(state.section)} Deck${state.storageError?' · Storage unavailable':state.dirty?' · Unsaved':''}`;
   tray.classList.toggle('is-empty', !entries.length);
-  tray.innerHTML = entries.length ? entries.map(entry => `<article class="tray-card" data-kind="${cardAccent(entry.card)}"><button class="deck-inspect" data-card="${entry.card.id}" aria-label="Inspect ${escape(entry.card.name)}">${imageTag(entry.card, true)}<strong>${escape(entry.card.name)}</strong></button>${quickControls(entry.card, state.section, true)}</article>`).join('') : `<div class="tray-empty">${icon('deck')}<span><strong>${sectionName(state.section)} Deck is empty</strong><small>${state.section === 'extra' ? 'Fusion, Synchro, Xyz, and Link monsters' : state.section === 'side' ? 'Keep alternate options here' : 'Search below, then tap the green + on a card'}</small></span></div>`;
-  tray.scrollLeft = scrollLeft;
+  const content = entries.length ? entries.map(entry => `<article class="tray-card" data-kind="${cardAccent(entry.card)}" data-deck-card="${entry.card.id}" data-render-key="deck:${entry.card.id}"><button class="deck-inspect" data-card="${entry.card.id}" aria-label="Inspect ${escape(entry.card.name)}">${imageTag(entry.card, true)}<strong>${escape(entry.card.name)}</strong></button>${quickControls(entry.card, state.section, true)}</article>`).join('') : `<div class="tray-empty">${icon('deck')}<span><strong>${allEntries.length?'No matching cards':sectionName(state.section)+' Deck is empty'}</strong><small>${allEntries.length?'Try another search or show all cards.':deckView.workspace==='deck'?'Use Find & add to choose cards.':state.section === 'extra' ? 'Fusion, Synchro, Xyz, and Link monsters' : state.section === 'side' ? 'Keep alternate options here' : 'Search below, then tap the green + on a card'}</small>${allEntries.length?'<button data-action="reset-deck-view">Show all cards</button>':''}</span></div>`;
+  patchContent(tray,content);
+  tray.scrollLeft = scrollLeft; tray.scrollTop = scrollTop;
   if (focusedAction) {
     const replacement = $(`[data-${focusedAction}="${focusedId}"]`, tray);
     if (replacement && !replacement.disabled) replacement.focus({ preventScroll: true });
@@ -338,7 +353,7 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
   renderGrid();
 }
 function showDeckOptions() {
-  showDialog(`${dialogHeader('Deck options')}<p>${escape(state.draft.name)} · ${state.dirty ? 'unsaved changes' : 'current deck'}</p><button class="menu-item" data-action="rename">${icon('edit')}<span>Rename deck</span></button><button class="menu-item" data-action="open-decks">${icon('deck')}<span>Manage saved decks<small>Open or delete saved decks</small></span></button><button class="menu-item" data-action="rules">${icon('rules')}<span>Rules / Format<small>Summoning mechanic restrictions</small></span></button><button class="menu-item" data-action="backups">${icon('backup')}<span>Import / Export<small>JSON and YDK backups</small></span></button>`, 'menu-body');
+  showDialog(`${dialogHeader('Deck options')}<p>${escape(state.draft.name)} · ${state.dirty ? 'unsaved changes' : 'current deck'}</p><button class="menu-item" data-action="organize-deck">${icon('filter')}<span>View & organize<small>Four columns, card filters and sorting</small></span></button><button class="menu-item" data-action="rename">${icon('edit')}<span>Rename deck</span></button><button class="menu-item" data-action="open-decks">${icon('deck')}<span>Manage saved decks<small>Open or delete saved decks</small></span></button><button class="menu-item" data-action="rules">${icon('rules')}<span>Rules / Format<small>Summoning mechanic restrictions</small></span></button><button class="menu-item" data-action="backups">${icon('backup')}<span>Import / Export<small>JSON and YDK backups</small></span></button>`, 'menu-body');
 }
 function changeCardQuantity(cardId, section, remove = false) {
   const card = state.cardIndex.get(cardId) || SECTIONS.flatMap(s => state.draft.sections[s]).find(entry => entry.card.id === cardId)?.card;
@@ -393,12 +408,16 @@ function openDeck(id) {
 function deleteDeck(id) {
   const deck = state.decks.find(d => d.id === id);
   if (!deck) return;
-  showDialog(`${dialogHeader('Delete saved deck?')}<p>Delete “${escape(deck.name)}” from this device? Export a backup first if you want to keep it.</p><div class="dialog-actions"><button data-action="open-decks">Keep deck</button><button class="danger" id="confirm-delete">Delete deck</button></div>`);
+  showDialog(`${dialogHeader('Delete saved deck?')}<p>Delete “${escape(deck.name)}” from this device? ${state.draft.id===id&&state.dirty?'Its unsaved edits will also be removed. ':''}Your other saved decks stay available.</p><div class="dialog-actions"><button data-action="open-decks">Keep deck</button><button class="danger" id="confirm-delete">Delete deck</button></div>`);
   $('#confirm-delete').onclick = () => {
     try {
-      const next = state.decks.filter(d => d.id !== id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, decks: next })); state.decks = next;
-      if (state.draft.id === id) state.dirty = true;
+      const previousIndex=state.decks.findIndex(deck=>deck.id===id);
+      const next=deleteSavedDeck(localStorage,id);
+      state.decks=next;
+      if(state.draft.id===id){
+        state.draft=next.length?structuredClone(next[Math.min(previousIndex,next.length-1)]):createDeck();
+        state.dirty=false; state.section='main'; deckView.query=''; deckView.category='All';
+      }
       if (state.route === 'decks') renderDeck();
       showSavedDecks(); toast('Saved deck deleted.');
     } catch { toast('Could not delete from browser storage.', true); }
@@ -460,7 +479,7 @@ let installPrompt;
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
 window.addEventListener('appinstalled', () => { installPrompt = null; toast('Duel Atlas added to your home screen.'); });
 function showMenu() {
-  showDialog(`${dialogHeader('Your companion')}<p>Duel Atlas · v${VERSION}<br>A Yu-Gi-Oh! archive, deck workshop, and Solo arena.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Playable 2004 Lab · local AI</small></span></button>`, 'menu-body');
+  showDialog(`${dialogHeader('Duel Atlas')}<p>Duel Atlas · v${VERSION}<br>Your cards. Your decks. Your next duel.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Playable 2004 Lab · local AI</small></span></button>`, 'menu-body');
 }
 function showInstall() {
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -468,15 +487,16 @@ function showInstall() {
   if ($('#install-now')) $('#install-now').onclick = async () => { await installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; showInstall(); };
 }
 function showSettings() {
-  showDialog(`${dialogHeader('App settings')}<label class="settings-label"><span>Show ATK / DEF in archive</span><input id="show-stats" type="checkbox" ${state.showStats ? 'checked' : ''}></label><p>Archive data refreshes after 24 hours. Search and filters run locally.</p><button data-action="refresh-settings">Refresh card archive</button><p>Saved decks: ${state.decks.length} · this browser / device only</p><button class="secondary" data-action="backup-all">Back up all saved decks</button>${state.storageError ? '<p class="inline-error">Browser storage could not be read. Back up the saved data before fixing or clearing it in browser settings.</p>' : ''}<button data-action="close">Done</button>`, 'settings-body');
+  showDialog(`${dialogHeader('App settings')}<section class="settings-card"><h3>Card display</h3><label class="settings-label"><span>Show ATK / DEF in archive</span><input id="show-stats" type="checkbox" ${state.showStats ? 'checked' : ''}></label><p>Search and filters run on your device.</p></section><section class="settings-card"><h3>On this device</h3><p>${state.decks.length} saved decks · archive refreshes daily</p><button data-action="refresh-settings">Refresh archive</button><button data-action="backup-all">Back up all decks</button></section>${state.storageError ? '<p class="inline-error">Browser storage could not be read. Back up the saved data before fixing or clearing it in browser settings.</p>' : ''}<button data-action="close">Done</button>`, 'settings-body');
   $('#show-stats').onchange = event => {
     state.showStats = event.target.checked;
     try { localStorage.setItem('duel-atlas.show-stats', String(state.showStats)); } catch { toast('Setting applied for this session. Browser storage is unavailable.', true); }
   };
 }
 function showAbout() {
-  showDialog(`${dialogHeader('Built for the duel table')}<span class="pill gold">v${VERSION} · PLAYABLE TEST</span><p>Browse the full archive, build and back up decks, and play local Solo duels with the supported 2004 TCG pool.</p><p>Solo includes AI, phase tracking, supported card effects, response windows, and animations. The offline EDOPro core and card scripts handle the early card pool. Inspect Rules & cards in Solo for scope and credits. Multiplayer connections are planned for a later phase.</p><p>Card data and official card images are supplied by <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. Card names, text, and images belong to their respective rights holders. This independent companion is not affiliated with Konami.</p><p>Rules use <a href="https://github.com/n1xx1/ocgcore-wasm">ocgcore-wasm</a>, the <a href="https://github.com/edo9300/ygopro-core">EDOPro core</a> and <a href="https://github.com/ProjectIgnis/CardScripts">Project Ignis card scripts</a>. <a href="./assets/rules/THIRD_PARTY_NOTICES.md">Licenses and corresponding source</a>.</p><p>The Duel Atlas emblem is original artwork. No official artwork is used as app branding.</p><button data-action="close">Back to the workshop</button>`, 'about-body');
+  showDialog(`${dialogHeader('About Duel Atlas')}<span class="pill gold">v${VERSION} · FUNCTIONALITY TEST</span><p>Explore the full archive, build local decks and play Solo with the supported 2004 TCG pool. Multiplayer is coming later.</p><p>Solo uses current card text and modern turn rules. Open Solo → Rules & cards for supported cards and limits.</p><p>Data and official card art: <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. An independent fan app, unaffiliated with Konami. Card names and images belong to their rights holders; Duel Atlas branding is original.</p><p>Rules powered by <a href="https://github.com/n1xx1/ocgcore-wasm">ocgcore-wasm</a>, <a href="https://github.com/edo9300/ygopro-core">EDOPro</a> and <a href="https://github.com/ProjectIgnis/CardScripts">Project Ignis</a>. <a href="./assets/rules/THIRD_PARTY_NOTICES.md">Licenses & source</a>.</p><button data-action="close">Done</button>`, 'about-body');
 }
+
 const actions = {
  'return-solo': () => { if (persistDeck()) { solo.setDesignedDeck(duelDesign, state.draft.id); duelDesign = null; navigate('solo'); } },
  close: closeDialog, filters: showFilters, retry: () => requestArchive(true),
@@ -494,6 +514,8 @@ const actions = {
     } catch (error) { $('#detail-error').textContent = error.message; }
  },
  rename: () => showNameDialog(true), 'new-deck': () => showNameDialog(false), 'save-deck': persistDeck, 'open-decks': showSavedDecks,
+ 'reset-deck-view': () => { deckView.query=''; deckView.category='All'; $('#deck-query').value=''; $('#deck-category').value='All'; refreshDeckWorkspace({resetTray:true}); },
+ 'organize-deck': () => { closeDialog(); if(state.route!=='decks')navigate('decks'); deckView.workspace='deck'; refreshDeckWorkspace({resetTray:true}); },
  rules: showRules, backups: showBackups, 'deck-options': showDeckOptions, 'find-cards': () => { navigate('decks'); $('#card-search').focus({ preventScroll: true }); },
  'export-json': () => download(exportJSON(state.draft), safeFilename() + '.json'),
  'export-ydk': () => download(exportYDK(state.draft), safeFilename() + '.ydk', 'text/plain'),
@@ -510,6 +532,7 @@ document.addEventListener('click', event => {
   if (!target || target.disabled) return;
   if (target.dataset.route) { event.preventDefault(); navigate(target.dataset.route); return; }
   if (target.dataset.action) { actions[target.dataset.action]?.(); return; }
+  if (target.dataset.workspace) { deckView.workspace=target.dataset.workspace; refreshDeckWorkspace({resetTray:true}); return; }
   if (target.dataset.category) { state.filters.category = target.dataset.category; document.querySelectorAll('[data-category]').forEach(b => b.setAttribute('aria-pressed', b === target)); updateArchive(); return; }
   if (target.dataset.section) { state.section = target.dataset.section; refreshDeckWorkspace({ resetTray: true }); updateArchive(); return; }
   if (target.dataset.card) {

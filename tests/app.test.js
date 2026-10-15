@@ -77,6 +77,57 @@ test('saved decks reopen in a new app session', async () => {
   const { window, app } = await boot('reopen', JSON.stringify({ version: 1, decks: [{ id: 'deck-1', name: 'Reopened deck', mechanics: { Fusion: true, Synchro: true, Xyz: true, Pendulum: true, Link: true }, sections: { main: [{ card: cards[0], quantity: 2 }], extra: [], side: [] } }] }));
   try { assert.equal(app.state.draft.name, 'Reopened deck'); assert.equal(app.state.draft.sections.main[0].quantity, 2); } finally { window.close(); }
 });
+test('four-column deck view filters and sorts the saved deck without changing it or the archive search',async()=>{
+  let deck=createDeck('Mixed deck','mixed');for(const card of cards)deck=addCard(deck,card);
+  const {window,app,$}=await boot('deck-overview',JSON.stringify({version:1,decks:[deck]}));
+  try{
+    const style=document.createElement('style');style.textContent=(await Promise.all(['styles.css','duel.css','light.css'].map(name=>readFile(new URL('../'+name,import.meta.url),'utf8')))).join('\n');document.head.append(style);
+    app.navigate('decks');const search=$('#card-search');search.value='Blue-Eyes';search.dispatchEvent(new window.Event('input',{bubbles:true}));
+    const before=JSON.stringify(app.state.draft);$('[data-workspace="deck"]').click();
+    assert.equal($('.deck-screen').dataset.workspace,'deck');assert.equal(window.getComputedStyle($('.deck-list')).gridTemplateColumns,'repeat(4,minmax(0,1fr))');
+    assert.equal(window.getComputedStyle($('.deck-list')).overflowY,'auto');assert.equal(window.getComputedStyle($('#archive-panel')).display,'none');
+    assert.deepEqual([...document.querySelectorAll('.tray-card')].map(c=>Number(c.dataset.deckCard)),[89631139,83764718,44095762]);
+    $('#deck-category').value='Trap';$('#deck-category').dispatchEvent(new window.Event('change',{bubbles:true}));
+    assert.equal(document.querySelectorAll('.tray-card').length,1);assert.match($('.deck-view-summary').textContent,/1 of 3 cards/);
+    $('#deck-query').value='missing';$('#deck-query').dispatchEvent(new window.Event('input',{bubbles:true}));assert.match($('.deck-tray').textContent,/No matching cards/);
+    $('#deck-query').value='';$('#deck-query').dispatchEvent(new window.Event('input',{bubbles:true}));
+    $('#deck-category').value='All';$('#deck-category').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('#deck-sort').value='atk';$('#deck-sort').dispatchEvent(new window.Event('change',{bubbles:true}));
+    assert.equal($('.tray-card').dataset.deckCard,'89631139');assert.equal(JSON.stringify(app.state.draft),before);assert.equal(app.state.dirty,false);
+    const art=$('.tray-card img');$('.tray-card [data-quick-add]').click();assert.equal(totals(app.state.draft).main,4);assert.match($('.deck-view-summary').textContent,/4 of 4 cards/);assert.equal($('.tray-card img'),art,'Quantity edits retain loaded card art');
+    $('[data-workspace="browse"]').click();assert.equal($('#card-search'),search);assert.equal(search.value,'Blue-Eyes');assert.equal($('.deck-view-tools').hidden,true);
+    window.happyDOM.setWindowSize({width:320,height:568});assert.equal(window.getComputedStyle($('.deck-tray')).display,'none','Short phones reserve room for search results; Your deck remains available');
+    $('[data-workspace="deck"]').click();assert.equal(window.getComputedStyle($('.deck-tray')).display,'grid');assert.equal(window.getComputedStyle($('.deck-tray')).gridTemplateColumns,'repeat(4,minmax(0,1fr))');
+    assert.equal(window.getComputedStyle(document.documentElement).colorScheme,'light');
+    $('#app-menu').click();assert.equal(window.getComputedStyle($('.dialog-body')).color,'#1d394c');
+  }finally{window.close();}
+});
+test('deleting the active saved deck switches drafts and deleting the last deck cannot resurrect it',async()=>{
+  const first=addCard(createDeck('First','delete-first'),cards[0]),second=createDeck('Second','delete-second');
+  const {window,app,$}=await boot('delete-current',JSON.stringify({version:1,decks:[first,second]}));
+  try{
+    app.navigate('decks');$('[data-action="deck-options"]').click();$('[data-action="open-decks"]').click();
+    $('[data-delete-deck="delete-first"]').click();$('#confirm-delete').click();
+    assert.equal(app.state.draft.id,'delete-second');assert.equal(app.state.dirty,false);assert.equal($('#deck-picker option[value="delete-first"]'),null);
+    assert.deepEqual(JSON.parse(localStorage.getItem(STORAGE_KEY)).decks.map(d=>d.id),['delete-second']);
+    $('[data-delete-deck="delete-second"]').click();$('#confirm-delete').click();
+    assert.equal(app.state.decks.length,0);assert.notEqual(app.state.draft.id,'delete-second');assert.equal(app.state.dirty,false);
+    $('[data-action="close"]').click();$('[data-action="save-deck"]').click();
+    assert.equal(app.state.decks.length,1);assert.ok(app.state.decks.every(d=>!['delete-first','delete-second'].includes(d.id)));
+  }finally{window.close();}
+});
+test('deleting another deck preserves unsaved edits; a failed storage write keeps both deck and draft intact',async()=>{
+  const decks=[createDeck('Editing','editing'),createDeck('Remove','remove')];
+  const {window,app,$}=await boot('delete-failure',JSON.stringify({version:1,decks}));
+  try{
+    app.navigate('decks');$('[data-quick-add="89631139"]').click();const draft=JSON.stringify(app.state.draft);
+    $('[data-action="deck-options"]').click();$('[data-action="open-decks"]').click();$('[data-delete-deck="remove"]').click();
+    const storage=globalThis.localStorage;Object.defineProperty(globalThis,'localStorage',{value:{getItem:storage.getItem.bind(storage),setItem(){throw new Error('Quota');}},configurable:true});
+    $('#confirm-delete').click();assert.equal(app.state.decks.length,2);assert.equal(JSON.stringify(app.state.draft),draft);assert.match($('#toast').textContent,/Could not delete/);
+    Object.defineProperty(globalThis,'localStorage',{value:storage,configurable:true});$('#confirm-delete').click();
+    assert.equal(app.state.decks.length,1);assert.equal(JSON.stringify(app.state.draft),draft);assert.equal(app.state.dirty,true);
+  }finally{window.close();}
+});
 test('API error has a visible retry action, and corrupt storage stays protected', async () => {
   const { window, app, $ } = await boot('failure', '{broken', true);
   try {
