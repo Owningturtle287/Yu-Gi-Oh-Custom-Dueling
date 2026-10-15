@@ -1,0 +1,40 @@
+import { PHASE_LABELS, findCard } from './engine.js';
+
+// Quote the card's current text rather than inventing a ruling or promising an
+// outcome. The native engine remains the authority on timing and resolution.
+export function effectBrief(card, detail = '', limit = 220) {
+  const text = (detail && !/Choose an effect option|Activate this effect\?|Continue\?/i.test(detail) ? detail : card?.desc || '')
+    .replace(/\r/g, '').replace(/\s+/g, ' ').trim();
+  if (text.length <= limit) return text;
+  const boundary = text.lastIndexOf(' ', limit - 1);
+  return text.slice(0, boundary > limit / 2 ? boundary : limit - 1) + '…';
+}
+
+export function responseOffer(state, actions) {
+  const optionalTrigger = state.choice?.side === 0 && state.choice.optionalResponse;
+  if (state.window?.priority !== 0 && !optionalTrigger) return null;
+  const options = optionalTrigger ? actions.filter(a => a.yes === true) : actions.filter(a => ['ACTIVATE', 'EFFECT'].includes(a.type));
+  const cards = options.map(action => ({action, card: findCard(state, action.uid || state.choice?.trigger?.uid)})).filter(item => item.card);
+  if (!cards.length) return null;
+  const pass = actions.find(a => a.type === 'PASS' || optionalTrigger && a.yes === false);
+  const link = state.chain.at(-1), attacker = state.pending?.kind === 'attack' ? findCard(state, state.pending.uid) : null;
+  const context = optionalTrigger ? 'This card has an optional triggered effect. You can activate it now or decline.'
+    : link ? `${link.card.name} was activated. Your response is added to the chain and resolves before earlier links.`
+    : attacker ? `${attacker.card.name} declared an attack. You can respond before the attack continues.`
+    : state.window.timing || `You have a legal response during ${PHASE_LABELS[state.phase] || state.phase}.`;
+  return {id: state.choice?.promptId || state.window?.promptId || `${state.turn}:${state.phase}:${actions.map(a => a.id).join(',')}`,
+    cards, pass, context, required: !pass, phase: PHASE_LABELS[state.phase] || state.phase};
+}
+
+// Repeating Pass is safe; repeating activations could pay a new cost or choose
+// a different target. Never apply this preference to mandatory/procedural choices.
+export function createResponsePolicy() {
+  let key = null, passing = false;
+  const sync = state => { const next = `${state.runtimeId || state.seed}:${state.turn}`; if (key !== next) {key = next; passing = false;} };
+  return {
+    isPassing(state) {sync(state); return passing;},
+    passTurn(state) {sync(state); passing = true;},
+    askAgain() {passing = false;},
+    action(state, actions) {sync(state); return passing ? responseOffer(state, actions)?.pass || null : null;}
+  };
+}

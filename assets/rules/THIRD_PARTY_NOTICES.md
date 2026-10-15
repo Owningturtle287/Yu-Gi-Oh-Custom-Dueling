@@ -10,7 +10,7 @@ Duel Atlas runs these components locally. No duel service or game server is used
 
 ## Local wrapper corrections
 
-`scripts/prepare-runtime.mjs` copies the exact pinned npm files into the ignored `vendor/` directory, then makes three documented corrections to its JavaScript protocol adapter: permutation replies omit a spurious length byte; sum-selection prompts decode mandatory cards before optional cards and include complete locations; Set-card shuffle messages decode their byte count and separate source/destination arrays. No WebAssembly binary or Lua card effect is modified. The script checks each source pattern before patching, and regression tests exercise these paths. The field adapter avoids the wrapper's unsupported TYPE query field.
+`scripts/prepare-runtime.mjs` copies the exact pinned npm files into the ignored `vendor/` directory, then makes four documented corrections to its JavaScript protocol adapter: permutation replies omit a spurious length byte; sum-selection prompts decode mandatory cards before optional cards and include complete locations; Set-card shuffle messages decode their byte count and separate source/destination arrays; movement messages retain the trailing reason bitmask so the log can distinguish costs, effects, battle destruction and materials. No WebAssembly binary or Lua card effect is modified. The script checks each source pattern before patching, and regression tests exercise these paths. The field adapter avoids the wrapper's unsupported TYPE query field.
 
 ## Rebuild and inspect
 

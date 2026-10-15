@@ -18,6 +18,11 @@ runtime=runtime.replace(sum,'case 23:return{type:t,player:e.u8(),select_max:e.u8
 const shuffle='case 36:return{type:t,location:e.u8(),cards:Array.from({length:e.u32()},()=>({from:p(e),to:p(e)}))}';
 if(!runtime.includes(shuffle))throw new Error('Pinned set shuffle protocol patch no longer matches.');
 runtime=runtime.replace(shuffle,'case 36:{let location=e.u8(),count=e.u8(),from=Array.from({length:count},()=>p(e)),to=Array.from({length:count},()=>p(e));return{type:t,location,cards:from.map((f,i)=>({from:f,to:to[i]}))}}');
+// MOVE ends in a reason bitmask (core-field.cpp / core-operations.cpp).
+// Upstream drops it, which loses the distinction between costs and effects.
+const move='case 50:return{type:t,card:e.u32(),from:p(e),to:p(e)}';
+if(!runtime.includes(move))throw new Error('Pinned MOVE reason patch no longer matches.');
+runtime=runtime.replace(move,'case 50:return{type:t,card:e.u32(),from:p(e),to:p(e),reason:e.u32()}');
 await writeFile(indexPath,runtime);
 for (const name of ['ocgcore.sync.mjs','ocgcore.sync.wasm']) await cp('node_modules/ocgcore-wasm/lib/'+name,'vendor/ocgcore/lib/'+name);
 const manifest=JSON.parse(await readFile('assets/rules/manifest.json'));

@@ -11,4 +11,4 @@ export function groupedLog(entries, filter = 'all') {
   }
   return groups;
 }
-export const logKindLabel = kind => ({phase:'Phase',draw:'Draw',summon:'Summon / Set',set:'Set',activate:'Activation',effect:'Effect',attack:'Attack',battle:'Battle result',damage:'LP loss',heal:'LP gain',leave:'Card moved',position:'Position',discard:'Discard',reveal:'Reveal',victory:'Result'}[kind] || 'Action');
+export const logKindLabel = kind => ({phase:'Phase',draw:'Draw',summon:'Summon / Set',set:'Set',activate:'Activation',effect:'Effect',cost:'Cost paid',target:'Target chosen',response:'Response',attack:'Attack',battle:'Battle result',damage:'LP loss',heal:'LP gain',leave:'Card moved',position:'Position',discard:'Discard',reveal:'Reveal',victory:'Result'}[kind] || 'Action');

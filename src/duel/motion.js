@@ -43,9 +43,13 @@ export function planMotion(previous, next, action = null) {
     if (attacker) motions.push({ type: 'attack', uid: action.uid, target: action.target,
       to: action.target ? null : `${1 - attacker.side}:lp`, start: appearance(attacker), end: appearance(attacker) });
   }
-  if(previous)for(const entry of next.log.filter(entry=>entry.id>previous.serial&&entry.uids?.length&&(entry.kind==='battle'||entry.kind==='damage'))){
-    const attacker=before.get(entry.uids[0]);
-    if(attacker)motions.push({type:'impact',target:entry.uids[1]||null,to:entry.uids[1]?null:`${1-attacker.side}:lp`});
+  if(previous)for(const entry of next.log.filter(entry=>entry.id>previous.serial)){
+    if(['activate','target'].includes(entry.kind)&&entry.uids?.length)motions.push({type:'effect',uid:entry.uids[0],target:entry.kind==='target'?entry.uids[1]:null});
+    if(entry.kind==='damage'&&Number.isInteger(entry.targetSide))motions.push({type:'impact',target:null,to:`${entry.targetSide}:lp`});
+    else if(entry.uids?.length&&(entry.kind==='battle'||entry.kind==='damage')){
+      const attacker=before.get(entry.uids[0]);
+      if(attacker)motions.push({type:'impact',target:entry.uids[1]||null,to:entry.uids[1]?null:`${1-attacker.side}:lp`});
+    }
   }
   if (previous) next.players.forEach((player, side) => {
     const delta = player.lp - previous.players[side].lp;
@@ -103,6 +107,20 @@ export function createMotionPlayer(root) {
       jobs.push(finished.finally(() => animations.delete(animation))); return finished;
     };
     for (const motion of motions) {
+      if(motion.type==='effect'){
+        const source=after.cards.get(motion.uid)||before.cards.get(motion.uid),target=after.cards.get(motion.target)||before.cards.get(motion.target);
+        for(const [point,isTarget] of [[source,false],[target,true]]){
+          if(!point)continue;
+          const pulse=document.createElement('span');pulse.className='duel-effect-pulse'+(isTarget?' target':'');layer.append(pulse);
+          run(pulse,[{transform:transform(point,0,.85),opacity:0},{transform:transform(point,0,1.1),opacity:1,offset:.3},{transform:transform(point,0,1.45),opacity:0}],{duration:540,delay:isTarget?100:0,easing:ease,fill:'both'});
+        }
+        if(source&&target){
+          const path=document.createElement('span');path.className='duel-effect-path';
+          path.style.cssText=`left:${source.x}px;top:${source.y}px;width:${Math.hypot(target.x-source.x,target.y-source.y)}px;transform:rotate(${Math.atan2(target.y-source.y,target.x-source.x)}rad);`;layer.append(path);
+          run(path,[{opacity:0,clipPath:'inset(0 100% 0 0)'},{opacity:.85,clipPath:'inset(0 0 0 0)',offset:.5},{opacity:0,clipPath:'inset(0 0 0 100%)'}],{duration:560,easing:ease,fill:'both'});
+        }
+        continue;
+      }
       if(motion.type==='impact'){
         const target=after.cards.get(motion.target)||before.cards.get(motion.target)||after.zones.get(motion.to);if(!target)continue;
         const impact=document.createElement('span');impact.className='duel-impact';layer.append(impact);

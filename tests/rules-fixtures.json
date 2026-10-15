@@ -602,6 +602,14 @@
           "has_effect": 1,
           "md_rarity": "Rare"
         }
+      ],
+      "card_images": [
+        {
+          "id": 5318639,
+          "image_url": "https://images.ygoprodeck.com/images/cards/5318639.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/5318639.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/5318639.jpg"
+        }
       ]
     },
     {
@@ -1418,6 +1426,14 @@
           "konami_id": 4818,
           "has_effect": 1,
           "md_rarity": "Ultra Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 73915051,
+          "image_url": "https://images.ygoprodeck.com/images/cards/73915051.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/73915051.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/73915051.jpg"
         }
       ]
     },

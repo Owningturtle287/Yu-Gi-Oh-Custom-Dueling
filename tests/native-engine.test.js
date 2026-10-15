@@ -117,3 +117,24 @@ test('generic Pass uses the active chain response without bypassing a choice or 
     state=engine.applyAction(state,{type:'END'},0);assert.equal(state.active,1);
   }finally{engine.destroyMatch(state);}
 });
+test('native logs explain the card, discard cost, chosen target and confirmed destruction independently',async()=>{
+  let state=await resolvedTributeToDoomed();
+  try{
+    const log=state.log;
+    assert.match(log.find(e=>e.kind==='activate').message,/Tribute to the Doomed.*Discard 1 card/);
+    assert.match(log.find(e=>e.kind==='cost').message,/Summoned Skull was discarded to pay Tribute to the Doomed’s cost/);
+    assert.match(log.find(e=>e.kind==='target').message,/Tribute to the Doomed targets Mystical Elf in AI’s Monster Zone/);
+    assert.match(log.find(e=>e.kind==='effect').message,/Resolving Tribute to the Doomed/);
+    assert.ok(log.some(e=>/Mystical Elf was destroyed by Tribute to the Doomed.*AI’s Graveyard/.test(e.message)));
+    state=engine.applyAction(state,{type:'NEXT'},0);assert.equal(state.phase,'battle');
+  }finally{engine.destroyMatch(state);}
+});
+test('chain negation names the effect and LP costs name their source without claiming the effect resolved',async()=>{
+  let state=await game([['Pot of Greed'],[]],[{}, {spells:[{...body('Solemn Judgment'),faceUp:false}]}]);
+  try{
+    state=move(state,'ACTIVATE','Pot of Greed');state=move(state,'ACTIVATE','Solemn Judgment',1);state=settle(state);
+    assert.ok(state.log.some(e=>e.kind==='cost'&&/AI paid 4,000 LP as Solemn Judgment/.test(e.message)));
+    assert.ok(state.log.some(e=>/Pot of Greed.*was negated; its effect will not apply/.test(e.message)));
+    assert.ok(!state.log.some(e=>e.kind==='draw'&&/Pot of Greed/.test(e.message)));
+  }finally{engine.destroyMatch(state);}
+});

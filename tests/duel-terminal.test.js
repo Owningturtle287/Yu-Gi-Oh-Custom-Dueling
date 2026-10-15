@@ -59,6 +59,15 @@ test('fast games catch up old queued events, retain at most 500, and render API 
     r.terminal.sync([entry(510, 'A new game')]); assert.equal(r.host.querySelectorAll('article').length, 1);
   } finally { r.close(); }
 });
+test('detailed card explanations finish typing promptly and preserve the complete readable text',()=>{
+  const r=rig();try{
+    const message='Tribute to the Doomed: discard a card as the activation cost; select a monster as its target; destroy that monster when the effect resolves. '.repeat(3);
+    r.terminal.sync([entry(1,message)]);r.tick(70);
+    assert.equal(r.host.querySelector('p').textContent,message);
+    assert.equal(r.window.document.querySelector('[data-terminal-announcement]').textContent,message);
+    assert.equal(r.timers.size,0);
+  }finally{r.close();}
+});
 test('keyed hands preserve unaffected art and focus after a draw or playing a middle card', () => {
   const window = new Window(); try {
     const root = window.document.body;

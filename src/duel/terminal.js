@@ -52,7 +52,10 @@ export function createDuelTerminal({ getRoot, reduced = () => false, delay = 22,
       pending.slice(0, -4).forEach(entry => complete(entry));
       const entry = pending.slice(-4)[0];
       if (entry) {
-        const count = Math.min(entry.message.length, (progress.get(entry.id) || 0) + 1);
+        // Detailed effects should remain readable without building a minutes-long
+        // backlog. Short messages keep their character-by-character cadence.
+        const chunk = Math.max(1, Math.ceil(entry.message.length / 70)) * (pending.length > 2 ? 2 : 1);
+        const count = Math.min(entry.message.length, (progress.get(entry.id) || 0) + chunk);
         progress.set(entry.id, count);
         if (count === entry.message.length) complete(entry, true);
       }

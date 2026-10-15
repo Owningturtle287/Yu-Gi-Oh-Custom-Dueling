@@ -74,6 +74,15 @@ test('movement plans include graveyard, returns, control changes and public LP c
   assert.deepEqual(motions.find(m=>m.type==='life'),{type:'life',to:'1:lp',delta:-500,before:8000,after:7500});
   const returned=structuredClone(grave);returned.players[0].grave=[];returned.players[0].hand.push(card);assert.equal(planMotion(grave,returned).find(m=>m.uid===card.uid).to,'0:hand');
 });
+test('effect damage hits the actual recipient, including recoil, and targeting gets a source-to-target cue',()=>{
+  const state=game(),source=state.players[0].hand[0],target=state.players[1].hand[0],next=structuredClone(state);
+  next.log.push({id:state.serial+1,kind:'target',uids:[source.uid,target.uid],message:'Target selected.'},
+    {id:state.serial+2,kind:'damage',uids:[source.uid],targetSide:0,message:'You lost 500 LP.'},
+    {id:state.serial+3,kind:'damage',uids:[source.uid],targetSide:1,message:'AI lost 500 LP.'});
+  const motions=planMotion(state,next);
+  assert.ok(motions.some(m=>m.type==='effect'&&m.uid===source.uid&&m.target===target.uid));
+  assert.deepEqual(motions.filter(m=>m.type==='impact').map(m=>m.to),['0:lp','1:lp']);
+});
 test('attacks point to the chosen monster or opposing Life Points',()=>{
   const s=game(),card=s.players[0].hand.shift();s.players[0].monsters[0]={...card,faceUp:true,position:'attack'};
   let motion=planMotion(s,s,{type:'ATTACK',uid:card.uid,target:null}).find(m=>m.type==='attack');assert.equal(motion.to,'1:lp');

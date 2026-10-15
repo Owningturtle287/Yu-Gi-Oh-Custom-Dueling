@@ -1,4 +1,4 @@
-# Duel Atlas · v0.2.1
+# Duel Atlas · v0.2.2
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2004 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
@@ -6,8 +6,11 @@ Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
 
-- Fixed Battle, End Turn and Pass commands being rejected after effects. Toolbar commands now use the current legal response ID; stale explicit responses are still rejected. A regression resolves Tribute to the Doomed, then enters Battle / Main 2 or ends the turn through the actual arena controls.
-- Duel choice sheets now show official card thumbnails, locations/types, a source-card preview and labeled action colors: red for discard/destruction, gold for Tributes/materials, purple for effects and green for confirmation. Confirm / Cancel / Reset stay outside the scrolling results. Hidden opposing choices use card backs. Single-card choices replace the prior selection, while staging preserves displayed art nodes, search, keyboard focus and scroll.
+- Response opportunities now open the actual card with a phase/timing explanation, current effect text and compact, color-coded **Activate**, **Pass once** and **Pass turn** controls. Multiple eligible effects have visual selectors. Optional triggered effects use the same preview; required choices remain interactive.
+- **Pass turn** declines optional responses only until the next turn. A visible **Ask again** control restores prompts immediately. This preference is session-only, never repeats an activation or pays costs automatically, and never bypasses mandatory targets, costs or procedural choices.
+- The terminal names each activation, chain link, paid cost, selected target and actual movement/result. Negated effects are identified by name, LP changes name their cause, and longer messages type promptly without a growing backlog. Hidden draws/Set cards remain private.
+- Purple source pulses and teal target cues connect effects visually. LP impacts use the actual damaged player, including effects that damage both players. Motion remains cancellable and respects reduced motion.
+- Card choice sheets retain official thumbnails, location/type labels, clear action colors and fixed confirmation controls. Battle / End Turn / Pass retain the phase-lock regression fix after Tribute to the Doomed.
 
 - A compact, styled duel settings panel with AI speed, motion toggle, log/rules shortcuts, deck saving, resume and surrender.
 - An 18px central phase tracker and 12px contained ATK/DEF strips return space to the card zones. Both players' ten zones, mirrored auxiliary piles, centered hands, POV life counters and iPhone safe areas remain in the bounded landscape arena.
@@ -49,6 +52,8 @@ Rotate the phone to landscape. Portrait pauses play and shows the rotation promp
 
 The player automatically draws and reaches Main 1. Tap a card to inspect it; legal shortcuts appear on field cards. Targets and Tributes highlight on the board. Multi-card costs show selected cards and **Confirm**; **All choices** opens a compact picker for mixed field/pile targets. Card declarations have a searchable picker. Effect ordering and counter allocations can be reset before confirming. The native core supplies legal actions and validates every actual response.
 
+**Response cards** appear when the core offers a legal effect. Read the timing context and effect text, then activate or pass. **Pass once** declines this opportunity. **Pass turn** declines all optional effects for the current turn, including later attacks; **Ask again** undoes it. It resets automatically next turn. Mandatory choices always remain available. Closing a preview returns to the field; **Review card** reopens it.
+
 The terminal types events chronologically and preserves your scroll when reviewing history. **Latest** resumes following; the expanded log has filters. Inspection, menus and portrait rotation pause AI. Motion respects reduced-motion preferences. Small card and pile sheets retain the field behind them; card art shows an immediate thumbnail while full art decodes. The arena patches existing image nodes across phase changes.
 
 ### Coverage and limits
@@ -82,7 +87,7 @@ npm run test:live
 npm run test:duel-live
 ```
 
-The **134 automated tests** cover archive/filter/date/storage/import/export/menu flows, production native Solo interactions, bounded field layout contracts, stable image nodes, targeting, movement, hidden-card privacy, terminal typing, offline shell completeness, and legacy engine regressions. New native tests initialize every included early card, test Ritual/Fusion/Chaos/Spirit/Union/Toon/counter/token behavior, reject stale actions, preserve field identities, verify God Card/date handling and complete seeded AI games. A full-snapshot stress run completed 100 randomized matches without illegal replies or stalls. An additional full-catalog check generated 48 decks across 27 released set pools and completed 40 matches / 4,322 legal actions, exercising 189 named activations. These checks do not prove every possible card interaction.
+The **144 automated tests** cover archive/filter/date/storage/import/export/menu flows, production native Solo interactions, bounded field layout contracts, stable image nodes, targeting, movement, hidden-card privacy, terminal typing, offline shell completeness, and legacy engine regressions. Response tests exercise automatic card previews, activation, single/turn passes, undo/reset, multiple cards, optional native triggers and mandatory-choice protection. Log tests verify Tribute to the Doomed’s cost/target/destruction and Solemn Judgment’s cost/negation. Native tests initialize every included early card, test Ritual/Fusion/Chaos/Spirit/Union/Toon/counter/token behavior, reject stale actions, preserve field identities, verify God Card/date handling and complete seeded AI games. A full-snapshot stress run completed 100 randomized matches without illegal replies or stalls. An additional full-catalog check generated 48 decks across 27 released set pools and completed 40 matches / 4,272 legal actions, exercising 186 named activations. These checks do not prove every possible card interaction.
 
 Optional live checks access YGOPRODeck. For a repeatable offline full-catalog run, set `DUEL_CARD_SNAPSHOT` and `DUEL_SET_SNAPSHOT` to saved API JSON files when running `test:duel-live`.
 
@@ -98,7 +103,7 @@ All paths are relative for GitHub project subdirectories. Version package/core/H
 
 - `src/app.js`, `core.js`, `cards.js`, `era.js`: shell, archive, storage/backups, region/year filters.
 - `src/duel/native-loader.js`, `native-engine.js`, `rules-manifest.js`: pinned rules pack, core protocol adapter and legal/AI actions.
-- `src/duel/ui.js`, `field.js`, `motion.js`, `dom.js`, `terminal.js`, `card-view.js`, `duel.css`: setup, board targeting, movement, stable art, terminal and inspection.
+- `src/duel/ui.js`, `field.js`, `motion.js`, `dom.js`, `terminal.js`, `card-view.js`, `responses.js`, `duel.css`: setup, board targeting, movement, stable art, terminal and inspection.
 - `src/duel/decks.js`, `catalog.js`: eligible pools, deck generation/validation and rule coverage.
 - `src/duel/engine.js`, `ai.js`: retained deterministic legacy regression engine.
 - `assets/rules/`: original Lua/numeric shards, manifest, licenses and source links.

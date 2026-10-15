@@ -492,3 +492,60 @@ dialog:has(.duel-picker-body) { left:env(safe-area-inset-left); right:env(safe-a
 .duel-choice-source>span:last-child { display:flex; flex-direction:column; min-width:0; gap:2px; }
 .duel-choice-source small { color:#bda6da; font-size:8px; text-transform:uppercase; letter-spacing:.7px; }
 .duel-choice-source strong { color:#e9e1f4; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* Response cards explain the timing without covering the whole table. */
+dialog:has(.duel-response-body) { width:min(540px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 28px)); max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); border-radius:20px; }
+.duel-response-body { display:flex; flex-direction:column; gap:8px; min-height:0; height:min(390px,calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px)); padding:12px 16px; background:radial-gradient(ellipse at 10% 0,#52406b66,transparent 65%),#101e2c; }
+.duel-response-body .dialog-header { flex:none; min-height:30px; margin:0; }
+.duel-response-body .dialog-header h2 { font-size:18px; }
+.duel-response-body .dialog-header button { min-height:32px; height:32px; min-width:32px; width:32px; padding:3px; border-radius:10px; }
+.duel-response-timing { display:flex; align-items:center; gap:9px; flex:none; padding:7px 9px; border:1px solid #76629488; border-radius:10px; background:#382b4b66; }
+.duel-response-timing>span { flex:none; color:#e2cfff; font-size:10px; font-weight:800; text-transform:uppercase; }
+.duel-response-body .duel-response-timing p { margin:0; font-size:11px; line-height:1.35; color:#d3cde2; }
+.duel-response-card { display:grid; grid-template-columns:116px minmax(0,1fr); align-items:center; gap:14px; min-height:0; flex:1; }
+.duel-response-art { position:relative; width:116px; height:169px; max-height:100%; border-radius:6px; overflow:hidden; background:#07131f; box-shadow:0 6px 20px #0008; }
+.duel-response-art img { display:block; height:100%; width:100%; object-fit:contain; }
+.duel-response-art>.duel-inspect-full { position:absolute; inset:0; }
+.duel-response-copy { display:flex; flex-direction:column; gap:5px; min-width:0; min-height:0; max-height:100%; }
+.duel-response-copy h3 { margin:0; font-size:17px; line-height:1.15; color:#f1e8ff; overflow-wrap:anywhere; }
+.duel-response-copy>small { color:#c9b488; font-size:10px; }
+.duel-response-body .duel-response-brief { margin:2px 0; font-size:12px; line-height:1.4; color:#dde5ec; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4; overflow:hidden; flex-shrink:1; }
+.duel-response-copy .duel-response-read { min-height:28px; padding:3px 0; border:0; background:transparent; text-align:left; color:#a9dace; font-size:11px; text-decoration:underline; }
+.duel-response-copy .effect-text { height:100px; min-height:0; font-size:14px; white-space:pre-wrap; }
+.duel-response-options { display:flex; gap:6px; overflow-x:auto; overflow-y:hidden; overscroll-behavior:contain; min-width:0; padding:3px; }
+.duel-response-options button { display:flex; position:relative; flex:none; padding:3px; width:34px; min-height:44px; height:44px; border-radius:4px; }
+.duel-response-options img { width:100%; height:100%; object-fit:contain; }
+.duel-response-options span { position:absolute; right:-2px; bottom:0; background:#101b2b; font-size:9px; padding:1px 3px; border-radius:4px; }
+.duel-response-options [aria-pressed=true] { border-color:#d2b7fb; box-shadow:0 0 0 1px #ad8bd9; }
+.duel-response-actions { display:flex; flex:none; gap:7px; border-top:1px solid #5f6d8166; padding-top:8px; }
+.duel-response-actions button { flex:1; min-width:0; min-height:40px; padding:6px 8px; border-radius:10px; font-size:12px; font-weight:750; background:linear-gradient(140deg,var(--choice-bg),#142335); color:var(--choice-accent); border-color:var(--choice-border); }
+.duel-response-body .duel-response-note { margin:0; color:#b8bdcb; font-size:10px; line-height:1.3; }
+.duel-response-policy { display:flex; justify-content:space-between; align-items:center; gap:5px; flex:none; width:100%; min-height:28px; padding:4px 7px; font-size:9px; color:#ecd295; border:1px solid #b09b5b66; background:#302e2455; border-radius:7px; }
+.duel-response-policy b { font-size:9px; color:#b4e8dc; }
+.duel-terminal-entry[data-kind=cost] p { color:#f3ca92; }
+.duel-terminal-entry[data-kind=target] p { color:#a9d6f6; }
+.duel-terminal-entry[data-kind=response] p { color:#a6b9bd; }
+.duel-effect-pulse { position:fixed; left:0; top:0; width:54px; height:70px; border:2px solid #c6a5ff; border-radius:8px; box-shadow:0 0 18px #b587ff88,inset 0 0 12px #c69cff55; }
+.duel-effect-pulse.target { border-color:#9be7db; box-shadow:0 0 18px #7be7ce88; }
+.duel-effect-path { position:fixed; height:2px; background:linear-gradient(90deg,#c5a3ff33,#c5a3ff,#9be7db); transform-origin:left center; box-shadow:0 0 8px #c6a5ff; }
+@media (orientation:landscape) and (max-height:440px) {
+  .duel-response-body { padding:8px 12px; gap:6px; }
+  .duel-response-body .dialog-header h2 { font-size:16px; }
+  .duel-response-card { grid-template-columns:96px minmax(0,1fr); gap:12px; }
+  .duel-response-art { width:96px; height:140px; }
+  .duel-response-copy h3 { font-size:15px; }
+  .duel-response-body .duel-response-brief { font-size:11px; line-height:1.3; }
+  .duel-response-copy .effect-text { height:74px; }
+  .duel-response-copy { gap:3px; }
+  .duel-response-body:has(.duel-response-options) .duel-response-brief { -webkit-line-clamp:2; }
+}
+@media (orientation:landscape) and (max-height:360px) {
+  .duel-response-body { gap:4px; }
+  .duel-response-card { grid-template-columns:72px minmax(0,1fr); }
+  .duel-response-art { height:105px; width:72px; }
+  .duel-response-timing { padding:4px 7px; }
+  .duel-response-body .duel-response-brief { -webkit-line-clamp:2; }
+  .duel-response-card { position:relative; }
+  .duel-response-options { position:absolute; left:0; bottom:0; width:72px; background:#101c2ddd; border-radius:5px; }
+  .duel-response-options button { width:27px; min-height:34px; height:34px; }
+}
