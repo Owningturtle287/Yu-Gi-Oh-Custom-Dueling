@@ -236,7 +236,7 @@ test('separate Deck, Graveyard and Extra Deck zones open the correct pile and pr
     assert.doesNotMatch(r.main.innerHTML,/Private AI Fusion|12345678.jpg/);
     const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,recent.uid);assert.equal(grave.querySelector('.duel-pile-count').textContent,'2');grave.click();
     assert.match(r.modal.querySelector('h2').textContent,/Your Graveyard/);
-    assert.deepEqual([...r.modal.querySelectorAll('.duel-public-card')].map(node=>node.dataset.duelCard),[old.uid,recent.uid]);
+    assert.deepEqual([...r.modal.querySelectorAll('.duel-public-card')].map(node=>node.dataset.duelCard),[recent.uid,old.uid]);
     assert.equal(r.modal.querySelector('.duel-pile-tabs'),null);assert.equal(r.modal.querySelector('[data-duel-pile]'),null);
     r.$('[data-motion-zone="0:extra"]').click();assert.match(r.modal.textContent,/Known Fusion/);assert.doesNotMatch(r.modal.textContent,/First fallen/);
     r.$('[data-motion-zone="1:extra"]').click();assert.match(r.modal.textContent,/AI’s Extra Deck stays face-down/);
@@ -296,6 +296,24 @@ test('Banished zones flank each Graveyard and update after an actual banishing e
       assert.equal(r.controller.getMatch().players[side].grave.length,0);
     }
     r.$('[data-motion-zone="0:banished"]').click();assert.match(r.modal.querySelector('h2').textContent,/Your Banished/);assert.match(r.modal.textContent,/Mystical Space Typhoon/);
+  }finally{r.close();}
+});
+test('Graveyard and banished sheets show newest cards first without mutating game order or exposing hidden cards',async()=>{
+  const r=await rig();try{
+    const s=r.controller.getMatch();
+    for(const side of [0,1])for(const zone of ['grave','banished']){
+      const older=put(s,side,normals[1],zone),newer=put(s,side,normals[2],zone),latest=put(s,side,normals[3],zone,{faceUp:!(side===1&&zone==='banished')});
+      const original=s.players[side][zone].map(c=>c.uid);r.controller.refresh();
+      for(let n=0;n<2;n++){
+        r.$(`[data-motion-zone="${side}:${zone}"]`).click();
+        assert.deepEqual([...r.modal.querySelectorAll('.duel-public-card')].map(b=>b.dataset.duelCard),[latest.uid,newer.uid,older.uid]);
+        assert.deepEqual(s.players[side][zone].map(c=>c.uid),original,'Opening a pile must not reverse the actual game state');
+        if(side===1&&zone==='banished'){
+          const hidden=r.modal.querySelector('.duel-public-card');assert.match(hidden.textContent,/Face-down card/);assert.doesNotMatch(hidden.textContent,/Warrior 3/);assert.ok(hidden.querySelector('.card-back-image'));
+        }
+        r.$('[data-action="close"]').click();
+      }
+    }
   }finally{r.close();}
 });
 test('hand inspection shows art and readable description together above actions, and plays a Summon',async()=>{

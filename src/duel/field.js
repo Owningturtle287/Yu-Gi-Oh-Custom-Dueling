@@ -53,7 +53,7 @@ export function quickCardActions(actions, uid) {
 
 export function activityCue(previous, next, action) {
   if(!previous)return {source:null,targets:[],label:'Opening hand'};
-  const labels={ATTACK:'Attacking',ACTIVATE:'Activating',EFFECT:'Using effect',SUMMON:action?.set?'Setting':'Summoning',SET:'Setting',FLIP:'Flipping',POSITION:'Changing position',DISCARD:'Discarding'};
+  const labels={ATTACK:'Attacking',DECLARE_ATTACK:'Attack declared',ACTIVATE:'Activating',EFFECT:'Using effect',SUMMON:action?.set?'Setting':'Summoning',SET:'Setting',FLIP:'Flipping',POSITION:'Changing position',DISCARD:'Discarding'};
   if(action?.uid&&labels[action.type])return {source:action.uid,targets:[action.target,...(action.tributes||[]),action.tribute].filter(Boolean),label:labels[action.type],directSide:action.type==='ATTACK'&&action.target===null?1-next.active:null};
   if(action?.type==='CHOOSE')return {source:previous.choice?.trigger?.uid,targets:[action.target].filter(Boolean),label:'Resolving effect'};
   const event=[...next.log].reverse().find(entry=>entry.id>previous.serial&&entry.uids?.length&&['effect','battle','summon','activate','position','leave'].includes(entry.kind));

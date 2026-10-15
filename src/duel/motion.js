@@ -47,11 +47,13 @@ export function planMotion(previous, next, action = null) {
   if(previous)for(const entry of next.log.filter(entry=>entry.id>previous.serial)){
     if(['activate','target'].includes(entry.kind)&&entry.uids?.length)motions.push({type:'effect',uid:entry.uids[0],target:entry.kind==='target'?entry.uids[1]:null});
     if(entry.kind==='damage'&&Number.isInteger(entry.targetSide))motions.push({type:'impact',target:null,to:`${entry.targetSide}:lp`});
-    else if(entry.uids?.length&&(entry.kind==='battle'||entry.kind==='damage')){
+    else if(entry.uids?.length&&(entry.kind==='battle'&&next.version!==2||entry.kind==='damage')){
       const attacker=before.get(entry.uids[0]);
       if(attacker)motions.push({type:'impact',target:entry.uids[1]||null,to:entry.uids[1]?null:`${1-attacker.side}:lp`});
     }
   }
+  const strike=motions.find(m=>m.type==='attack');
+  if(strike&&!motions.some(m=>m.type==='impact'&&m.target===strike.target&&m.to===strike.to))motions.push({type:'impact',target:strike.target,to:strike.to});
   if (previous) next.players.forEach((player, side) => {
     const delta = player.lp - previous.players[side].lp;
     if (delta) motions.push({ type: 'life', to: `${side}:lp`, delta, before: previous.players[side].lp, after: player.lp });
@@ -187,8 +189,10 @@ export function createMotionPlayer(root) {
         if(line){
           line.path.style.strokeDasharray=String(line.geometry.length);
           run(line.path,[{strokeDashoffset:line.geometry.length},{strokeDashoffset:0}],{duration:240,easing:ease,fill:'both'});
+          line.outline.style.strokeDasharray=String(line.geometry.length);
+          run(line.outline,[{strokeDashoffset:line.geometry.length},{strokeDashoffset:0}],{duration:240,easing:ease,fill:'both'});
           run(arrow,[{opacity:0},{opacity:1,offset:.15},{opacity:1,offset:.72},{opacity:0}],{duration,easing:ease,fill:'both'});
-          const spark=document.createElement('span');spark.className='duel-attack-spark';layer.append(spark);
+          const spark=document.createElement('span');spark.className='duel-attack-particle';layer.append(spark);
           run(spark,[{transform:transform(line.geometry.start,line.geometry.angle,.5),opacity:0},{transform:transform(line.geometry.start,line.geometry.angle),opacity:1,offset:.12},{transform:transform(line.geometry.end,line.geometry.angle,1.15),opacity:1,offset:.82},{transform:transform(line.geometry.end,line.geometry.angle,.5),opacity:0}],{duration:490,easing:ease,fill:'both'});
         }
       } else {

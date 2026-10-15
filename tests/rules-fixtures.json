@@ -2847,6 +2847,201 @@
           "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/19523799.jpg"
         }
       ]
+    },
+    {
+      "id": 44209392,
+      "name": "Castle Walls",
+      "type": "Trap Card",
+      "humanReadableCardType": "Normal Trap",
+      "frameType": "trap",
+      "desc": "Increase the DEF of 1 face-up monster on the field by 500 points until the end of this turn.",
+      "race": "Normal",
+      "tcgDate": "2002-03-29",
+      "ocgDate": "1999-07-05",
+      "setNames": [
+        "Starter Deck 2006",
+        "Starter Deck: Joey",
+        "Starter Deck: Kaiba",
+        "Starter Deck: Pegasus",
+        "Starter Deck: Yugi"
+      ],
+      "card_images": [
+        {
+          "id": 44209392,
+          "image_url": "https://images.ygoprodeck.com/images/cards/44209392.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/44209392.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/44209392.jpg"
+        }
+      ]
+    },
+    {
+      "id": 40640057,
+      "name": "Kuriboh",
+      "type": "Effect Monster",
+      "humanReadableCardType": "Effect Monster",
+      "frameType": "effect",
+      "desc": "During damage calculation, if your opponent's monster attacks (Quick Effect): You can discard this card; you take no battle damage from that battle.",
+      "race": "Fiend",
+      "attribute": "DARK",
+      "archetype": "Kuriboh",
+      "atk": 300,
+      "def": 200,
+      "level": 1,
+      "tcgDate": "2002-06-26",
+      "ocgDate": "2000-01-27",
+      "setNames": [
+        "Brothers of Legend",
+        "Champion Pack: Game Two",
+        "Dark Beginning 2",
+        "Dark Legends",
+        "Duel Terminal - Preview Wave 1",
+        "Duel Terminal 1",
+        "Duelist League 2010 participation cards",
+        "Duelist Pack: Battle City",
+        "Duelist Pack: Yugi",
+        "Forbidden Legacy",
+        "Hidden Arsenal: Chapter 1",
+        "Legendary Collection 3: Yugi's World Mega Pack",
+        "Metal Raiders",
+        "Millennium Pack",
+        "Retro Pack",
+        "Speed Duel Starter Decks: Match of the Millennium",
+        "Starter Deck 2006",
+        "Starter Deck: Yugi Evolution",
+        "Starter Deck: Yugi Reloaded",
+        "Structure Deck: Yugi Muto",
+        "Yu-Gi-Oh! Advent Calendar (2019)",
+        "Yu-Gi-Oh! Power of Chaos: Yugi the Destiny promotional cards",
+        "Yugi's Legendary Decks"
+      ],
+      "card_images": [
+        {
+          "id": 40640057,
+          "image_url": "https://images.ygoprodeck.com/images/cards/40640057.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/40640057.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/40640057.jpg"
+        },
+        {
+          "id": 40640058,
+          "image_url": "https://images.ygoprodeck.com/images/cards/40640058.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/40640058.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/40640058.jpg"
+        },
+        {
+          "id": 40640059,
+          "image_url": "https://images.ygoprodeck.com/images/cards/40640059.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/40640059.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/40640059.jpg"
+        }
+      ]
+    },
+    {
+      "id": 17814387,
+      "name": "Reinforcements",
+      "type": "Trap Card",
+      "humanReadableCardType": "Normal Trap",
+      "frameType": "trap",
+      "desc": "Target 1 face-up monster on the field; it gains 500 ATK until the end of this turn.",
+      "race": "Normal",
+      "tcgDate": "2002-03-29",
+      "ocgDate": "1999-07-05",
+      "setNames": [
+        "Duel Terminal - Preview Wave 1",
+        "Duel Terminal 1",
+        "Speed Duel Demo Deck 2020",
+        "Speed Duel Starter Decks: Ultimate Predators",
+        "Speed Duel: Trials of the Kingdom Sneak Peek participation cards",
+        "Starter Deck 2006",
+        "Starter Deck: Joey",
+        "Starter Deck: Kaiba",
+        "Starter Deck: Pegasus",
+        "Starter Deck: Yugi"
+      ],
+      "card_images": [
+        {
+          "id": 17814387,
+          "image_url": "https://images.ygoprodeck.com/images/cards/17814387.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/17814387.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/17814387.jpg"
+        }
+      ]
+    },
+    {
+      "id": 70046172,
+      "name": "Rush Recklessly",
+      "type": "Spell Card",
+      "humanReadableCardType": "Quick-Play Spell",
+      "frameType": "spell",
+      "desc": "Target 1 face-up monster on the field; it gains 700 ATK until the end of this turn.",
+      "race": "Quick-Play",
+      "tcgDate": "2002-09-16",
+      "ocgDate": "2000-04-20",
+      "setNames": [
+        "2-Player Starter Deck: Yuya & Declan",
+        "Battle Pack 2: War of the Giants",
+        "Battle Pack 3: Monster League",
+        "Champion Pack: Game Two",
+        "Dark Beginning 1",
+        "Dark Legion Starter Deck",
+        "Duel Terminal 3",
+        "Magic Ruler",
+        "Saber Force Starter Deck",
+        "Spell Ruler",
+        "Starter Deck: Jaden Yuki",
+        "Starter Deck: Kaiba Evolution",
+        "Starter Deck: Kaiba Reloaded",
+        "Starter Deck: Pegasus",
+        "Starter Deck: Syrus Truesdale",
+        "Starter Deck: Yu-Gi-Oh! 5D's",
+        "Starter Deck: Yu-Gi-Oh! 5D's 2009",
+        "Tournament Pack 4"
+      ],
+      "card_images": [
+        {
+          "id": 70046172,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70046172.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70046172.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70046172.jpg"
+        }
+      ]
+    },
+    {
+      "id": 3819470,
+      "name": "Seven Tools of the Bandit",
+      "type": "Trap Card",
+      "humanReadableCardType": "Counter Trap",
+      "frameType": "trap",
+      "desc": "When a Trap Card is activated: Pay 1000 LP; negate the activation, and if you do, destroy it.",
+      "race": "Counter",
+      "tcgDate": "2002-06-26",
+      "ocgDate": "1999-11-18",
+      "setNames": [
+        "Dark Beginning 2",
+        "Dark Legends",
+        "Legendary Collection 3: Yugi's World Mega Pack",
+        "Metal Raiders",
+        "Retro Pack",
+        "Speed Duel Starter Decks: Destiny Masters",
+        "Speed Duel Starter Decks: Match of the Millennium",
+        "Speed Duel Tournament Pack 5",
+        "Starter Deck: Dawn of the Xyz",
+        "Starter Deck: Joey",
+        "Starter Deck: Pegasus",
+        "Starter Deck: Syrus Truesdale",
+        "Starter Deck: Xyz Symphony",
+        "Starter Deck: Yu-Gi-Oh! 5D's",
+        "Starter Deck: Yugi Evolution",
+        "Super Starter: Space-Time Showdown",
+        "Turbo Pack: Booster Five"
+      ],
+      "card_images": [
+        {
+          "id": 3819470,
+          "image_url": "https://images.ygoprodeck.com/images/cards/3819470.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/3819470.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/3819470.jpg"
+        }
+      ]
     }
   ]
 }

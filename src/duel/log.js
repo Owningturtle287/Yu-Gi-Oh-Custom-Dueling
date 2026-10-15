@@ -1,4 +1,4 @@
-const battleKinds = new Set(['attack', 'battle', 'damage', 'heal', 'victory']);
+const battleKinds = new Set(['attack', 'battle', 'timing', 'stats', 'damage', 'heal', 'victory']);
 export function groupedLog(entries, filter = 'all') {
   const groups = [];
   for (const entry of entries) {
@@ -11,4 +11,4 @@ export function groupedLog(entries, filter = 'all') {
   }
   return groups;
 }
-export const logKindLabel = kind => ({phase:'Phase',draw:'Draw',summon:'Summon / Set',set:'Set',activate:'Activation',effect:'Effect',cost:'Cost paid',target:'Target chosen',response:'Response',attack:'Attack',battle:'Battle result',damage:'LP loss',heal:'LP gain',leave:'Card moved',position:'Position',discard:'Discard',reveal:'Reveal',victory:'Result'}[kind] || 'Action');
+export const logKindLabel = kind => ({phase:'Phase',draw:'Draw',summon:'Summon / Set',set:'Set',activate:'Activation',effect:'Effect',cost:'Cost paid',target:'Target chosen',response:'Response',attack:'Attack',battle:'Battle result',timing:'Battle timing',stats:'ATK / DEF change',damage:'LP loss',heal:'LP gain',leave:'Card moved',position:'Position',discard:'Discard',reveal:'Reveal',victory:'Result'}[kind] || 'Action');

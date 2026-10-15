@@ -7,12 +7,17 @@ import {loadNativeRules} from '../src/duel/native-loader.js';
 import {createNativeBackend} from '../src/duel/native-engine.js';
 import {createSoloController} from '../src/duel/ui.js';
 import {responseOffer,createResponsePolicy,effectBrief} from '../src/duel/responses.js';
+import {damageDuel,advanceBattle} from './battle-fixtures.js';
 const cards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.meta.url))).data.map(normalizeCard),get=name=>cards.find(c=>c.name===name);
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
 const waitFor=async predicate=>{const end=Date.now()+2500;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,5));assert.ok(predicate(),'Response UI ready');};
-async function rig({multiple=false,trigger=false}={}){
+async function rig({multiple=false,trigger=false,damage=false}={}){
   const engine=createNativeBackend({rules:()=>pack});
-  const state=await engine.createMatch([0,1].map(()=>({name:'Response test',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,cards,openingHands:[[],[]],initialFields:[trigger?{grave:[{card:get('Sinister Serpent')}]}:{spells:[{card:get('Scapegoat'),faceUp:false},...(multiple?[{card:get('Mystical Space Typhoon'),faceUp:false}]:[])],...(multiple?{monsters:[{card:get('Summoned Skull')}]}:{})},{}]});
+  let state;
+  if(damage){
+    state=await damageDuel(engine,cards,{traps:['Castle Walls']});
+    state=advanceBattle(engine,state,s=>s.battleStep==='beforeCalculation'&&s.actions[0].some(a=>a.type==='ACTIVATE'));
+  }else state=await engine.createMatch([0,1].map(()=>({name:'Response test',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,cards,openingHands:[[],[]],initialFields:[trigger?{grave:[{card:get('Sinister Serpent')}]}:{spells:[{card:get('Scapegoat'),faceUp:false},...(multiple?[{card:get('Mystical Space Typhoon'),faceUp:false}]:[])],...(multiple?{monsters:[{card:get('Summoned Skull')}]}:{})},{}]});
   const window=new Window({url:'https://example.com/repo/'});window.happyDOM.setWindowSize({width:844,height:390});
   window.document.body.innerHTML='<main></main><dialog></dialog>';
   for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],writable:true,configurable:true});
@@ -33,6 +38,23 @@ test('a legal response opens its card, timing and effect text automatically; Pas
     assert.equal(r.$('[data-duel="response-read"]').getAttribute('aria-expanded'),'true');
     r.$('[data-duel="response-pass"]').click();await waitFor(()=>r.state.phase==='standby'&&r.modal.hasAttribute('open'));
     assert.match(r.$('.duel-response-timing').textContent,/Standby/);assert.equal(r.$('.duel-response-policy'),null);
+    assert.deepEqual(r.errors,[]);
+  }finally{r.close();}
+});
+test('Damage Step preview names the revealed defender and updates its field DEF after Castle Walls resolves',async()=>{
+  const r=await rig({damage:true});try{
+    assert.match(r.$('.duel-response-timing').textContent,/Before damage calculation.*Mystical Elf is face-up/);
+    assert.doesNotMatch(r.$('.duel-response-timing').textContent,/attack is declared/);
+    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/including Damage Step responses/);
+    assert.equal(r.$('.duel-phases').dataset.battleStep,'beforeCalculation');
+    r.$('[data-duel="response-activate"]').click();
+    await waitFor(()=>r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
+    const elf=r.state.players[0].monsters.find(Boolean);
+    assert.equal(r.$(`[data-duel-card="${elf.uid}"]`).dataset.role,'eligible');
+    r.$(`[data-duel-card="${elf.uid}"]`).click();await waitFor(()=>!r.$('[data-duel="confirm-choice"]')?.disabled&&r.$('.duel-arena').dataset.moving==='false');r.$('[data-duel="confirm-choice"]').click();
+    await waitFor(()=>r.state.log.some(e=>e.kind==='stats'&&/DEF 2000 → 2500/.test(e.message)));
+    assert.match(r.$(`[data-duel-card="${elf.uid}"]`).getAttribute('aria-label'),/DEF 2500/);
+    assert.ok(r.state.log.some(e=>e.kind==='timing'&&e.battleStep==='beforeCalculation'));
     assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });

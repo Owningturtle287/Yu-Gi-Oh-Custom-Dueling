@@ -19,31 +19,36 @@ export function attackGeometry(from,to){
 
 export function appendAttackArrow(svg,from,to,{selected=true,side=0}={}){
   const geometry=attackGeometry(from,to);if(!geometry)return null;
-  const document=svg.ownerDocument,id=`attack-head-${++serial}`,color=side===1?'#ffafc5':'#ffe1a1';
+  const document=svg.ownerDocument,id=`attack-head-${++serial}`,color=side===1?'#ffd0e0':'#fff0c6',tail=side===1?'#b56bc0':'#68d7c5';
   const defs=element(document,'defs'),marker=element(document,'marker',{id,viewBox:'0 0 12 12',refX:10,refY:6,markerWidth:12,markerHeight:12,markerUnits:'userSpaceOnUse',orient:'auto'});
-  marker.append(element(document,'path',{d:'M 1 1 L 11 6 L 1 11 L 4 6 Z',fill:color}));defs.append(marker);
-  const path=element(document,'path',{d:`M ${geometry.start.x} ${geometry.start.y} L ${geometry.end.x} ${geometry.end.y}`,fill:'none',stroke:color,'stroke-width':selected?3:1.8,'marker-end':`url(#${id})`,class:'duel-arrow-shaft','data-selected':selected});
-  svg.append(defs,path);return {path,geometry};
+  marker.append(element(document,'path',{d:'M 1 1 L 11 6 L 1 11 L 3.5 6 Z',fill:color,stroke:'#172333','stroke-width':.6}));
+  const gradient=element(document,'linearGradient',{id:id+'-light',gradientUnits:'userSpaceOnUse',x1:geometry.start.x,y1:geometry.start.y,x2:geometry.end.x,y2:geometry.end.y});
+  gradient.append(element(document,'stop',{offset:0,'stop-color':tail}),element(document,'stop',{offset:1,'stop-color':color}));defs.append(marker,gradient);
+  const d=`M ${geometry.start.x} ${geometry.start.y} L ${geometry.end.x} ${geometry.end.y}`;
+  const outline=element(document,'path',{d,fill:'none',stroke:'#081523','stroke-width':7,'stroke-linecap':'round',opacity:.75});
+  const path=element(document,'path',{d,fill:'none',stroke:`url(#${id}-light)`,'stroke-width':3.5,'stroke-linecap':'round','marker-end':`url(#${id})`,class:'duel-arrow-shaft','data-selected':selected,'data-side':side});
+  svg.append(defs,outline,path);return {path,outline,geometry};
 }
 
 export function attackLinks(state,selection){
+  if(state?.winner!==undefined&&state.winner!==null)return [];
   if(!selection&&state?.choice?.attackUid)selection={kind:'attack',sourceUid:state.choice.attackUid,side:state.choice.side,selected:state.choice.selected||[],actions:state.choice.options};
   if(selection?.kind==='attack'){
-    const targets=[...new Set(selection.actions.filter(a=>a.target).map(a=>a.target))];
-    const links=targets.map(target=>({uid:selection.sourceUid,target,side:selection.side,selected:selection.selected.includes(target)}));
-    if(selection.actions.some(a=>a.type==='ATTACK'&&a.target===null))links.push({uid:selection.sourceUid,target:null,side:selection.side,selected:false});
-    return links;
+    const target=(selection.selected||[]).find(uid=>selection.actions.some(a=>a.target===uid));
+    return target?[{uid:selection.sourceUid,target,side:selection.side,selected:true}]:[];
   }
   const attack=state?.pending;
   return attack?.kind==='attack'?[{...attack,selected:true}]:[];
 }
 
 export function createAttackArrows(root){
-  let state=null,selection=null,paused=false,hovered=null;
+  let state=null,selection=null,paused=false;
   function refresh(){
     const svg=root.querySelector('.duel-target-arrows'),table=root.querySelector('.duel-table');if(!svg||!table)return;
     svg.replaceChildren();if(paused)return;
-    const area=table.getBoundingClientRect();if(!area.width||!area.height)return;
+    // Measure the SVG's own viewport. A surrounding console, border, safe-area
+    // inset or CSS scale must never become part of its coordinate system.
+    const area=svg.getBoundingClientRect();if(!area.width||!area.height)return;
     svg.setAttribute('viewBox',`0 0 ${area.width} ${area.height}`);
     const rect=uid=>{
       const host=root.querySelector(`[data-motion-uid="${uid}"]`),visual=host?.querySelector('.duel-card-visual')||host;
@@ -53,12 +58,10 @@ export function createAttackArrows(root){
       const from=rect(link.uid),lp=link.target===null?root.querySelector(`[data-field-lp="${1-link.side}"]`)?.getBoundingClientRect():null;
       const to=link.target===null&&lp?{x:lp.left+lp.width/2-area.left,y:lp.top+lp.height/2-area.top,width:lp.width,height:lp.height}:rect(link.target);
       if(!from||!to)continue;
-      const arrow=appendAttackArrow(svg,from,to,{side:link.side,selected:link.selected||hovered===(link.target||`lp:${1-link.side}`)});
+      const arrow=appendAttackArrow(svg,from,to,{side:link.side,selected:true});
       if(arrow){arrow.path.dataset.source=link.uid;arrow.path.dataset.target=link.target||`lp:${1-link.side}`;}
     }
   }
-  const point=event=>{const node=event.target.closest?.('[data-duel-card],[data-field-lp]');hovered=node?.dataset.duelCard||(node?.dataset.fieldLp!==undefined?`lp:${node.dataset.fieldLp}`:null);refresh();};
-  root.addEventListener('pointerover',point);root.addEventListener('focusin',point);
   return {sync(next,nextSelection,{hidden=false}={}){state=next;selection=nextSelection;paused=hidden;refresh();},refresh,
-    destroy(){root.removeEventListener('pointerover',point);root.removeEventListener('focusin',point);root.querySelector('.duel-target-arrows')?.replaceChildren();}};
+    destroy(){root.querySelector('.duel-target-arrows')?.replaceChildren();}};
 }

@@ -89,6 +89,14 @@ test('attacks point to the chosen monster or opposing Life Points',()=>{
   const target=s.players[1].hand.shift();s.players[1].monsters[0]={...target,faceUp:false,position:'defense'};
   motion=planMotion(s,s,{type:'ATTACK',uid:card.uid,target:target.uid}).find(m=>m.type==='attack');assert.equal(motion.target,target.uid);
 });
+test('native attack declaration and preliminary calculation do not animate an impact before responses finish',()=>{
+  const s=game(),card=s.players[0].hand.shift();s.version=2;s.players[0].monsters[0]={...card,faceUp:true,position:'attack'};
+  const next=structuredClone(s);next.log.push({id:s.serial+1,kind:'battle',uids:[card.uid],message:'Calculating battle.'});
+  const declaration=planMotion(s,next,{type:'DECLARE_ATTACK',uid:card.uid,target:null});
+  assert.ok(!declaration.some(m=>['attack','impact'].includes(m.type)));
+  const strike=planMotion(s,next,{type:'ATTACK',uid:card.uid,target:null});
+  assert.equal(strike.filter(m=>m.type==='attack').length,1);assert.equal(strike.filter(m=>m.type==='impact').length,1);assert.equal(strike.find(m=>m.type==='impact').to,'1:lp');
+});
 test('log entries retain turn/phase/actor context, battle numbers and hidden Set privacy',()=>{
   let s=autoToMain1(game());const set=choose(s,'SUMMON',a=>a.set);s=pass(set.state);
   const entry=s.log.find(e=>e.kind==='summon');assert.equal(entry.turn,1);assert.equal(entry.phase,'main1');assert.equal(entry.side,0);assert.doesNotMatch(entry.message,/Warrior/);

@@ -1,4 +1,5 @@
 import { PHASE_LABELS, findCard } from './engine.js';
+import { BATTLE_STEPS } from './battle-timing.js';
 
 // Quote the card's current text rather than inventing a ruling or promising an
 // outcome. The native engine remains the authority on timing and resolution.
@@ -20,10 +21,10 @@ export function responseOffer(state, actions) {
   const link = state.chain.at(-1), attacker = state.pending?.kind === 'attack' ? findCard(state, state.pending.uid) : null;
   const context = optionalTrigger ? 'This card has an optional triggered effect. You can activate it now or decline.'
     : link ? `${link.card.name} was activated. Your response is added to the chain and resolves before earlier links.`
-    : attacker ? `${attacker.card.name} declared an attack. You can respond before the attack continues.`
-    : state.window.timing || `You have a legal response during ${PHASE_LABELS[state.phase] || state.phase}.`;
+    : state.window?.timing || (attacker ? `${attacker.card.name} declared an attack. You can respond before the attack continues.`
+    : `You have a legal response during ${PHASE_LABELS[state.phase] || state.phase}.`);
   return {id: state.choice?.promptId || state.window?.promptId || `${state.turn}:${state.phase}:${actions.map(a => a.id).join(',')}`,
-    cards, pass, context, required: !pass, phase: PHASE_LABELS[state.phase] || state.phase};
+    cards, pass, context, required: !pass, phase: BATTLE_STEPS[state.window?.battleStep||state.battleStep]?.label || PHASE_LABELS[state.phase] || state.phase};
 }
 
 // Repeating Pass is safe; repeating activations could pay a new cost or choose

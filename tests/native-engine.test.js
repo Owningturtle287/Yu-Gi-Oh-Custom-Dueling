@@ -189,7 +189,7 @@ test('native attack targeting retains the attacker through selection and commits
     const attacker=state.players[0].monsters.find(Boolean),victim=state.players[1].monsters[1];
     state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ATTACK'),0);
     assert.equal(state.choice.attackUid,attacker.uid);assert.equal(state.choice.trigger.uid,attacker.uid);
-    assert.match(state.choice.instructions,/Arrows point from your attacker/);
+    assert.match(state.choice.instructions,/One arrow shows your selected target/);
     state=engine.applyAction(state,state.actions[0].find(a=>a.target===victim.uid),0);
     assert.equal(state.choice.attackUid,attacker.uid);assert.ok(state.choice.selected.includes(victim.uid));
     state=engine.applyAction(state,state.actions[0].find(a=>a.finish),0);
