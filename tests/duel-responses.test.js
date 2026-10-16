@@ -34,18 +34,17 @@ test('a legal response opens its card, timing and effect text automatically; Pas
     assert.match(r.modal.textContent,/Scapegoat/);assert.match(r.modal.textContent,/Draw/);assert.match(r.modal.textContent,/Special Summon/);
     assert.match(r.$('.duel-response-art img').src,/images.ygoprodeck.com/);
     assert.equal(r.$('[data-duel="respond"]').textContent,'Review card');
-    r.$('[data-duel="response-read"]').click();assert.equal(r.$('#duel-response-description').hidden,false);assert.match(r.$('#duel-response-description').textContent,/4 "Sheep Tokens"/);
-    assert.equal(r.$('[data-duel="response-read"]').getAttribute('aria-expanded'),'true');
+    assert.equal(r.$('[data-duel="response-read"]'),null);assert.equal(r.$('#duel-response-description').hidden,false);assert.match(r.$('#duel-response-description').textContent,/4 "Sheep Tokens"/);
     r.$('[data-duel="response-pass"]').click();await waitFor(()=>r.state.phase==='standby'&&r.modal.hasAttribute('open'));
-    assert.match(r.$('.duel-response-timing').textContent,/Standby/);assert.equal(r.$('.duel-response-policy'),null);
+    assert.match(r.$('.duel-response-context').textContent,/Standby/);assert.equal(r.$('.duel-response-policy'),null);
     assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });
 test('Damage Step preview names the revealed defender and updates its field DEF after Castle Walls resolves',async()=>{
   const r=await rig({damage:true});try{
-    assert.match(r.$('.duel-response-timing').textContent,/Before damage calculation.*Mystical Elf is face-up/);
-    assert.doesNotMatch(r.$('.duel-response-timing').textContent,/attack is declared/);
-    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/including Damage Step responses/);
+    assert.match(r.$('.duel-response-context').textContent,/Mystical Elf is face-up/);
+    assert.doesNotMatch(r.$('.duel-response-context').textContent,/attack is declared/);
+    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/skips later Damage Step responses/);
     assert.equal(r.$('.duel-phases').dataset.battleStep,'beforeCalculation');
     r.$('[data-duel="response-activate"]').click();
     await waitFor(()=>r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
@@ -98,7 +97,7 @@ test('turn preference never declines required chains, costs, targets or procedur
 test('native optional triggered effects use the same explanatory response card and decline without moving the card',async()=>{
   const r=await rig({trigger:true});try{
     assert.equal(r.state.choice.optionalResponse,true);assert.match(r.modal.textContent,/Sinister Serpent/);
-    assert.match(r.$('.duel-response-timing').textContent,/optional triggered effect/);
+    assert.match(r.$('.duel-response-context').textContent,/optional triggered effect/);
     r.$('[data-duel="response-pass"]').click();await waitFor(()=>r.state.phase==='main1'&&!r.state.choice);
     assert.ok(r.state.players[0].grave.some(c=>c.card.name==='Sinister Serpent'));
     assert.ok(r.state.log.some(e=>/pass on Sinister Serpent/.test(e.message)));assert.deepEqual(r.errors,[]);

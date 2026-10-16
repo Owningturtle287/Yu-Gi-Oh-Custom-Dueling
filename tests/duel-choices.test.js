@@ -75,7 +75,7 @@ test('staged card searches and scroll remain in place while selecting and desele
     assert.equal(r.$('#duel-choice-search').value,'Backup card 3');assert.equal(r.$('#duel-options-list').scrollTop,80);
     assert.equal(r.modal.querySelectorAll('.duel-choice-card').length,10);
     const selectedUID=r.state.choice.selected[0];r.$('.duel-choice-card[aria-pressed="false"]').click();
-    await waitFor(()=>r.state.choice.selected[0]!==selectedUID);assert.equal(r.state.choice.selected.length,1,'A one-card cost replaces its prior selection');
+    await waitFor(()=>r.state.choice.selected[0]!==selectedUID&&r.$('.duel-arena').dataset.moving==='false');assert.equal(r.state.choice.selected.length,1,'A one-card cost replaces its prior selection');
     assert.equal(r.modal.querySelectorAll('.duel-choice-card[aria-pressed="true"]').length,1);
     r.$('.duel-choice-card[aria-pressed="true"]').click();await waitFor(()=>!r.$('.duel-choice-card[aria-pressed="true"]'));
     assert.equal(r.$('.duel-choice-footer [data-choice-tone="teal"]').disabled,true);

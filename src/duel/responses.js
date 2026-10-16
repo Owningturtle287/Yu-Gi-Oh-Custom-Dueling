@@ -15,7 +15,12 @@ export function responseOffer(state, actions) {
   const optionalTrigger = state.choice?.side === 0 && state.choice.optionalResponse;
   if (state.window?.priority !== 0 && !optionalTrigger) return null;
   const options = optionalTrigger ? actions.filter(a => a.yes === true) : actions.filter(a => ['ACTIVATE', 'EFFECT'].includes(a.type));
-  const cards = options.map(action => ({action, card: findCard(state, action.uid || state.choice?.trigger?.uid)})).filter(item => item.card);
+  const cards = options.map(action => {
+    const found=findCard(state,action.uid||state.choice?.trigger?.uid),official=action.effectCard;
+    // A core source descriptor takes precedence over a stale/mismatched UID.
+    const card=official&&found?.card.name!==official.name?{uid:null,controller:0,card:official,public:true}:found;
+    return {action,card};
+  }).filter(item => item.card);
   if (!cards.length) return null;
   const pass = actions.find(a => a.type === 'PASS' || optionalTrigger && a.yes === false);
   const link = state.chain.at(-1), attacker = state.pending?.kind === 'attack' ? findCard(state, state.pending.uid) : null;

@@ -829,7 +829,7 @@
       "type": "Effect Monster",
       "humanReadableCardType": "Effect Monster",
       "frameType": "effect",
-      "desc": "Cannot be Normal Summoned/Set. Must first be Special Summoned (from your hand) by banishing 1 LIGHT and 1 DARK monster from your GY. Once per turn, you can activate 1 of these effects.\r\n\u25cf Target 1 monster on the field; banish it. This card cannot attack the turn this effect is activated.\r\n\u25cf If this attacking card destroys an opponent's monster by battle: It can make a second attack in a row.",
+      "desc": "Cannot be Normal Summoned/Set. Must first be Special Summoned (from your hand) by banishing 1 LIGHT and 1 DARK monster from your GY. Once per turn, you can activate 1 of these effects.\r\n● Target 1 monster on the field; banish it. This card cannot attack the turn this effect is activated.\r\n● If this attacking card destroys an opponent's monster by battle: It can make a second attack in a row.",
       "race": "Warrior",
       "atk": 3000,
       "def": 2500,
@@ -3040,6 +3040,341 @@
           "image_url": "https://images.ygoprodeck.com/images/cards/3819470.jpg",
           "image_url_small": "https://images.ygoprodeck.com/images/cards_small/3819470.jpg",
           "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/3819470.jpg"
+        }
+      ]
+    },
+    {
+      "id": 9603356,
+      "name": "Shadowknight Archfiend",
+      "type": "Effect Monster",
+      "humanReadableCardType": "Effect Monster",
+      "frameType": "effect",
+      "desc": "The controller of this card pays 900 Life Points during each of his/her Standby Phases (this is not optional). When this card is targeted by the effect of a card controlled by your opponent, when resolving the effect, roll a six-sided die. If the result is 3, negate the effect and destroy the opponent's card. The Battle Damage this card inflicts to your opponent is halved.",
+      "race": "Fiend",
+      "attribute": "WIND",
+      "archetype": "Archfiend",
+      "atk": 2000,
+      "def": 1600,
+      "level": 4,
+      "tcgDate": "2003-12-01",
+      "ocgDate": "2003-02-20",
+      "setNames": [
+        "Dark Crisis",
+        "Dark Revelation Volume 1",
+        "Speed Duel GX: Duelists of Shadows"
+      ],
+      "card_images": [
+        {
+          "id": 9603356,
+          "image_url": "https://images.ygoprodeck.com/images/cards/9603356.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/9603356.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/9603356.jpg"
+        }
+      ]
+    },
+    {
+      "id": 18891691,
+      "name": "Perfect Machine King",
+      "type": "Effect Monster",
+      "humanReadableCardType": "Effect Monster",
+      "frameType": "effect",
+      "desc": "This card gains 500 ATK for each other Machine-Type monster on the field.",
+      "race": "Machine",
+      "attribute": "EARTH",
+      "atk": 2700,
+      "def": 1500,
+      "level": 8,
+      "tcgDate": "2004-11-20",
+      "ocgDate": "2004-08-05",
+      "setNames": [
+        "Dark Revelation Volume 3",
+        "Rise of Destiny"
+      ],
+      "card_images": [
+        {
+          "id": 18891691,
+          "image_url": "https://images.ygoprodeck.com/images/cards/18891691.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/18891691.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/18891691.jpg"
+        }
+      ]
+    },
+    {
+      "id": 83258273,
+      "name": "Robbin' Zombie",
+      "type": "Trap Card",
+      "humanReadableCardType": "Continuous Trap",
+      "frameType": "trap",
+      "desc": "If your monster inflicts battle damage to your opponent: Send the top card of their Deck to the GY.",
+      "race": "Continuous",
+      "tcgDate": "2004-03-01",
+      "ocgDate": "2003-07-17",
+      "setNames": [
+        "Dark Revelation Volume 2",
+        "Invasion of Chaos",
+        "Speed Duel: Attack from the Deep"
+      ],
+      "card_images": [
+        {
+          "id": 83258273,
+          "image_url": "https://images.ygoprodeck.com/images/cards/83258273.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/83258273.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/83258273.jpg"
+        }
+      ]
+    },
+    {
+      "id": 94585852,
+      "name": "Pandemonium",
+      "type": "Spell Card",
+      "humanReadableCardType": "Field Spell",
+      "frameType": "spell",
+      "desc": "Neither player has to pay Life Points during the Standby Phase for \"Archfiend\" monsters. Each time a player's \"Archfiend\" monster(s) is destroyed and sent to the Graveyard, except by battle, that player can add 1 \"Archfiend\" monster from their Deck to their hand that is a lower Level than the destroyed card.",
+      "race": "Field",
+      "archetype": "Archfiend",
+      "tcgDate": "2003-12-01",
+      "ocgDate": "2003-02-20",
+      "setNames": [
+        "Dark Crisis",
+        "Dark Revelation Volume 1",
+        "Gold Series",
+        "Speed Duel GX: Duelists of Shadows"
+      ],
+      "card_images": [
+        {
+          "id": 94585852,
+          "image_url": "https://images.ygoprodeck.com/images/cards/94585852.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/94585852.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/94585852.jpg"
+        }
+      ]
+    },
+    {
+      "id": 61528025,
+      "name": "Banisher of the Light",
+      "type": "Effect Monster",
+      "humanReadableCardType": "Effect Monster",
+      "frameType": "effect",
+      "desc": "Any card sent to the Graveyard is banished instead.",
+      "race": "Fairy",
+      "attribute": "LIGHT",
+      "atk": 100,
+      "def": 2000,
+      "level": 3,
+      "tcgDate": "2002-09-16",
+      "ocgDate": "2000-07-13",
+      "setNames": [
+        "Dark Beginning 1",
+        "Legendary Collection 3: Yugi's World Mega Pack",
+        "Magic Ruler",
+        "Speed Duel: Battle City Box",
+        "Spell Ruler"
+      ],
+      "card_images": [
+        {
+          "id": 61528025,
+          "image_url": "https://images.ygoprodeck.com/images/cards/61528025.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/61528025.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/61528025.jpg"
+        }
+      ]
+    },
+    {
+      "id": 7359741,
+      "name": "Mechanicalchaser",
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A hunter that relentlessly pursues its target by order of the Machine King.",
+      "race": "Machine",
+      "attribute": "DARK",
+      "atk": 1850,
+      "def": 800,
+      "level": 4,
+      "tcgDate": "2002-09-01",
+      "ocgDate": "1999-08-26",
+      "setNames": [
+        "Dark Beginning 2",
+        "Legendary Collection 3: Yugi's World Mega Pack",
+        "Quarter Century Bonanza",
+        "Speed Duel GX: Duel Academy Box",
+        "Structure Deck: Machine Re-Volt",
+        "Tournament Pack: 1st Season",
+        "Tournament Pack: 3rd Season"
+      ],
+      "card_images": [
+        {
+          "id": 7359741,
+          "image_url": "https://images.ygoprodeck.com/images/cards/7359741.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/7359741.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/7359741.jpg"
+        }
+      ]
+    },
+    {
+      "id": 77585513,
+      "name": "Jinzo",
+      "type": "Effect Monster",
+      "humanReadableCardType": "Effect Monster",
+      "frameType": "effect",
+      "desc": "Trap Cards, and their effects on the field, cannot be activated. Negate all Trap effects on the field.",
+      "race": "Machine",
+      "attribute": "DARK",
+      "archetype": "Jinzo",
+      "atk": 2400,
+      "def": 1500,
+      "level": 6,
+      "tcgDate": "2002-10-20",
+      "ocgDate": "2000-09-28",
+      "setNames": [
+        "Anniversary Pack",
+        "Battle Pack: Epic Dawn",
+        "Collectible Tins 2003",
+        "Dark Beginning 1",
+        "Duelist League 3 participation cards",
+        "Duelist Pack: Battle City",
+        "Duelist Saga",
+        "Gold Series",
+        "Legendary Collection 4: Joey's World Mega Pack",
+        "Legendary Decks II",
+        "Legendary Duelists: Rage of Ra",
+        "Mystic Fighters",
+        "Pharaoh's Servant",
+        "Premium Gold",
+        "Quarter Century Bonanza",
+        "Retro Pack 2",
+        "Speed Duel Tournament Pack 5",
+        "Speed Duel: Battle City Box",
+        "Speed Duel: Streets of Battle City",
+        "THANK YOU PACK",
+        "Trials of the Pharaoh - Match of the Millennium & Twisted Nightmares promotional card"
+      ],
+      "card_images": [
+        {
+          "id": 77585513,
+          "image_url": "https://images.ygoprodeck.com/images/cards/77585513.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/77585513.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/77585513.jpg"
+        },
+        {
+          "id": 77585514,
+          "image_url": "https://images.ygoprodeck.com/images/cards/77585514.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/77585514.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/77585514.jpg"
+        }
+      ]
+    },
+    {
+      "id": 5758500,
+      "name": "Soul Release",
+      "type": "Spell Card",
+      "humanReadableCardType": "Normal Spell",
+      "frameType": "spell",
+      "desc": "Target up to 5 cards in any GY(s); banish them.",
+      "race": "Normal",
+      "tcgDate": "2002-06-26",
+      "ocgDate": "1999-09-23",
+      "setNames": [
+        "Dark Beginning 1",
+        "Metal Raiders",
+        "OTS Tournament Pack 25",
+        "Speed Duel GX: Duelists of Shadows",
+        "Speed Duel Starter Decks: Match of the Millennium",
+        "Starter Deck: Pegasus",
+        "The Dark Emperor Structure Deck",
+        "The Secret Forces"
+      ],
+      "card_images": [
+        {
+          "id": 5758500,
+          "image_url": "https://images.ygoprodeck.com/images/cards/5758500.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/5758500.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/5758500.jpg"
+        }
+      ]
+    },
+    {
+      "id": 35975813,
+      "name": "Terrorking Archfiend",
+      "type": "Effect Monster",
+      "humanReadableCardType": "Effect Monster",
+      "frameType": "effect",
+      "desc": "This card cannot be Normal Summoned or Flip Summoned unless you have an Archfiend Monster Card on your side of the field. The controller of this card pays 800 Life Points during each of his/her Standby Phases (this is not optional). When this card is targeted by the effect of a card controlled by your opponent, when resolving the effect, roll a six-sided die. If the result is 2 or 5, negate the effect and destroy the opponent's card. The effects of an Effect Monster that this card destroyed as a result of battle are negated.",
+      "race": "Fiend",
+      "attribute": "DARK",
+      "archetype": "Archfiend",
+      "atk": 2000,
+      "def": 1500,
+      "level": 4,
+      "tcgDate": "2003-12-01",
+      "ocgDate": "2003-02-20",
+      "setNames": [
+        "Dark Crisis",
+        "Dark Revelation Volume 1",
+        "Speed Duel GX: Duelists of Shadows"
+      ],
+      "card_images": [
+        {
+          "id": 35975813,
+          "image_url": "https://images.ygoprodeck.com/images/cards/35975813.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/35975813.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/35975813.jpg"
+        }
+      ]
+    },
+    {
+      "id": 53129443,
+      "name": "Dark Hole",
+      "type": "Spell Card",
+      "humanReadableCardType": "Normal Spell",
+      "frameType": "spell",
+      "desc": "Destroy all monsters on the field.",
+      "race": "Normal",
+      "archetype": "Hole",
+      "tcgDate": "2002-03-08",
+      "ocgDate": "1999-02-04",
+      "setNames": [
+        "2-Player Starter Deck: Yuya & Declan",
+        "2-Player Starter Set",
+        "2025 Mega-Pack Tin",
+        "Battles of Legend: Monstrous Revenge",
+        "Dark Beginning 1",
+        "Dark Legion Starter Deck",
+        "Demo Deck 2016",
+        "Destiny Soldiers",
+        "Gold Series: Haunted Mine",
+        "Legend of Blue Eyes White Dragon",
+        "Legendary Collection 3: Yugi's World Mega Pack",
+        "Legendary Collection 4: Joey's World Mega Pack",
+        "Legendary Hero Decks",
+        "Noble Knights of the Round Table Box Set",
+        "OTS Tournament Pack 12",
+        "OTS Tournament Pack 12 (POR)",
+        "OTS Tournament Pack 23",
+        "Premium Gold: Return of the Bling",
+        "Realm of the Sea Emperor Structure Deck",
+        "Saber Force Starter Deck",
+        "Samurai Warlords Structure Deck",
+        "Space-Time Showdown Power-Up Pack",
+        "Starter Deck: Codebreaker",
+        "Starter Deck: Joey",
+        "Starter Deck: Kaiba",
+        "Starter Deck: Kaiba Reloaded",
+        "Starter Deck: Link Strike",
+        "Starter Deck: Pegasus",
+        "Starter Deck: Yugi",
+        "Starter Deck: Yugi Evolution",
+        "Starter Deck: Yugi Reloaded",
+        "Structure Deck: Fire Kings",
+        "Turbo Pack: Booster Five",
+        "Turbo Pack: Booster Four"
+      ],
+      "card_images": [
+        {
+          "id": 53129443,
+          "image_url": "https://images.ygoprodeck.com/images/cards/53129443.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53129443.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/53129443.jpg"
         }
       ]
     }

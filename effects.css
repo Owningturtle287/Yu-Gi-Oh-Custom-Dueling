@@ -1,0 +1,48 @@
+/* Effects occupy the centre of the table, without stacking a second card reader. */
+dialog:has(.duel-effect-choice-body) {
+  position:fixed; inset:50% auto auto var(--effect-center-x,50%); transform:translate(-50%,-50%);
+  width:min(var(--effect-choice-width,340px),calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 16px));
+  height:auto; max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+  margin:0; padding:0; border:0; border-radius:16px; background:transparent; box-shadow:none; overflow:visible;
+}
+dialog:has(.duel-effect-choice-body)::backdrop { background:#06121c44; backdrop-filter:none; }
+#modal .dialog-body.duel-effect-choice-body {
+  display:grid; grid-template-rows:28px minmax(60px,1fr) auto; justify-items:center; gap:6px;
+  height:min(530px,calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px));
+  min-height:0; padding:0; overflow:visible; background:transparent; border:0;
+}
+.duel-effect-choice-body .dialog-header { width:100%; height:28px; min-height:28px; margin:0; color:#fff; }
+.duel-effect-choice-body .dialog-header h2 { font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:#fff; text-shadow:0 1px 4px #000; }
+.duel-effect-choice-body .dialog-header button { width:28px; min-width:28px; height:28px; min-height:28px; padding:3px; border:0; border-radius:50%; background:#f3f7f6; color:#27485a; }
+.duel-effect-choice-body .duel-response-art { width:auto; height:100%; aspect-ratio:421/614; max-height:250px; margin:0; border-radius:4px; box-shadow:0 6px 22px #0008; }
+.duel-response-caption { display:flex; flex-direction:column; gap:5px; min-width:0; width:100%; padding:10px 12px; border-radius:14px; background:#f7faf9; color:#244456; box-shadow:0 5px 24px #0004; }
+.duel-effect-choice-body .duel-response-copy { gap:2px; flex:none; }
+#modal .duel-effect-choice-body .duel-response-copy h3 { margin:0; font-size:16px; line-height:1.15; color:#233f50; }
+#modal .duel-effect-choice-body .duel-response-copy>small { font-size:10px; color:#7c602d; }
+.duel-effect-choice-body .duel-response-description { flex:none; height:58px; min-height:0; padding:0 5px 0 0; border:0; border-radius:0; background:transparent; font-size:13px; line-height:1.4; color:#345567; overflow:auto; overscroll-behavior:contain; white-space:pre-wrap; }
+.duel-response-context { margin:0; font-size:10px; line-height:1.3; color:#586e7a; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.duel-effect-choice-body .duel-response-options { position:static; width:auto; max-width:100%; min-height:40px; padding:1px; background:transparent; }
+.duel-effect-choice-body .duel-response-options button { width:30px; height:40px; min-height:40px; padding:1px; }
+.duel-effect-choice-body .duel-response-actions { width:100%; padding:0; border:0; gap:5px; }
+.duel-effect-choice-body .duel-response-actions button { min-height:36px; height:36px; padding:4px 6px; font-size:12px; border-radius:8px; }
+.duel-effect-choice-body .duel-response-note { font-size:9px; line-height:1.25; }
+.duel-effect-host { position:absolute; inset:0; z-index:22; pointer-events:none; overflow:hidden; border-radius:inherit; }
+.duel-effect-host:empty { display:none; }
+.duel-effect-spotlight { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:10px; background:radial-gradient(ellipse,#07142299,transparent 70%); }
+.duel-effect-art { position:relative; height:clamp(110px,47dvh,300px); aspect-ratio:421/614; border-radius:4px; overflow:hidden; box-shadow:0 5px 26px #0009,0 0 28px #7fdbc74d; }
+.duel-effect-art>.duel-inspect-full { position:absolute; inset:0; }
+.duel-effect-art img { width:100%; height:100%; object-fit:contain; display:block; }
+.duel-effect-no-art { display:grid; place-items:center; height:100%; background:#244758; color:#e3c477; font-size:42px; }
+.duel-effect-caption { display:flex; flex-direction:column; gap:4px; width:min(360px,90%); padding:10px 13px; border-radius:12px; background:#f7faf9f5; color:#244456; box-shadow:0 5px 22px #0005; text-align:center; }
+.duel-effect-caption small { font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#765497; }
+.duel-effect-caption strong { font-size:16px; line-height:1.15; }
+.duel-effect-caption p { margin:0; font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+[data-effect-stage=resolve] .duel-effect-caption small,[data-effect-stage=ready] .duel-effect-caption small { color:#237457; }
+[data-effect-stage=negated] .duel-effect-caption small { color:#a73f5b; }
+@media (max-height:360px) {
+  .duel-effect-choice-body .duel-response-description { height:44px; font-size:12px; }
+  .duel-response-caption { padding:8px 10px; gap:4px; }
+  .duel-effect-choice-body .duel-response-note { display:none; }
+  .duel-effect-choice-body .duel-response-context { -webkit-line-clamp:1; }
+  .duel-effect-art { position:relative; height:43dvh; }
+}
