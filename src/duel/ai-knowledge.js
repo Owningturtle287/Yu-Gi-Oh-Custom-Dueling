@@ -1,5 +1,7 @@
 // Decision hints, never rulings. The native core alone supplies legal actions
 // and resolves effects. Unknown text receives a conservative, typed fallback.
+import {memoryFor,knownCard} from './ai-memory.js';
+import {decisionGuidance,retentionBonus} from './ai-guidance.js';
 import {effects} from './catalog.js';
 export const AI_NAME='Strategic AI';
 export const allCards=s=>s.players.flatMap(p=>['hand','deck','monsters','spells','grave','banished','extra'].flatMap(z=>p[z].filter(Boolean)).concat(p.field?[p.field]:[]));
@@ -14,8 +16,8 @@ export function zoneOf(s,uid){for(let side=0;side<2;side++)for(const zone of ['h
 export function aiObservation(state,side){
   // In particular, query results for a face-down monster must not leak DEF,
   // effects, ID, race, or disabled status into planning. Deck order is unused.
-  const known=new Set(state.revealedUIDs||[]);
-  const hidden=c=>c?{uid:c.uid,owner:c.owner,controller:c.controller,faceUp:false,position:c.position,hidden:true,card:{name:'Unknown card',type:'Unknown',atk:0,def:0}}:null;
+  const known=new Set(state.version===2?[]:state.revealedUIDs||[]);
+  const hidden=c=>{const remembered=c&&knownCard(state,side,c.uid);if(remembered)return {...c,card:remembered,known:true,hidden:false,disabled:false,currentStats:{atk:Math.max(0,remembered.atk||0),def:Math.max(0,remembered.def||0)}};return c?{uid:c.uid,owner:c.owner,controller:c.controller,faceUp:false,position:c.position,hidden:true,card:{name:'Unknown card',type:'Unknown',atk:0,def:0}}:null;};
   const players=state.players.map((p,index)=>({...p,
     deck:index===side?[...p.deck].sort((a,b)=>String(a.card.id).localeCompare(String(b.card.id))):p.deck.map(hidden),
     hand:p.hand.map(c=>index===side||c.public||known.has(c.uid)?c:hidden(c)),
@@ -25,7 +27,7 @@ export function aiObservation(state,side){
     field:!p.field||index===side||p.field.faceUp?p.field:hidden(p.field),
     banished:p.banished.map(c=>index===side||c.faceUp?c:hidden(c))}));
   // Do not retain backups, hidden logs, or the raw state alongside this view.
-  return {perspective:side,version:state.version,seed:state.seed,serial:state.serial,turn:state.turn,phase:state.phase,active:state.active,winner:state.winner,players,chain:state.chain||[],pending:state.pending,choice:state.choice,window:state.window,battleStep:state.battleStep,battleOptions:state.battleOptions||[],normalSummons:state.normalSummons,turnEffects:state.turnEffects||[],attacksUsed:state.attacksUsed||{}};
+  return {memory:memoryFor(state,side),perspective:side,version:state.version,seed:state.seed,serial:state.serial,turn:state.turn,phase:state.phase,active:state.active,winner:state.winner,players,chain:state.chain||[],pending:state.pending,choice:state.choice,window:state.window,battleStep:state.battleStep,battleOptions:state.battleOptions||[],normalSummons:state.normalSummons,turnEffects:state.turnEffects||[],attacksUsed:state.attacksUsed||{}};
 }
 const profiles=new Map();
 function define(names,intent,extra={}){for(const name of names.split('|'))profiles.set(name,{intent,...extra});}
@@ -60,7 +62,8 @@ define('Black Luster Soldier - Envoy of the Beginning|Chaos Sorcerer','chaos');d
 define("Robbin' Zombie|Robbin' Goblin|Skull Invitation|Coffin Seller|Wave-Motion Cannon|Solar Flare Dragon|Burning Land|Dark Room of Nightmare",'continuous');
 const ops={draw:'draw',upstart:'draw',destroyMonsters:'wipe',storm:'backrowWipe',fissure:'removal',destroy:'backrowRemoval',revive:'revive',control:'control',equip:'equip',field:'field',mirror:'mirror',trapHole:'removal',negateAttack:'protect',waboku:'protect',boost:'boost',negate:'negate',desserts:'burn',gift:'heal',burn:'burn',heal:'heal',continuous:'stall',fusion:'summon',flipDestroy:'removal',bounce:'bounce',recover:'recover',revealDestroy:'backrowRemoval',turnPosition:'position',thunderSearch:'search',tributeBurn:'tributeBurn',tributeBoost:'tributeBoost',coinDestroy:'removal'};
 export function effectProfile(card,detail=''){
-  card=card?.card||card||{};const named=profiles.get(card.name);if(named)return {...named};
+  card=card?.card||card||{};const guided=decisionGuidance(card,detail);if(guided.intent&&guided.intent!=='position')return {...guided};
+  const named=profiles.get(card.name);if(named)return {...named};
   const rule=effects[card.name];if(rule&&ops[rule.op])return {...rule,intent:ops[rule.op]};
   const t=(detail&&!/Choose an effect|Activate this effect|Continue\?/i.test(detail)?detail:card.desc||'').replace(/\s+/g,' ');
   // Prefer the activation's described operation over incidental words in a cost.
@@ -116,7 +119,9 @@ export function costValue(state,side,card){
   let value=resourceValue(state,side,card);
   if(card.controller!==side&&['monsters','spells','field'].includes(zone))return -value;
   if(['grave','banished','deck'].includes(zone))value*=.28;
-  if(['Sangan','Witch of the Black Forest','Night Assailant','Sinister Serpent'].includes(card.card.name)&&!card.disabled)value*=.35;
+  const graveEnabled=!state.players.some(p=>p.monsters.some(c=>c?.faceUp&&!c.disabled&&c.card.name==='Banisher of the Light'));
+  if(['Sangan','Witch of the Black Forest','Night Assailant','Sinister Serpent'].includes(card.card.name)&&!card.disabled&&graveEnabled)value*=.35;
+  value+=retentionBonus(state,side,card);
   const copies=state.players[side].hand.filter(c=>c.card.id===card.card.id).length;if(copies>1)value*=.8;
   return value;
 }

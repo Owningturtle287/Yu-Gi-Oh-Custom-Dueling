@@ -1,4 +1,4 @@
-// Paired, reproducible matches against the frozen v0.2.6 hard policy. This is a
+// Paired, reproducible matches against a frozen prior policy. This is a
 // development benchmark; the product exposes only one AI policy.
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -6,7 +6,11 @@ import {loadCards} from '../src/cards.js';
 import {normalizeCard} from '../src/core.js';
 import {loadNativeRules} from '../src/duel/native-loader.js';
 import {createNativeBackend} from '../src/duel/native-engine.js';
-import {baselineAI} from '../tests/ai-v026-baseline.js';
+import {baselineAI as v026} from '../tests/ai-v026-baseline.js';
+import {chooseAIAction as v027} from '../tests/ai-baselines/v027/native-ai.js';
+import {chooseAIAction} from '../src/duel/native-ai.js';
+const baselineAI=process.env.AI_BENCH_BASELINE==='v026'?v026:v027;
+const weights=process.env.AI_WEIGHTS?JSON.parse(process.env.AI_WEIGHTS):undefined;
 import {generateDeck,expandDeck,defaultSide} from '../src/duel/decks.js';
 const cards=process.env.DUEL_CARD_SNAPSHOT?JSON.parse(await readFile(process.env.DUEL_CARD_SNAPSHOT,'utf8')).data.map(normalizeCard):(await loadCards()).cards;
 const get=name=>{const c=cards.find(c=>c.name===name);assert.ok(c,name);return c;};
@@ -20,7 +24,7 @@ for(const pool of ['constructed','random'])for(let seed=Number(process.env.AI_BE
   let s=await engine.createMatch(decks,{seed,first:seed%2,cards}),count=0;
   try{
     while(s.winner===null&&count++<2500){
-      const side=s.actions[0].length?0:1,start=performance.now(),action=side===newSide?engine.chooseAIAction(s,side):baselineAI(s,side);
+      const side=s.actions[0].length?0:1,start=performance.now(),action=side===newSide?chooseAIAction(s,side,{weights}):baselineAI(s,side);
       if(side===newSide)maxDecisionMs=Math.max(maxDecisionMs,performance.now()-start);
 
       assert.ok(action,JSON.stringify({pool,seed,newSide,phase:s.phase,choice:s.choice?.title}));s=engine.applyAction(s,action,side);
@@ -30,4 +34,4 @@ for(const pool of ['constructed','random'])for(let seed=Number(process.env.AI_BE
     steps+=count;results.push({pool,seed,newSide,winner:s.winner,turn:s.turn,actions:count});
   }finally{engine.destroyMatch(s);}
 }
-console.log(JSON.stringify({matches:results.length,wins,losses,draws,winRate:wins/results.length,actions:steps,maxDecisionMs:Math.round(maxDecisionMs*100)/100,results},null,2));
+console.log(JSON.stringify({baseline:process.env.AI_BENCH_BASELINE||'v027',weights,matches:results.length,wins,losses,draws,winRate:wins/results.length,actions:steps,maxDecisionMs:Math.round(maxDecisionMs*100)/100,results},null,2));

@@ -3,6 +3,7 @@ import { support, ERA_END, isMonster } from './catalog.js';
 import * as nativeEngine from './native-engine.js';
 import { PHASES, PHASE_LABELS } from './engine.js';
 import { chooseAIAction as legacyAI } from './ai.js';
+import { createAIClient } from './ai-client.js';
 import { AI_SPEEDS, decisionDelay, automaticOpeningAction } from './flow.js';
 import { CARD_BACK, planMotion, captureArena, createMotionPlayer } from './motion.js';
 import { groupedLog, logKindLabel } from './log.js';
@@ -30,6 +31,9 @@ const image=card=>{
 export function createSoloController({main,modal,getCards,getDecks,getStatus,showDialog,dialogHeader,closeDialog,toast,onDesign,onKeepDeck,engine=nativeEngine}) {
   const {createMatch,legalActions,applyAction,findCard,stats}=engine;
   const chooseAIAction=engine.chooseAIAction||legacyAI;
+  const aiClient=createAIClient({choose:chooseAIAction});
+  let thinking=0;
+  const cancelThinking=()=>{thinking=0;aiClient.cancel();};
   let config={sides:[defaultSide(),defaultSide()],aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',setsError='',starting=false,selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[],inspectedUid=null,cardGroups=[],cancelArt=()=>{};
   const motion=createMotionPlayer(main), reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
   const attackArrows=createAttackArrows(main);
@@ -43,10 +47,10 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   let portrait=isPortrait();
   const cancelMotion=()=>{motion.cancel();intro.cancel();effects.cancel();};
   const resize=()=>{
-    motion.cancel();intro.cancel();effects.cancel();
+    motion.cancel();intro.cancel();effects.cancel();cancelThinking();
     const changed=portrait!==isPortrait();portrait=isPortrait();
     if(active&&match&&changed){clearTimeout(timer);if(portrait){cancelArt();inspectedUid=null;responseSeen=null;closeDialog();}render();}
-    else if(active&&match)attackArrows.refresh();
+    else if(active&&match){attackArrows.refresh();schedule();}
   };
   window.addEventListener('resize',resize);
   reducedMotion.addEventListener?.('change',cancelMotion);
@@ -133,7 +137,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       const issues=decks.flatMap((deck,side)=>validateDuelDeck(deck,getCards(),config.sides[side]).map(message=>`${side===0?'Your deck':'AI deck'}: ${message}`));
       if(issues.length){showDialog(`${header('Decks need a quick review')}<div class="duel-choice-list" aria-label="Deck issues">${issues.map(issue=>`<p class="support-row">${escape(issue)}</p>`).join('')}</div><button data-action="close">Back to setup</button>`,'duel-list-body');return;}
       const first=config.first==='you'?0:config.first==='ai'?1:seed%2;
-      const next=await createMatch(decks.map(deck=>({...expandDeck(deck,getCards()),name:deck.name})),{seed,first,lp:config.lp,cards:getCards()});
+      const next=await createMatch(decks.map(deck=>({...expandDeck(deck,getCards()),name:deck.name})),{seed,first,lp:config.lp,cards:getCards(),eligibility:config.sides});
       if(!active){engine.destroyMatch?.(next);return;}
       next.deckBackups=decks;terminal.reset();introPending={coin:config.first==='coin',first,lp:config.lp};
       const entry={id:++next.serial,turn:next.turn||1,phase:next.phase,side:first,kind:'phase',uids:[],message:(config.first==='coin'?`Opening coin toss: ${first===0?'Heads':'Tails'}. `:'')+(first===0?'You go first.':'AI goes first.')};next.log.push(entry);next.lastEvent=entry;
@@ -389,7 +393,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function schedule(){
     clearTimeout(timer);
-    if(!active||moving||!match||match.winner!==null||isPortrait())return;
+    if(!active||moving||thinking||!match||match.winner!==null||isPortrait())return;
     if(introPending){resumeOpening();return;}
     if(inspectedUid&&!modal.open){dismissInspection();return;}
     if(modal.open){timer=setTimeout(schedule,100);return;}
@@ -405,7 +409,18 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const automatic=automaticOpeningAction(match,openingTurn);
     if(automatic){timer=setTimeout(()=>{if(!active)return;if(modal.open){schedule();return;}step(automatic);},config.animations&&!reducedMotion.matches?220:20);return;}
     const aiActions=legalActions(match,1);
-    if(aiActions.length){const delay=aiActions.length===1&&aiActions[0].type==='PASS'?(config.animations?90:20):decisionDelay(config.aiSpeed);timer=setTimeout(()=>{if(!active)return;if(modal.open){schedule();return;}const action=chooseAIAction(match,1);if(action)step(action,1);},delay);return;}
+    if(aiActions.length){
+      const delay=aiActions.length===1&&aiActions[0].type==='PASS'?(config.animations?90:20):decisionDelay(config.aiSpeed);
+      timer=setTimeout(async()=>{
+        if(!active)return;if(modal.open){schedule();return;}
+        const current=match,prompt=aiActions.map(a=>a.id).join('|'),token=++presentation;thinking=token;
+        const action=aiActions.length===1?aiActions[0]:match.version===2?await aiClient.decide(match,1):chooseAIAction(match,1);
+        if(thinking!==token)return;thinking=0;
+        if(!active||moving||match!==current||token!==presentation||isPortrait())return;
+        if(modal.open||prompt!==legalActions(match,1).map(a=>a.id).join('|')){schedule();return;}
+        const legal=legalActions(match,1).find(a=>a.id===action?.id);if(legal)step(legal,1);else schedule();
+      },delay);return;
+    }
     const actions=legalActions(match,0);
     if(actions.length===1&&actions[0].type==='PASS')timer=setTimeout(()=>{if(modal.open)schedule();else step(actions[0]);},config.animations?100:20);
   }
@@ -457,7 +472,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(action==='inspect-source'){if(fieldSelection?.sourceUid)inspect(fieldSelection.sourceUid);return;}
     if(action==='duel-menu')duelMenu();if(action==='log')showLog();if(action==='log-latest')jumpToLatest();
     if(action==='toggle-motion'){config.animations=!config.animations;persist();duelMenu();}
-    if(action==='rematch'){engine.destroyMatch?.(match);match=null;terminal.reset();closeDialog();render();}
+    if(action==='rematch'){cancelThinking();engine.destroyMatch?.(match);match=null;terminal.reset();closeDialog();render();}
     if(action==='surrender'){
       showDialog(`${header('Surrender this duel?')}<p>The current match will end. Your saved decks stay on this device.</p><div class="dialog-actions"><button data-action="close">Keep playing</button><button class="danger" data-duel="confirm-surrender">Surrender</button></div>`);
     }
@@ -470,12 +485,12 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   document.addEventListener('click',handleClick);
   return {
     enter(){active=true;render();if(!match&&config.sides.some(s=>s.source==='set')&&setsStatus==='idle')requestSets();},
-    leave(){cancelArt();terminal.pause();attackArrows.sync(null,null,{hidden:true});responseSeen=null;active=false;inspectedUid=null;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');},
+    leave(){cancelThinking();cancelArt();terminal.pause();attackArrows.sync(null,null,{hidden:true});responseSeen=null;active=false;inspectedUid=null;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');},
     refresh:render,
     setDesignedDeck:saveSide,
     getMatch:()=>match,
     getConfig:()=>structuredClone(config),
-    destroy(){engine.destroyMatch?.(match);cancelArt();terminal.destroy();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);reducedMotion.removeEventListener?.('change',cancelMotion);}
+    destroy(){cancelThinking();aiClient.destroy();engine.destroyMatch?.(match);cancelArt();terminal.destroy();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);reducedMotion.removeEventListener?.('change',cancelMotion);}
   };
 }
 function mainPhaseLabel(state){return ['main1','main2'].includes(state.phase)?'Summon, Set, or activate a card. Tap your hand to begin.':state.phase==='battle'?'Tap your Attack Position monster to choose an attack.':state.phase==='end'?'End Phase. Continue to your opponent’s turn.':`${PHASE_LABELS[state.phase]} Phase · continue when ready.`;}

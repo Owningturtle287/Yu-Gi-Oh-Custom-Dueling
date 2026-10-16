@@ -1,6 +1,7 @@
 import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,combatTraits,resourceValue,costValue} from './ai-knowledge.js';
 import {battleOutcome,battlePlan,incomingDamage} from './ai-combat.js';
 import {combatBoostTarget} from './battle-timing.js';
+import {planTurn} from './ai-turn.js';
 
 const harmful=new Set(['removal','backrowRemoval','bounce','harmfulEquip','graveRemoval']);
 const valuable=new Set(['draw','search','recover','revive','control','wipe','mirror','negate']);
@@ -72,10 +73,14 @@ function targetScore(ctx,a,intent,source){
     return value;
   }
   if(intent==='control')return own?-2000:800+valueOf(ctx,c);
+  if(intent==='debuff')return own?-2000:300+attack(c)*.3;
   if(intent==='boost'||intent==='equip')return boostTargetScore(ctx,c,effectProfile(source?.card||source));
   if(intent==='megamorph'){
     const beneficial=ctx.p.lp<ctx.foe.lp;
-    return own===beneficial?valueOf(ctx,c):-2000;
+    if(own!==beneficial)return -2000;
+    const changed={...c,currentStats:{atk:Math.max(0,c.card.atk??attack(c))*(beneficial?2:.5),def:defense(c)}};
+    const gain=own?attack(changed)-attack(c):attack(c)-attack(changed);
+    return valueOf(ctx,c)+gain*.5+(own&&c.position==='attack'&&canBattle(ctx.s)&&attack(changed)>=ctx.foe.lp?100000:0);
   }
   if(intent==='pierce')return own&&c.position==='attack'?attack(c)*.4:-1500;
   if(intent==='position'){
@@ -113,7 +118,7 @@ function choiceIntent(ctx){
   if(/spsummon|special summon/.test(hint))return {intent:'revive',source,profile};
   if(/atohand|add to hand/.test(hint))return {intent:'search',source,profile};
   if(/destroy/.test(hint))return {intent:profile.intent==='backrowRemoval'?'backrowRemoval':'removal',source,profile};
-  if(/equip/.test(hint))return {intent:profile.intent==='control'?'control':'equip',source,profile};
+  if(/equip/.test(hint))return {intent:['control','megamorph','pierce','harmfulEquip'].includes(profile.intent)?profile.intent:'equip',source,profile};
   if(/remove|banish/.test(hint)&&profile.intent==='graveBoost')return {intent:'cost',source,profile};
   return {intent:profile.intent,source,profile};
 }
@@ -149,6 +154,21 @@ function scoreEffect(ctx,a){
     }
     case 'archfiendSupport':utility=monsters(p).some(c=>/Archfiend/.test(c.card.name))?900:-100;break;
     case 'draw':utility=p.deck.length>2?1500:-2000;break;
+    case 'fusionCheat':utility=p.lp>5000&&p.extra.length&&canBattle(s)?150:-800;break;
+    case 'tribe':{
+      const races=[...new Set(opp.filter(c=>c.faceUp&&!c.hidden).map(c=>c.card.race))];
+      utility=Math.max(-1000,...races.map(r=>opp.filter(c=>c.faceUp&&c.card.race===r).reduce((n,c)=>n+valueOf(ctx,c),0)-ours.filter(c=>c.faceUp&&c.card.race===r).reduce((n,c)=>n+valueOf(ctx,c),0)))-150;break;
+    }
+    case 'debuff':{
+      const attacker=locate(s,s.pending?.uid),defender=locate(s,s.pending?.target);
+      if(!attacker||!defender){utility=-300;break;}
+      const target=attacker.controller===side?defender:attacker;
+      const changed={...target,currentStats:{atk:card.name==='Shrink'?Math.floor(attack(target)/2):Math.max(0,attack(target)+(profile.atk||0)),def:defense(target)}};
+      const before=battleOutcome(s,attacker.controller,attacker,defender),after=battleOutcome(s,attacker.controller,attacker.uid===target.uid?changed:attacker,defender.uid===target.uid?changed:defender);
+      utility=(after.value-before.value)*(attacker.controller===side?1:-1)-200;
+      if(attacker.controller!==side&&before.enemyDamage>=p.lp&&after.enemyDamage<p.lp)utility+=100000;
+      break;
+    }
     case 'search':case 'recover':utility=1000;break;
     case 'revive':utility=s.active!==side&&s.phase!=='end'&&!s.pending?-100:bestTarget(ctx,'revive',source)-250;break;
     case 'control':utility=bestTarget(ctx,'control',source)-100;break;
@@ -343,7 +363,7 @@ function scoreChoice(ctx,a){
   }
   return 0;
 }
-export function rankAIActions(state,side=1){
+export function rankAIActions(state,side=1,{planning=true,weights}={}){
   const actions=state.actions?.[side]||[];if(!actions.length)return [];
   const ctx=makeContext(state,side,actions);
   const score=a=>{
@@ -369,6 +389,22 @@ export function rankAIActions(state,side=1){
     if(a.type==='DISCARD')return -costValue(ctx.s,side,locate(ctx.s,a.uid));
     return -20;
   };
-  return actions.map((action,index)=>({action,index,score:score(action)})).sort((a,b)=>b.score-a.score||a.index-b.index);
+  const ranked=actions.map((action,index)=>({action,index,score:score(action)})).sort((a,b)=>b.score-a.score||a.index-b.index);
+  if(planning){
+    const plan=planTurn(ctx.s,side,ranked,{weights});
+    for(const row of ranked){const projection=plan.roots.get(row.action.id);if(!projection)continue;
+      row.projection=projection;row.score=projection.lethal?200000+Math.min(5000,row.score)-projection.steps*20:row.score+Math.max(-1800,Math.min(5000,projection.delta))*.45;
+    }
+    ranked.sort((a,b)=>b.score-a.score||a.index-b.index);
+  }
+  return ranked;
 }
-export function chooseAIAction(state,side=1){return rankAIActions(state,side)[0]?.action||null;}
+export function chooseAIAction(state,side=1,options={}){
+  const ranked=rankAIActions(state,side,options),top=ranked[0];if(!top)return null;
+  // Variety is confined to close, positive, ordinary plays. Required choices,
+  // lethal lines, emergency defenses and target/cost selection stay exact.
+  if(options.variety===false||state.choice||state.window||top.score>=10000||top.score<=0||!['SUMMON','SET','ACTIVATE','EFFECT','ATTACK'].includes(top.action.type))return top.action;
+  const band=Math.min(45,top.score*.035),candidates=ranked.filter(r=>r.score>0&&top.score-r.score<=band&&r.action.type===top.action.type);
+  let hash=2166136261;for(const ch of `${state.seed}|${side}|${state.turn}|${state.phase}|${state.serial}`)hash=Math.imul(hash^ch.charCodeAt(0),16777619);
+  return candidates[(hash>>>0)%candidates.length].action;
+}
