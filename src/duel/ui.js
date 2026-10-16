@@ -30,7 +30,7 @@ const image=card=>{
 export function createSoloController({main,modal,getCards,getDecks,getStatus,showDialog,dialogHeader,closeDialog,toast,onDesign,onKeepDeck,engine=nativeEngine}) {
   const {createMatch,legalActions,applyAction,findCard,stats}=engine;
   const chooseAIAction=engine.chooseAIAction||legacyAI;
-  let config={sides:[defaultSide(),defaultSide()],difficulty:'normal',aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',setsError='',starting=false,selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[],inspectedUid=null,cardGroups=[],cancelArt=()=>{};
+  let config={sides:[defaultSide(),defaultSide()],aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',setsError='',starting=false,selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[],inspectedUid=null,cardGroups=[],cancelArt=()=>{};
   const motion=createMotionPlayer(main), reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
   const attackArrows=createAttackArrows(main);
   const effects=createEffectPlayer({getRoot:()=>main.querySelector('.duel-effect-host')});
@@ -56,7 +56,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }catch{/* corrupt settings never replace saved decks */}
   if(!AI_SPEEDS[config.aiSpeed])config.aiSpeed='normal';
   if(!['coin','you','ai'].includes(config.first))config.first='coin';
-  if(!['easy','normal','hard'].includes(config.difficulty))config.difficulty='normal';
+  delete config.difficulty; // Migrate older settings to the single full-strength policy.
   if(![4000,8000].includes(config.lp))config.lp=8000;
   config.animations=typeof config.animations==='boolean'?config.animations:true;
   // In-memory match survives navigation. Deck/config storage failures are visible.
@@ -87,7 +87,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
         <div class="solo-pool-note"><span class="status-dot"></span><p>${ready?`<strong>${pool.length} supported cards</strong> fit these filters. ${side.source==='saved'?'Your deck will be checked before starting.':'Generated decks have 40 cards, max. 3 copies, and enough low-level monsters.'}`:'Load the card archive to prepare your duel.'}</p></div>
         ${side.source==='saved'?'<p class="solo-note">Design opens the deck builder with playable cards only. Save and return here when ready.</p>':'<p class="solo-note">Set pools may be incomplete after filtering. Uses the offline card scripts and modern card text.</p>'}`:
         `<div class="solo-deck-hero"><div class="solo-sigil" aria-hidden="true">⚔</div><div><h2>Set the challenge.</h2><p>Local AI. Your pace. No account needed.</p></div></div>
-         <div class="solo-settings-grid"><label>AI difficulty<select id="solo-difficulty">${[['easy','Easy'],['normal','Normal'],['hard','Hard']].map(([v,l])=>option(v,l,config.difficulty)).join('')}</select></label><label>AI decision speed<select id="solo-ai-speed">${Object.entries(AI_SPEEDS).map(([key,speed])=>option(key,speed.label,config.aiSpeed)).join('')}</select></label></div><p class="solo-note">Difficulty changes decisions; speed changes the pause between them. AI never sees hidden cards. Animations finish before the next move.</p>
+         <div class="solo-ai-identity"><strong>Strategic AI</strong><span>Always full strength</span></div><label>AI decision speed<select id="solo-ai-speed">${Object.entries(AI_SPEEDS).map(([key,speed])=>option(key,speed.label,config.aiSpeed)).join('')}</select></label><p class="solo-note">Plans attacks, evaluates targets and manages its cards. Speed changes the pause between decisions. The AI uses its own cards and public information.</p>
          <div class="solo-settings-grid"><label>Goes first<select id="solo-first">${[['coin','Coin toss'],['you','You'],['ai','AI']].map(([v,l])=>option(v,l,config.first)).join('')}</select></label><label>Life Points<select id="solo-lp">${[8000,4000].map(n=>option(n,String(n),config.lp)).join('')}</select></label></div>
          <label class="solo-checkbox"><input id="solo-animations" type="checkbox" ${config.animations?'checked':''}> Duel animations</label><p class="solo-note">Your Draw and Standby Phases advance automatically to Main 1. The first player still skips the first draw and Battle Phase. Hand limit: six.</p>`}
       </div>
@@ -96,11 +96,11 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     // Assign values explicitly as well as option attributes, including after a
     // saved deck is created while this screen is unmounted.
     if(tab<2)for(const [id,value] of [['solo-source',side.source],['solo-deck',side.deckId],['solo-set',side.set]]){const select=main.querySelector('#'+id);if(select)select.value=value;}
-    else for(const [id,value] of [['solo-difficulty',config.difficulty],['solo-ai-speed',config.aiSpeed],['solo-first',config.first],['solo-lp',String(config.lp)]])main.querySelector('#'+id).value=value;
+    else for(const [id,value] of [['solo-ai-speed',config.aiSpeed],['solo-first',config.first],['solo-lp',String(config.lp)]])main.querySelector('#'+id).value=value;
     main.querySelector('#solo-source')?.addEventListener('change',event=>{side.source=event.target.value;persist();if(side.source==='set'&&setsStatus==='idle')requestSets();else render();});
     main.querySelector('#solo-deck')?.addEventListener('change',event=>{side.deckId=event.target.value;persist();render();});
     main.querySelector('#solo-set')?.addEventListener('change',event=>{side.set=event.target.value;persist();});
-    for(const [id,key] of [['solo-difficulty','difficulty'],['solo-ai-speed','aiSpeed'],['solo-first','first'],['solo-lp','lp'],['solo-animations','animations']])main.querySelector('#'+id)?.addEventListener('change',event=>{config[key]=key==='lp'?Number(event.target.value):key==='animations'?event.target.checked:event.target.value;persist();});
+    for(const [id,key] of [['solo-ai-speed','aiSpeed'],['solo-first','first'],['solo-lp','lp'],['solo-animations','animations']])main.querySelector('#'+id)?.addEventListener('change',event=>{config[key]=key==='lp'?Number(event.target.value):key==='animations'?event.target.checked:event.target.value;persist();});
   }
   function filters(){
     const side=config.sides[tab],pool=getCards().filter(c=>c.tcgDate&&c.tcgDate<=ERA_END),races=[...new Set(pool.filter(isMonster).map(c=>c.race))].sort();
@@ -405,7 +405,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const automatic=automaticOpeningAction(match,openingTurn);
     if(automatic){timer=setTimeout(()=>{if(!active)return;if(modal.open){schedule();return;}step(automatic);},config.animations&&!reducedMotion.matches?220:20);return;}
     const aiActions=legalActions(match,1);
-    if(aiActions.length){const delay=aiActions.length===1&&aiActions[0].type==='PASS'?(config.animations?90:20):decisionDelay(config.aiSpeed);timer=setTimeout(()=>{if(!active)return;if(modal.open){schedule();return;}const action=chooseAIAction(match,1,config.difficulty);if(action)step(action,1);},delay);return;}
+    if(aiActions.length){const delay=aiActions.length===1&&aiActions[0].type==='PASS'?(config.animations?90:20):decisionDelay(config.aiSpeed);timer=setTimeout(()=>{if(!active)return;if(modal.open){schedule();return;}const action=chooseAIAction(match,1);if(action)step(action,1);},delay);return;}
     const actions=legalActions(match,0);
     if(actions.length===1&&actions[0].type==='PASS')timer=setTimeout(()=>{if(modal.open)schedule();else step(actions[0]);},config.animations?100:20);
   }
@@ -429,7 +429,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   function speedControl(){return `<label class="duel-speed-label">AI decision speed<select id="duel-ai-speed">${Object.entries(AI_SPEEDS).map(([key,speed])=>option(key,speed.label,config.aiSpeed)).join('')}</select></label>`;}
   function duelMenu(){
     motion.cancel();
-    showDialog(`${header('Duel settings')}<div class="duel-menu-kicker">LOCAL SOLO <span>2004 RULES PACK</span></div><p class="duel-menu-match">${escape(match.players[0].name)} <span>vs</span> ${escape(match.players[1].name)} · ${escape(config.difficulty)} AI</p><div class="duel-menu-preferences">${speedControl()}<button class="duel-motion-toggle" data-duel="toggle-motion" aria-pressed="${config.animations}"><span>Card motion</span><b>${config.animations?'On':'Off'}</b></button></div><div class="duel-menu-grid"><button data-duel="log"><i aria-hidden="true">▤</i> Expanded log</button><button data-duel="coverage"><i aria-hidden="true">◇</i> Rules & cards</button><button data-duel-keep="0"><i aria-hidden="true">↓</i> Save your deck</button><button data-duel-keep="1"><i aria-hidden="true">↓</i> Save AI deck</button></div>${responsePolicy.isPassing(match)?'<button class="duel-response-policy" data-duel="ask-again">Passing optional responses this turn <b>Ask again</b></button>':''}<p class="duel-menu-note">Leaving Solo pauses this match. Reloading ends it.</p><div class="duel-menu-footer"><button class="primary" data-action="close">Resume duel</button><button class="danger" data-duel="surrender" ${match.winner!==null?'disabled':''}>Surrender</button></div>`,'duel-menu-body');
+    showDialog(`${header('Duel settings')}<div class="duel-menu-kicker">LOCAL SOLO <span>2004 RULES PACK</span></div><p class="duel-menu-match">${escape(match.players[0].name)} <span>vs</span> ${escape(match.players[1].name)} · Strategic AI</p><div class="duel-menu-preferences">${speedControl()}<button class="duel-motion-toggle" data-duel="toggle-motion" aria-pressed="${config.animations}"><span>Card motion</span><b>${config.animations?'On':'Off'}</b></button></div><div class="duel-menu-grid"><button data-duel="log"><i aria-hidden="true">▤</i> Expanded log</button><button data-duel="coverage"><i aria-hidden="true">◇</i> Rules & cards</button><button data-duel-keep="0"><i aria-hidden="true">↓</i> Save your deck</button><button data-duel-keep="1"><i aria-hidden="true">↓</i> Save AI deck</button></div>${responsePolicy.isPassing(match)?'<button class="duel-response-policy" data-duel="ask-again">Passing optional responses this turn <b>Ask again</b></button>':''}<p class="duel-menu-note">Leaving Solo pauses this match. Reloading ends it.</p><div class="duel-menu-footer"><button class="primary" data-action="close">Resume duel</button><button class="danger" data-duel="surrender" ${match.winner!==null?'disabled':''}>Surrender</button></div>`,'duel-menu-body');
     const select=modal.querySelector('#duel-ai-speed');select.value=config.aiSpeed;
     select.onchange=event=>{config.aiSpeed=event.target.value;persist();schedule();};
   }

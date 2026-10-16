@@ -272,3 +272,7 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
   .deck-tabs button { min-height:40px; height:40px; }
 }
 @media (prefers-reduced-motion:reduce) { .duel-intro-stage,.duel-intro-coin { animation:none!important; transition:none!important; } }
+
+.solo-ai-identity { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid #b7d2c8; border-radius:12px; background:linear-gradient(120deg,#e1f0e8,#f7faf5); color:#245546; }
+.solo-ai-identity strong { font-size:15px; }
+.solo-ai-identity span { font-size:11px; color:#5d6b55; }

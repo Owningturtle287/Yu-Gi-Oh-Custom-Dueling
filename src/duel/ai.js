@@ -2,8 +2,8 @@ import { legalActions, observation, findCard, stats } from './engine.js';
 import { ruleFor, isMonster, isTrap } from './catalog.js';
 import { seededRandom } from './decks.js';
 
-// Difficulty changes risk and action scoring, never starting cards or hidden access.
-export function chooseAIAction(state, side=1, difficulty='normal') {
+// Legacy-engine regression policy. Production Solo uses native-ai.js.
+export function chooseAIAction(state, side=1) {
   const actions=legalActions(state,side);if(!actions.length)return null;
   const view=observation(state,side),player=view.players[side],foe=view.players[1-side];
   const random=seededRandom(state.seed+state.serial*7919+side*13);
@@ -40,7 +40,7 @@ export function chooseAIAction(state, side=1, difficulty='normal') {
         const atk=stats(view,card).atk;
         if(!target)return 12+atk/150;
         const value=strength(target),difference=atk-value;
-        return difference>0?15+difference/150+value/600:difference===0?(target.position==='attack'?3:-4):difficulty==='easy'?2:-15+difference/100;
+        return difference>0?15+difference/150+value/600:difference===0?(target.position==='attack'?3:-4):-15+difference/100;
       }
       case 'EFFECT':
         if(rule.op==='thunderSearch')return 10+action.count;
@@ -90,6 +90,6 @@ export function chooseAIAction(state, side=1, difficulty='normal') {
       default:return -10;
     }
   };
-  const variance=difficulty==='easy'?22:difficulty==='hard'?0:3;
+  const variance=0;
   return actions.map((action,index)=>({action,index,value:score(action)+random()*variance})).sort((a,b)=>b.value-a.value||a.index-b.index)[0].action;
 }

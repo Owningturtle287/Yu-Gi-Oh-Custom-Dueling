@@ -301,7 +301,7 @@ test('card tiles render a third phone column and do not nest compact controls in
 });
 const soloCatalog = Array.from({length:24},(_,index)=>({...cards[0],id:500000+index,name:`Classic warrior ${index}`,type:'Normal Monster',race:'Warrior',attribute:'EARTH',level:4,atk:1000+index*40,def:900,desc:'A classic test warrior.',setNames:['Classic test set'],card_images:[]}));
 async function waitFor(predicate){const end=Date.now()+2000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,10));assert.ok(predicate(),'UI did not reach its expected ready state');}
-test('Solo setup saves independent eligibility, difficulty, saved-deck choices and builder return', async () => {
+test('Solo setup has one AI policy and saves independent eligibility, speed, saved decks and builder return', async () => {
   const {window,app,$}=await boot('solo-setup',null,false,soloCatalog);
   const change=(selector,value)=>{const input=$(selector);input.value=value;input.dispatchEvent(new window.Event('change',{bubbles:true}));};
   try{
@@ -312,14 +312,14 @@ test('Solo setup saves independent eligibility, difficulty, saved-deck choices a
     $('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
     let config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
     assert.equal(config.sides[1].race,'Warrior');assert.equal(config.sides[1].traps,false);assert.equal(config.sides[0].race,'');
-    $('[data-duel-tab="2"]').click();change('#solo-difficulty','hard');change('#solo-ai-speed','relaxed');change('#solo-first','you');
+    $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-identity').textContent,/Strategic AI.*Always full strength/);change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
     assert.equal(app.state.route,'decks');assert.match($('.duel-design-banner').textContent,/AI Solo deck/);
     assert.equal(app.state.draft.releaseYear,2004);assert.equal(app.state.filtered.length,24);
     $('.card-tile [data-quick-add]').click();$('[data-action="return-solo"]').click();
     assert.equal(app.state.route,'solo');assert.equal($('#solo-source').value,'saved');
     config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
-    assert.equal(config.difficulty,'hard');assert.equal(config.sides[1].deckId,app.state.draft.id);
+    assert.equal(config.difficulty,undefined);assert.equal(config.sides[1].deckId,app.state.draft.id);
     assert.equal(config.aiSpeed,'relaxed');
     $('[data-duel="start"]').click();assert.match($('#modal').textContent,/AI deck: Main Deck needs 40–60/);
   }finally{app.navigate('home');window.close();}
