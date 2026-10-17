@@ -83,7 +83,10 @@ async function rig({width=1024,height=768,animations=false,opening=false}={}){
 test('Attack shortcut selects a highlighted Set monster on the board without a target list',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster),target=put(s,1,{...monster,name:'Secret defender'},'monsters',{faceUp:false,position:'defense'});put(s,1,monster);r.controller.refresh();
-    r.$(`[data-duel-quick="${attacker.uid}"]`).click();assert.equal(r.modal.hasAttribute('open'),false);assert.equal(r.$('.duel-arena').dataset.selecting,'true');
+    const shortcut=r.$(`[data-duel-quick="${attacker.uid}"]`),art=r.$(`[data-duel-card="${attacker.uid}"]`);
+    assert.ok(shortcut.closest('.duel-card-rail'));assert.ok(shortcut.querySelector('svg'));assert.match(shortcut.getAttribute('aria-label'),/Attack with Warrior/);
+    assert.equal(art.querySelector('.duel-inline-actions,.duel-card-stats,.duel-activity-tag'),null,'The card face contains only its artwork');
+    shortcut.click();assert.equal(r.modal.hasAttribute('open'),false);assert.equal(r.$('.duel-arena').dataset.selecting,'true');
     assert.equal(r.window.document.querySelectorAll('.opponent .duel-zone[data-role="eligible"]').length,2);
     assert.doesNotMatch(r.main.textContent,/Secret defender/);assert.match(r.$(`[data-duel-card="${target.uid}"]`).getAttribute('aria-label'),/Legal target.*face-down.*ATK \? DEF \?/);
     r.$(`[data-duel-card="${target.uid}"]`).click();assert.equal(r.controller.getMatch().pending.target,target.uid);
@@ -202,12 +205,13 @@ test('all twenty zones and both rows keep their grid display across landscape ph
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     for(const [width,height] of [[568,320],[667,375],[844,390],[932,430],[1024,768]]){
       rotate(r,width,height);
+      const table=r.$('.duel-table');assert.equal(table.dataset.fitSize,`${width}:${height}`);assert.ok(parseFloat(table.style.getPropertyValue('--card-height'))>32);
       assert.equal(r.$('.duel-arena').hidden,false,`${width}×${height}`);
       assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
       assert.equal(r.main.querySelectorAll('[data-pile-zone]').length,10);
       for(const board of r.main.querySelectorAll('.duel-board')){
         const computed=r.window.getComputedStyle(board);assert.equal(computed.display,'grid',`${width}×${height}: both board containers must use grid`);
-        assert.equal(computed.gridTemplateRows,'repeat(2,minmax(0,1fr))');assert.equal(computed.gridColumn,'2');assert.equal(computed.gridRow,'1');
+        assert.match(computed.gridTemplateRows,/px/);assert.equal(computed.gridColumn,'2');assert.equal(computed.gridRow,'1');
       }
       for(const row of r.main.querySelectorAll('.monster-zones, .backrow-zones'))assert.equal(r.window.getComputedStyle(row).display,'grid',`${width}×${height}: each row is present`);
       assert.equal(r.main.querySelectorAll('.duel-table .duel-life').length,2);
@@ -220,7 +224,7 @@ test('the game mats oppose vertically and mirror auxiliary and pile positions fo
   const r=await rig();try{
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const computed=selector=>r.window.getComputedStyle(r.$(selector));
-    assert.equal(computed('.opponent-side').gridRow,'1');assert.equal(computed('.player-side').gridRow,'3');
+    assert.equal(computed('.opponent-side').gridRow,'1');assert.equal(computed('.player-side').gridRow,'2');
     for(const [prefix,leftColumn,rightColumn,auxAreas,pileAreas] of [['.player-side','1','3','"field" "extra"','"grave" "deck"'],['.opponent-side','3','1','"extra" "field"','"deck" "grave"']]){
       assert.equal(computed(prefix+' .duel-auxiliary-zones').gridColumn,leftColumn);
       assert.equal(computed(prefix+' .duel-pile-zones').gridColumn,rightColumn);
@@ -235,8 +239,8 @@ test('the game mats oppose vertically and mirror auxiliary and pile positions fo
     assert.ok(r.$('.duel-hand').closest('.player-side'));assert.ok(r.$('.duel-opponent-hand').closest('.opponent-side'));
     assert.equal(computed('.duel-hand-area').gridRow,'2');assert.equal(computed('.duel-opponent-hand').gridRow,'1');
     assert.equal(computed('.opponent-side .duel-mat').gridRow,'2');
-    assert.equal(computed('.opponent-side').gridTemplateRows,'clamp(36px,10dvh,60px) minmax(0,1fr)');
-    assert.equal(r.$('.duel-center-line').contains(r.$('.duel-phases')),true);
+    assert.equal(computed('.opponent-side').gridTemplateRows,r.$('.duel-table').style.getPropertyValue('--ai-hand-size')+' minmax(0,1fr)');
+    assert.equal(r.$('.duel-phase-rail').contains(r.$('.duel-phases')),true);
     assert.ok(r.$('.duel-table').contains(r.$('.duel-controls')));
   }finally{r.close();}
 });
@@ -247,7 +251,7 @@ test('separate Deck, Graveyard and Extra Deck zones open the correct pile and pr
     const secret=put(s,1,{...monster,name:'Private AI Fusion',type:'Fusion Monster',card_images:[{image_url_small:'https://images.ygoprodeck.com/images/cards_small/12345678.jpg'}]},'extra');
     r.controller.refresh();
     assert.doesNotMatch(r.main.innerHTML,/Private AI Fusion|12345678.jpg/);
-    const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,recent.uid);assert.equal(grave.querySelector('.duel-pile-count').textContent,'2');grave.click();
+    const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,recent.uid);assert.equal(grave.closest('.duel-zone-shell').querySelector('.duel-pile-count').textContent,'2');grave.click();
     assert.match(r.modal.querySelector('h2').textContent,/Your Graveyard/);
     assert.deepEqual([...r.modal.querySelectorAll('.duel-public-card')].map(node=>node.dataset.duelCard),[recent.uid,old.uid]);
     assert.equal(r.modal.querySelector('.duel-pile-tabs'),null);assert.equal(r.modal.querySelector('[data-duel-pile]'),null);
@@ -273,7 +277,7 @@ test('resolved card movement updates the actual Graveyard stack and its public p
     const s=r.controller.getMatch(),source=put(s,0,mst,'hand'),target=put(s,1,trap,'spells',{faceUp:false,setTurn:0});
     r.controller.refresh();r.$(`[data-duel-quick="${source.uid}"]`).click();r.$(`[data-duel-card="${target.uid}"]`).click();
     await waitFor(()=>r.controller.getMatch().players[0].grave.some(card=>card.uid===source.uid)&&r.$('.duel-arena').dataset.moving==='false');
-    const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,source.uid);assert.equal(grave.querySelector('.duel-pile-count').textContent,'1');
+    const grave=r.$('[data-motion-zone="0:grave"]');assert.equal(grave.dataset.motionUid,source.uid);assert.equal(grave.closest('.duel-zone-shell').querySelector('.duel-pile-count').textContent,'1');
     assert.equal(r.$('[data-motion-zone="1:grave"]').dataset.motionUid,target.uid);
     grave.click();assert.match(r.modal.textContent,/Mystical Space Typhoon/);
   }finally{r.close();}
@@ -299,13 +303,13 @@ test('Banished zones flank each Graveyard and update after an actual banishing e
     for(const side of [0,1]){
       const grave=r.$(`[data-motion-zone="${side}:grave"]`).closest('.duel-grave-group'),banished=r.$(`[data-motion-zone="${side}:banished"]`);
       assert.equal(banished.closest('.duel-grave-group'),grave);
-      assert.equal(r.window.getComputedStyle(banished.closest('[data-pile-zone]')).gridColumn,side?'1':'2');
-      for(const pile of grave.children)assert.equal(r.window.getComputedStyle(pile).gridRow,'1','Mirrored columns must share a row instead of auto-placing the second pile below');
+      assert.equal(r.window.getComputedStyle(banished.closest('[data-pile-zone]')).position,'absolute');
+      assert.equal(r.window.getComputedStyle(grave.querySelector('[data-pile-zone=grave]')).gridColumn,'1');
     }
     r.$(`[data-duel-quick="${source.uid}"]`).click();r.$(`[data-duel-card="${target.uid}"]`).click();
     await waitFor(()=>r.controller.getMatch().players[0].banished.some(card=>card.uid===source.uid)&&r.$('.duel-arena').dataset.moving==='false');
     for(const [side,uid] of [[0,source.uid],[1,target.uid]]){
-      const tile=r.$(`[data-motion-zone="${side}:banished"]`);assert.equal(tile.dataset.motionUid,uid);assert.equal(tile.querySelector('.duel-pile-count').textContent,'1');
+      const tile=r.$(`[data-motion-zone="${side}:banished"]`);assert.equal(tile.dataset.motionUid,uid);assert.equal(tile.closest('.duel-zone-shell').querySelector('.duel-pile-count').textContent,'1');
       assert.equal(r.controller.getMatch().players[side].grave.length,0);
     }
     r.$('[data-motion-zone="0:banished"]').click();assert.match(r.modal.querySelector('h2').textContent,/Your Banished/);assert.match(r.modal.textContent,/Mystical Space Typhoon/);
@@ -422,7 +426,7 @@ test('expanded mats, bounded stats, and POV life corners hold at phone and table
         assert.equal(r.window.getComputedStyle(side.querySelector('.duel-mat')).width,'100%','Mats must use the full available field width');
       }
       for(const bar of r.main.querySelectorAll('.duel-card-stats')){
-        const css=r.window.getComputedStyle(bar);assert.equal(css.gridTemplateColumns,'repeat(2,minmax(0,1fr))');assert.equal(css.width,'100%');assert.equal(css.overflow,'hidden');assert.equal(css.contain,'paint');
+        const css=r.window.getComputedStyle(bar);assert.ok(['repeat(2,minmax(0,1fr))','minmax(0,1fr)'].includes(css.gridTemplateColumns));assert.ok(['100%','24px'].includes(css.width));assert.equal(css.overflow,'hidden');assert.equal(css.contain,'paint');
         assert.equal(bar.querySelectorAll('small').length,2);assert.equal(parseFloat(r.window.getComputedStyle(bar.querySelector('span')).minWidth),0);
       }
       const yours=r.window.getComputedStyle(r.$('.player-life')),foe=r.window.getComputedStyle(r.$('.opponent-life'));
