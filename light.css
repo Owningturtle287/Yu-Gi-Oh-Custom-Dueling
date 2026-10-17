@@ -1,4 +1,4 @@
-/* Shared daylight surfaces. The playing mat retains its own night palette. */
+/* Shared daylight surfaces for menus and the full-screen duel mat. */
 :root {
   color-scheme:light;
   --bg:#eef3f5; --panel:#fff; --panel2:#e5eeef; --line:#c8d5dd;
@@ -164,15 +164,15 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .supported { color:#26724d; } .unsupported { color:#a13951; }
 .support-row { border-color:#d4dfe5; }
 
-/* Preserve field contrast independently of the daylight app and dialog colors. */
+/* The arena shares the daylight palette, with its own jade and plum cues. */
 .duel-session {
-  color-scheme:dark; --bg:#090f1d; --panel:#18253b; --panel2:#233449; --line:#34445b;
-  --text:#eaf0f1; --muted:#b0bdd0; --teal:#7ce5d1; --gold:#f0cd82;
-  --danger:#ffa3ad; --violet:#b7a6ff; --rose:#f7a2c0; color:var(--text);
+  color-scheme:light; --bg:#e5eeeb; --panel:#fbfdf9; --panel2:#e0ece4; --line:#b0c7bc;
+  --text:#284b3f; --muted:#557364; --teal:#176d5f; --gold:#805c25;
+  --danger:#a13e4d; --violet:#76558e; --rose:#94446c; color:var(--text);
 }
-.duel-playing body { background:#09131e; }
-.duel-session .primary { color:#0b2825; }
-.duel-session .primary:hover:not(:disabled) { background:#a0ead7; }
+.duel-playing body { background:#e5eeeb; }
+.duel-session .primary { color:#fff; background:#176d5f; border-color:#176d5f; }
+.duel-session .primary:hover:not(:disabled) { background:#10574c; }
 
 /* Every in-duel sheet shares the same light surface and readable action colors. */
 #modal .dialog-body { color:#1d394c; background:linear-gradient(145deg,#fff,#eef5f3); border-color:#c0d3cf; }
@@ -276,3 +276,51 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .solo-ai-identity { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid #b7d2c8; border-radius:12px; background:linear-gradient(120deg,#e1f0e8,#f7faf5); color:#245546; }
 .solo-ai-identity strong { font-size:15px; }
 .solo-ai-identity span { font-size:11px; color:#5d6b55; }
+
+/* Daylight arena: ivory surfaces, jade geometry and muted plum opposition. */
+.duel-table { border-color:#aec6c0; background:radial-gradient(ellipse at 50% 48%,#cee1d8aa,transparent 68%),repeating-linear-gradient(135deg,transparent,transparent 28px,#648f7b06 28px,#648f7b06 29px),linear-gradient(155deg,#f8fbf8,#e4efeb 55%,#f3f5ef); box-shadow:inset 0 0 32px #90b2a31a; }
+.duel-zone { color:#769d91; border-color:#98b8ad; background:#ffffff70; box-shadow:inset 0 1px 7px #4d816f08; }
+.opponent .duel-zone { border-color:#b1a5bd; background:#f5f1f884; }
+.duel-zone.occupied { border-color:#658e81; background:#e8f0eb; }
+.duel-field-zone { border-color:#8db09d; background:#e4efdf88; }
+.duel-pile-zone { border-color:#bbaa83; background:#f2eddf88; }
+[data-pile-zone=banished] .duel-zone { border-color:#ac93b5; background:#f3ebf288; }
+.duel-empty-mark { color:#8ba79c; opacity:.75; }
+.duel-card-visual { box-shadow:0 2px 4px #31534635; }
+.duel-hand-card { border-color:#a5beb4; background:#ffffffaa; box-shadow:0 2px 5px #31534618; }
+.duel-empty-hand { color:#607c70; }
+.duel-pile-count { background:#f7f2df; border-color:#bba16a; color:#785825; }
+.duel-card-stats { background:#f7fbf7f2; color:#567263; border:1px solid #bed1c5; }
+.duel-card-stats b { color:#294c40; }
+.duel-life { color:#1a5d4b; border-color:#9bbeb0; background:linear-gradient(120deg,#fff,#deeee5); box-shadow:0 2px 6px #305e4d10; }
+.duel-life.opponent-life { color:#884368; border-color:#c7a9bd; background:linear-gradient(120deg,#fff,#eee3ed); }
+.duel-life-meter { background:#c8d9d0; }
+.duel-life-meter>i { background:linear-gradient(90deg,#88bca4,#247a5e); }
+.opponent-life .duel-life-meter>i { background:linear-gradient(90deg,#cfacc1,#9b4c77); }
+.duel-turn { color:#7f5c27; }
+.duel-turn span { color:#4e7064; }
+.duel-exit,.duel-utility-actions button { background:#ffffffe8; border-color:#b6ccc4; color:#365f51; box-shadow:0 2px 7px #426e5e12; }
+.duel-action-area>.duel-prompt { color:#3c6153; }
+.duel-controls button { background:#fbfdfbee; color:#355d4f; border-color:#b0c9bd; }
+.duel-controls .primary { background:#176d5f; color:#fff; border-color:#176d5f; }
+.duel-controls .duel-cancel-choice { color:#a13e4d; border-color:#d6aeb5; background:#fff3f3; }
+.duel-phases li { color:#72887e; background:#eef4ed; border-color:#c2d1c6; }
+.duel-phases .complete { color:#3f7761; border-color:#97b8a3; background:#e3efe4; }
+.duel-phases [aria-current] { color:#79551a; border-color:#b99b5b; background:linear-gradient(110deg,#fbf3d8,#eee4c2); box-shadow:0 1px 7px #8f76491a; }
+.duel-zone.actionable,.duel-hand-card.actionable { border-color:#41866b; box-shadow:inset 0 0 0 1px #41866b55; }
+.duel-zone[data-role=eligible],.duel-life[data-role=eligible],.duel-field-zone[data-role=eligible] { border-color:#168056; background-color:#deefdf; box-shadow:0 0 0 2px #26865b77,0 0 10px #4d956a40; }
+.duel-zone[data-role=selected] { border-color:#467ca5; box-shadow:0 0 0 2px #467ca588; }
+.duel-quick-action.attack { color:#805014; background:#fff0c9; border-color:#c7a467; }
+.duel-quick-action.effect { color:#654185; background:#f1e8fa; border-color:#b19ac6; }
+.duel-quick-action.flip { color:#1c6c4d; background:#e4f3e5; border-color:#82b89b; }
+.duel-hud .duel-response-policy { color:#715721; border-color:#d4c59a; background:#fff6da; }
+.duel-hud .duel-response-policy b { color:#276b54; }
+.duel-orientation p { color:#526f63; }
+.duel-reveal-caption,.duel-reveal-footer span { color:#567267; }
+.duel-reveal-list button { background:#f6faf7; border-color:#c1d2c8; color:#325644; }
+.duel-reveal-list button[aria-pressed=true] { border-color:#287b60; background:#deeee3; box-shadow:inset 0 0 0 1px #287b60; }
+.duel-reveal-inspector { color:#315643; }
+.duel-reveal-inspector .effect-text { color:#3f6154; background:#f1f6f0; }
+
+#modal:has(.duel-reveal-body) { width:min(700px,calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 24px)); max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px); border-radius:18px; }
+#modal .duel-reveal-body { width:100%; max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); padding:12px; gap:8px; }

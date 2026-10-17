@@ -230,14 +230,14 @@ test('the game mats oppose vertically and mirror auxiliary and pile positions fo
     }
     assert.deepEqual([...r.main.querySelectorAll('.opponent .monster-zones .duel-zone')].map(node=>node.dataset.motionZone),[4,3,2,1,0].map(index=>'1:monsters:'+index));
     assert.deepEqual([...r.main.querySelectorAll('.yours .monster-zones .duel-zone')].map(node=>node.dataset.motionZone),[0,1,2,3,4].map(index=>'0:monsters:'+index));
-    assert.equal(r.$('.duel-console').contains(r.$('.duel-hand')),false);
+    assert.equal(r.$('.duel-console'),null);
     assert.equal(r.$('.duel-table').contains(r.$('.duel-hand')),true);
     assert.ok(r.$('.duel-hand').closest('.player-side'));assert.ok(r.$('.duel-opponent-hand').closest('.opponent-side'));
     assert.equal(computed('.duel-hand-area').gridRow,'2');assert.equal(computed('.duel-opponent-hand').gridRow,'1');
     assert.equal(computed('.opponent-side .duel-mat').gridRow,'2');
-    assert.equal(computed('.opponent-side').gridTemplateRows,'clamp(44px,11dvh,60px) minmax(0,1fr)');
+    assert.equal(computed('.opponent-side').gridTemplateRows,'clamp(36px,10dvh,60px) minmax(0,1fr)');
     assert.equal(r.$('.duel-center-line').contains(r.$('.duel-phases')),true);
-    assert.equal(r.$('.duel-console').contains(r.$('.duel-phases')),false);
+    assert.ok(r.$('.duel-table').contains(r.$('.duel-controls')));
   }finally{r.close();}
 });
 test('separate Deck, Graveyard and Extra Deck zones open the correct pile and preserve private contents',async()=>{
@@ -334,7 +334,7 @@ test('hand inspection shows art and readable description together above actions,
     const uid=r.controller.getMatch().players[0].hand[0].uid,name=r.controller.getMatch().players[0].hand[0].card.name;
     r.$(`[data-duel-card="${uid}"]`).click();assert.equal(r.modal.hasAttribute('open'),true);
     assert.equal(r.modal.querySelector('h2').textContent,name);assert.equal(r.$('.duel-card-reader'),null);
-    assert.equal(r.main.querySelector('.duel-selected-card'),null);assert.ok(r.$('.duel-terminal'));
+    assert.equal(r.main.querySelector('.duel-selected-card'),null);assert.equal(r.$('.duel-terminal'),null);assert.ok(r.$('[data-duel="log"]'));
     const art=r.$('.duel-inspect-art').firstChild;
     assert.match(r.$('.duel-inspect-description').textContent,/classic warrior/);
     assert.equal(r.$('.duel-inspect-description').getAttribute('tabindex'),'0');
@@ -374,16 +374,16 @@ test('off-field choices retain exact actions when the arena refreshes behind the
   }finally{r.close();}
 });
 
-test('phase changes preserve every unchanged field, hand, pile image and the terminal scroll node',async()=>{
+test('phase changes preserve every unchanged field, hand and pile image',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch(),shown=put(s,0,{...monster,card_images:[{image_url_small:'https://images.ygoprodeck.com/images/cards_small/123.jpg'}]}),set=put(s,1,monster,'monsters',{faceUp:false,position:'defense'});
     r.controller.refresh();
-    const image=r.$(`[data-duel-card="${shown.uid}"] img`),back=r.$(`[data-duel-card="${set.uid}"] img`),hand=r.$('.duel-hand-card'),pile=r.$('[data-motion-zone="0:deck"] img'),terminal=r.$('[data-live-terminal]');
+    const image=r.$(`[data-duel-card="${shown.uid}"] img`),back=r.$(`[data-duel-card="${set.uid}"] img`),hand=r.$('.duel-hand-card'),pile=r.$('[data-motion-zone="0:deck"] img');
     let sourceWrites=0;const observer=new r.window.MutationObserver(records=>{sourceWrites+=records.filter(record=>record.attributeName==='src').length;});observer.observe(image,{attributes:true});
     r.$('[data-duel="next"]').click();
     await waitFor(()=>r.controller.getMatch().phase==='main2'&&!r.controller.getMatch().window&&r.$('.duel-arena').dataset.moving==='false');
     assert.equal(r.$(`[data-duel-card="${shown.uid}"] img`),image);assert.equal(r.$(`[data-duel-card="${set.uid}"] img`),back);
-    assert.equal(r.$('.duel-hand-card'),hand);assert.equal(r.$('[data-motion-zone="0:deck"] img'),pile);assert.equal(r.$('[data-live-terminal]'),terminal);
+    assert.equal(r.$('.duel-hand-card'),hand);assert.equal(r.$('[data-motion-zone="0:deck"] img'),pile);
     assert.equal(sourceWrites,0);assert.equal(image.getAttribute('loading'),'eager');observer.disconnect();
     assert.equal(r.$('.duel-phases [aria-current]').textContent,'M2Main 2');
   }finally{r.close();}
@@ -398,12 +398,12 @@ test('inspection immediately uses the field thumbnail; closing by the dialog clo
     await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);
   }finally{r.close();}
 });
-test('terminal presentation is scrollable with a large effect reader and smaller noninteractive LP',async()=>{
+test('on-demand log replaces the terminal while card descriptions and LP remain accessible',async()=>{
   const r=await rig();try{
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const computed=selector=>r.window.getComputedStyle(r.$(selector));
-    assert.equal(computed('.duel-terminal-scroll').overflowY,'auto');assert.equal(computed('.duel-terminal-scroll').overflowX,'hidden');
-    assert.equal(r.$('[data-live-terminal]').getAttribute('aria-live'),'off');assert.equal(r.$('[data-terminal-announcement]').getAttribute('aria-live'),'polite');
+    assert.equal(r.$('[data-live-terminal]'),null);assert.equal(r.$('.duel-console'),null);
+    r.$('[data-duel="log"]').click();assert.equal(computed('.duel-log').overflowY,'auto');r.$('[data-action="close"]').click();
     assert.equal(computed('.duel-life').minHeight,'32px');
     r.$('.duel-hand-card').click();
     assert.equal(computed('.duel-inspect-description').fontSize,'14px');assert.equal(computed('.duel-inspect-description').overflowY,'auto');

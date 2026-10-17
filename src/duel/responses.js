@@ -41,6 +41,13 @@ export function createResponsePolicy() {
     isPassing(state) {sync(state); return passing;},
     passTurn(state) {sync(state); passing = true;},
     askAgain() {passing = false;},
-    action(state, actions) {sync(state); return passing ? responseOffer(state, actions)?.pass || null : null;}
+    action(state, actions) {
+      sync(state);
+      // Auto-pass reduces idle phase interruptions, never hides an attack,
+      // summon response, active chain or optional triggered effect.
+      const event=state.window?.event?.kind;
+      const important=state.pending?.kind==='attack'||!!state.battleStep||state.choice?.optionalResponse||['attack','summon','chain'].includes(event)||state.chain.length>0;
+      return passing&&!important?responseOffer(state, actions)?.pass||null:null;
+    }
   };
 }

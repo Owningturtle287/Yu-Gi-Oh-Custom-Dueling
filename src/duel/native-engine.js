@@ -43,7 +43,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const errors=[];
     const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:[BigInt(seed>>>0||1),2n,3n,4n],team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
     if(!handle)throw new Error('The duel rules engine could not start.');
-    const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
+    const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,revealSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
     r.reason=Object.fromEntries([...scripts['constant.lua'].matchAll(/^REASON_(\w+)\s*=\s*(0x[\da-f]+|\d+)/gmi)].map(([,key,value])=>[key,Number(value)]));
     r.side=team=>team===0?first:1-first;r.team=side=>side===first?0:1;
     r.state={aiMemory:createAIMemory(cards,eligibility),version:2,runtimeId:id,players:decks.map(d=>({...emptyPlayer(d.name),lp})),turn:0,normalSummons:[0,0],active:first,phase:'draw',seed:seed>>>0,serial:0,log:[],lastEvent:null,winner:null,chain:[],window:null,pending:null,choice:null,actions:[[],[]],visualAction:null};
@@ -92,6 +92,23 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   function cardAt(r,loc){
     if(!loc)return null;const p=r.state.players[r.side(loc.controller)],L=r.module.OcgLocation;
     return loc.location===L.SZONE&&loc.sequence===5?p.field:(p[{[L.DECK]:'deck',[L.HAND]:'hand',[L.MZONE]:'monsters',[L.SZONE]:'spells',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'}[loc.location]]||[])[loc.sequence]||null;
+  }
+  function confirmCards(r,msg){
+    const s=r.state,L=r.module.OcgLocation,viewer=r.side(msg.player),source=effectSource(r);
+    const deck=msg.cards.length>0&&msg.cards.every(c=>c.location===L.DECK&&c.controller===msg.cards[0].controller);
+    const topFirst=deck&&source?.card.id===17092736;
+    const ordered=topFirst?[...msg.cards].sort((a,b)=>b.sequence-a.sequence):msg.cards;
+    const cards=ordered.map(item=>{
+      const old=cardAt(r,item),card=descriptor(r,item.code||old?.coreCode),instance={uid:old?.coreCode===item.code?old.uid:null,card,controller:r.side(item.controller)};
+      if(instance.uid){rememberCard(s,viewer,instance,deck?'deck':item.location===L.HAND?'hand':'spells',{hand:item.location===L.HAND});if(viewer===0){s.revealedUIDs??=[];s.revealedUIDs.push(instance.uid);}}
+      return {...instance,sequence:item.sequence,zone:deck?'deck':item.location===L.HAND?'hand':'field'};
+    });
+    if(deck){
+      s.reveals??=[];
+      const id=`${r.id}:reveal:${++r.revealSequence}`;
+      s.reveals.push({id,viewer,ordered:topFirst,source:source?.card||null,cards});
+      log(r,`${source?.card.name||'The effect'}: ${who(viewer)} ${viewer===0?'view':'views'} ${topFirst?'the top ':''}${cards.length} ${topFirst?'':'revealed '}card${cards.length===1?'':'s'} from ${cards[0].controller===0?'your':'AI’s'} Deck${topFirst?', in order. The Deck order is unchanged.':'.'}`,'reveal',[],viewer);
+    }else for(const c of cards)log(r,'Revealed '+c.card.name+'.','reveal',[c.uid].filter(Boolean),c.controller);
   }
   function descriptor(r,code){
     if(r.preferred.has(code))return r.preferred.get(code);
@@ -195,7 +212,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       case T.ATTACK_DISABLED:log(r,`${findCard(s,r.lastAttack?.uid)?.card.name||'The monster'}’s attack was negated${effectName(r)?' by '+effectName(r):''}; this attack will not deal battle damage.`,'battle');s.pending=null;s.battleStep=null;r.lastAttack=null;r.battleStrike=null;break;
       case T.DAMAGE_STEP_START:battleStep(r,'start');break;
       case T.DAMAGE_STEP_END:commitStrike(r);s.pending=null;r.lastAttack=null;battleStep(r,null);log(r,'Damage Step complete. Return to the Battle Step.','timing');break;
-      case T.CONFIRM_CARDS:for(const item of msg.cards){const card=cardAt(r,item);if(card){rememberCard(s,r.side(msg.player),card,({[m.OcgLocation.HAND]:'hand',[m.OcgLocation.DECK]:'deck',[m.OcgLocation.MZONE]:'monsters',[m.OcgLocation.GRAVE]:'grave'})[item.location]||'spells',{hand:item.location===m.OcgLocation.HAND});s.revealedUIDs??=[];s.revealedUIDs.push(card.uid);log(r,'Revealed '+card.card.name+'.','reveal',[card.uid],r.side(item.controller));}}break;
+      case T.CONFIRM_CARDS:confirmCards(r,msg);break;
       case T.BECOME_TARGET:{const cards=msg.cards.map(loc=>({card:cardAt(r,loc),loc}));for(const {card,loc} of cards){const name=card&&(r.side(loc.controller)===0||card.faceUp||card.public||loc.location===m.OcgLocation.GRAVE)?card.card.name:'a face-down card';log(r,`${effectName(r)||'The effect'} targets ${name}${loc.location===m.OcgLocation.MZONE?` in ${r.side(loc.controller)===0?'your':'AI’s'} Monster Zone ${loc.sequence+1}`:''}.`,'target',[effectSource(r)?.uid,card?.uid].filter(Boolean));}break;}
       case T.ATTACK:notePattern(s,s.active,'attacks');r.attackSelectionUid=null;s.attacksUsed??={};if(at)s.attacksUsed[at.uid]=(s.attacksUsed[at.uid]||0)+1;r.lastAttack={kind:'attack',uid:at?.uid,target:target?.uid||null,side:at?.controller??s.active};s.pending=r.lastAttack;s.visualAction={type:'DECLARE_ATTACK',uid:at?.uid,target:target?.uid||null};r.battleStrike=null;battleStep(r,'attack');log(r,`${at?.card.name||'A monster'} attacked ${target?target.faceUp?target.card.name:'a face-down Defense Position monster':'Life Points directly'}.`,'attack',[at?.uid,target?.uid].filter(Boolean));break;
       case T.BATTLE:{const attacker=findCard(s,r.lastAttack?.uid)||cardAt(r,msg.card),defender=findCard(s,r.lastAttack?.target)||cardAt(r,msg.target);r.battleStrike={type:'ATTACK',uid:attacker?.uid,target:defender?.uid||null};log(r,`${attacker?.card.name||'Attacker'}: ${msg.card.attack} ATK${msg.target?` vs ${defender?.card.name||'defender'}: ${msg.target.position&m.OcgPosition.DEFENSE?msg.target.defense+' DEF':msg.target.attack+' ATK'}`:' · direct attack'}.`,'battle',[attacker?.uid,defender?.uid].filter(Boolean));break;}
@@ -235,6 +252,10 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       if(prompt.type===T.SELECT_PLACE){lib.duelSetResponse(handle,{type:m.OcgResponseType.SELECT_PLACE,places:places(r,prompt).slice(0,prompt.count)});continue;}
       if(prompt.type===T.SELECT_POSITION&&[1,2,4,8].includes(prompt.positions)){lib.duelSetResponse(handle,{type:m.OcgResponseType.SELECT_POSITION,position:prompt.positions});continue;}
       if(prompt.type===T.SELECT_COUNTER&&prompt.cards.length===1&&prompt.cards[0].count>=prompt.count){lib.duelSetResponse(handle,{type:m.OcgResponseType.SELECT_COUNTER,counters:[prompt.count]});continue;}
+      // This script asks how many top cards to inspect. The card's printed
+      // instruction is five (or the remaining Deck), so do not expose the
+      // implementation's numeric prompt as though it selected a card.
+      if(prompt.type===T.ANNOUNCE_NUMBER&&effectSource(r)?.card.id===17092736){const max=Math.max(...prompt.options.map(Number));lib.duelSetResponse(handle,{type:m.OcgResponseType.ANNOUNCE_NUMBER,value:prompt.options.findIndex(n=>Number(n)===max)});continue;}
       r.prompt=prompt;r.promptSequence++;sync(r);actions(r);return;
     }
     throw new Error('The engine exceeded its processing limit.');
@@ -263,6 +284,11 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     return null;
   }
   function actions(r){
+    buildActions(r);
+    const reveal=r.state.reveals?.[0];
+    if(reveal&&r.state.winner===null){r.state.actions=[[],[]];r.state.actions[reveal.viewer]=[{type:'ACK_REVEAL',id:reveal.id,label:'Done viewing'}];}
+  }
+  function buildActions(r){
     const {module:m,prompt:p,state:s}=r,T=m.OcgMessageType,R=m.OcgResponseType;
     r.reply.clear();r.epoch++;s.actions=[[],[]];s.choice=null;s.window=null;
     if(!p||s.winner!==null)return;
@@ -290,7 +316,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     if(p.type===T.SELECT_CHAIN){
       const timing=p.hint_timing|p.hint_timing_other,H=m.OcgHintTiming;
       const context=timing&H.MAIN_END?`Before ${PHASE_LABELS[s.phase]} ends, you may activate a legal fast effect.`:timing&(H.SUMMON|H.SPSUMMON|H.FLIPSUMMON)?'A monster was summoned. You may respond before play continues.':timing&H.CHAIN_END?'The previous chain has finished. You may start a new response chain.':`You may activate a legal fast effect during ${PHASE_LABELS[s.phase]}.`;
-      s.window={priority:side,promptId:`${r.id}:p${r.promptSequence}`,forced:p.forced,battleStep:s.battleStep,timing:battleContext(s)||context,event:{kind:s.pending?.kind||'effect',side:s.active}};
+      s.window={priority:side,promptId:`${r.id}:p${r.promptSequence}`,forced:p.forced,battleStep:s.battleStep,timing:battleContext(s)||context,event:{kind:s.pending?.kind||((timing&(H.SUMMON|H.SPSUMMON|H.FLIPSUMMON))?'summon':s.chain.length?'chain':'phase'),side:s.active}};
       if(!p.forced)add({type:'PASS'},{type:R.SELECT_CHAIN,index:null});
       p.selects.forEach((item,index)=>located(item,'ACTIVATE','Activate '+descriptor(r,item.code).name,{type:R.SELECT_CHAIN,index},{effectText:describe(r,item.description)}));return;
     }
@@ -330,7 +356,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       if(r.selected.length&&(sorting||p.type===T.SELECT_COUNTER))add({type:'CHOOSE',label:'Reset selection',reset:true},null,{kind:'reset'});
       choice.title=`${sorting?'Choose order':r.hint} · ${r.selected.length} selected`;
       if(finishable(r,p)){add({type:'CHOOSE',label:'Confirm selection',finish:true},selectionResponse(r,p));choice.canFinish=true;}
-      if(p.can_cancel&&!r.selected.length)option('Cancel effect',{type:p.type===T.SELECT_TRIBUTE?R.SELECT_TRIBUTE:R.SELECT_CARD,indicies:null},{cancel:true});
+      if(p.can_cancel)option(p.type===T.SELECT_TRIBUTE?'Cancel summon':'Cancel selection',{type:p.type===T.SELECT_TRIBUTE?R.SELECT_TRIBUTE:R.SELECT_CARD,indicies:null},{cancel:true});
       return;
     }
     if(p.type===T.ANNOUNCE_NUMBER){choice.title='Declare a number';p.options.forEach((number,index)=>option(String(number),{type:R.ANNOUNCE_NUMBER,value:index},{number:Number(number)}));return;}
@@ -355,6 +381,11 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   function applyAction(state,action,side=state.active){
     const r=matches.get(state.runtimeId);if(!r)throw new Error('This duel has ended. Start a new match.');
     r.state=structuredClone(state);r.state.visualAction=null;
+    if(action.type==='ACK_REVEAL'){
+      const reveal=r.state.reveals?.[0];
+      if(!reveal||reveal.viewer!==side||reveal.id!==action.id)throw new Error('That reveal is no longer available.');
+      r.state.reveals.shift();const uids=new Set(reveal.cards.map(c=>c.uid));r.state.revealedUIDs=(r.state.revealedUIDs||[]).filter(uid=>!uids.has(uid));actions(r);return r.state;
+    }
     if(action.type==='SURRENDER'){r.state.winner=1-side;log(r,who(side)+' surrendered.','victory');return r.state;}
     const legal=legalActions(state,side).find(a=>action.id?a.id===action.id:a.type===action.type),reply=legal&&r.reply.get(legal.id);
     if(!reply)throw new Error('That selection is no longer legal.');

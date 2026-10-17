@@ -44,7 +44,7 @@ test('Damage Step preview names the revealed defender and updates its field DEF 
   const r=await rig({damage:true});try{
     assert.match(r.$('.duel-response-context').textContent,/Mystical Elf is face-up/);
     assert.doesNotMatch(r.$('.duel-response-context').textContent,/attack is declared/);
-    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/skips later Damage Step responses/);
+    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/Attacks, summons, chains and triggered effects still ask/);
     assert.equal(r.$('.duel-phases').dataset.battleStep,'beforeCalculation');
     r.$('[data-duel="response-activate"]').click();
     await waitFor(()=>r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
@@ -88,7 +88,7 @@ test('turn preference never declines required chains, costs, targets or procedur
   const activate={type:'ACTIVATE',uid:'c1'},pass={type:'PASS'},policy=createResponsePolicy();policy.passTurn(state);
   assert.equal(policy.action(state,[activate,pass]),pass);assert.equal(policy.action(state,[activate]),null);
   state.window=null;state.choice={side:0,trigger:{uid:'c1'},optionalResponse:false};const yes={type:'CHOOSE',yes:true},no={type:'CHOOSE',yes:false};assert.equal(policy.action(state,[yes,no]),null);
-  state.choice.optionalResponse=true;assert.equal(policy.action(state,[yes,no]),no);
+  state.choice.optionalResponse=true;assert.equal(policy.action(state,[yes,no]),null);
   state.turn++;assert.equal(policy.action(state,[yes,no]),null);assert.equal(policy.isPassing(state),false);
   assert.match(effectBrief(get('Tribute to the Doomed')),/Discard 1 card/);assert.equal(effectBrief({desc:'x'.repeat(500)}).length,220);
   state.choice=null;state.window={priority:1};assert.equal(responseOffer(state,[activate,pass]),null);
