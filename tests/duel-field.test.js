@@ -224,7 +224,7 @@ test('the game mats oppose vertically and mirror auxiliary and pile positions fo
   const r=await rig();try{
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const computed=selector=>r.window.getComputedStyle(r.$(selector));
-    assert.equal(computed('.opponent-side').gridRow,'1');assert.equal(computed('.player-side').gridRow,'2');
+    assert.equal(computed('.opponent-side').gridRow,'1');assert.equal(computed('.player-side').gridRow,'3');assert.equal(computed('.duel-midline').gridRow,'2');
     for(const [prefix,leftColumn,rightColumn,auxAreas,pileAreas] of [['.player-side','1','3','"field" "extra"','"grave" "deck"'],['.opponent-side','3','1','"extra" "field"','"deck" "grave"']]){
       assert.equal(computed(prefix+' .duel-auxiliary-zones').gridColumn,leftColumn);
       assert.equal(computed(prefix+' .duel-pile-zones').gridColumn,rightColumn);

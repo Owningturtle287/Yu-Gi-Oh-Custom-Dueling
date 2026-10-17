@@ -11,7 +11,7 @@ test('four card rows, both hands and the phase rail fit landscape phones includi
     assert.ok(Math.abs(g.topSide+g.bottomSide+g.sideGap+8-h)<.01,`${w}×${h}: no vertical overflow or unused band`);
     assert.equal(g.board,g.slot*5+g.cellGap*4);assert.ok(g.pileGap>g.cellGap*3);
     assert.ok(g.cardWidth<g.bay);assert.ok(g.slot>=g.bay);assert.ok(g.cardHeight>=32);
-    assert.ok(g.topHand>=36&&g.bottomHand>=50);
+    assert.ok(g.topHand>=36&&g.bottomHand>=44);assert.equal(g.sideGap,18,'The center divider has its own visible track');
     if(!g.compact){assert.equal(g.action,24);assert.ok(g.cardHeight>=56,'Stats and a 24px action fit beside the art');}
     else assert.equal(g.footer,16,'Compact stats have their own row, with actions in the card inspector');
   }
@@ -19,9 +19,17 @@ test('four card rows, both hands and the phase rail fit landscape phones includi
 test('iPhone 14 field uses larger card surfaces and a tighter central rack than the stretched layout',()=>{
   const g=arenaGeometry(750,363);
   const oldPitch=((750-8-12)*5/7.5+6)/5;
-  assert.equal(g.compact,false);assert.ok(g.cardHeight>61);assert.ok(g.slot+g.cellGap<oldPitch*.85);
+  assert.equal(g.compact,false);assert.ok(g.cardHeight>60);assert.ok(g.slot+g.cellGap<oldPitch*.85);
   assert.ok(g.bay-(g.cardWidth)>4,'A rotated defender has clearance before the action gutter');
   assert.ok(g.phase<=44);
+  assert.ok(g.topSide+g.sideGap>182,'The player mat sits lower than the previous 173.5px center edge');
+});
+test('the phase rail extends into the right safe area while preserving a camera-safe label column',()=>{
+  for(const inset of [0,24,47,59]){
+    const normal=arenaGeometry(750,363),edge=arenaGeometry(750+inset,363,{rightInset:inset});
+    assert.equal(edge.phase,normal.phase+inset);assert.equal(edge.fieldWidth,normal.fieldWidth);assert.equal(edge.cardHeight,normal.cardHeight);
+    assert.equal(edge.values['--phase-safe'],inset);assert.ok(edge.required<=edge.fieldWidth);
+  }
 });
 test('phase rail, aligned piles, side gutters and compact metadata have explicit independent tracks',async()=>{
   const window=new Window();try{
