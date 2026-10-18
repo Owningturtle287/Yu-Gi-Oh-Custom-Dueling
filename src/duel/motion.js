@@ -1,5 +1,6 @@
 import { cardRotation } from './field.js';
 import { appendAttackArrow } from './attack-arrows.js';
+import {localRect} from './viewport.js';
 export const CARD_BACK = './assets/card-back.jpg';
 const fieldZones = new Set(['monsters', 'spells', 'field']);
 const publicZones = new Set(['grave', 'banished']);
@@ -61,20 +62,20 @@ export function planMotion(previous, next, action = null) {
   return motions;
 }
 
-function rectOf(element) {
-  const rect = element?.getBoundingClientRect();
+function rectOf(element,root) {
+  const rect = localRect(element,root);
   return rect?.width > 0 && rect?.height > 0 ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2, width: rect.width, height: rect.height } : null;
 }
 export function captureArena(root) {
   const snapshot = { cards: new Map(), zones: new Map() };
   for (const element of root.querySelectorAll('[data-motion-uid]')) {
     const surface=element.querySelector('.duel-card-visual') || element.querySelector('img') || element;
-    const rect = rectOf(surface);
+    const rect = rectOf(surface,root);
     if(rect && surface.tagName==='IMG'){rect.width=Math.min(rect.width,rect.height*59/86);rect.height=rect.width*86/59;}
     if (rect) snapshot.cards.set(element.dataset.motionUid, rect);
   }
   for (const element of root.querySelectorAll('[data-motion-zone]')) {
-    const rect = rectOf(element); if (rect) snapshot.zones.set(element.dataset.motionZone, rect);
+    const rect = rectOf(element,root); if (rect) snapshot.zones.set(element.dataset.motionZone, rect);
   }
   return snapshot;
 }
@@ -100,7 +101,7 @@ export function createMotionPlayer(root) {
     if (!enabled || !motions.length || typeof root.animate !== 'function') return;
     const after = captureArena(root), current = generation, document = root.ownerDocument;
     layer = document.createElement('div'); layer.className = 'duel-motion-layer'; layer.setAttribute('aria-hidden', 'true');
-    document.body.append(layer);
+    root.append(layer);
     const jobs = [], arrivals = new Map();
     const zonePoint = (snapshot, key) => snapshot.zones.get(key) || (key ? snapshot.zones.get(`${key[0]}:piles`) : null);
     let drawIndex = 0;

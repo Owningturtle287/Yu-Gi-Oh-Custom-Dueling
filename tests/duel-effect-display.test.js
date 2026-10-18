@@ -67,7 +67,7 @@ test('the arena shows mandatory effects without a modal and holds AI decisions u
   const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,kind)=>{modal.innerHTML=`<div class="dialog-body ${kind}">${html}</div>`;modal.setAttribute('open','');},closeDialog:()=>modal.removeAttribute('open'),dialogHeader:title=>`<h2>${title}</h2>`,toast:message=>errors.push(message),onDesign(){},onKeepDeck(){},engine});
   const waitFor=async predicate=>{for(let n=0;n<100&&!predicate();n++)await new Promise(yes=>setTimeout(yes,10));assert.ok(predicate(),JSON.stringify({errors,match:!!controller.getMatch(),text:main.textContent.slice(-150)}));};
   try{
-    controller.enter();main.querySelector('[data-duel="start"]').click();await waitFor(()=>main.querySelector('.duel-effect-spotlight'));
+    controller.enter();main.querySelector('[data-duel="start"]').click();await waitFor(()=>main.querySelector('.duel-intro-skip'));main.querySelector('.duel-intro-skip').click();await waitFor(()=>main.querySelector('.duel-effect-spotlight'));
     assert.equal(modal.open,false);assert.match(main.querySelector('.duel-effect-caption').textContent,/Shadowknight.*900 LP paid/);
     assert.equal(main.querySelector('.duel-arena').dataset.moving,'true');await new Promise(yes=>setTimeout(yes,60));assert.equal(aiDecisions,0);
     controller.leave();await new Promise(yes=>setTimeout(yes,30));assert.equal(main.querySelector('.duel-effect-spotlight'),null);assert.equal(aiDecisions,0);

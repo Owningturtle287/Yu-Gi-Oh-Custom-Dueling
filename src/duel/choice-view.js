@@ -14,6 +14,7 @@ function locate(state, uid) {
 }
 const zoneNames={hand:'hand',monsters:'Monster Zone',spells:'Spell / Trap Zone',field:'Field Spell',grave:'Graveyard',banished:'Banished',extra:'Extra Deck',deck:'Deck'};
 export function choiceIntent(action, purpose='') {
+  if(action.coinCall)return {tone:action.coinCall==='Heads'?'gold':'blue',label:'Call '+action.coinCall};
   if (action.finish) return {tone:'teal',label:'Confirm'};
   if (action.cancel || action.yes===false) return {tone:'danger',label:'Decline'};
   if (action.reset) return {tone:'gold',label:'Reset'};

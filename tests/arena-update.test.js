@@ -81,8 +81,8 @@ test('Telescope UI displays numbered real card art, supports inspection, and pau
       assert.equal(r.s.reveals.length,1);assert.deepEqual(r.s.players[1].deck.map(c=>c.card.id),order);
     }
     r.$('[data-duel-reveal-card="3"]').click();
-    r.window.happyDOM.setWindowSize({width:390,height:844});r.window.dispatchEvent(new r.window.Event('resize'));assert.equal(r.modal.hasAttribute('open'),false);assert.equal(r.s.reveals.length,1);
-    r.window.happyDOM.setWindowSize({width:844,height:390});r.window.dispatchEvent(new r.window.Event('resize'));await waitFor(()=>r.modal.hasAttribute('open')&&r.$('.duel-reveal-body'));r.$('[data-duel="reveal-done"]').click();await waitFor(()=>r.s.reveals.length===0&&!r.modal.hasAttribute('open'));assert.deepEqual(r.s.players[1].deck.map(c=>c.card.id),order);assert.deepEqual(r.errors,[]);
+    r.window.happyDOM.setWindowSize({width:390,height:844});r.window.dispatchEvent(new r.window.Event('resize'));assert.equal(r.modal.hasAttribute('open'),true);assert.equal(r.s.reveals.length,1);assert.equal(r.window.document.documentElement.dataset.duelRotated,'true');
+    r.window.happyDOM.setWindowSize({width:844,height:390});r.window.dispatchEvent(new r.window.Event('resize'));await waitFor(()=>r.modal.hasAttribute('open')&&r.$('.duel-reveal-body'));if(r.$('[data-duel="reveal-list"]'))r.$('[data-duel="reveal-list"]').click();r.$('[data-duel="reveal-done"]').click();await waitFor(()=>r.s.reveals.length===0&&!r.modal.hasAttribute('open'));assert.deepEqual(r.s.players[1].deck.map(c=>c.card.id),order);assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });
 test('field tribute controls expose Cancel after staging a card and preserve the hand and board',async()=>{
@@ -118,5 +118,22 @@ test('the light arena fills one bounded column, has no console, and keeps tools 
     const style=r.window.document.createElement('style');style.textContent=(await Promise.all(['styles.css','duel.css','light.css'].map(f=>readFile(new URL('../'+f,import.meta.url),'utf8')))).join('\n');r.window.document.head.append(style);const css=n=>r.window.getComputedStyle(n);
     for(const [width,height] of [[568,320],[667,375],[844,390],[932,430],[1024,768]]){r.window.happyDOM.setWindowSize({width,height});r.window.dispatchEvent(new r.window.Event('resize'));assert.equal(css(r.$('.duel-arena')).gridTemplateColumns,'minmax(0,1fr)');assert.equal(css(r.$('.duel-session')).colorScheme,'light');assert.equal(css(r.$('.duel-session')).overflow,'hidden');assert.equal(r.$('.duel-console'),null);assert.equal(r.$('[data-live-terminal]'),null);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);assert.equal(css(r.$('.duel-action-area')).position,'absolute');assert.ok(!r.$('.duel-board').contains(r.$('.duel-controls')));assert.equal(css(r.$('.duel-controls button')).minHeight,'40px');assert.ok(r.$('.duel-midline .duel-prompt'));assert.equal(r.$('.duel-action-area .duel-prompt'),null);}
     r.$('[data-duel="log"]').click();assert.ok(r.$('.duel-log'));assert.equal(css(r.$('.duel-log')).overflowY,'auto');assert.deepEqual(r.errors,[]);
+  }finally{r.close();}
+});
+test('Save & exit ends the runtime and explicitly resumes a staged native Tribute choice from the duel menu',async()=>{
+  const e=backend(),s=await e.createMatch(decks(),{cards,seed:27,openingHands:[[get('Gaia The Fierce Knight')],[]],initialFields:[{monsters:[{card:get('Mystical Elf')},{card:get('Summoned Skull')}]},{}]}),r=await ui(e,s);try{
+    const gaia=r.s.players[0].hand.find(c=>c.card.name==='Gaia The Fierce Knight');r.$(`[data-duel-card="${gaia.uid}"]`).click();[...r.modal.querySelectorAll('[data-duel-group]')].find(b=>b.textContent.includes('Tribute Summon')).click();await waitFor(()=>r.$('.duel-arena').dataset.moving==='false');r.$('.duel-zone[data-role="eligible"]').click();await waitFor(()=>r.s.choice.selected.length===1&&r.$('.duel-arena').dataset.moving==='false');
+    const runtime=r.s.runtimeId,deck=r.s.players[0].deck.map(c=>c.card.id);r.$('[data-duel="duel-menu"]').click();r.$('[data-duel="save-exit"]').click();assert.equal(r.controller.getMatch(),null);assert.ok(r.$('.solo-setup'));
+    r.$('[data-duel-tab="3"]').click();assert.equal(r.main.querySelectorAll('[data-resume-duel]').length,1);r.$('[data-resume-duel]').click();await waitFor(()=>r.controller.getMatch()?.choice?.selected.length===1);
+    assert.notEqual(r.s.runtimeId,runtime);assert.equal(r.s.normalSummons[0],0);assert.deepEqual(r.s.players[0].deck.map(c=>c.card.id),deck);assert.ok(r.$('[data-duel="cancel-choice"]'));
+    r.controller.leave();r.controller.enter();assert.equal(r.controller.getMatch(),null);assert.ok(r.$('.solo-setup'));
+  }finally{r.close();}
+});
+test('Jirai Gumo renders distinct coin faces and explains the actual call and LP consequence',async()=>{
+  const record=rules.records.get(94773007),jirai={id:94773007,name:record.name,type:'Effect Monster',level:4,atk:2200,def:100,race:'Insect',desc:'Call a coin when attacking; a wrong call halves your LP.',card_images:[]};
+  const e=backend();let s=await damageDuel(e,[...cards,jirai],{defendingSide:1,attacker:'Jirai Gumo',traps:[]});s=advanceBattle(e,s,x=>x.choice?.selectionType==='select_option');const r=await ui(e,s);try{
+    await waitFor(()=>r.$('.duel-picker-body'));assert.match(r.modal.querySelector('h2').textContent,/Jirai Gumo.*Call the coin/);assert.match(r.$('.duel-choice-help').textContent,/half.*LP/);
+    const options=[...r.modal.querySelectorAll('[data-duel-choice]')];assert.deepEqual(options.map(b=>b.querySelector('strong').textContent),['Heads','Tails']);assert.deepEqual(options.map(b=>b.querySelector('svg text').textContent),['H','T']);
+    assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });

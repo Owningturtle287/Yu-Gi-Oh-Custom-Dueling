@@ -1,3 +1,4 @@
+import {localRect,isRotated} from './viewport.js';
 const NS='http://www.w3.org/2000/svg';
 let serial=0;
 const element=(document,tag,attributes={})=>{
@@ -27,7 +28,8 @@ export function appendAttackArrow(svg,from,to,{selected=true,side=0}={}){
   const d=`M ${geometry.start.x} ${geometry.start.y} L ${geometry.end.x} ${geometry.end.y}`;
   const outline=element(document,'path',{d,fill:'none',stroke:'#081523','stroke-width':7,'stroke-linecap':'round',opacity:.75});
   const path=element(document,'path',{d,fill:'none',stroke:`url(#${id}-light)`,'stroke-width':3.5,'stroke-linecap':'round','marker-end':`url(#${id})`,class:'duel-arrow-shaft','data-selected':selected,'data-side':side});
-  svg.append(defs,outline,path);return {path,outline,geometry};
+  const flow=element(document,'path',{d,fill:'none',stroke:'#ffffff','stroke-width':2,'stroke-linecap':'round','stroke-dasharray':'2 14',opacity:.9,class:'duel-arrow-flow'});
+  svg.append(defs,outline,path,flow);return {path,outline,geometry};
 }
 
 export function attackLinks(state,selection){
@@ -49,14 +51,14 @@ export function createAttackArrows(root){
     // Measure the SVG's own viewport. A surrounding console, border, safe-area
     // inset or CSS scale must never become part of its coordinate system.
     const area=svg.getBoundingClientRect();if(!area.width||!area.height)return;
-    svg.setAttribute('viewBox',`0 0 ${area.width} ${area.height}`);
+    svg.setAttribute('viewBox',`0 0 ${isRotated(svg)?area.height:area.width} ${isRotated(svg)?area.width:area.height}`);
     const rect=uid=>{
       const host=root.querySelector(`[data-motion-uid="${uid}"]`),visual=host?.querySelector('.duel-card-visual')||host;
-      const r=visual?.getBoundingClientRect();return r?.width&&r.height?{x:r.left+r.width/2-area.left,y:r.top+r.height/2-area.top,width:r.width,height:r.height}:null;
+      const r=localRect(visual,svg);return r?.width&&r.height?{x:r.left+r.width/2,y:r.top+r.height/2,width:r.width,height:r.height}:null;
     };
     for(const link of attackLinks(state,selection)){
-      const from=rect(link.uid),lp=link.target===null?root.querySelector(`[data-field-lp="${1-link.side}"]`)?.getBoundingClientRect():null;
-      const to=link.target===null&&lp?{x:lp.left+lp.width/2-area.left,y:lp.top+lp.height/2-area.top,width:lp.width,height:lp.height}:rect(link.target);
+      const from=rect(link.uid),lp=link.target===null?localRect(root.querySelector(`[data-field-lp="${1-link.side}"]`),svg):null;
+      const to=link.target===null&&lp?{x:lp.left+lp.width/2,y:lp.top+lp.height/2,width:lp.width,height:lp.height}:rect(link.target);
       if(!from||!to)continue;
       const arrow=appendAttackArrow(svg,from,to,{side:link.side,selected:true});
       if(arrow){arrow.path.dataset.source=link.uid;arrow.path.dataset.target=link.target||`lp:${1-link.side}`;}

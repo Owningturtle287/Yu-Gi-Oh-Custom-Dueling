@@ -23,6 +23,7 @@ let toastTimer, gridObserver, gridFrame, previousFocus, detailCard, cardRequest;
 let duelDesign = null;
 const deckView = {workspace:'browse',query:'',category:'All',sort:'type'};
 const solo = createSoloController({ main, modal, getCards: () => state.cards, getDecks: () => state.decks, getStatus: () => state.cardStatus, showDialog, dialogHeader, closeDialog, toast,
+  onExit: () => navigate('home'),
   onDesign: (side, deck) => confirmReplace(() => {
     duelDesign = side;
     state.draft = deck ? structuredClone(deck) : createDeck(side === 0 ? 'My classic deck' : 'AI classic deck');

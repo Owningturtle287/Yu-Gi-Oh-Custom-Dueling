@@ -324,7 +324,7 @@ test('Solo setup has one AI policy and saves independent eligibility, speed, sav
     $('[data-duel="start"]').click();assert.match($('#modal').textContent,/AI deck: Main Deck needs 40–60/);
   }finally{app.navigate('home');window.close();}
 });
-test('a Solo match starts, tracks phases, offers real summon actions, pauses, resumes and surrenders', async () => {
+test('a Solo match starts, tracks phases, offers summons, exits cleanly and starts a fresh duel', async () => {
   const {window,app,$}=await boot('solo-play',null,false,soloCatalog);
   try{
     app.navigate('solo');$('[data-duel-tab="2"]').click();
@@ -341,9 +341,9 @@ test('a Solo match starts, tracks phases, offers real summon actions, pauses, re
     $('.duel-hand-card').click();assert.match($('.duel-card-actions').textContent,/Normal Summon/);assert.equal($('#modal').open,true);
     [...document.querySelectorAll('[data-duel-group]')].find(b=>b.textContent==='Normal Summon').click();
     assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
-    $('.duel-exit').click();assert.equal(app.state.route,'home');assert.equal(document.documentElement.classList.contains('duel-playing'),false);
+    $('[data-duel="duel-menu"]').click();$('[data-duel="exit-duel"]').click();assert.equal(app.state.route,'home');assert.equal(document.documentElement.classList.contains('duel-playing'),false);
     app.navigate('archive');assert.equal($('.duel-arena'),null);app.navigate('solo');
-    assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,1);
+    assert.ok($('.solo-setup'));$('[data-duel="start"]').click();await waitFor(()=>$('.duel-arena')?.dataset.moving==='false');assert.equal(document.querySelectorAll('.yours .duel-zone.occupied').length,0);
     $('[data-duel="duel-menu"]').click();$('[data-duel="surrender"]').click();$('[data-duel="confirm-surrender"]').click();
     assert.match($('.duel-prompt').textContent,/Defeat/);assert.ok($('[data-duel="rematch"]'));
     await waitFor(()=>$('.duel-arena').dataset.moving==='false');

@@ -167,7 +167,7 @@ test('defense rotates the complete card surface; the authentic back and motion m
   assert.match(css,/\.duel-zone \.duel-card-visual \{[^}]*rotate\(var\(--card-rotation,0deg\)\)/);
   assert.match(css,/\.duel-zone\.defense \.duel-card-visual \{[^}]*100cqw/);
   assert.match(css,/\.duel-motion-layer \{[^}]*position:fixed[^}]*pointer-events:none[^}]*overflow:hidden/);
-  assert.match(css,/\.duel-log-body \{[^}]*height:calc\(100dvh/);
+  assert.match(css,/\.duel-log-body \{[^}]*height:calc\(calc\(var\(--duel-vh/);
   assert.match(worker,/assets\/card-back.jpg/);assert.match(worker,/src\/duel\/motion.js/);assert.match(worker,/src\/duel\/flow.js/);assert.match(worker,/src\/duel\/log.js/);
   const asset=await readFile(new URL('../assets/card-back.jpg',import.meta.url));assert.equal(asset.readUInt16BE(0),0xffd8);assert.ok(asset.length>10000);
 });

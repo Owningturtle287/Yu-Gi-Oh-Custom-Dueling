@@ -93,19 +93,16 @@ test('Attack shortcut selects a highlighted Set monster on the board without a t
     assert.equal(r.$(`[data-duel-card="${attacker.uid}"]`).dataset.role,'source');assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'target');
   }finally{r.close();}
 });
-test('opening banner blocks phase decisions, can be skipped, and navigation resumes the same unshuffled match',async()=>{
+test('opening banner blocks phase decisions, can be skipped, and exiting discards the live match',async()=>{
   const r=await rig({width:844,height:390,animations:true,opening:true});try{
-    const initial=r.controller.getMatch(),frozen=JSON.stringify(initial);assert.ok(r.$('.duel-table .duel-intro'));assert.equal(r.$('.duel-arena').dataset.intro,'true');
-    assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,2);
-    await new Promise(resolve=>setTimeout(resolve,100));assert.equal(JSON.stringify(r.controller.getMatch()),frozen);
-    r.controller.leave();assert.equal(r.$('.duel-intro'),null);r.controller.enter();await waitFor(()=>r.$('.duel-intro'));
-    assert.equal(r.controller.getMatch(),initial);assert.equal(initial.players[0].hand.length,5);
-    r.$('.duel-intro-skip').click();await waitFor(()=>r.controller.getMatch().phase==='main1'&&!r.controller.getMatch().window&&r.$('.duel-arena').dataset.moving==='false');
-    assert.equal(r.$('.duel-intro'),null);assert.equal(r.controller.getMatch().players[0].hand.length,5);assert.equal(r.controller.getMatch().log.filter(e=>e.message==='You go first.').length,1);
-    assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,0);
-    r.controller.leave();r.controller.enter();assert.equal(r.$('.duel-intro'),null);
+    const initial=r.controller.getMatch(),frozen=JSON.stringify(initial);assert.ok(r.$('.duel-intro'));assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,2);
+    await new Promise(resolve=>setTimeout(resolve,80));assert.equal(JSON.stringify(r.controller.getMatch()),frozen);
+    r.$('.duel-intro-skip').click();await waitFor(()=>r.controller.getMatch().phase==='main1'&&r.$('.duel-arena').dataset.moving==='false');
+    assert.equal(initial.players[0].hand.length,5);assert.equal(r.$('.duel-exit'),null);assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,0);
+    r.controller.leave();r.controller.enter();assert.equal(r.controller.getMatch(),null);assert.ok(r.$('.solo-setup'));
   }finally{r.close();}
 });
+
 test('direct attacks target the AI’s own bottom-left LP corner; card faces and stats are oriented separately',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster);r.controller.refresh();
@@ -165,38 +162,28 @@ function rotate(r,width,height){
   r.window.happyDOM.setWindowSize({width,height});
   r.window.dispatchEvent(new r.window.Event('resize'));
 }
-test('starting in portrait pauses opening phases and rotation resumes the same match without an extra draw',async()=>{
+test('starting in portrait immediately uses a playable fixed landscape canvas without extra draws',async()=>{
   const r=await rig({width:390,height:844});try{
-    const initial=r.controller.getMatch(),frozen=JSON.stringify(initial);
-    assert.equal(r.$('.duel-orientation').hidden,false);assert.equal(r.$('.duel-arena').hidden,true);
-    assert.equal(r.$('.duel-arena').hasAttribute('inert'),true);assert.ok(r.window.document.documentElement.classList.contains('duel-playing'));
-    r.$('[data-duel="next"]').click();await new Promise(resolve=>setTimeout(resolve,120));
-    assert.equal(JSON.stringify(r.controller.getMatch()),frozen,'Portrait must not execute a hidden action or opening timer');
-    rotate(r,844,390);
-    await waitFor(()=>r.controller.getMatch().phase==='main1'&&!r.controller.getMatch().window&&r.$('.duel-arena').dataset.moving==='false');
-    assert.equal(r.$('.duel-orientation').hidden,true);assert.equal(r.$('.duel-arena').hidden,false);
-    assert.equal(r.controller.getMatch().players[0].hand.length,5);assert.equal(r.controller.getMatch().players[0].deck.length,35);
-    rotate(r,390,844);rotate(r,844,390);
-    assert.equal(r.controller.getMatch().players[0].hand.length,5,'Repeated rotation cannot replay a draw');
-    r.controller.leave();assert.equal(r.window.document.documentElement.classList.contains('duel-playing'),false);
-    r.controller.enter();assert.ok(r.window.document.documentElement.classList.contains('duel-playing'));assert.equal(r.controller.getMatch().turn,1);
+    await waitFor(()=>r.controller.getMatch().phase==='main1'&&r.$('.duel-arena').dataset.moving==='false');
+    const initial=r.controller.getMatch();assert.equal(r.$('.duel-orientation'),null);assert.equal(r.$('.duel-arena').hidden,false);assert.equal(r.window.document.documentElement.dataset.duelRotated,'true');
+    assert.equal(initial.players[0].hand.length,5);rotate(r,844,390);assert.equal(r.window.document.documentElement.dataset.duelRotated,'false');
+    rotate(r,390,844);assert.equal(r.controller.getMatch(),initial);assert.equal(initial.players[0].hand.length,5);assert.equal(r.$('.duel-arena').hidden,false);
   }finally{r.close();}
 });
-test('rotation cancels a pending AI decision and resumes it only after landscape returns',async()=>{
+
+test('AI decisions continue in a physically portrait phone through the rotated landscape canvas',async()=>{
   const r=await rig();try{
-    const s=r.controller.getMatch();s.active=1;s.turn=2;s.phase='main1';r.controller.refresh();
-    rotate(r,390,844);const frozen=JSON.stringify(r.controller.getMatch());
-    await new Promise(resolve=>setTimeout(resolve,260));assert.equal(JSON.stringify(r.controller.getMatch()),frozen);
-    rotate(r,844,390);await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);
-    assert.equal(r.$('.duel-arena').hidden,false);
+    const state=r.controller.getMatch();state.active=1;state.turn=2;state.phase='main1';r.controller.refresh();rotate(r,390,844);
+    const frozen=JSON.stringify(r.controller.getMatch());await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);assert.equal(r.$('.duel-arena').hidden,false);
   }finally{r.close();}
 });
-test('rotation closes card inspection and keeps an unfinished field choice without losing legal targets',async()=>{
+
+test('rotation preserves card inspection and an unfinished field choice without losing legal targets',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster),target=put(s,1,monster);r.controller.refresh();
     r.$(`[data-duel-quick="${attacker.uid}"]`).click();r.$('[data-duel="inspect-source"]').click();assert.ok(r.$('.duel-card-viewer'));assert.equal(r.modal.hasAttribute('open'),true);
-    rotate(r,390,844);assert.equal(r.modal.hasAttribute('open'),false);assert.equal(r.$('.duel-arena').dataset.selecting,'true');
-    rotate(r,844,390);assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'eligible');
+    rotate(r,390,844);assert.equal(r.modal.hasAttribute('open'),true);assert.equal(r.$('.duel-arena').dataset.selecting,'true');
+    rotate(r,844,390);assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'eligible');r.$('[data-action="close"]').click();
     r.$(`[data-duel-card="${target.uid}"]`).click();assert.equal(r.controller.getMatch().pending.target,target.uid);
   }finally{r.close();}
 });
@@ -205,7 +192,7 @@ test('all twenty zones and both rows keep their grid display across landscape ph
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     for(const [width,height] of [[568,320],[667,375],[844,390],[932,430],[1024,768]]){
       rotate(r,width,height);
-      const table=r.$('.duel-table');assert.equal(table.dataset.fitSize,`${width}:${height}`);assert.ok(parseFloat(table.style.getPropertyValue('--card-height'))>32);
+      const table=r.$('.duel-table');assert.equal(table.dataset.fitSize,`${width}:${height}:false`);assert.ok(parseFloat(table.style.getPropertyValue('--card-height'))>32);
       assert.equal(r.$('.duel-arena').hidden,false,`${width}×${height}`);
       assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
       assert.equal(r.main.querySelectorAll('[data-pile-zone]').length,10);
@@ -220,19 +207,28 @@ test('all twenty zones and both rows keep their grid display across landscape ph
     }
   }finally{r.close();}
 });
+test('the attached hand toggle doubles the hand without a focus frame or replacing card nodes',async()=>{
+  const r=await rig({width:844,height:390});try{
+    const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
+    const first=r.$('.duel-hand-card'),table=r.$('.duel-table'),normal=parseFloat(table.style.getPropertyValue('--hand-card-size'));
+    assert.equal(r.$('.duel-hand').hasAttribute('tabindex'),false);assert.equal(r.$('.duel-hand-rack').firstElementChild,r.$('.duel-hand-zoom'));
+    r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal*2);assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
+    r.$('.duel-hand-zoom').click();assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-zoom')).position,'static');
+  }finally{r.close();}
+});
 test('the game mats oppose vertically and mirror auxiliary and pile positions for each duelist',async()=>{
   const r=await rig();try{
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const computed=selector=>r.window.getComputedStyle(r.$(selector));
     assert.equal(computed('.opponent-side').gridRow,'1');assert.equal(computed('.player-side').gridRow,'3');assert.equal(computed('.duel-midline').gridRow,'2');
-    for(const [prefix,leftColumn,rightColumn,auxAreas,pileAreas] of [['.player-side','1','3','"field" "extra"','"grave" "deck"'],['.opponent-side','3','1','"extra" "field"','"deck" "grave"']]){
+    for(const [prefix,leftColumn,rightColumn,auxAreas,pileAreas] of [['.player-side','1','3','"field" "extra"','"grave" "deck"'],['.opponent-side','1','3','"extra" "field"','"deck" "grave"']]){
       assert.equal(computed(prefix+' .duel-auxiliary-zones').gridColumn,leftColumn);
       assert.equal(computed(prefix+' .duel-pile-zones').gridColumn,rightColumn);
       assert.equal(computed(prefix+' .duel-auxiliary-zones').gridTemplateAreas,auxAreas);
       assert.equal(computed(prefix+' .duel-pile-zones').gridTemplateAreas,pileAreas);
       assert.equal(r.main.querySelectorAll(prefix+' [data-pile-zone]').length,5);
     }
-    assert.deepEqual([...r.main.querySelectorAll('.opponent .monster-zones .duel-zone')].map(node=>node.dataset.motionZone),[4,3,2,1,0].map(index=>'1:monsters:'+index));
+    assert.deepEqual([...r.main.querySelectorAll('.opponent .monster-zones .duel-zone')].map(node=>node.dataset.motionZone),[0,1,2,3,4].map(index=>'1:monsters:'+index));
     assert.deepEqual([...r.main.querySelectorAll('.yours .monster-zones .duel-zone')].map(node=>node.dataset.motionZone),[0,1,2,3,4].map(index=>'0:monsters:'+index));
     assert.equal(r.$('.duel-console'),null);
     assert.equal(r.$('.duel-table').contains(r.$('.duel-hand')),true);
@@ -448,7 +444,7 @@ test('compact card and pile sheets retain visible full typing, small buttons and
     assert.notEqual(r.window.getComputedStyle(r.$('.duel-inspect-meta')).display,'none','Typing must remain visible on short phones');
     r.$('[data-action="close"]').click();r.$('[data-motion-zone="0:grave"]').click();
     assert.equal(r.window.getComputedStyle(r.modal).width,'340px');assert.equal(r.modal.querySelectorAll('.duel-pile-tabs, [data-duel-pile]').length,0);assert.match(r.modal.textContent,/Graveyard is empty/);
-    const css=style.textContent;assert.match(css,/max-width:calc\(100vw - env\(safe-area-inset-left\) - env\(safe-area-inset-right\) - 36px\)/);
+    const css=style.textContent;assert.match(css,/--duel-vw/);assert.match(css,/--duel-safe-left/);
     assert.match(css,/backdrop-filter:blur\(1px\)/);
   }finally{r.close();}
 });
