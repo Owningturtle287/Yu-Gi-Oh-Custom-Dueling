@@ -35,7 +35,7 @@ test('the revealed defender gains 500 DEF before calculation, survives the tie, 
     assert.equal(s.visualAction.type,'ATTACK');assert.equal(s.visualAction.uid,attacker);
     const motions=planMotion(declared,s,s.visualAction);assert.equal(motions.filter(m=>m.type==='attack').length,1);
     const stat=s.log.find(e=>e.kind==='stats'&&/Castle Walls changes Mystical Elf: DEF 2000 → 2500/.test(e.message)),battle=s.log.find(e=>e.kind==='battle'&&/2500 ATK.*2500 DEF/.test(e.message));
-    assert.ok(stat&&battle&&stat.id<battle.id);assert.ok(s.log.find(e=>e.battleStep==='beforeCalculation').id<stat.id);
+    assert.ok(stat&&battle&&stat.id<battle.id);assert.equal(battle.battleNotice.defender.def,2500,'The paired presentation uses the post-Castle Walls calculation');assert.ok(s.log.find(e=>e.battleStep==='beforeCalculation').id<stat.id);
     s=advanceBattle(engine,s,x=>x.turn===3);assert.equal(engine.findCard(s,defender).currentStats.def,2000);
   }finally{engine.destroyMatch(s);}
 });

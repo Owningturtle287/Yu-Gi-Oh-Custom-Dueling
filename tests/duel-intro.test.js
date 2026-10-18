@@ -13,6 +13,7 @@ async function finish(r){for(let n=0;n<30&&r.intro.active;n++){for(const call of
 test('opening toss shows the supplied side, then a concise banner agreeing with the core first player',async()=>{
   for(const first of [0,1]){const r=rig();try{
     const done=r.intro.play({coin:true,first});assert.equal(r.root.querySelector('[data-stage]').dataset.stage,'coin');assert.equal(r.root.querySelectorAll('svg.duel-coin-disc').length,1);
+    assert.equal(r.root.querySelector('svg text').textContent,'','No readable face during the spin');assert.ok(r.calls[0].frames.some(frame=>frame.filter?.includes('blur(2.4px)')));
     assert.ok(r.calls[0].frames.some(frame=>frame.transform.includes('scaleX(.07)')));assert.ok(!JSON.stringify(r.calls.map(c=>c.frames)).includes('rotateY'));
     for(const call of r.calls)call.finish();await tick();assert.equal(r.root.querySelector('svg text').textContent,first===0?'H':'T');
     await new Promise(resolve=>setTimeout(resolve,18));assert.equal(r.root.querySelector('h2').textContent,'DUEL');assert.equal(r.root.querySelector('p').textContent,first===0?'YOU START':'AI STARTS');

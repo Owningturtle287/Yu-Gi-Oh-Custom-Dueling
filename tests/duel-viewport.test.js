@@ -11,9 +11,9 @@ test('clockwise portrait transforms map card and target rectangles back into lan
     assert.deepEqual(localRect(card,root),{left:100,top:50,width:40,height:60});assert.deepEqual(landscapeSize({innerWidth:390,innerHeight:844}),{width:844,height:390});
   }finally{window.close();}
 });
-test('expanded hands double their card lane while both fields remain inside the table',()=>{
+test('hand enlargement cannot change card rows, piles, phase rail or the fixed hand lane',()=>{
   for(const [w,h] of [[750,363],[844,390],[932,430]]){
-    const normal=arenaGeometry(w,h),large=arenaGeometry(w,h,{expandedHand:true});assert.equal(large.bottomHand,normal.bottomHand*2);assert.ok(large.required<=large.fieldWidth);assert.ok(Math.abs(large.topSide+large.bottomSide+large.sideGap+8-h)<.01);assert.ok(large.cardHeight>=32);
+    const normal=arenaGeometry(w,h),large=arenaGeometry(w,h,{expandedHand:true});assert.deepEqual(large,normal);assert.ok(large.required<=large.fieldWidth);assert.ok(Math.abs(large.topSide+large.bottomSide+large.sideGap+8-h)<.01);assert.ok(large.cardHeight>=32);
   }
 });
 test('standard card notices show own Sets, hide opposing Sets, and reveal an actual Flip once',()=>{

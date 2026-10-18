@@ -219,7 +219,15 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       case T.CONFIRM_CARDS:confirmCards(r,msg);break;
       case T.BECOME_TARGET:{const cards=msg.cards.map(loc=>({card:cardAt(r,loc),loc}));for(const {card,loc} of cards){const name=card&&(r.side(loc.controller)===0||card.faceUp||card.public||loc.location===m.OcgLocation.GRAVE)?card.card.name:'a face-down card';log(r,`${effectName(r)||'The effect'} targets ${name}${loc.location===m.OcgLocation.MZONE?` in ${r.side(loc.controller)===0?'your':'AI’s'} Monster Zone ${loc.sequence+1}`:''}.`,'target',[effectSource(r)?.uid,card?.uid].filter(Boolean));}break;}
       case T.ATTACK:notePattern(s,s.active,'attacks');r.attackSelectionUid=null;s.attacksUsed??={};if(at)s.attacksUsed[at.uid]=(s.attacksUsed[at.uid]||0)+1;r.lastAttack={kind:'attack',uid:at?.uid,target:target?.uid||null,side:at?.controller??s.active};s.pending=r.lastAttack;s.visualAction={type:'DECLARE_ATTACK',uid:at?.uid,target:target?.uid||null};r.battleStrike=null;battleStep(r,'attack');log(r,`${at?.card.name||'A monster'} attacked ${target?target.faceUp?target.card.name:'a face-down Defense Position monster':'Life Points directly'}.`,'attack',[at?.uid,target?.uid].filter(Boolean));break;
-      case T.BATTLE:{const attacker=findCard(s,r.lastAttack?.uid)||cardAt(r,msg.card),defender=findCard(s,r.lastAttack?.target)||cardAt(r,msg.target);r.battleStrike={type:'ATTACK',uid:attacker?.uid,target:defender?.uid||null};log(r,`${attacker?.card.name||'Attacker'}: ${msg.card.attack} ATK${msg.target?` vs ${defender?.card.name||'defender'}: ${msg.target.position&m.OcgPosition.DEFENSE?msg.target.defense+' DEF':msg.target.attack+' ATK'}`:' · direct attack'}.`,'battle',[attacker?.uid,defender?.uid].filter(Boolean));break;}
+      case T.BATTLE:{
+        const attacker=findCard(s,r.lastAttack?.uid)||cardAt(r,msg.card),defender=findCard(s,r.lastAttack?.target)||cardAt(r,msg.target);
+        const side=attacker?.controller??r.lastAttack?.side??s.active,defense=!!(msg.target?.position&m.OcgPosition.DEFENSE);
+        r.battleStrike={type:'ATTACK',uid:attacker?.uid,target:defender?.uid||null,presentation:'paired'};
+        // Snapshot the core's calculated values before destruction moves a card.
+        // No presentation is emitted at declaration or for a negated attack.
+        const battleNotice=attacker?{side,attacker:{uid:attacker.uid,card:attacker.card,atk:msg.card.attack},defender:defender?{uid:defender.uid,card:defender.card,atk:msg.target.attack,def:msg.target.defense,defense}:null,targetLP:s.players[1-side].lp}:null;
+        log(r,`${attacker?.card.name||'Attacker'}: ${msg.card.attack} ATK${defender?` vs ${defender.card.name}: ${defense?msg.target.defense+' DEF':msg.target.attack+' ATK'}`:' · direct attack'}.`,'battle',[attacker?.uid,defender?.uid].filter(Boolean),side,battleNotice?{battleNotice}:{});break;
+      }
       case T.DAMAGE:case T.PAY_LPCOST:case T.RECOVER:{
         if(msg.type===T.PAY_LPCOST&&!r.resolving&&!r.automaticSource){sync(r);const card=upkeepSource(r,r.side(msg.player),msg.amount);if(card)r.automaticSource={uid:card.uid,card:card.card,side:card.controller};}
         const automatic=r.automaticSource;

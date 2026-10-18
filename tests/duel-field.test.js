@@ -192,7 +192,7 @@ test('all twenty zones and both rows keep their grid display across landscape ph
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     for(const [width,height] of [[568,320],[667,375],[844,390],[932,430],[1024,768]]){
       rotate(r,width,height);
-      const table=r.$('.duel-table');assert.equal(table.dataset.fitSize,`${width}:${height}:false`);assert.ok(parseFloat(table.style.getPropertyValue('--card-height'))>32);
+      const table=r.$('.duel-table');assert.equal(table.dataset.fitSize,`${width}:${height}`);assert.ok(parseFloat(table.style.getPropertyValue('--card-height'))>32);
       assert.equal(r.$('.duel-arena').hidden,false,`${width}×${height}`);
       assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
       assert.equal(r.main.querySelectorAll('[data-pile-zone]').length,10);
@@ -212,7 +212,7 @@ test('the attached hand toggle doubles the hand without a focus frame or replaci
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const first=r.$('.duel-hand-card'),table=r.$('.duel-table'),normal=parseFloat(table.style.getPropertyValue('--hand-card-size'));
     assert.equal(r.$('.duel-hand').hasAttribute('tabindex'),false);assert.equal(r.$('.duel-hand-rack').firstElementChild,r.$('.duel-hand-zoom'));
-    r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal*2);assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
+    r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-area')).getPropertyValue('--hand-zoom'),'2');assert.equal(r.window.getComputedStyle(r.$('.duel-hand-rack')).position,'absolute');assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
     r.$('.duel-hand-zoom').click();assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-zoom')).position,'static');
   }finally{r.close();}
 });
@@ -221,7 +221,7 @@ test('the game mats oppose vertically and mirror auxiliary and pile positions fo
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const computed=selector=>r.window.getComputedStyle(r.$(selector));
     assert.equal(computed('.opponent-side').gridRow,'1');assert.equal(computed('.player-side').gridRow,'3');assert.equal(computed('.duel-midline').gridRow,'2');
-    for(const [prefix,leftColumn,rightColumn,auxAreas,pileAreas] of [['.player-side','1','3','"field" "extra"','"grave" "deck"'],['.opponent-side','1','3','"extra" "field"','"deck" "grave"']]){
+    for(const [prefix,leftColumn,rightColumn,auxAreas,pileAreas] of [['.player-side','1','3','"field" "extra"','"grave" "deck"'],['.opponent-side','3','1','"extra" "field"','"deck" "grave"']]){
       assert.equal(computed(prefix+' .duel-auxiliary-zones').gridColumn,leftColumn);
       assert.equal(computed(prefix+' .duel-pile-zones').gridColumn,rightColumn);
       assert.equal(computed(prefix+' .duel-auxiliary-zones').gridTemplateAreas,auxAreas);

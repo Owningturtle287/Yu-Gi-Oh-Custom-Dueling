@@ -134,6 +134,8 @@ test('Jirai Gumo renders distinct coin faces and explains the actual call and LP
   const e=backend();let s=await damageDuel(e,[...cards,jirai],{defendingSide:1,attacker:'Jirai Gumo',traps:[]});s=advanceBattle(e,s,x=>x.choice?.selectionType==='select_option');const r=await ui(e,s);try{
     await waitFor(()=>r.$('.duel-picker-body'));assert.match(r.modal.querySelector('h2').textContent,/Jirai Gumo.*Call the coin/);assert.match(r.$('.duel-choice-help').textContent,/half.*LP/);
     const options=[...r.modal.querySelectorAll('[data-duel-choice]')];assert.deepEqual(options.map(b=>b.querySelector('strong').textContent),['Heads','Tails']);assert.deepEqual(options.map(b=>b.querySelector('svg text').textContent),['H','T']);
+    const style=r.window.document.createElement('style');style.textContent=(await Promise.all(['styles.css','duel.css','light.css'].map(f=>readFile(new URL('../'+f,import.meta.url),'utf8')))).join('\n');r.window.document.head.append(style);
+    for(const button of options){const css=r.window.getComputedStyle(button);assert.equal(css.gridTemplateColumns,'48px minmax(0,1fr) 12px');assert.equal(css.minHeight,'82px');assert.equal(button.querySelector('.duel-coin-choice-art').nextElementSibling.querySelector('strong').textContent,button.getAttribute('aria-label').replace('Call ',''));}
     assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });

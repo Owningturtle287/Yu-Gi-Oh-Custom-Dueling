@@ -2,11 +2,11 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 // Fit four card rows to the actual safe-area-adjusted table, then size the
 // columns from those cards instead of spreading five slots across the screen.
-export function arenaGeometry(width,height,{rightInset=0,expandedHand=false}={}){
+export function arenaGeometry(width,height,{rightInset=0}={}){
   width=Math.max(320,width);height=Math.max(240,height);
   rightInset=clamp(Number(rightInset)||0,0,100);
-  const phase=(width<640?24:28)+rightInset,phaseGap=4,fieldWidth=width-8-phase-phaseGap;
-  let topHand=clamp(height*.05,16,26),bottomHand=clamp(height*.14,52,80)*(expandedHand?2:1);
+  const phase=24+rightInset,phaseGap=4,fieldWidth=width-8-phase-phaseGap;
+  let topHand=clamp(height*.05,16,26),bottomHand=clamp(height*.14,52,80);
   const handCardSize=bottomHand;
   const rowGap=3,sideGap=14,handGap=2,pileGap=18,outer=28,cellGap=4;
   const available=height-8-topHand-bottomHand-sideGap-handGap*2;
