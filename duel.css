@@ -155,10 +155,9 @@ dialog:has(.duel-log-body) { width:min(880px,calc(calc(var(--duel-vw,1dvw) * 100
 /* Immersive landscape table: tightly packed mats, outer hands, center phases. */
 .duel-playing .app-shell { max-width:none; padding:0; }
 .duel-playing .topbar, .duel-playing .bottom-nav { display:none; }
-.duel-playing #main:has(.duel-session) { padding:max(3px,var(--duel-safe-top,env(safe-area-inset-top))) 0 max(3px,var(--duel-safe-bottom,env(safe-area-inset-bottom))) max(4px,var(--duel-safe-left,env(safe-area-inset-left))); }
 .duel-session { height:100%; min-height:0; width:100%; overflow:hidden; }
 .duel-arena[hidden] { display:none!important; }
-.duel-arena { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr); gap:0; height:100%; min-height:0; overflow:hidden; width:100%; max-width:none; margin:auto; }
+.duel-playing .duel-arena.screen { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr); gap:0; height:100%; min-height:0; overflow:hidden; width:100%; max-width:none; margin:0; }
 
 
 .duel-grave-group { grid-area:grave; display:grid; grid-template-columns:minmax(0,1fr) minmax(22px,.42fr); grid-template-rows:minmax(0,1fr); gap:3px; min-width:0; min-height:0; }
@@ -588,7 +587,7 @@ dialog:has(.duel-response-body) { width:min(540px,calc(calc(var(--duel-vw,1dvw) 
 .duel-table [data-pile-zone=banished] .duel-pile-count { top:auto; bottom:-9px; left:0; right:0; min-width:0; width:18px; font-size:6px; line-height:9px; }
 .duel-field-slot>.duel-inline-actions { right:auto; left:calc(-24px - 2px); bottom:auto; top:50%; transform:translateY(-50%); }
 .opponent-side .duel-field-slot>.duel-inline-actions { left:auto; right:calc(-24px - 2px); }
-.duel-phase-rail { grid-column:2; grid-row:1/-1; min-width:0; min-height:0; padding-right:var(--duel-safe-right,env(safe-area-inset-right)); }
+.duel-phase-rail { grid-column:2; grid-row:1/-1; min-width:0; min-height:0; padding:0; }
 .duel-phase-rail .duel-phases { width:100%; grid-template-columns:minmax(0,1fr); grid-template-rows:repeat(6,minmax(0,1fr)); gap:4px; }
 .duel-phase-rail .duel-phases li { flex-direction:column; gap:2px; padding:3px 1px; border-radius:9px; min-height:0; }
 .duel-phase-rail .duel-phases li>span { font-size:11px; }
@@ -609,8 +608,7 @@ dialog:has(.duel-response-body) { width:min(540px,calc(calc(var(--duel-vw,1dvw) 
 
 /* A fixed landscape canvas, including the document's modal top layer. */
 html { --duel-vw:1dvw; --duel-vh:1dvh; --duel-safe-left:env(safe-area-inset-left); --duel-safe-right:env(safe-area-inset-right); --duel-safe-top:env(safe-area-inset-top); --duel-safe-bottom:env(safe-area-inset-bottom); }
-.duel-playing #main:has(.duel-session) { position:fixed; inset:0; width:100dvw; height:100dvh; transform:translateZ(0); padding:max(3px,var(--duel-safe-top)) 0 max(3px,var(--duel-safe-bottom)) max(4px,var(--duel-safe-left)); }
-.duel-phase-rail { padding-right:var(--duel-safe-right); }
+.duel-playing #main:has(.duel-session) { position:fixed; inset:0; width:100dvw; height:100dvh; transform:translateZ(0); padding:0; }
 html[data-duel-rotated=true] { --duel-vw:1dvh; --duel-vh:1dvw; --duel-safe-left:env(safe-area-inset-top); --duel-safe-right:env(safe-area-inset-bottom); --duel-safe-top:env(safe-area-inset-right); --duel-safe-bottom:env(safe-area-inset-left); }
 html[data-duel-rotated=true] #main:has(.duel-session) { inset:auto; left:100dvw; top:0; width:100dvh; height:100dvw; transform-origin:0 0; transform:rotate(90deg); }
 html.duel-playing #modal { max-height:calc(var(--duel-vh) * 100 - 16px); max-width:calc(var(--duel-vw) * 100 - var(--duel-safe-left) - var(--duel-safe-right) - 20px); }
@@ -633,15 +631,19 @@ html[data-duel-rotated=true] #modal { position:fixed; inset:auto; left:50%; top:
 .duel-card-rail .duel-inline-actions { order:1; }
 .duel-opponent-hand { --ai-card-size:clamp(16px,calc(var(--duel-vh) * 5),26px); align-items:flex-start; overflow:hidden; }
 .duel-opponent-card { width:calc(var(--ai-card-size) * 2 * .686); height:calc(var(--ai-card-size) * 2); transform:translateY(calc(var(--ai-card-size) * -1)); }
-.duel-hand-area { position:relative; align-items:flex-end; padding:0; overflow:visible; z-index:7; }
-.duel-hand-rack { position:absolute; bottom:var(--hand-rack-bottom,0px); left:var(--hand-rack-left,0px); display:flex; align-items:center; gap:5px; width:var(--hand-rack-width); height:var(--hand-display-height); min-width:0; flex:none; }
+.duel-hand-area { position:relative; align-items:flex-end; padding:0 0 max(4px,var(--duel-safe-bottom)); overflow:visible; z-index:7; pointer-events:none; }
+.duel-hand-rack { position:absolute; bottom:var(--hand-rack-bottom,4px); left:var(--hand-rack-left,0px); display:flex; align-items:center; width:var(--hand-rack-width); height:var(--hand-display-height); min-width:0; flex:none; }
+.duel-hand-rack,.duel-hand { pointer-events:none; }
+.duel-hand-area button { pointer-events:auto; }
 .duel-hand-shell { width:var(--hand-display-width); }
 .duel-hand { width:max-content; min-width:0; flex:none; gap:var(--hand-card-gap,3px); overflow:visible; touch-action:manipulation; border:0; outline:none!important; box-shadow:none!important; scrollbar-width:none; }
 .duel-hand::-webkit-scrollbar { display:none; }
-.duel-hand-zoom { position:static; flex:none; width:30px; height:32px; min-width:30px; min-height:32px; padding:2px; border-radius:9px; font-size:10px; color:#285e4a; border-color:#b5cabc; background:#fff; }
+.duel-hand-zoom { position:absolute; z-index:2; left:var(--hand-toggle-left); bottom:var(--hand-toggle-bottom); width:30px; height:32px; min-width:30px; min-height:32px; padding:2px; border-radius:9px; font-size:10px; color:#285e4a; border-color:#b5cabc; background:#fff; }
 .duel-hand-card { flex:none; }
 .duel-hand-rack[data-compact-hand=true] .duel-inline-actions { display:none; }
-.duel-table>.opponent-life { position:absolute; z-index:6; top:3px; left:5px; right:auto; }
+.duel-table>.opponent-life { position:absolute; z-index:6; top:7px; left:12px; right:auto; }
+.duel-side>.player-life { bottom:4px; bottom:max(4px,var(--duel-safe-bottom)); left:8px; }
+.duel-action-area { bottom:max(4px,var(--duel-safe-bottom)); }
 .duel-utility-actions { top:4px; right:calc(var(--phase-width) + var(--phase-gap) + 8px); }
 .duel-table [data-pile-zone=banished] .duel-pile-count { top:50%; bottom:auto; left:calc(100% + 3px); right:auto; width:auto; min-width:14px; transform:translateY(-50%); }
 .duel-table .opponent-side [data-pile-zone=banished] .duel-pile-count { left:auto; right:calc(100% + 3px); }

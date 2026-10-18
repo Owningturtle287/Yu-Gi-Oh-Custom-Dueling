@@ -16,7 +16,7 @@ const backend=()=>createNativeBackend({rules:()=>rules});
 const decks=()=>[0,1].map(()=>({name:'Duel refinement',main:Array(40).fill(get('Mystical Elf')),extra:[]}));
 const waitFor=async predicate=>{const deadline=Date.now()+3000;while(!predicate()&&Date.now()<deadline)await new Promise(r=>setTimeout(r,5));assert.ok(predicate(),'Expected duel checkpoint');};
 async function rig(engine,state){
-  const window=new Window({url:'https://example.com/repo/'});window.happyDOM.setWindowSize({width:844,height:390});window.document.body.innerHTML='<main></main><dialog id="modal"></dialog>';
+  const window=new Window({url:'https://example.com/repo/'});window.happyDOM.setWindowSize({width:844,height:390});window.document.body.innerHTML='<main id="main"></main><dialog id="modal"></dialog>';
   for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],writable:true,configurable:true});
   const main=document.querySelector('main'),modal=document.querySelector('dialog'),errors=[],closeDialog=()=>modal.removeAttribute('open');
   document.addEventListener('click',event=>{if(event.target.closest('[data-action="close"]')){closeDialog();modal.dispatchEvent(new window.Event('close'));}});
@@ -29,10 +29,36 @@ test('the whole hand fits without scrolling as its count and enlargement change'
   for(const [width,height] of [[320,293],[438,293],[714,363],[808,390],[988,740]])for(const count of [0,1,5,6,10,20,40])for(const expanded of [false,true]){
     const hand=handGeometry(width,height,{count,expanded,baseSize:52});
     assert.ok(hand.left>=0);assert.ok(hand.left+hand.rackWidth<=width+.01,`${count} cards at ${width}px`);
-    assert.ok(hand.cardWidth*count+Math.max(0,count-1)*hand.values['--hand-card-gap']<=hand.rackWidth-35+.01);
-    assert.ok(hand.cardHeight<=height*.48);if(expanded)assert.equal(hand.bottom,48);
+    assert.ok(hand.cardWidth*count+Math.max(0,count-1)*hand.values['--hand-card-gap']<=hand.rackWidth+.01);
+    assert.ok(hand.cardHeight<=height*.48);if(expanded)assert.equal(hand.bottom,52);
+    const normal=handGeometry(width,height,{count,baseSize:52});
+    assert.equal(hand.toggleLeft,normal.toggleLeft);assert.equal(hand.toggleBottom,normal.toggleBottom);
   }
   assert.equal(handGeometry(808,390,{count:6,expanded:true,baseSize:52}).cardHeight,104);
+});
+test('the hand overlay cannot intercept empty-area phase taps, and the full-screen frame has no outer safe-area gutters',async()=>{
+  const engine=backend(),state=await engine.createMatch(decks(),{cards,first:0,seed:17}),r=await rig(engine,state);
+  try{
+    const css=(await Promise.all(['styles.css','duel.css','light.css'].map(f=>readFile(new URL('../'+f,import.meta.url),'utf8')))).join('\n');
+    r.window.document.head.innerHTML=`<style>${css}</style>`;
+    const computed=s=>r.window.getComputedStyle(r.$(s));
+    assert.equal(computed('#main').padding,'0px');assert.equal(computed('.duel-arena').maxWidth,'none');
+    assert.equal(computed('.duel-phase-rail').paddingRight,'0px');
+    assert.equal(computed('.duel-hand-area').pointerEvents,'none');assert.equal(computed('.duel-hand-rack').pointerEvents,'none');
+    for(const selector of ['.duel-hand-card','.duel-hand-zoom'])assert.equal(computed(selector).pointerEvents,'auto',selector);
+    assert.notEqual(computed('.duel-controls button').pointerEvents,'none');
+    assert.equal(r.$('.duel-hand-zoom').parentElement,r.$('.duel-hand-area'));
+  }finally{r.close();}
+});
+test('the opening-turn phase button advances normally while correctly skipping the first Battle Phase',async()=>{
+  const engine=backend(),state=await engine.createMatch(decks(),{cards,first:0,seed:18}),r=await rig(engine,state);
+  try{
+    await waitFor(()=>r.state.phase==='main1'&&r.$('.duel-arena').dataset.moving==='false');
+    assert.equal(r.$('[data-duel="next"]').disabled,false);assert.equal(r.$('[data-duel="end"]').disabled,false);
+    assert.equal(r.state.actions[0].find(a=>a.type==='NEXT').label,'End');assert.match(r.$('#duel-decision').textContent,/Battle is skipped/);
+    r.$('[data-duel="next"]').click();await waitFor(()=>r.state.turn>1);
+    assert.equal(r.state.log.some(e=>e.turn===1&&e.message==='Battle Phase.'),false);assert.deepEqual(r.errors,[]);
+  }finally{r.close();}
 });
 async function exchangeState(engine){
   let state=await engine.createMatch(decks(),{cards,first:1,seed:42,openingHands:[[get('Exchange'),get('Dark Magician'),get('Mystical Elf')],[get('Summoned Skull'),get('Blue-Eyes White Dragon'),get('Gaia The Fierce Knight')]]});

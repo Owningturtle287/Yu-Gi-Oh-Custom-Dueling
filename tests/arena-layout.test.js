@@ -24,11 +24,12 @@ test('iPhone 14 field uses larger card surfaces and a tighter central rack than 
   assert.ok(g.phase<=44);
   assert.ok(g.cardHeight>63,'The clipped AI hand returns vertical room to the card art');assert.equal(g.rowGap,3);assert.ok(g.phase<=28);
 });
-test('the phase rail extends into the right safe area while preserving a camera-safe label column',()=>{
+test('the phase rail stays 24px at the screen edge and home-indicator clearance is reserved inside the frame',()=>{
   for(const inset of [0,24,47,59]){
-    const normal=arenaGeometry(750,363),edge=arenaGeometry(750+inset,363,{rightInset:inset});
-    assert.equal(edge.phase,normal.phase+inset);assert.equal(edge.fieldWidth,normal.fieldWidth);assert.equal(edge.cardHeight,normal.cardHeight);
-    assert.equal(edge.values['--phase-safe'],inset);assert.ok(edge.required<=edge.fieldWidth);
+    const edge=arenaGeometry(750+inset,390,{bottomInset:21});
+    assert.equal(edge.phase,24);assert.equal(edge.fieldWidth,750+inset-36);
+    assert.equal(edge.bottomInset,21);assert.ok(edge.required<=edge.fieldWidth);
+    assert.ok(edge.values['--hand-card-size']>=64);assert.ok(edge.bottomHand>=52+21);
   }
 });
 test('phase rail, aligned piles, side gutters and compact metadata have explicit independent tracks',async()=>{
@@ -36,7 +37,7 @@ test('phase rail, aligned piles, side gutters and compact metadata have explicit
     const source=await readFile(new URL('../duel.css',import.meta.url),'utf8');window.document.head.innerHTML=`<style>${source}</style>`;
     window.document.body.innerHTML='<div class="duel-table"><section class="duel-side player-side"><div class="duel-mat"><div class="duel-pile-zones"><div class="duel-grave-group"><article class="duel-zone-shell" data-pile-zone="grave"><div class="duel-zone-surface"></div></article><article class="duel-zone-shell" data-pile-zone="banished"><div class="duel-zone-surface"></div></article></div><article class="duel-zone-shell" data-pile-zone="deck"><div class="duel-zone-surface"></div></article></div><div class="duel-board"><div class="duel-zone-row"><article class="duel-zone-shell monster-slot"><div class="duel-zone-surface"><button class="duel-zone"><span class="duel-card-visual"></span></button></div><div class="duel-card-rail"><div class="duel-card-stats"><span><small>ATK</small><b>99999</b></span><span><small>DEF</small><b>99999</b></span></div><div class="duel-inline-actions"><button class="duel-quick-action">Effect</button></div></div></article></div></div></div></section><nav class="duel-phase-rail"><ol class="duel-phases"><li>M1</li></ol></nav></div>';
     const $=s=>window.document.querySelector(s),css=s=>window.getComputedStyle($(s)),table=$('.duel-table');applyArenaGeometry(table,750,363);
-    applyArenaGeometry(table,797,363,{rightInset:47});assert.equal(css('.duel-phases li').width,'24px');assert.equal(css('.duel-phases li').maxWidth,'24px');assert.equal(css('.duel-phases').width,'100%');
+    applyArenaGeometry(table,844,390,{bottomInset:21});assert.equal(css('.duel-phases li').width,'24px');assert.equal(css('.duel-phases li').maxWidth,'24px');assert.equal(css('.duel-phases').width,'100%');
     assert.equal(css('.duel-phase-rail').gridColumn,'2');assert.equal(css('.duel-phases').gridTemplateColumns,'minmax(0,1fr)');assert.equal(css('.duel-phases').gridTemplateRows,'repeat(6,minmax(0,1fr))');
     assert.equal(css('.duel-grave-group').gridTemplateColumns,'minmax(0,1fr)');assert.equal(css('[data-pile-zone=grave]').gridColumn,'1');assert.equal(css('[data-pile-zone=banished]').position,'absolute');
     assert.equal(css('[data-pile-zone=grave] .duel-zone-surface').width,css('[data-pile-zone=deck] .duel-zone-surface').width);

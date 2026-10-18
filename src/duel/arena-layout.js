@@ -2,12 +2,12 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 // Fit four card rows to the actual safe-area-adjusted table, then size the
 // columns from those cards instead of spreading five slots across the screen.
-export function arenaGeometry(width,height,{rightInset=0}={}){
+export function arenaGeometry(width,height,{bottomInset=4}={}){
   width=Math.max(320,width);height=Math.max(240,height);
-  rightInset=clamp(Number(rightInset)||0,0,100);
-  const phase=24+rightInset,phaseGap=4,fieldWidth=width-8-phase-phaseGap;
-  let topHand=clamp(height*.05,16,26),bottomHand=clamp(height*.14,52,80);
-  const handCardSize=bottomHand;
+  bottomInset=clamp(Number(bottomInset)||0,0,60);
+  const phase=24,phaseGap=4,fieldWidth=width-8-phase-phaseGap;
+  const handCardSize=clamp(height*.17,64,96);
+  let topHand=clamp(height*.05,16,26),bottomHand=clamp(height*.14,52,80)+bottomInset;
   const rowGap=3,sideGap=14,handGap=2,pileGap=18,outer=45,cellGap=4;
   const available=height-8-topHand-bottomHand-sideGap-handGap*2;
   let compact=fieldWidth<570||(available-rowGap*2)/4<56;
@@ -25,9 +25,9 @@ export function arenaGeometry(width,height,{rightInset=0}={}){
   const spare=Math.max(0,available-rowGap*2-footer*2-cardHeight*4);
   topHand+=spare/2;bottomHand+=spare/2;
   const mat=cardHeight*2+rowGap+footer;
-  return {...m,compact,phase,rightInset,fieldWidth,footer,rowGap,cellGap,pileGap,topHand,bottomHand,mat,
+  return {...m,compact,phase,bottomInset,fieldWidth,footer,rowGap,cellGap,pileGap,topHand,bottomHand,mat,
     topSide:topHand+handGap+mat,bottomSide:bottomHand+handGap+mat,sideGap,
-    values:{'--phase-width':phase,'--phase-safe':rightInset,'--phase-gap':phaseGap,'--card-height':cardHeight,'--card-width':m.cardWidth,'--art-bay':m.bay,'--action-width':m.action,'--slot-width':m.slot,'--board-width':m.board,'--stat-footer':footer,'--row-gap':rowGap,'--cell-gap':cellGap,'--pile-gap':pileGap,'--ai-hand-size':topHand,'--player-hand-size':bottomHand,'--hand-card-size':handCardSize,'--ai-side-height':topHand+handGap+mat,'--player-side-height':bottomHand+handGap+mat,'--side-gap':sideGap}};
+    values:{'--phase-width':phase,'--phase-gap':phaseGap,'--card-height':cardHeight,'--card-width':m.cardWidth,'--art-bay':m.bay,'--action-width':m.action,'--slot-width':m.slot,'--board-width':m.board,'--stat-footer':footer,'--row-gap':rowGap,'--cell-gap':cellGap,'--pile-gap':pileGap,'--ai-hand-size':topHand,'--player-hand-size':bottomHand,'--hand-card-size':handCardSize,'--ai-side-height':topHand+handGap+mat,'--player-side-height':bottomHand+handGap+mat,'--side-gap':sideGap}};
 }
 
 export function applyArenaGeometry(table,width,height,options){
@@ -37,16 +37,23 @@ export function applyArenaGeometry(table,width,height,options){
 }
 
 // Hand fitting is an overlay calculation. It never changes a field track.
-// Expanded hands lift above the bottom controls and use the entire field width.
-export function handGeometry(width,height,{count,expanded=false,baseSize=52}={}){
+// Expanded hands lift above the controls. The toggle keeps its normal position.
+export function handGeometry(width,height,{count,expanded=false,baseSize=64,bottomInset=4}={}){
   count=Math.max(0,Math.floor(Number(count)||0));
+  bottomInset=clamp(Number(bottomInset)||0,0,60);
   const dock=clamp(width*.27,188,224),lp=clamp(width*.1,76,104);
-  const lifted=expanded||width-(lp+12)-(dock+12)<150;
-  const left=lifted?8:lp+12,right=lifted?8:dock+12;
-  const available=Math.max(52,width-left-right),toggle=30,toggleGap=5,gap=count>12?1:3;
-  const target=Math.min(baseSize*(expanded?2:1),height*.48);
-  const cardWidth=count?Math.max(1,Math.min(target*.686,(available-toggle-toggleGap-gap*(count-1))/count)):0;
-  const cardHeight=count?cardWidth/.686:target,rackWidth=toggle+toggleGap+(count?cardWidth*count+gap*(count-1):80);
-  return {cardWidth,cardHeight,rackWidth,left:left+(available-rackWidth)/2,bottom:lifted?48:0,
-    values:{'--hand-display-height':cardHeight,'--hand-display-width':cardWidth,'--hand-card-gap':gap,'--hand-rack-width':rackWidth,'--hand-rack-left':left+(available-rackWidth)/2,'--hand-rack-bottom':lifted?48:0}};
+  const toggle=30,toggleGap=5,gap=count>12?1:3;
+  const normalLifted=width-(lp+12)-(dock+12)<150;
+  const fit=large=>{
+    const lifted=large||normalLifted,left=lifted?8:lp+12,right=lifted?8:dock+12;
+    const available=Math.max(52,width-left-right),reserve=large?0:toggle+toggleGap;
+    const target=Math.min(baseSize*(large?2:1),height*.48);
+    const cardWidth=count?Math.max(1,Math.min(target*.686,(available-reserve-gap*(count-1))/count)):0;
+    const cardHeight=count?cardWidth/.686:target,cardSpan=count?cardWidth*count+gap*(count-1):80;
+    return {cardWidth,cardHeight,rackWidth:cardSpan,left:left+(available-cardSpan-reserve)/2+reserve,bottom:bottomInset+(lifted?48:0)};
+  };
+  const normal=fit(false),hand=expanded?fit(true):normal;
+  const toggleLeft=normal.left-toggle-toggleGap,toggleBottom=normal.bottom+Math.max(0,(normal.cardHeight-32)/2);
+  return {...hand,toggleLeft,toggleBottom,
+    values:{'--hand-display-height':hand.cardHeight,'--hand-display-width':hand.cardWidth,'--hand-card-gap':gap,'--hand-rack-width':hand.rackWidth,'--hand-rack-left':hand.left,'--hand-rack-bottom':hand.bottom,'--hand-toggle-left':toggleLeft,'--hand-toggle-bottom':toggleBottom}};
 }

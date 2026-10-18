@@ -192,7 +192,7 @@ test('all twenty zones and both rows keep their grid display across landscape ph
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     for(const [width,height] of [[568,320],[667,375],[844,390],[932,430],[1024,768]]){
       rotate(r,width,height);
-      const table=r.$('.duel-table');assert.equal(table.dataset.fitSize,`${width}:${height}`);assert.ok(parseFloat(table.style.getPropertyValue('--card-height'))>32);
+      const table=r.$('.duel-table');assert.equal(table.dataset.fitSize,`${width}:${height}:4`);assert.ok(parseFloat(table.style.getPropertyValue('--card-height'))>32);
       assert.equal(r.$('.duel-arena').hidden,false,`${width}×${height}`);
       assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
       assert.equal(r.main.querySelectorAll('[data-pile-zone]').length,10);
@@ -207,14 +207,15 @@ test('all twenty zones and both rows keep their grid display across landscape ph
     }
   }finally{r.close();}
 });
-test('the attached hand toggle doubles the hand without a focus frame or replacing card nodes',async()=>{
+test('the fixed hand toggle enlarges only the hand without a focus frame or replacing card nodes',async()=>{
   const r=await rig({width:844,height:390});try{
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const first=r.$('.duel-hand-card'),table=r.$('.duel-table'),normal=parseFloat(table.style.getPropertyValue('--hand-card-size'));
     assert.equal(r.window.getComputedStyle(r.$('.duel-hand')).scrollbarWidth,'none');assert.equal(r.window.getComputedStyle(r.$('.duel-opponent-hand')).getPropertyValue('--ai-card-size'),'clamp(16px,calc(1dvh * 5),26px)');
-    assert.equal(r.$('.duel-hand').hasAttribute('tabindex'),false);assert.equal(r.$('.duel-hand-rack').firstElementChild,r.$('.duel-hand-zoom'));
-    r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.ok(parseFloat(r.$('.duel-hand-rack').style.getPropertyValue('--hand-display-height'))>normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-rack')).position,'absolute');assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
-    r.$('.duel-hand-zoom').click();assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-zoom')).position,'static');
+    const area=r.$('.duel-hand-area'),toggle=()=>['--hand-toggle-left','--hand-toggle-bottom'].map(v=>area.style.getPropertyValue(v)),position=toggle();
+    assert.equal(r.$('.duel-hand').hasAttribute('tabindex'),false);assert.equal(r.$('.duel-hand-zoom').parentElement,area);
+    r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.deepEqual(toggle(),position);assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.ok(parseFloat(area.style.getPropertyValue('--hand-display-height'))>normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-rack')).position,'absolute');assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
+    r.$('.duel-hand-zoom').click();assert.deepEqual(toggle(),position);assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-zoom')).position,'absolute');
   }finally{r.close();}
 });
 test('the game mats oppose vertically and mirror auxiliary and pile positions for each duelist',async()=>{
@@ -427,7 +428,7 @@ test('expanded mats, bounded stats, and POV life corners hold at phone and table
         assert.equal(bar.querySelectorAll('small').length,2);assert.equal(parseFloat(r.window.getComputedStyle(bar.querySelector('span')).minWidth),0);
       }
       const yours=r.window.getComputedStyle(r.$('.player-life')),foe=r.window.getComputedStyle(r.$('.opponent-life'));
-      assert.equal(yours.left,'4px');assert.equal(yours.bottom,'2px');assert.equal(foe.left,'5px');assert.equal(foe.top,'3px');
+      assert.equal(yours.left,'8px');assert.match(yours.bottom,/4px/);assert.equal(foe.left,'12px');assert.equal(foe.top,'7px');
       assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
     }
     assert.match(r.$('.yours .duel-card-stats').textContent,/99999/);
