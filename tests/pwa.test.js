@@ -11,13 +11,15 @@ test('manifest uses relative GitHub Pages scope and includes installable and mas
   assert.ok(manifest.icons.some(i => i.sizes === '512x512' && i.purpose === 'maskable'));
 });
 test('service worker installs a complete shell and removes only this app’s old shell cache', async () => {
-  const listeners = {}, removed = [], installed = [];
+  const listeners = {}, removed = [], installed = [], requests = [];
   const scope = 'https://example.com/repo/';
   const self = { registration: { scope }, addEventListener: (event, handler) => listeners[event] = handler, skipWaiting: async () => {}, clients: { claim: async () => {} } };
-  const caches = { open: async () => ({ addAll: async paths => installed.push(...paths) }), keys: async () => [`duel-atlas:${scope}:shell-v0.0.0`, `duel-atlas:${scope}:images-v1`, 'another-app-cache'], delete: async key => removed.push(key) };
-  runInNewContext(await readFile(new URL('../sw.js', import.meta.url), 'utf8'), { self, caches, URL, Map, Set, Date, Promise, Response, setTimeout });
+  const caches = { open: async () => ({ addAll: async paths => {requests.push(...paths);installed.push(...paths.map(request=>'./'+new URL(request.url).pathname.slice(new URL(scope).pathname.length)));} }), keys: async () => [`duel-atlas:${scope}:shell-v0.0.0`, `duel-atlas:${scope}:images-v1`, 'another-app-cache'], delete: async key => removed.push(key) };
+  runInNewContext(await readFile(new URL('../sw.js', import.meta.url), 'utf8'), { self, caches, URL, Map, Set, Date, Promise, Request, Response, setTimeout });
   let pending; listeners.install({ waitUntil: promise => pending = promise }); await pending;
   for (const path of installed) if (path !== './') await access(new URL('../' + path, import.meta.url));
+  assert.equal(new Set(requests.map(request=>request.url)).size,requests.length,'Cache.addAll must receive each shell URL once');
+  assert.ok(requests.every(request=>request.cache==='reload'),'Installing a release must bypass stale HTTP-cached scripts and styles');
   assert.ok(installed.includes('./src/core.js'));
   assert.ok(installed.includes('./src/era.js'));
   assert.ok(installed.includes('./src/layout.js'));
@@ -32,6 +34,15 @@ test('service worker installs a complete shell and removes only this app’s old
   assert.ok(installed.includes('./duel.css'));
   listeners.activate({ waitUntil: promise => pending = promise }); await pending;
   assert.deepEqual(removed, [`duel-atlas:${scope}:shell-v0.0.0`]);
+});
+test('navigation keeps the installed HTML together with the same cached script and style release',async()=>{
+  const listeners={},scope='https://example.com/repo/';let networkCalls=0;
+  const cached=new Response('<html>installed release</html>'),self={registration:{scope},addEventListener:(name,handler)=>listeners[name]=handler};
+  const caches={open:async()=>({match:async url=>url===scope+'index.html'?cached:undefined})};
+  runInNewContext(await readFile(new URL('../sw.js',import.meta.url),'utf8'),{self,caches,URL,Request,Map,Set,Date,Promise,Response,setTimeout,fetch:async()=>{networkCalls++;return new Response('different release');}});
+  let response;listeners.fetch({request:{method:'GET',mode:'navigate',url:scope},respondWith:promise=>response=promise});
+  assert.equal(await (await response).text(),'<html>installed release</html>');assert.equal(networkCalls,0);
+  caches.open=async()=>{throw Error('storage unavailable');};listeners.fetch({request:{method:'GET',mode:'navigate',url:scope},respondWith:promise=>response=promise});assert.equal(await (await response).text(),'different release');assert.equal(networkCalls,1);
 });
 test('mobile layout contains page overflow and limits scroll regions', async () => {
   const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');

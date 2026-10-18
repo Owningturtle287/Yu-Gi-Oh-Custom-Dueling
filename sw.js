@@ -1,6 +1,6 @@
 /* App shell updates with each release; card images persist independently. */
 const PREFIX = 'duel-atlas:' + self.registration.scope;
-const SHELL_CACHE = PREFIX + ':shell-v0.4.1';
+const SHELL_CACHE = PREFIX + ':shell-v0.4.1-fresh1';
 const IMAGE_CACHE = PREFIX + ':images-v1';
 const SHELL = ['./', './index.html', './styles.css', './duel.css', './light.css', './effects.css', './battle.css', './src/app.js', './src/core.js', './src/cards.js', './src/era.js', './src/layout.js', './src/deck-view.js', './src/icons.js', './src/duel/catalog.js', './src/duel/decks.js', './src/duel/engine.js', './src/duel/ai.js', './src/duel/native-ai.js', './src/duel/ai-knowledge.js', './src/duel/ai-combat.js', './src/duel/ai-turn.js', './src/duel/ai-memory.js', './src/duel/ai-guidance.js', './src/duel/ai-client.js', './src/duel/ai-worker.js', './src/duel/ui.js', './src/duel/intro.js','./src/duel/battle-presentation.js', './src/duel/motion.js', './src/duel/flow.js', './src/duel/log.js', './src/duel/field.js', './src/duel/arena-layout.js', './src/duel/viewport.js', './src/duel/saves.js', './src/duel/native-prompts.js', './src/duel/dom.js', './src/duel/terminal.js', './src/duel/card-view.js', './src/duel/choice-view.js', './src/duel/responses.js', './src/duel/effects.js', './src/duel/attack-arrows.js', './src/duel/battle-timing.js', './manifest.webmanifest', './assets/emblem.svg', './assets/card-back.jpg', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png'];
 
@@ -8,7 +8,7 @@ const RULES = ["./src/duel/native-loader.js","./src/duel/native-engine.js","./sr
 SHELL.push(...RULES);
 const shellURLs = new Set(SHELL.map(path => new URL(path, self.registration.scope).href));
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(SHELL_CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(SHELL_CACHE).then(cache => cache.addAll([...new Set(SHELL)].map(path => new Request(new URL(path, self.registration.scope), { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith(PREFIX + ':shell-') && key !== SHELL_CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
@@ -44,7 +44,13 @@ self.addEventListener('fetch', event => {
     event.respondWith(imageResponse(event.request)); return;
   }
   if (event.request.mode === 'navigate' && event.request.url.startsWith(self.registration.scope)) {
-    event.respondWith(fetch(event.request).catch(async () => (await caches.open(SHELL_CACHE)).match(new URL('./index.html', self.registration.scope).href))); return;
+    // Navigation uses the same installed release as its scripts and styles.
+    // Installation refreshes HTTP-cached files before claiming clients.
+    event.respondWith((async () => {
+      try { const cached = await (await caches.open(SHELL_CACHE)).match(new URL('./index.html', self.registration.scope).href); if (cached) return cached; }
+      catch { /* Storage unavailable: still allow an online launch. */ }
+      return fetch(event.request);
+    })()); return;
   }
   if (shellURLs.has(event.request.url)) {
     // Cached release assets stay together; a new worker installs the next complete shell.
