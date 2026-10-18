@@ -211,6 +211,7 @@ test('the attached hand toggle doubles the hand without a focus frame or replaci
   const r=await rig({width:844,height:390});try{
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);
     const first=r.$('.duel-hand-card'),table=r.$('.duel-table'),normal=parseFloat(table.style.getPropertyValue('--hand-card-size'));
+    assert.equal(r.window.getComputedStyle(r.$('.duel-hand')).scrollbarWidth,'none');assert.equal(r.window.getComputedStyle(r.$('.duel-opponent-hand')).getPropertyValue('--ai-card-size'),'clamp(16px,calc(1dvh * 5),26px)');
     assert.equal(r.$('.duel-hand').hasAttribute('tabindex'),false);assert.equal(r.$('.duel-hand-rack').firstElementChild,r.$('.duel-hand-zoom'));
     r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-area')).getPropertyValue('--hand-zoom'),'2');assert.equal(r.window.getComputedStyle(r.$('.duel-hand-rack')).position,'absolute');assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
     r.$('.duel-hand-zoom').click();assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-zoom')).position,'static');

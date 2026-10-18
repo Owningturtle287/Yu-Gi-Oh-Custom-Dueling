@@ -669,13 +669,14 @@ html[data-duel-rotated=true] #modal { position:fixed; inset:auto; left:50%; top:
 .opponent-side .duel-field-slot>.duel-inline-actions { left:auto; right:calc(-24px - 2px); }
 .duel-card-rail .duel-card-stats { order:2; }
 .duel-card-rail .duel-inline-actions { order:1; }
-.duel-opponent-hand { align-items:flex-start; overflow:hidden; }
-.duel-opponent-card { width:calc(var(--ai-hand-size) * 2 * .686); height:calc(var(--ai-hand-size) * 2); transform:translateY(calc(var(--ai-hand-size) * -1)); }
+.duel-opponent-hand { --ai-card-size:clamp(16px,calc(var(--duel-vh) * 5),26px); align-items:flex-start; overflow:hidden; }
+.duel-opponent-card { width:calc(var(--ai-card-size) * 2 * .686); height:calc(var(--ai-card-size) * 2); transform:translateY(calc(var(--ai-card-size) * -1)); }
 .duel-hand-area { position:relative; align-items:flex-end; justify-content:center; padding-inline:calc(var(--dock-width) + 8px); overflow:visible; z-index:7; --hand-zoom:1; }
 .duel-hand-area[data-expanded=true] { --hand-zoom:2; }
 .duel-hand-rack { position:absolute; bottom:0; left:50%; transform:translateX(-50%); display:flex; align-items:center; align-self:flex-end; gap:5px; width:max-content; max-width:calc(100% - var(--dock-width) * 2 - 16px); height:calc(var(--hand-card-size) * var(--hand-zoom)); min-width:0; flex-shrink:0; }
 .duel-hand-shell { width:calc(var(--hand-card-size) * var(--hand-zoom) * .686); }
-.duel-hand { width:max-content; max-width:100%; min-width:0; border:0; outline:none!important; box-shadow:none!important; }
+.duel-hand { width:max-content; max-width:100%; min-width:0; border:0; outline:none!important; box-shadow:none!important; scrollbar-width:none; }
+.duel-hand::-webkit-scrollbar { display:none; }
 .duel-hand-zoom { position:static; flex:none; width:30px; height:32px; min-width:30px; min-height:32px; padding:2px; border-radius:9px; font-size:10px; color:#285e4a; border-color:#b5cabc; background:#fff; }
 .duel-hand-card { flex:none; }
 .duel-hud { top:3px; left:5px; height:24px; width:auto; }
