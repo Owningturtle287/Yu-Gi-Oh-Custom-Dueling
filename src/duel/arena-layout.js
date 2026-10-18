@@ -8,7 +8,7 @@ export function arenaGeometry(width,height,{rightInset=0}={}){
   const phase=24+rightInset,phaseGap=4,fieldWidth=width-8-phase-phaseGap;
   let topHand=clamp(height*.05,16,26),bottomHand=clamp(height*.14,52,80);
   const handCardSize=bottomHand;
-  const rowGap=3,sideGap=14,handGap=2,pileGap=18,outer=28,cellGap=4;
+  const rowGap=3,sideGap=14,handGap=2,pileGap=18,outer=45,cellGap=4;
   const available=height-8-topHand-bottomHand-sideGap-handGap*2;
   let compact=fieldWidth<570||(available-rowGap*2)/4<56;
   const measure=(cardHeight,compact)=>{
@@ -34,4 +34,19 @@ export function applyArenaGeometry(table,width,height,options){
   const layout=arenaGeometry(width,height,options);
   for(const [key,value] of Object.entries(layout.values))table.style.setProperty(key,`${Math.round(value*100)/100}px`);
   table.dataset.compactField=String(layout.compact);return layout;
+}
+
+// Hand fitting is an overlay calculation. It never changes a field track.
+// Expanded hands lift above the bottom controls and use the entire field width.
+export function handGeometry(width,height,{count,expanded=false,baseSize=52}={}){
+  count=Math.max(0,Math.floor(Number(count)||0));
+  const dock=clamp(width*.27,188,224),lp=clamp(width*.1,76,104);
+  const lifted=expanded||width-(lp+12)-(dock+12)<150;
+  const left=lifted?8:lp+12,right=lifted?8:dock+12;
+  const available=Math.max(52,width-left-right),toggle=30,toggleGap=5,gap=count>12?1:3;
+  const target=Math.min(baseSize*(expanded?2:1),height*.48);
+  const cardWidth=count?Math.max(1,Math.min(target*.686,(available-toggle-toggleGap-gap*(count-1))/count)):0;
+  const cardHeight=count?cardWidth/.686:target,rackWidth=toggle+toggleGap+(count?cardWidth*count+gap*(count-1):80);
+  return {cardWidth,cardHeight,rackWidth,left:left+(available-rackWidth)/2,bottom:lifted?48:0,
+    values:{'--hand-display-height':cardHeight,'--hand-display-width':cardWidth,'--hand-card-gap':gap,'--hand-rack-width':rackWidth,'--hand-rack-left':left+(available-rackWidth)/2,'--hand-rack-bottom':lifted?48:0}};
 }

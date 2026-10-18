@@ -296,10 +296,7 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .duel-life.opponent-life { color:#884368; border-color:#c7a9bd; background:linear-gradient(120deg,#fff,#eee3ed); }
 .duel-life-meter { background:#c8d9d0; }
 .duel-life-meter>i { background:linear-gradient(90deg,#88bca4,#247a5e); }
-.opponent-life .duel-life-meter>i { background:linear-gradient(90deg,#cfacc1,#9b4c77); }
-.duel-turn { color:#7f5c27; }
-.duel-turn span { color:#4e7064; }
-.duel-exit,.duel-utility-actions button { background:#ffffffe8; border-color:#b6ccc4; color:#365f51; box-shadow:0 2px 7px #426e5e12; }
+.opponent-life .duel-life-meter>i { background:linear-gradient(90deg,#cfacc1,#9b4c77); }.duel-utility-actions button  { background:#ffffffe8; border-color:#b6ccc4; color:#365f51; box-shadow:0 2px 7px #426e5e12; }
 .duel-action-area>.duel-prompt { color:#3c6153; }
 .duel-controls button { background:#fbfdfbee; color:#355d4f; border-color:#b0c9bd; }
 .duel-controls .primary { background:#176d5f; color:#fff; border-color:#176d5f; }
@@ -313,9 +310,8 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .duel-quick-action.attack { color:#805014; background:#fff0c9; border-color:#c7a467; }
 .duel-quick-action.effect { color:#654185; background:#f1e8fa; border-color:#b19ac6; }
 .duel-quick-action.flip { color:#1c6c4d; background:#e4f3e5; border-color:#82b89b; }
-.duel-hud .duel-response-policy { color:#715721; border-color:#d4c59a; background:#fff6da; }
-.duel-hud .duel-response-policy b { color:#276b54; }
-.duel-orientation p { color:#526f63; }
+.duel-utility-actions .duel-response-policy { color:#715721; border-color:#d4c59a; background:#fff6da; }
+.duel-utility-actions .duel-response-policy b { color:#276b54; }
 #modal .duel-reveal-caption { flex:none; margin:0; font-size:11px; line-height:1.3; color:#567267; }
 .duel-reveal-list button { background:#f6faf7; border-color:#c1d2c8; color:#325644; }
 .duel-reveal-list button[aria-pressed=true] { border-color:#287b60; background:#deeee3; box-shadow:inset 0 0 0 1px #287b60; }

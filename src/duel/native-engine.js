@@ -101,15 +101,19 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const topFirst=deck&&source?.card.id===17092736;
     const ordered=topFirst?[...msg.cards].sort((a,b)=>b.sequence-a.sequence):msg.cards;
     const cards=ordered.map(item=>{
+      const zone=({[L.DECK]:'deck',[L.HAND]:'hand',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'})[item.location]||'field';
       const old=cardAt(r,item),card=descriptor(r,item.code||old?.coreCode),instance={uid:old?.coreCode===item.code?old.uid:null,card,controller:r.side(item.controller)};
-      if(instance.uid){rememberCard(s,viewer,instance,deck?'deck':item.location===L.HAND?'hand':'spells',{hand:item.location===L.HAND});if(viewer===0){s.revealedUIDs??=[];s.revealedUIDs.push(instance.uid);}}
-      return {...instance,sequence:item.sequence,zone:deck?'deck':item.location===L.HAND?'hand':'field'};
+      if(instance.uid){rememberCard(s,viewer,instance,zone==='field'?item.location===L.MZONE?'monsters':'spells':zone,{hand:item.location===L.HAND});if(viewer===0){s.revealedUIDs??=[];s.revealedUIDs.push(instance.uid);}}
+      return {...instance,sequence:item.sequence,zone};
     });
-    if(deck){
+    const zoneList=cards.length&&cards.every(c=>c.zone!=='field');
+    if(zoneList){
       s.reveals??=[];
       const id=`${r.id}:reveal:${++r.revealSequence}`;
-      s.reveals.push({id,viewer,ordered:topFirst,source:source?.card||null,cards});
-      log(r,`${source?.card.name||'The effect'}: ${who(viewer)} ${viewer===0?'view':'views'} ${topFirst?'the top ':''}${cards.length} ${topFirst?'':'revealed '}card${cards.length===1?'':'s'} from ${cards[0].controller===0?'your':'AI’s'} Deck${topFirst?', in order. The Deck order is unchanged.':'.'}`,'reveal',[],viewer);
+      const batch=s.reveals.find(reveal=>reveal.batch===r.promptSequence&&reveal.viewer===viewer&&reveal.source?.id===source?.card.id&&reveal.presentationOnly===!deck&&!reveal.ordered&&!topFirst);
+      if(batch)batch.cards.push(...cards.filter(card=>!batch.cards.some(c=>c.uid&&c.uid===card.uid)));
+      else s.reveals.push({id,viewer,batch:r.promptSequence,presentationOnly:!deck,ordered:topFirst,source:source?.card||null,cards});
+      log(r,`${source?.card.name||'The effect'}: ${who(viewer)} ${viewer===0?'view':'views'} ${topFirst?'the top ':''}${cards.length} ${topFirst?'':'revealed '}card${cards.length===1?'':'s'} from ${cards[0].controller===0?'your':'AI’s'} ${deck?'Deck':cards[0].zone}${topFirst?', in order. The Deck order is unchanged.':'.'}`,'reveal',[],viewer);
     }else for(const c of cards){
       log(r,'Revealed '+c.card.name+'.','reveal',[c.uid].filter(Boolean),c.controller);
       if(viewer===0||c.controller===0)notice(r,{uid:c.uid,card:c.card,side:c.controller},'reveal',`${source?.card.name||'The effect'} reveals this card.${c.card.type==='Trap Card'&&[19159413,9076207].includes(source?.card.id)?' It is a Trap, so it is not destroyed and stays Set.':''}`);
@@ -413,12 +417,26 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     r.lib.duelSetResponse(r.handle,reply.response);pump(r);return r.state;
   }
   function destroyMatch(state){const r=matches.get(state?.runtimeId);if(r){r.lib.destroyDuel(r.handle);matches.delete(r.id);}}
-  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
+  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
     let state=await createMatch(save.decks,{...save.options,cards});
-    try{for(let i=0;i<save.history.length;i++){const entry=save.history[i],action=entry.type==='SURRENDER'?{type:'SURRENDER'}:legalActions(state,entry.side)[entry.index];if(!action||action.type!==entry.type)throw new Error('Saved duel replay did not match its recorded choices.');state=applyAction(state,action,entry.side);if(i%100===99)await new Promise(resolve=>setTimeout(resolve,0));}if(checkpoint(state)!==save.checkpoint)throw new Error('Saved duel verification failed.');return state;}catch(error){destroyMatch(state);throw error;}
+    const legacy=save.presentationRevision!==2;
+    const acknowledgeLegacyLists=()=>{
+      while(legacy&&state.reveals?.[0]?.presentationOnly){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}
+    };
+    try{
+      for(let i=0;i<save.history.length;i++){
+        const entry=save.history[i];acknowledgeLegacyLists();
+        const action=entry.type==='SURRENDER'?{type:'SURRENDER'}:legalActions(state,entry.side)[entry.index];
+        if(!action||action.type!==entry.type)throw new Error('Saved duel replay did not match its recorded choices.');
+        state=applyAction(state,action,entry.side);if(i%100===99)await new Promise(resolve=>setTimeout(resolve,0));
+      }
+      acknowledgeLegacyLists();
+      if(checkpoint(state)!==save.checkpoint)throw new Error('Saved duel verification failed.');return state;
+    }catch(error){destroyMatch(state);throw error;}
+
   }
   return {createMatch,applyAction,legalActions,stats,findCard,destroyMatch,chooseAIAction,exportMatch,restoreMatch};
 }

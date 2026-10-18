@@ -1,5 +1,4 @@
 import {cardArtURLs,sharpenCardArt} from './card-view.js';
-import {CARD_BACK} from './motion.js';
 
 // Explanations and visual notices only. Legality, payments and outcomes always
 // come from the native core; these helpers never implement a card effect.
@@ -20,14 +19,13 @@ export function effectNotices(previous,next){
 
 export function cardPresentations(previous,next){
   const notices=effectNotices(previous,next),old=new Map((previous?.players||[]).flatMap(p=>[...p.monsters,...p.spells,p.field].filter(Boolean).map(c=>[c.uid,c])));
-  const cards=next.players.flatMap((p,side)=>[...p.monsters,...p.spells,p.field].filter(Boolean).flatMap(card=>{
-    const before=old.get(card.uid);if(before&&card.faceUp===before.faceUp)return [];
+  const cards=next.players.flatMap(p=>[...p.monsters,...p.spells,p.field].filter(Boolean).flatMap(card=>{
+    const before=old.get(card.uid);if(!card.faceUp||before&&card.faceUp===before.faceUp)return [];
     if(notices.some(n=>n.uid===card.uid))return [];
-    const hidden=side===1&&!card.faceUp&&!before?.faceUp;
-    return [{uid:card.uid,card:hidden?{name:'Opponent’s Set card',card_images:[]}:card.card,back:hidden,stage:!card.faceUp?before?'flipDown':'set':before?'flip':'summon',text:!card.faceUp?before?'Turned face-down.':'Placed face-down.':before?'Flipped face-up.':'Placed on the field.'}];
+    return [{uid:card.uid,card:card.card,stage:before?'flip':'summon',text:before?'Flipped face-up.':'Placed on the field.'}];
   }));return [...cards,...notices];
 }
-export function createEffectPlayer({getRoot,hold=3000}){
+export function createEffectPlayer({getRoot,hold=1500}){
   let running=null;
   function cancel(){const run=running;if(!run)return;running=null;clearTimeout(run.timer);run.release?.();run.cancelArt?.();for(const animation of run.animations)try{animation.cancel();}catch{/* finished */}run.root.replaceChildren();run.resolve(false);}
   async function play(events,{enabled=true,reduced=false}={}){
@@ -40,11 +38,11 @@ export function createEffectPlayer({getRoot,hold=3000}){
         if(running!==run)return false;
         run.cancelArt?.();
         const card=event.card,url=cardArtURLs(card).preview;
-        const image=event.back?`<img src="${CARD_BACK}" alt="Face-down card">`:url?`<img src="${escape(url)}" alt="${escape(card.name)}">`:'<span class="duel-effect-no-art" aria-hidden="true">◇</span>';
-        const title={set:'Card Set',summon:'Card played',flip:'Card flipped',flipDown:'Turned face-down',reveal:'Card revealed',activate:'Effect activating',automatic:'Required effect',resolve:'Effect resolved',negated:'Effect negated',ready:'Continuous card ready',continuous:'Continuous effect'}[event.stage]||'Card effect';
+        const image=url?`<img src="${escape(url)}" alt="${escape(card.name)}">`:'<span class="duel-effect-no-art" aria-hidden="true">◇</span>';
+        const title={summon:'Card played',flip:'Card flipped',reveal:'Card revealed',activate:'Effect activating',automatic:'Required effect',resolve:'Effect resolved',negated:'Effect negated',ready:'Continuous card ready',continuous:'Continuous effect'}[event.stage]||'Card effect';
         root.innerHTML=`<div class="duel-effect-spotlight" data-effect-stage="${event.stage}" role="status" aria-live="polite"><div class="duel-effect-art">${image}</div><div class="duel-effect-caption"><small>${escape(title)}${event.chainLink?' · Chain '+event.chainLink:''}</small><strong>${escape(card.name)}</strong><p>${escape(event.text)}</p></div></div>`;
         const panel=root.firstElementChild;
-        run.cancelArt=event.back?()=>{}:sharpenCardArt(panel.querySelector('.duel-effect-art'),card);
+        run.cancelArt=sharpenCardArt(panel.querySelector('.duel-effect-art'),card);
         if(!reduced&&typeof panel.animate==='function')try{const animation=panel.animate([{opacity:0,transform:'translateY(10px) scale(.96)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:180,fill:'both',easing:'ease-out'});animation.finished?.catch(()=>{});run.animations.push(animation);}catch{/* static fallback */}
         await wait(hold);
       }

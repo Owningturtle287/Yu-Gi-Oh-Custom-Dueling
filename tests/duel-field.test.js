@@ -106,7 +106,7 @@ test('opening banner blocks phase decisions, can be skipped, and exiting discard
 test('direct attacks target the AI’s own bottom-left LP corner; card faces and stats are oriented separately',async()=>{
   const r=await rig();try{
     const s=r.controller.getMatch();s.turn=2;s.phase='battle';const attacker=put(s,0,monster);r.controller.refresh();
-    r.$(`[data-duel-quick="${attacker.uid}"]`).click();const lp=r.$('[data-field-lp="1"]');assert.equal(lp.dataset.role,'eligible');assert.ok(lp.closest('.opponent-side'));assert.ok(lp.closest('.duel-table'));
+    r.$(`[data-duel-quick="${attacker.uid}"]`).click();const lp=r.$('[data-field-lp="1"]');assert.equal(lp.dataset.role,'eligible');assert.equal(lp.parentElement,r.$('.duel-table'));assert.ok(lp.closest('.duel-table'));
     assert.ok(r.$('[data-field-lp="0"]').closest('.player-side'));
     lp.click();assert.equal(r.controller.getMatch().pending.target,null);
     r.controller.getMatch().window=null;r.controller.getMatch().pending=null;const enemy=put(r.controller.getMatch(),1,monster,'monsters',{position:'defense'});r.controller.refresh();
@@ -155,7 +155,7 @@ test('the landscape arena reserves portrait card surfaces and keeps both rows vi
   assert.match(css,/\.duel-zone-surface \{[^}]*aspect-ratio:59\/78/);
   assert.match(css,/100cqh - var\(--slot-footer\)\) \* \.756/);
   assert.match(css,/\.duel-status-row \.duel-prompt \{[^}]*font-size:12px/);
-  assert.match(css,/data-role=eligible/);assert.match(css,/\.duel-hud/);
+  assert.match(css,/data-role=eligible/);assert.match(css,/\.duel-utility-actions/);
   assert.doesNotMatch(css,/data-field-layer|duel-layer-switch|duel-field-tabs/);
 });
 function rotate(r,width,height){
@@ -213,7 +213,7 @@ test('the attached hand toggle doubles the hand without a focus frame or replaci
     const first=r.$('.duel-hand-card'),table=r.$('.duel-table'),normal=parseFloat(table.style.getPropertyValue('--hand-card-size'));
     assert.equal(r.window.getComputedStyle(r.$('.duel-hand')).scrollbarWidth,'none');assert.equal(r.window.getComputedStyle(r.$('.duel-opponent-hand')).getPropertyValue('--ai-card-size'),'clamp(16px,calc(1dvh * 5),26px)');
     assert.equal(r.$('.duel-hand').hasAttribute('tabindex'),false);assert.equal(r.$('.duel-hand-rack').firstElementChild,r.$('.duel-hand-zoom'));
-    r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-area')).getPropertyValue('--hand-zoom'),'2');assert.equal(r.window.getComputedStyle(r.$('.duel-hand-rack')).position,'absolute');assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
+    r.$('.duel-hand-zoom').click();assert.equal(r.$('.duel-hand-zoom').getAttribute('aria-pressed'),'true');assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.ok(parseFloat(r.$('.duel-hand-rack').style.getPropertyValue('--hand-display-height'))>normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-rack')).position,'absolute');assert.equal(r.$('.duel-hand-card'),first);assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
     r.$('.duel-hand-zoom').click();assert.equal(parseFloat(table.style.getPropertyValue('--hand-card-size')),normal);assert.equal(r.window.getComputedStyle(r.$('.duel-hand-zoom')).position,'static');
   }finally{r.close();}
 });
@@ -427,7 +427,7 @@ test('expanded mats, bounded stats, and POV life corners hold at phone and table
         assert.equal(bar.querySelectorAll('small').length,2);assert.equal(parseFloat(r.window.getComputedStyle(bar.querySelector('span')).minWidth),0);
       }
       const yours=r.window.getComputedStyle(r.$('.player-life')),foe=r.window.getComputedStyle(r.$('.opponent-life'));
-      assert.equal(yours.left,'4px');assert.equal(yours.bottom,'2px');assert.equal(foe.right,'4px');assert.equal(foe.top,'2px');
+      assert.equal(yours.left,'4px');assert.equal(yours.bottom,'2px');assert.equal(foe.left,'5px');assert.equal(foe.top,'3px');
       assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
     }
     assert.match(r.$('.yours .duel-card-stats').textContent,/99999/);

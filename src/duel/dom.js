@@ -18,8 +18,8 @@ function patch(current, next) {
   for (const attribute of next.attributes) {
     if (current.getAttribute(attribute.name) !== attribute.value) current.setAttribute(attribute.name, attribute.value);
   }
-  // Stateful subviews own their transcript or picker contents and scroll.
-  if (current.hasAttribute('data-live-terminal') || current.hasAttribute('data-owned-content')) return;
+  // Stateful subviews own their picker contents and scroll.
+  if (current.hasAttribute('data-owned-content')) return;
   children(current, next);
 }
 
