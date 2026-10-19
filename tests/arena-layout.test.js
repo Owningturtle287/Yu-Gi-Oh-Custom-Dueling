@@ -22,14 +22,24 @@ test('iPhone 14 field uses larger card surfaces and a tighter central rack than 
   assert.equal(g.compact,false);assert.ok(g.cardHeight>60);assert.ok(g.slot+g.cellGap<oldPitch*.85);
   assert.ok(g.bay-(g.cardWidth)>4,'A rotated defender has clearance before the action gutter');
   assert.ok(g.phase<=44);
-  assert.ok(g.cardHeight>63,'The clipped AI hand returns vertical room to the card art');assert.equal(g.rowGap,3);assert.ok(g.phase<=28);
+  assert.ok(g.cardHeight>63,'The clipped AI hand returns vertical room to the card art');assert.equal(g.rowGap,3);assert.equal(g.phase,32);
 });
-test('the phase rail stays 24px at the screen edge and home-indicator clearance is reserved inside the frame',()=>{
+test('24px phase tiles have an 8px corner inset and home-indicator clearance stays inside the frame',()=>{
   for(const inset of [0,24,47,59]){
     const edge=arenaGeometry(750+inset,390,{bottomInset:21});
-    assert.equal(edge.phase,24);assert.equal(edge.fieldWidth,750+inset-36);
+    assert.equal(edge.phase,32);assert.equal(edge.fieldWidth,750+inset-44);
     assert.equal(edge.bottomInset,21);assert.ok(edge.required<=edge.fieldWidth);
     assert.ok(edge.values['--hand-card-size']>=64);assert.ok(edge.bottomHand>=52+21);
+  }
+});
+test('both central card blocks balance their visible pile gaps without changing card-to-card spacing',()=>{
+  for(const [width,height] of [[474,293],[568,320],[750,363],[844,390],[932,430],[1366,768]]){
+    const g=arenaGeometry(width,height),surfaceOffset=(g.compact?g.slot-g.cardWidth:g.bay-g.cardWidth)/2;
+    const leftGap=g.pileGap+(g.bay-g.cardWidth)/2+surfaceOffset+g.boardOffset;
+    const rightGap=g.slot+g.pileGap+(g.bay-g.cardWidth)/2-surfaceOffset-g.cardWidth-g.boardOffset;
+    assert.ok(Math.abs(leftGap-rightGap)<.001,`${width}: ${leftGap} vs ${rightGap}`);
+    assert.equal(g.cellGap,4);assert.equal(g.rowGap,3);assert.equal(g.board,g.slot*5+g.cellGap*4);
+    if(!g.compact)assert.ok(Math.abs(g.boardOffset-13.5)<.001);
   }
 });
 test('phase rail, aligned piles, side gutters and compact metadata have explicit independent tracks',async()=>{

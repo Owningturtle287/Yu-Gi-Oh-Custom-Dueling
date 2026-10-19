@@ -5,9 +5,9 @@
   --text:#192d40; --muted:#526778; --teal:#146e64; --gold:#8b611d;
   --danger:#ae334c; --violet:#69509a; --rose:#a53e70; --green:#24734c; --red:#af354d;
 }
-html,body { background:#eef3f5; }
+html,body { background:#eef3f5; touch-action:manipulation; }
 body { background:radial-gradient(ellipse at 100% 0,#e1ede9,transparent 60%),var(--bg); }
-button { background:var(--panel); box-shadow:0 1px 2px #17334a05; }
+button { background:linear-gradient(180deg,#fff,#f2f7f6); box-shadow:inset 0 1px #fff,0 2px 5px #17334a12; font-weight:600; transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .12s ease; touch-action:manipulation; }
 button:hover:not(:disabled) { background:var(--panel2); }
 input,select { background:#f9fbfc; border-color:var(--line); color:var(--text); }
 input::placeholder { color:#6d7c89; }
@@ -179,10 +179,6 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 #modal .duel-inspect-meta,#modal .duel-card-typing { color:#6c562e; }
 #modal .duel-inspect-description { color:#294a60; background:#edf3f5; border-color:#c7d9de; }
 #modal .duel-summon-note { background:#f3ecdc; color:#74571d; }
-#modal .duel-menu-kicker,#modal .duel-choice-source small { color:#327a69; }
-#modal .duel-menu-kicker span { color:#8a692b; }
-#modal .duel-menu-grid button { background:#fff; border-color:#c7d6dc; }
-#modal .duel-menu-grid i { color:#327565; }
 #modal .duel-motion-toggle b { background:#d7ecde; color:#1c6948; }
 #modal .duel-motion-toggle[aria-pressed=false] b { color:#526c7c; background:#e0e8ed; }
 #modal .duel-choice-help,#modal .duel-menu-note,#modal .duel-response-note { color:#566c7c; }
@@ -320,3 +316,19 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 #modal:has(.duel-reveal-zoom) { width:min(440px,calc((calc(var(--duel-vh,1dvh) * 100) - var(--duel-safe-top,env(safe-area-inset-top)) - var(--duel-safe-bottom,env(safe-area-inset-bottom)) - 24px) * .686 + 44px),calc(calc(var(--duel-vw,1dvw) * 100) - var(--duel-safe-left,env(safe-area-inset-left)) - var(--duel-safe-right,env(safe-area-inset-right)) - 24px)); height:min(540px,calc(calc(var(--duel-vh,1dvh) * 100) - var(--duel-safe-top,env(safe-area-inset-top)) - var(--duel-safe-bottom,env(safe-area-inset-bottom)) - 24px)); border:0; border-radius:0; background:transparent; box-shadow:none; overflow:visible; }
 #modal .duel-reveal-body.duel-reveal-zoom { height:100%; max-height:100%; padding:0; gap:8px; display:grid; grid-template-columns:minmax(0,1fr) 36px; grid-template-rows:minmax(0,1fr); background:transparent; border:0; }
 .duel-reveal-back { background:#f6fbf8; border-color:#c1d3cb; color:#2e5a4a; box-shadow:0 2px 8px #213c3526; }
+
+/* Raised control surfaces share jade, plum and warm-metal accents. */
+.primary,.solo-launch .primary,.duel-session .primary,.duel-controls .primary { color:#fff; border-color:#145d53; background:linear-gradient(135deg,#267c6e,#145b53); box-shadow:inset 0 1px #ffffff38,0 3px 8px #145d5329; }
+.primary:hover:not(:disabled),.duel-session .primary:hover:not(:disabled) { background:linear-gradient(135deg,#217565,#104e49); }
+.danger { color:#9b2944; border-color:#d2a2b0; background:linear-gradient(135deg,#fff6f7,#f4dce3); box-shadow:inset 0 1px #fff,0 2px 5px #82334c12; }
+.icon-button,.duel-utility-actions button,.duel-hand-zoom,.duel-controls button:not(.primary) { box-shadow:inset 0 1px #fff,0 2px 6px #2d574b20; }
+.duel-utility-actions button,.duel-hand-zoom { background:linear-gradient(145deg,#fff,#e3eee8); border-color:#9dbdaf; color:#235c4c; }
+.duel-controls button:not(.primary):not(.duel-cancel-choice) { background:linear-gradient(145deg,#fffdf5,#eee8d8); color:#71572d; border-color:#c6b795; }
+.menu-item,.filter-toggle,.solo-tabs button,.deck-tabs button,.filter-tabs button,.duel-menu-body .duel-motion-toggle,.duel-menu-footer button:not(.primary):not(.danger) { background-image:linear-gradient(150deg,#ffffffa6,#ffffff00 70%); box-shadow:inset 0 1px #ffffffb3,0 2px 5px #254b4510; }
+.solo-tabs [aria-selected=true],.deck-tabs button[aria-pressed=true],.filter-tabs button[aria-selected=true] { box-shadow:inset 0 -3px #b49457,inset 0 1px #ffffffb3,0 2px 6px #254b4514; }
+.quick-controls button,.duel-quick-action,#modal [data-choice-tone] { background-image:linear-gradient(160deg,#ffffff55,#ffffff00 65%); }
+.duel-menu-body .duel-menu-preferences { padding:10px; border:1px solid #c9d9d1; border-radius:14px; background:linear-gradient(135deg,#f6faf7,#e7f0e9); }
+.duel-menu-body .duel-menu-footer button[data-duel=save-exit] { color:#6d4f21; border-color:#c6b18b; background:linear-gradient(145deg,#fffaf0,#eee3cb); }
+.duel-menu-body .duel-menu-footer button[data-duel=exit-duel] { color:#485e6e; border-color:#b9cad2; background:linear-gradient(145deg,#fff,#e5edf1); }
+#main,#modal .dialog-body { touch-action:manipulation; }
+@media(prefers-reduced-motion:reduce) { button { transition:none; } }

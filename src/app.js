@@ -30,11 +30,7 @@ const solo = createSoloController({ main, modal, getCards: () => state.cards, ge
     state.draft.releaseYear = 2004; state.dirty = !deck; state.section = 'main';
     state.filters = { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' };
     navigate('decks');
-  }),
-  onKeepDeck: deck => {
-    try { state.decks = saveDeck(localStorage, state.decks, deck); toast('Saved ' + deck.name + ' on this device.'); }
-    catch (error) { toast(error.message, true); }
-  }
+  })
 });
 const sectionName = section => ({ main: 'Main', extra: 'Extra', side: 'Side' })[section];
 const cardLabel = card => card.humanReadableCardType || card.type;

@@ -428,7 +428,7 @@ test('expanded mats, bounded stats, and POV life corners hold at phone and table
         assert.equal(bar.querySelectorAll('small').length,2);assert.equal(parseFloat(r.window.getComputedStyle(bar.querySelector('span')).minWidth),0);
       }
       const yours=r.window.getComputedStyle(r.$('.player-life')),foe=r.window.getComputedStyle(r.$('.opponent-life'));
-      assert.equal(yours.left,'8px');assert.match(yours.bottom,/4px/);assert.equal(foe.left,'12px');assert.equal(foe.top,'7px');
+      assert.equal(yours.left,'24px');assert.match(yours.bottom,/4px/);assert.equal(foe.left,'28px');assert.equal(foe.top,'10px');
       assert.equal(r.main.querySelectorAll('.duel-board .duel-zone').length,20);
     }
     assert.match(r.$('.yours .duel-card-stats').textContent,/99999/);

@@ -32,7 +32,7 @@ const image=card=>{
   return preview?`<img src="${escape(preview)}" alt="" loading="eager" decoding="async">`:'<span class="duel-no-image" aria-hidden="true">◇</span>';
 };
 
-export function createSoloController({main,modal,getCards,getDecks,getStatus,showDialog,dialogHeader,closeDialog,toast,onDesign,onKeepDeck,onExit=()=>{},engine=nativeEngine}) {
+export function createSoloController({main,modal,getCards,getDecks,getStatus,showDialog,dialogHeader,closeDialog,toast,onDesign,onExit=()=>{},engine=nativeEngine}) {
   const {createMatch,legalActions,applyAction,findCard,stats}=engine;
   const chooseAIAction=engine.chooseAIAction||legacyAI;
   const aiClient=createAIClient({choose:chooseAIAction});
@@ -522,10 +522,9 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     motion.cancel();
     showDialog(`${header('Duel settings')}
       <div class="duel-menu-preferences">${speedControl()}<button class="duel-motion-toggle" data-duel="toggle-motion" aria-pressed="${config.animations}"><span>Card motion</span><b>${config.animations?'On':'Off'}</b></button></div>
-      <div class="duel-menu-grid"><button data-duel="log"><i aria-hidden="true">▤</i> Duel log</button><button data-duel="coverage"><i aria-hidden="true">◇</i> Rules & cards</button><button data-duel-keep="0"><i aria-hidden="true">↓</i> Save your deck</button><button data-duel-keep="1"><i aria-hidden="true">↓</i> Save AI deck</button></div>
       ${responsePolicy.isPassing(match)?'<button class="duel-response-policy" data-duel="ask-again">Auto-pass is on <b>Ask again</b></button>':''}
       <p class="duel-menu-note">Save to resume later. Exit ends the current unsaved duel.</p>
-      <div class="duel-menu-footer"><button class="primary" data-action="close">Continue</button><button data-duel="save-duel" ${match.winner!==null?'disabled':''}>Save duel</button><button data-duel="save-exit" ${match.winner!==null?'disabled':''}>Save & exit</button><button data-duel="exit-duel">Exit duel</button><button class="danger" data-duel="surrender" ${match.winner!==null?'disabled':''}>Surrender</button></div>`,'duel-menu-body');
+      <div class="duel-menu-footer"><button class="primary" data-action="close">${icon('play')}<span>Resume duel</span></button><button data-duel="save-exit" ${match.winner!==null?'disabled':''}>${icon('save')}<span>Save & exit</span></button><button data-duel="exit-duel">${icon('exit')}<span>Exit duel</span></button><button class="danger" data-duel="surrender" ${match.winner!==null?'disabled':''}>${icon('flag')}<span>Surrender</span></button></div>`,'duel-menu-body');
     const select=modal.querySelector('#duel-ai-speed');select.value=config.aiSpeed;
     select.onchange=event=>{config.aiSpeed=event.target.value;persist();schedule();};
   }
@@ -539,7 +538,6 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(target.dataset.duelCard){if(fieldSelection)pickTarget(target.dataset.duelCard);else inspect(target.dataset.duelCard);return;}
     if(target.dataset.duelPile!==undefined){showPiles(Number(target.dataset.duelPile),target.dataset.duelPileZone);return;}
     if(target.dataset.duelLogFilter){logFilter=target.dataset.duelLogFilter;showLog();return;}
-    if(target.dataset.duelKeep!==undefined){onKeepDeck(match.deckBackups[Number(target.dataset.duelKeep)]);return;}
     if(target.dataset.responseIndex!==undefined){showResponse(Number(target.dataset.responseIndex));return;}
     if(target.dataset.duelRevealCard!==undefined){showReveal(Number(target.dataset.duelRevealCard));return;}
     if(target.dataset.action==='close'&&target.closest('.duel-reveal-body')){acknowledgeReveal();return;}
@@ -550,7 +548,6 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(action==='response-pass'){responseAction('pass');return;}
     if(action==='response-turn'){responseAction('turn');return;}
     if(action==='ask-again'){responsePolicy.askAgain();responseSeen=null;closeDialog();render();return;}
-    if(action==='save-duel'){saveCurrent();return;}
     if(action==='save-exit'){if(saveCurrent())exitCurrent();return;}
     if(action==='exit-duel'){exitCurrent();return;}
     if(action==='hand-zoom'){handExpanded=!handExpanded;render();return;}

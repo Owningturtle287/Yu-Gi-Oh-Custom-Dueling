@@ -43,11 +43,27 @@ test('the hand overlay cannot intercept empty-area phase taps, and the full-scre
     r.window.document.head.innerHTML=`<style>${css}</style>`;
     const computed=s=>r.window.getComputedStyle(r.$(s));
     assert.equal(computed('#main').padding,'0px');assert.equal(computed('.duel-arena').maxWidth,'none');
-    assert.equal(computed('.duel-phase-rail').paddingRight,'0px');
+    assert.equal(computed('.duel-phase-rail').paddingRight,'8px');
     assert.equal(computed('.duel-hand-area').pointerEvents,'none');assert.equal(computed('.duel-hand-rack').pointerEvents,'none');
     for(const selector of ['.duel-hand-card','.duel-hand-zoom'])assert.equal(computed(selector).pointerEvents,'auto',selector);
     assert.notEqual(computed('.duel-controls button').pointerEvents,'none');
     assert.equal(r.$('.duel-hand-zoom').parentElement,r.$('.duel-hand-area'));
+  }finally{r.close();}
+});
+test('duel settings keep only match controls and suppress double-tap zoom without disabling pinch zoom',async()=>{
+  const engine=backend(),state=await engine.createMatch(decks(),{cards,first:0,seed:19}),r=await rig(engine,state);
+  try{
+    const styles=(await Promise.all(['styles.css','duel.css','light.css'].map(f=>readFile(new URL('../'+f,import.meta.url),'utf8')))).join('\n');
+    r.window.document.head.innerHTML=`<style>${styles}</style>`;
+    r.$('[data-duel="duel-menu"]').click();
+    assert.equal(r.modal.querySelector('[data-duel-keep], [data-duel="save-duel"], [data-duel="coverage"], [data-duel="log"]'),null);
+    assert.equal(r.modal.querySelectorAll('.duel-menu-footer button').length,4);
+    assert.ok(r.$('[data-duel="save-exit"]'));assert.ok(r.$('[data-duel="surrender"]'));
+    const speed=r.$('#duel-ai-speed');speed.value='relaxed';speed.dispatchEvent(new r.window.Event('change',{bubbles:true}));assert.equal(r.controller.getConfig().aiSpeed,'relaxed');
+    r.$('[data-duel="toggle-motion"]').click();assert.equal(r.controller.getConfig().animations,true);
+    const css=n=>r.window.getComputedStyle(n);assert.equal(css(r.window.document.documentElement).touchAction,'manipulation');assert.equal(css(r.$('.duel-menu-body')).touchAction,'manipulation');
+    const markup=await readFile(new URL('../index.html',import.meta.url),'utf8');assert.doesNotMatch(markup,/user-scalable\s*=\s*no|maximum-scale\s*=\s*1/);
+    r.$('[data-action="close"]').click();assert.equal(r.modal.hasAttribute('open'),false);assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });
 test('the opening-turn phase button advances normally while correctly skipping the first Battle Phase',async()=>{

@@ -347,8 +347,9 @@ test('a Solo match starts, tracks phases, offers summons, exits cleanly and star
     $('[data-duel="duel-menu"]').click();$('[data-duel="surrender"]').click();$('[data-duel="confirm-surrender"]').click();
     assert.match($('.duel-prompt').textContent,/Defeat/);assert.ok($('[data-duel="rematch"]'));
     await waitFor(()=>$('.duel-arena').dataset.moving==='false');
-    $('[data-duel="duel-menu"]').click();$('[data-duel-keep="0"]').click();
-    assert.ok(app.state.decks.some(deck=>deck.sections.main.reduce((n,e)=>n+e.quantity,0)===40));
+    const savedDeckCount=app.state.decks.length;$('[data-duel="duel-menu"]').click();
+    assert.equal($('[data-duel-keep]'),null);assert.equal($('[data-duel="save-duel"]'),null);
+    assert.equal(document.querySelectorAll('.duel-menu-footer button').length,4);assert.equal(app.state.decks.length,savedDeckCount);
     $('[data-action="close"]').click();$('[data-duel="rematch"]').click();assert.ok($('.solo-setup'));
   }finally{app.navigate('home');window.close();}
 });

@@ -1,6 +1,6 @@
 /* App shell updates with each release; card images persist independently. */
 const PREFIX = 'duel-atlas:' + self.registration.scope;
-const SHELL_CACHE = PREFIX + ':shell-v0.4.3';
+const SHELL_CACHE = PREFIX + ':shell-v0.4.4';
 const IMAGE_CACHE = PREFIX + ':images-v1';
 const SHELL = ['./', './index.html', './styles.css', './duel.css', './light.css', './effects.css', './battle.css', './src/app.js', './src/core.js', './src/cards.js', './src/era.js', './src/layout.js', './src/deck-view.js', './src/icons.js', './src/duel/catalog.js', './src/duel/decks.js', './src/duel/engine.js', './src/duel/ai.js', './src/duel/native-ai.js', './src/duel/ai-knowledge.js', './src/duel/ai-combat.js', './src/duel/ai-turn.js', './src/duel/ai-memory.js', './src/duel/ai-guidance.js', './src/duel/ai-client.js', './src/duel/ai-worker.js', './src/duel/ui.js', './src/duel/intro.js','./src/duel/battle-presentation.js', './src/duel/motion.js', './src/duel/flow.js', './src/duel/log.js', './src/duel/field.js', './src/duel/arena-layout.js', './src/duel/viewport.js', './src/duel/saves.js', './src/duel/native-prompts.js', './src/duel/dom.js', './src/duel/card-view.js', './src/duel/choice-view.js', './src/duel/responses.js', './src/duel/effects.js', './src/duel/attack-arrows.js', './src/duel/battle-timing.js', './manifest.webmanifest', './assets/emblem.svg', './assets/card-back.jpg', './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png'];
 

@@ -15,6 +15,9 @@ const paths = {
  wifi: '<path d="M3 8a14 14 0 0 1 18 0M6 12a9 9 0 0 1 12 0m-9 4a4 4 0 0 1 6 0m-3 4v.1"/>',
  trash: '<path d="M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/>',
  plus: '<path d="M12 4v16M4 12h16"/>',
- check: '<path d="m4 12 5 5L20 6"/>'
+ check: '<path d="m4 12 5 5L20 6"/>',
+ play: '<path d="m9 5 11 7-11 7Z"/>',
+ exit: '<path d="M10 4H4v16h6M13 7l5 5-5 5M8 12h10"/>',
+ flag: '<path d="M5 22V3m0 1c5-4 9 4 15 0v10c-6 4-10-4-15 0"/>'
 };
 export const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name] || paths.deck}</svg>`;
