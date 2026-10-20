@@ -41,7 +41,9 @@ export function choiceVisuals(state, action, {isHidden,archive=new Map()}={}) {
     const location=locate(state,uid);if(!location)return null;
     const {instance,side,zone,index}=location;
     const place=`${side===0?'Your':'AI'} ${zoneNames[zone]}${['monsters','spells'].includes(zone)?' '+(index+1):''}`;
-    const hidden=isHidden?isHidden(uid):side===1&&!instance.public&&!state.revealedUIDs?.includes(uid)&&(['hand','deck','extra'].includes(zone)||!instance.faceUp&&['monsters','spells','field','banished'].includes(zone));
+    const remembered=state.aiMemory?.[0]?.known?.[uid];
+    const revealedHand=zone==='hand'&&state.choice?.side===0&&remembered?.zone==='hand'&&remembered.card.id===instance.card.id;
+    const hidden=!revealedHand&&(isHidden?isHidden(uid):side===1&&!instance.public&&!state.revealedUIDs?.includes(uid)&&(['hand','deck','extra'].includes(zone)||!instance.faceUp&&['monsters','spells','field','banished'].includes(zone)));
     if(hidden)return {uid,hidden:true,name:'Face-down card',type:'Hidden card',place};
     return {uid,hidden:false,card:instance.card,name:instance.card.name,type:cardTypeLabel(instance.card),place};
   }).filter(Boolean);

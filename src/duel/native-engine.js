@@ -23,11 +23,25 @@ function shuffled(cards,seed){
   return copy;
 }
 
+export function nativeSeed(seed,version=2){
+  let value=BigInt(seed>>>0||1);
+  if(version===1)return [value,2n,3n,4n];
+  // SplitMix64 expands the match seed into all four xoshiro state words.
+  // Three constant small words made early core coin/dice results repeat.
+  return Array.from({length:4},()=>{
+    value=BigInt.asUintN(64,value+0x9e3779b97f4a7c15n);let mixed=value;
+    mixed=BigInt.asUintN(64,(mixed^(mixed>>30n))*0xbf58476d1ce4e5b9n);
+    mixed=BigInt.asUintN(64,(mixed^(mixed>>27n))*0x94d049bb133111ebn);
+    return BigInt.asUintN(64,mixed^(mixed>>31n));
+  });
+}
+
 // The native engine owns all rules. This adapter translates its legal prompts,
 // public events and field queries into the existing arena's presentation model.
 export function createNativeBackend({rules=defaultNativeRules}={}) {
   const matches=new Map();let nextMatch=0;
-  async function createMatch(decks,{seed=Date.now(),first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+  async function createMatch(decks,{seed=Date.now(),randomVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+    if(![1,2].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
     const pack=await rules(),{module:m,lib,records,scripts}=pack;
     const api=new Map([...cards,...(openingHands||[]).flat(),...(initialFields||[]).flatMap(p=>Object.values(p).flat().filter(Boolean).map(c=>c.card)),...decks.flatMap(d=>[...d.main,...d.extra])].map(c=>[c.id,c]));
     const byName=new Map([...records.values()].map(r=>[r.name,r]));
@@ -42,10 +56,10 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       return {code,alias:0,setcodes:[],type:card.type==='Normal Monster'?17:card.type==='Spell Card'?2:card.type==='Trap Card'?4:33,level:card.level||0,attack:card.atk||0,defense:card.def||0,race:m.OcgRace[card.race?.toUpperCase().replace(/[^A-Z0-9]/g,'')]||1n,attribute:m.OcgAttribute[card.attribute]||0,lscale:0,rscale:0,link_marker:0};
     };
     const errors=[];
-    const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:[BigInt(seed>>>0||1),2n,3n,4n],team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
+    const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:nativeSeed(seed,randomVersion),team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
     if(!handle)throw new Error('The duel rules engine could not start.');
     const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,revealSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
-    r.bootstrap=structuredClone({decks,options:{seed,first,lp,eligibility,openingHands,initialFields}});r.history=[];
+    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
     r.reason=Object.fromEntries([...scripts['constant.lua'].matchAll(/^REASON_(\w+)\s*=\s*(0x[\da-f]+|\d+)/gmi)].map(([,key,value])=>[key,Number(value)]));
     r.side=team=>team===0?first:1-first;r.team=side=>side===first?0:1;
     r.state={aiMemory:createAIMemory(cards,eligibility),version:2,runtimeId:id,players:decks.map(d=>({...emptyPlayer(d.name),lp})),turn:0,normalSummons:[0,0],active:first,phase:'draw',seed:seed>>>0,serial:0,log:[],lastEvent:null,winner:null,chain:[],window:null,pending:null,choice:null,actions:[[],[]],visualAction:null};
@@ -128,7 +142,8 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   function sync(r){
     const {lib,handle,module:m}=r,L=m.OcgLocation,Q=m.OcgQueryFlags;
     const previous=r.state.players,pool=cardsIn(r.state),used=new Set();
-    const flags=Q.CODE|Q.POSITION|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.LEVEL|Q.IS_PUBLIC|Q.STATUS;
+    const flags=Q.CODE|Q.POSITION|Q.TYPE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.LEVEL|Q.RACE|Q.ATTRIBUTE|Q.IS_PUBLIC|Q.STATUS;
+    const raceName=value=>({WINGEDBEAST:'Winged Beast',BEASTWARRIOR:'Beast-Warrior',SEASERPENT:'Sea Serpent',DIVINE:'Divine-Beast'})[value]||value?.toLowerCase().replace(/^./,c=>c.toUpperCase());
     const field=lib.duelQueryField(handle),players=previous.map(p=>({...emptyPlayer(p.name),lp:p.lp}));
     for(const side of [0,1]){
       // Core LP is signed int32; the wrapper reads it as uint32. Lethal
@@ -143,6 +158,11 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
           const same=old?.coreCode===q.code&&!used.has(old.uid)?old:pool.find(c=>c.coreCode===q.code&&!used.has(c.uid));
           const uid=same?.uid||`${r.id}-c${++r.uid}`;used.add(uid);
           const card={uid,coreCode:q.code,card:descriptor(r,q.code),owner:r.side(q.owner??controller),controller:side,public:!!q.isPublic,disabled:!!(q.status&1),faceUp:!!(q.position&m.OcgPosition.FACEUP),position:q.position&m.OcgPosition.DEFENSE?'defense':'attack',currentStats:{atk:Math.max(0,q.attack||0),def:Math.max(0,q.defense||0)}};
+          if(q.level!==undefined)card.currentLevel=q.level;
+          if(q.type!==undefined)card.currentType=q.type;
+          if(q.attack<0||q.defense<0)card.unknownStats={atk:q.attack<0,def:q.defense<0};
+          if(q.race!==undefined)card.currentRace=raceName(Object.entries(m.OcgRace).find(([,value])=>value===q.race)?.[0])||card.card.race;
+          if(q.attribute!==undefined)card.currentAttribute=Object.entries(m.OcgAttribute).find(([,value])=>value===q.attribute)?.[0]||card.card.attribute;
           if(zone==='spells'&&index===5)players[side].field=card;
           else if(zone==='monsters'||zone==='spells')players[side][zone][index]=card;
           else players[side][zone].push(card);
@@ -424,11 +444,11 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     r.lib.duelSetResponse(r.handle,reply.response);pump(r);return r.state;
   }
   function destroyMatch(state){const r=matches.get(state?.runtimeId);if(r){r.lib.destroyDuel(r.handle);matches.delete(r.id);}}
-  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
+  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:2,queryRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
-    let state=await createMatch(save.decks,{...save.options,cards});
+    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,cards});
     const legacy=save.presentationRevision!==2;
     const acknowledgeLegacyLists=()=>{
       while(legacy&&state.reveals?.[0]?.presentationOnly){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}
@@ -441,13 +461,29 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         state=applyAction(state,action,entry.side);if(i%100===99)await new Promise(resolve=>setTimeout(resolve,0));
       }
       acknowledgeLegacyLists();
-      if(checkpoint(state)!==save.checkpoint)throw new Error('Saved duel verification failed.');return state;
+      if(checkpoint(state)!==savedCheckpoint(save,state))throw new Error('Saved duel verification failed.');return state;
     }catch(error){destroyMatch(state);throw error;}
 
   }
   return {createMatch,applyAction,legalActions,stats,findCard,destroyMatch,chooseAIAction,exportMatch,restoreMatch};
 }
 function checkpoint(s){return JSON.stringify({turn:s.turn,active:s.active,phase:s.phase,winner:s.winner,players:s.players.map(p=>({lp:p.lp,zones:[...names.map(n=>p[n]),[p.field]].map(zone=>zone.map(c=>c?{id:c.coreCode,face:c.faceUp,position:c.position,stats:c.currentStats}:null))})),actions:s.actions.map(list=>list.map(a=>[a.type,a.label,a.selected,a.finish,a.cancel]))});}
+function savedCheckpoint(save,state){
+  if(save.queryRevision===2)return save.checkpoint;
+  // Older checkpoints serialized unknown signed stat sentinels as uint32.
+  // Normalize those fields only; all remaining state/actions still match exactly.
+  try{
+    const value=JSON.parse(save.checkpoint);
+    for(const [side,p] of value.players.entries()){
+      const actual=[...names.map(zone=>state.players[side][zone]),[state.players[side].field]];
+      for(const [zoneIndex,zone] of p.zones.entries())for(const [index,card] of zone.entries())if(card?.stats){
+        const current=actual[zoneIndex]?.[index];
+        for(const stat of ['atk','def'])if(current?.unknownStats?.[stat]&&card.stats[stat]>=0x80000000&&card.stats[stat]<=0xffffffff)card.stats[stat]=Math.max(0,card.stats[stat]|0);
+      }
+    }
+    return JSON.stringify(value);
+  }catch{return save.checkpoint;}
+}
 function selectionTypes(m){const T=m.OcgMessageType;return new Set(['SELECT_BATTLECMD','SELECT_IDLECMD','SELECT_EFFECTYN','SELECT_YESNO','SELECT_OPTION','SELECT_CARD','SELECT_CHAIN','SELECT_PLACE','SELECT_POSITION','SELECT_TRIBUTE','SORT_CHAIN','SELECT_COUNTER','SELECT_SUM','SELECT_DISFIELD','SORT_CARD','SELECT_UNSELECT_CARD','ANNOUNCE_RACE','ANNOUNCE_ATTRIB','ANNOUNCE_CARD','ANNOUNCE_NUMBER','ROCK_PAPER_SCISSORS'].map(key=>T[key]));}
 
 const backend=createNativeBackend();

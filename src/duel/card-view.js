@@ -1,6 +1,14 @@
 const smallPattern = /^https:\/\/images\.ygoprodeck\.com\/images\/cards_small\/\d+\.jpg$/;
 const fullPattern = /^https:\/\/images\.ygoprodeck\.com\/images\/cards\/\d+\.jpg$/;
 
+// Keep archive/printed data immutable while displaying the core's current
+// monster properties (Cost Down, DNA Surgery/Transplant, Legendary Ocean).
+export function currentCardData(instance){
+  const trapMonster=instance.card.type==='Trap Card'&&(instance.currentType&1);
+  return {...instance.card,...(trapMonster?{type:(instance.currentType&32?'Effect':'Normal')+' Trap Monster'}:{}),level:instance.currentLevel??instance.card.level,race:instance.currentRace??instance.card.race,attribute:instance.currentAttribute??instance.card.attribute};
+}
+export const cardStatText=(instance,values)=>({atk:instance.unknownStats?.atk?'?':values.atk,def:instance.unknownStats?.def?'?':values.def});
+
 export function cardArtURLs(card) {
   const supplied = card?.card_images?.[0];
   const small = smallPattern.test(supplied?.image_url_small || '') ? supplied.image_url_small : '';

@@ -19,7 +19,7 @@ import { createDuelIntro,coinMarkup } from './intro.js';
 import {battlePresentations,createBattlePlayer} from './battle-presentation.js';
 import { createAttackArrows } from './attack-arrows.js';
 import { BATTLE_STEPS, responseAdvice } from './battle-timing.js';
-import { cardArtURLs, cardTypeLabel, sharpenCardArt } from './card-view.js';
+import { cardArtURLs, cardTypeLabel, sharpenCardArt, currentCardData, cardStatText } from './card-view.js';
 import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, quickCardActions, activityCue, cardActivity } from './field.js';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
@@ -289,7 +289,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const card=findCard(match,inspectedUid);
     if(!card||isHidden(inspectedUid)){inspectedUid=null;return null;}
     const actions=fieldSelection?[]:legalActions(match,0).filter(action=>action.uid===inspectedUid||action.type==='CHOOSE'&&action.target===inspectedUid),groups=[];
-    for(const action of actions){const key=action.type+':'+!!action.set+':'+!!action.special;let group=groups.find(group=>group.key===key);if(!group){group={key,label:action.type==='SUMMON'&&!action.special&&card.card.level>=5?(action.set?'Tribute Set':'Tribute Summon'):labelFor(action),actions:[]};groups.push(group);}group.actions.push(action);}
+    for(const action of actions){const key=action.type+':'+!!action.set+':'+!!action.special;let group=groups.find(group=>group.key===key);if(!group){group={key,label:action.type==='SUMMON'&&!action.special&&(card.currentLevel??card.card.level)>=5?(action.set?'Tribute Set':'Tribute Summon'):labelFor(action),actions:[]};groups.push(group);}group.actions.push(action);}
     return {card,groups};
   }
   function inspect(uid){
@@ -299,13 +299,13 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function openInspection(){
     const selected=inspection();if(!selected)return;const {card,groups}=selected;cardGroups=groups;
-    const values=isMonster(card.card)?stats(match,card):null;
+    const details=currentCardData(card),values=isMonster(details)?cardStatText(card,stats(match,card)):null;
     const ownHand=match.players[0].hand.some(c=>c.uid===card.uid);
     const usedNormal=match.normalSummons?.[0]||match.normalUsed;
     const summonNote=ownHand&&values&&match.active===0&&['main1','main2'].includes(match.phase)&&!match.window&&!match.choice&&!groups.some(g=>g.actions.some(a=>a.type==='SUMMON'))&&usedNormal?'You already Normal Summoned/Set this turn. Tribute Summons normally share that limit; another summon needs a card effect.':'';
     cancelArt();
     const source=main.querySelector(`[data-motion-uid="${card.uid}"] img:not(.card-back-image)`)||modal.querySelector(`[data-duel-card="${card.uid}"] img`);
-    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(card.card))}</strong>${values?`<br>Level ${card.card.level} · ${escape(card.card.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
+    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(details))}</strong>${values?`<br>Level ${details.level} · ${escape(details.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
     cancelArt=sharpenCardArt(modal.querySelector('.duel-inspect-art'),card.card,{source});
   }
   function dismissInspection(){
@@ -330,7 +330,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   function renderZone(card,side,zone,index){
     const hidden=side===1&&card&&!card.faceUp,available=card&&arenaActions.some(action=>action.uid===card.uid),activity=card?cardActivity(match,card.uid,cue,fieldSelection):{role:'',label:''};
     const label=card?(hidden?`Opponent’s face-down card, zone ${index+1}`:card.card.name):`${zone==='monsters'?'Monster':'Spell / Trap'} Zone ${index+1}`;
-    const values=card&&zone==='monsters'?(hidden?{atk:'?',def:'?'}:card.faceUp?stats(match,card):{atk:card.card.atk,def:card.card.def}):null;
+    const values=card&&zone==='monsters'?(hidden?{atk:'?',def:'?'}:card.faceUp?cardStatText(card,stats(match,card)):{atk:card.card.atk<0?'?':card.card.atk,def:card.card.def<0?'?':card.card.def}):null;
     return `<article class="duel-zone-shell ${zone==='monsters'?'monster-slot':'spell-slot'} ${values?'has-stats':''}" data-role="${activity.role}"><div class="duel-zone-surface"><button class="duel-zone ${card?'occupied':''} ${card&&!card.faceUp?'face-down':''} ${card?.position==='defense'?'defense':''} ${available?'actionable':''}" ${card?`data-duel-card="${card.uid}" data-motion-uid="${card.uid}"`:''} data-role="${activity.role}" data-motion-zone="${side}:${zone}:${index}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${escape(label)}${card?.position==='defense'?' · Defense Position':''}${values?` · ATK ${values.atk} DEF ${values.def}`:''}${activity.label?' · '+escape(activity.label):''}">${card?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,card.position,zone)}deg">${hidden||!card.faceUp?cardBack():image(card.card)}</span>`:'<span class="duel-empty-mark" aria-hidden="true">◇</span>'}</button></div><div class="duel-card-rail">${values?`<div class="duel-card-stats" aria-hidden="true"><span><small>ATK</small><b>${values.atk}</b></span><span><small>DEF</small><b>${values.def}</b></span></div>`:''}${card?`<div class="duel-inline-actions">${quickButtons(card.uid,true)}</div>`:''}</div></article>`;
   }
   function renderLife(side){

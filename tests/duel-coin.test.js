@@ -14,10 +14,7 @@ const cards=[...JSON.parse(await readFile(new URL('./rules-fixtures.json',import
 for(const side of [0,1])for(const called of ['Heads','Tails'])test(`Jirai Gumo: side ${side} calling ${called} shows the actual core face and only halves LP on a wrong call`,async()=>{
   const seen=new Set();
   for(let seed=1;seed<=16&&seen.size<2;seed++){
-    // Cover both faces with full-width deterministic native RNG states. Small
-    // initial words can share the same first toss before other random effects.
     const raw=[],lib={...rules.lib,
-      createDuel(options){return rules.lib.createDuel({...options,seed:[0,1,2,3].map(i=>BigInt.asUintN(64,BigInt(seed*4+i)*0x9e3779b97f4a7c15n))});},
       duelGetMessage(handle){const messages=rules.lib.duelGetMessage(handle);raw.push(...messages.filter(m=>m.type===rules.module.OcgMessageType.TOSS_COIN));return messages;}};
     const engine=createNativeBackend({rules:()=>({...rules,lib})});let state;
     try{

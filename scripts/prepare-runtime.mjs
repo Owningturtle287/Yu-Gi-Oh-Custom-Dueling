@@ -23,6 +23,23 @@ runtime=runtime.replace(shuffle,'case 36:{let location=e.u8(),count=e.u8(),from=
 const move='case 50:return{type:t,card:e.u32(),from:p(e),to:p(e)}';
 if(!runtime.includes(move))throw new Error('Pinned MOVE reason patch no longer matches.');
 runtime=runtime.replace(move,'case 50:return{type:t,card:e.u32(),from:p(e),to:p(e),reason:e.u32()}');
+// TYPE was omitted from the wrapper's query decoder. Consume its payload so
+// querying live Trap Monster types cannot desynchronize the following fields.
+const queryAlias='else if(s===u.ALIAS&&o===4)t.alias=e.u32();';
+if(!runtime.includes(queryAlias))throw new Error('Pinned TYPE query patch no longer matches.');
+runtime=runtime.replace(queryAlias,queryAlias+'else if(s===u.TYPE&&o===4)t.type=e.u32();');
+// Unknown monster stats use negative int32 sentinels, not unsigned billions.
+for(const [flag,property] of [['ATTACK','attack'],['DEFENSE','defense'],['BASE_ATTACK','baseAttack'],['BASE_DEFENSE','baseDefense']]){
+  const unsigned=`s===u.${flag}&&o===4)t.${property}=e.u32()`;
+  if(!runtime.includes(unsigned))throw new Error('Pinned signed-stat query patch no longer matches: '+flag);
+  runtime=runtime.replace(unsigned,`s===u.${flag}&&o===4)t.${property}=e.i32()`);
+}
+// The synchronous wrapper retains every duel's callback closures in O even
+// after destroying the core handle. Those closures retain the full match and
+// archive. Release them on destruction and on failed creation as well.
+const create='createDuel(E){let i=++r;O.set(i,{cardReader:E.cardReader,errorHandler:E.errorHandler,scriptReader:E.scriptReader});let T=c.stackSave(),R=c.stackAlloc(4),m=c.stackAlloc(104);if(Y(a(m),{...E,ptrSize:4,cardReader:0,cardReaderPayload:i,cardReaderDone:0,cardReaderDonePayload:0,errorHandler:0,errorHandlerPayload:i,scriptReader:0,scriptReaderPayload:i,enableUnsafeLibraries:!0}),c._ocgapiCreateDuel(R,m)!=0)return null;let h=c.getValue(R,"i32");return c.stackRestore(T),{[D]:h}}';
+if(!runtime.includes(create))throw new Error('Pinned callback cleanup patch no longer matches.');
+runtime=runtime.replace(create,'createDuel(E){let i=++r;O.set(i,{cardReader:E.cardReader,errorHandler:E.errorHandler,scriptReader:E.scriptReader});let T=c.stackSave(),R=c.stackAlloc(4),m=c.stackAlloc(104);try{Y(a(m),{...E,ptrSize:4,cardReader:0,cardReaderPayload:i,cardReaderDone:0,cardReaderDonePayload:0,errorHandler:0,errorHandlerPayload:i,scriptReader:0,scriptReaderPayload:i,enableUnsafeLibraries:!0});if(c._ocgapiCreateDuel(R,m)!=0){O.delete(i);return null}return{[D]:c.getValue(R,"i32"),atlasCallbackId:i}}catch(error){O.delete(i);throw error}finally{c.stackRestore(T)}},destroyDuel(E){try{c._ocgapiDestroyDuel(E[D])}finally{O.delete(E.atlasCallbackId)}}');
 await writeFile(indexPath,runtime);
 for (const name of ['ocgcore.sync.mjs','ocgcore.sync.wasm']) await cp('node_modules/ocgcore-wasm/lib/'+name,'vendor/ocgcore/lib/'+name);
 const manifest=JSON.parse(await readFile('assets/rules/manifest.json'));

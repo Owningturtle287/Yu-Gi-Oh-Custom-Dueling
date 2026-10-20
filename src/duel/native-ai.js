@@ -205,7 +205,7 @@ function scoreEffect(ctx,a){
     }
     case 'chaosWipe':utility=aliveCards(foe).length+foe.hand.length>aliveCards(p).length+p.hand.length?1000:-1000;break;
     case 'tributeBurn':{
-      const catapult=card.name==='Catapult Turtle',amazon=card.name==='Amazon Archer',amount=catapult?Math.max(0,...ours.map(attack))/2:amazon?1200:profile.amount||500,weak=Math.min(Infinity,...ours.map(c=>costValue(s,side,c)));
+      const catapult=card.name==='Catapult Turtle',amazon=['Amazon Archer','Amazoness Archer'].includes(card.name),amount=catapult?Math.max(0,...ours.map(attack))/2:amazon?1200:profile.amount||500,weak=Math.min(Infinity,...ours.map(c=>costValue(s,side,c)));
       const total=catapult?amount:Math.floor(ours.length/(amazon?2:1))*amount;
       utility=foe.lp<=total&&ours.length?100000:amount*.35-weak-100;break;
     }
@@ -285,6 +285,14 @@ function summonScore(ctx,a){
     if(attack(c)<enemyPower&&defense(c)>attack(c)+400)score-=300;
     if(canBattle(s))score+=(battlePlan(next,side,{available:null}).score-ctx.plan.score)*.6;
     if(['search','removal','backrowRemoval','draw'].includes(profile.intent))score+=200;
+    // A modest Tribute upgrade can be the only way through persistent public
+    // defenders. Value opening that wall beyond this turn's immediate damage,
+    // rather than endlessly replacing small attackers in a recycling matchup.
+    if(required&&canBattle(s)){
+      const current=Math.max(0,...monsters(p).map(attack));
+      const walls=monsters(foe).filter(target=>target.faceUp&&!target.hidden&&!combatTraits(target).indestructible&&(target.position==='defense'?defense(target):attack(target))>=current&&(target.position==='defense'?defense(target):attack(target))<attack(c));
+      if(attack(c)>current&&walls.length)score+=Math.min(1500,400+walls.reduce((n,target)=>n+valueOf(ctx,target)*.5,0));
+    }
   }
   if(!monsters(p).length)score+=400;
   if(tributes.length&&monsters(p).reduce((n,c)=>n+attack(c),0)>attack(c)&&!monsters(foe).length)score-=800;

@@ -3,6 +3,7 @@
 import {memoryFor,knownCard} from './ai-memory.js';
 import {decisionGuidance,retentionBonus} from './ai-guidance.js';
 import {effects} from './catalog.js';
+import {currentCardData} from './card-view.js';
 export const AI_NAME='Strategic AI';
 export const allCards=s=>s.players.flatMap(p=>['hand','deck','monsters','spells','grave','banished','extra'].flatMap(z=>p[z].filter(Boolean)).concat(p.field?[p.field]:[]));
 export const locate=(s,uid)=>uid?allCards(s).find(c=>c.uid===uid)||null:null;
@@ -17,12 +18,13 @@ export function aiObservation(state,side){
   // In particular, query results for a face-down monster must not leak DEF,
   // effects, ID, race, or disabled status into planning. Deck order is unused.
   const known=new Set(state.version===2?[]:state.revealedUIDs||[]);
-  const hidden=c=>{const remembered=c&&knownCard(state,side,c.uid);if(remembered)return {...c,card:remembered,known:true,hidden:false,disabled:false,currentStats:{atk:Math.max(0,remembered.atk||0),def:Math.max(0,remembered.def||0)}};return c?{uid:c.uid,owner:c.owner,controller:c.controller,faceUp:false,position:c.position,hidden:true,card:{name:'Unknown card',type:'Unknown',atk:0,def:0}}:null;};
+  const hidden=c=>{const remembered=c&&knownCard(state,side,c.uid);if(remembered)return {...c,card:remembered,known:true,hidden:false,disabled:false,currentType:undefined,currentLevel:remembered.level,currentRace:remembered.race,currentAttribute:remembered.attribute,currentStats:{atk:Math.max(0,remembered.atk||0),def:Math.max(0,remembered.def||0)}};return c?{uid:c.uid,owner:c.owner,controller:c.controller,faceUp:false,position:c.position,hidden:true,card:{name:'Unknown card',type:'Unknown',atk:0,def:0}}:null;};
+  const visible=c=>c?{...c,card:currentCardData(c)}:c;
   const players=state.players.map((p,index)=>({...p,
     deck:index===side?[...p.deck].sort((a,b)=>String(a.card.id).localeCompare(String(b.card.id))):p.deck.map(hidden),
-    hand:p.hand.map(c=>index===side||c.public||known.has(c.uid)?c:hidden(c)),
+    hand:p.hand.map(c=>index===side||c.public||known.has(c.uid)?visible(c):hidden(c)),
     extra:index===side?p.extra:p.extra.map(c=>c.faceUp?c:hidden(c)),
-    monsters:p.monsters.map(c=>!c||index===side||c.faceUp||c.public||known.has(c.uid)?c:hidden(c)),
+    monsters:p.monsters.map(c=>!c||index===side||c.faceUp||c.public||known.has(c.uid)?visible(c):hidden(c)),
     spells:p.spells.map(c=>!c||index===side||c.faceUp||c.public||known.has(c.uid)?c:hidden(c)),
     field:!p.field||index===side||p.field.faceUp?p.field:hidden(p.field),
     banished:p.banished.map(c=>index===side||c.faceUp?c:hidden(c))}));
@@ -55,7 +57,7 @@ define('Limiter Removal','machineBoost');define('Mirror Wall','mirrorWall');
 define('Axe of Despair','equip',{atk:1000});define('Black Pendant','equip',{atk:500});define('United We Stand','equip',{atk:800,dynamic:'monsters'});define('Mage Power','equip',{atk:500,dynamic:'backrow'});
 define('Megamorph','megamorph');define('Fairy Meteor Crush','pierce');
 define('Gravity Bind|Level Limit - Area B|Swords of Revealing Light|Wall of Revealing Light|Messenger of Peace','stall');
-define('Cannon Soldier|Catapult Turtle|Amazon Archer','tributeBurn',{amount:500});define('Injection Fairy Lily','lily');
+define('Cannon Soldier|Catapult Turtle|Amazon Archer|Amazoness Archer','tributeBurn',{amount:500});define('Injection Fairy Lily','lily');
 define('Polymerization|Fusion Gate|Metamorphosis|Black Luster Ritual|Contract with the Abyss|Advanced Ritual Art|Monster Gate|Reasoning','summon');
 define('Soul Release|Kycoo the Ghost Destroyer','graveRemoval');define('Bazoo the Soul-Eater','graveBoost');
 define('Black Luster Soldier - Envoy of the Beginning|Chaos Sorcerer','chaos');define('Chaos Emperor Dragon - Envoy of the End','chaosWipe');
