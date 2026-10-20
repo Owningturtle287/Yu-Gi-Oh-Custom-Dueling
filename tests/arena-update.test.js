@@ -35,15 +35,15 @@ async function ui(engine,state){
 test('Enchanted Javelin is offered at attack declaration and heals before battle continues',async()=>{
   const e=backend();let s=await damageDuel(e,cards,{traps:['Enchanted Javelin']});try{
     const offer=responseOffer(s,s.actions[0]);assert.equal(offer.phase,'Attack declaration');assert.equal(offer.cards[0].card.card.name,'Enchanted Javelin');
-    const policy=createResponsePolicy();policy.passTurn(s);assert.equal(policy.action(s,s.actions[0]),null,'Routine auto-pass must not suppress an attack response');
+    const policy=createResponsePolicy();policy.passTurn(s);assert.equal(policy.action(s,s.actions[0]),offer.pass,'Auto-pass can decline this optional attack response');
     s=command(e,s,'ACTIVATE',0,'Enchanted Javelin');s=advanceBattle(e,s,x=>!x.pending&&x.players[0].grave.some(c=>c.card.name==='Enchanted Javelin'));
     assert.equal(s.players[0].lp,10500);const heal=s.log.find(x=>x.kind==='heal'&&x.message.includes('Enchanted Javelin')),battle=s.log.find(x=>x.kind==='battle'&&/2500 ATK/.test(x.message));assert.ok(heal&&battle&&heal.id<battle.id);
   }finally{e.destroyMatch(s);}
 });
-test('routine auto-pass still asks about summon, chain, damage and optional trigger opportunities',()=>{
+test('auto-pass declines optional summon, chain, damage and triggered effects',()=>{
   const p=createResponsePolicy(),c={uid:'trap',card:get('Enchanted Javelin')},s={runtimeId:'x',turn:2,phase:'main1',players:[{...decks()[0],hand:[c],deck:[],monsters:[],spells:[],grave:[],extra:[],banished:[]},{hand:[],deck:[],monsters:[],spells:[],grave:[],extra:[],banished:[]}],chain:[],window:{priority:0,event:{kind:'phase'}}},a=[{id:'a',type:'ACTIVATE',uid:c.uid},{id:'p',type:'PASS'}];p.passTurn(s);assert.equal(p.action(s,a),a[1]);
-  for(const kind of ['attack','summon','chain']){s.window.event.kind=kind;assert.equal(p.action(s,a),null);}
-  s.window.event.kind='phase';s.battleStep='beforeCalculation';assert.equal(p.action(s,a),null);s.battleStep=null;s.choice={side:0,optionalResponse:true,trigger:{uid:c.uid}};assert.equal(p.action(s,[{type:'CHOOSE',yes:true},{type:'CHOOSE',yes:false}]),null);
+  for(const kind of ['attack','summon','chain']){s.window.event.kind=kind;assert.equal(p.action(s,a),a[1]);}
+  s.window.event.kind='phase';s.battleStep='beforeCalculation';assert.equal(p.action(s,a),a[1]);s.battleStep=null;s.choice={side:0,optionalResponse:true,trigger:{uid:c.uid}};assert.equal(p.action(s,[{type:'CHOOSE',yes:true},{type:'CHOOSE',yes:false}]).yes,false);
 });
 test('Ancient Telescope automatically reveals five cards in exact top-first order, with an explicit viewing pause',async()=>{
   const e=backend();let {s,expected,order}=await telescope(e);try{

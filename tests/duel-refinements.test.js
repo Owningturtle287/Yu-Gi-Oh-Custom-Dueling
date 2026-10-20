@@ -36,6 +36,15 @@ test('the whole hand fits without scrolling as its count and enlargement change'
   }
   assert.equal(handGeometry(808,390,{count:6,expanded:true,baseSize:52}).cardHeight,104);
 });
+test('default hand sits lower with safe-area clearance while enlarged cards and the toggle retain their positions',()=>{
+  for(const inset of [4,21,34])for(const count of [1,5,6,10]){
+    const normal=handGeometry(714,363,{count,baseSize:64,bottomInset:inset}),large=handGeometry(714,363,{count,baseSize:64,bottomInset:inset,expanded:true});
+    assert.equal(normal.bottom,inset-8);assert.equal(large.bottom,inset+48);
+    assert.equal(normal.toggleBottom,inset+Math.max(0,(normal.cardHeight-32)/2-10));
+    assert.equal(large.toggleBottom,normal.toggleBottom);assert.equal(large.toggleLeft,normal.toggleLeft);
+    assert.ok(normal.left+normal.rackWidth<=714);assert.ok(large.left+large.rackWidth<=714);
+  }
+});
 test('the hand overlay cannot intercept empty-area phase taps, and the full-screen frame has no outer safe-area gutters',async()=>{
   const engine=backend(),state=await engine.createMatch(decks(),{cards,first:0,seed:17}),r=await rig(engine,state);
   try{

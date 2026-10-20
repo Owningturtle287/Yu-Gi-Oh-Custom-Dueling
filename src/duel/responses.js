@@ -43,11 +43,9 @@ export function createResponsePolicy() {
     askAgain() {passing = false;},
     action(state, actions) {
       sync(state);
-      // Auto-pass reduces idle phase interruptions, never hides an attack,
-      // summon response, active chain or optional triggered effect.
-      const event=state.window?.event?.kind;
-      const important=state.pending?.kind==='attack'||!!state.battleStep||state.choice?.optionalResponse||['attack','summon','chain'].includes(event)||state.chain.length>0;
-      return passing&&!important?responseOffer(state, actions)?.pass||null:null;
+      // Only the core's legal decline action is repeated. This includes optional
+      // attack/chain/trigger windows, never committed costs, targets or options.
+      return passing?responseOffer(state, actions)?.pass||null:null;
     }
   };
 }

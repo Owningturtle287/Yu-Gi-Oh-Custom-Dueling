@@ -52,7 +52,9 @@ export function handGeometry(width,height,{count,expanded=false,baseSize=64,bott
     const cardHeight=count?cardWidth/.686:target,cardSpan=count?cardWidth*count+gap*(count-1):80;
     return {cardWidth,cardHeight,rackWidth:cardSpan,left:left+(available-cardSpan-reserve)/2+reserve,bottom:bottomInset+(lifted?48:0)};
   };
-  const normal=fit(false),hand=expanded?fit(true):normal;
+  const normal=fit(false),hand=expanded?fit(true):{...normal,bottom:normal.bottom-(normalLifted?0:8)};
+  // Lower only the default cards. Keep the toggle anchored to its existing
+  // baseline and leave expanded/narrow-screen overlays and field tracks intact.
   const toggleLeft=Math.max(normalLifted?8:lp+28,normal.left-toggle-toggleGap-20),toggleBottom=normal.bottom+Math.max(0,(normal.cardHeight-32)/2-10);
   return {...hand,toggleLeft,toggleBottom,
     values:{'--hand-display-height':hand.cardHeight,'--hand-display-width':hand.cardWidth,'--hand-card-gap':gap,'--hand-rack-width':hand.rackWidth,'--hand-rack-left':hand.left,'--hand-rack-bottom':hand.bottom,'--hand-toggle-left':toggleLeft,'--hand-toggle-bottom':toggleBottom}};

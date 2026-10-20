@@ -21,12 +21,12 @@ export function selectCard(engine,state,uid){
   const finish=state.actions[side].find(a=>a.finish);assert.ok(finish,'Selection can be confirmed');
   return engine.applyAction(state,finish,side);
 }
-export async function damageDuel(engine,cards,{defender='Mystical Elf',attacker='Dark Magician',defendingSide=0,faceDown=true,defense=true,traps=['Castle Walls','Mystical Space Typhoon','Mirror Force'],opponentTraps=[],hand=[]}={}){
+export async function damageDuel(engine,cards,{defender='Mystical Elf',attacker='Dark Magician',defendingSide=0,faceDown=true,defense=true,traps=['Castle Walls','Mystical Space Typhoon','Mirror Force'],opponentTraps=[],hand=[],seed=73}={}){
   const get=name=>{const c=cards.find(c=>c.name===name);assert.ok(c,name);return c;},attackingSide=1-defendingSide;
   const fields=[{},{}],hands=[[],[]];hands[defendingSide]=hand.map(get);
   fields[defendingSide]={monsters:[{card:get(defender),defense,faceUp:!faceDown}],spells:traps.map(name=>({card:get(name),faceUp:false}))};
   fields[attackingSide]={monsters:[{card:get(attacker)}],spells:opponentTraps.map(name=>({card:get(name),faceUp:false}))};
-  let state=await engine.createMatch([0,1].map(()=>({name:'Damage Step regression',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{first:defendingSide,seed:73,cards,openingHands:hands,initialFields:fields});
+  let state=await engine.createMatch([0,1].map(()=>({name:'Damage Step regression',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{first:defendingSide,seed,cards,openingHands:hands,initialFields:fields});
   state=advanceBattle(engine,state,s=>s.active===attackingSide&&s.phase==='main1'&&!s.window&&!s.choice);
   state=command(engine,state,'NEXT',attackingSide);
   state=advanceBattle(engine,state,s=>s.actions[attackingSide].some(a=>a.type==='ATTACK'));

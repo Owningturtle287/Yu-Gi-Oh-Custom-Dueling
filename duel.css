@@ -630,8 +630,8 @@ html[data-duel-rotated=true] #modal { position:fixed; inset:auto; left:50%; top:
 .duel-hand-zoom { position:absolute; z-index:2; left:var(--hand-toggle-left); bottom:var(--hand-toggle-bottom); width:30px; height:32px; min-width:30px; min-height:32px; padding:2px; border-radius:9px; font-size:10px; color:#285e4a; border-color:#b5cabc; background:#fff; }
 .duel-hand-card { flex:none; }
 .duel-hand-rack[data-compact-hand=true] .duel-inline-actions { display:none; }
-.duel-table>.opponent-life { position:absolute; z-index:6; top:10px; left:28px; right:auto; border-radius:24px 11px 11px 11px; }
-.duel-side>.player-life { bottom:4px; bottom:max(4px,var(--duel-safe-bottom)); left:24px; border-radius:11px 11px 11px 24px; }
+.duel-table>.opponent-life { position:absolute; z-index:6; top:10px; left:22px; right:auto; border-radius:24px 11px 11px 11px; }
+.duel-side>.player-life { bottom:4px; bottom:max(4px,var(--duel-safe-bottom)); left:18px; border-radius:11px 11px 11px 24px; }
 .duel-action-area { bottom:max(4px,var(--duel-safe-bottom)); }
 .duel-utility-actions { top:4px; right:calc(var(--phase-width) + var(--phase-gap) + 8px); }
 .duel-table [data-pile-zone=banished] .duel-pile-count { top:50%; bottom:auto; left:calc(100% + 3px); right:auto; width:auto; min-width:14px; transform:translateY(-50%); }

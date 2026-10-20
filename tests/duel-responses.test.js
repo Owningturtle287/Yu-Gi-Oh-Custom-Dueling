@@ -44,7 +44,7 @@ test('Damage Step preview names the revealed defender and updates its field DEF 
   const r=await rig({damage:true});try{
     assert.match(r.$('.duel-response-context').textContent,/Mystical Elf is face-up/);
     assert.doesNotMatch(r.$('.duel-response-context').textContent,/attack is declared/);
-    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/Attacks, summons, chains and triggered effects still ask/);
+    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/declines optional effects.*Required choices still ask/);
     assert.equal(r.$('.duel-phases').dataset.battleStep,'beforeCalculation');
     r.$('[data-duel="response-activate"]').click();
     await waitFor(()=>r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
@@ -88,7 +88,7 @@ test('turn preference never declines required chains, costs, targets or procedur
   const activate={type:'ACTIVATE',uid:'c1'},pass={type:'PASS'},policy=createResponsePolicy();policy.passTurn(state);
   assert.equal(policy.action(state,[activate,pass]),pass);assert.equal(policy.action(state,[activate]),null);
   state.window=null;state.choice={side:0,trigger:{uid:'c1'},optionalResponse:false};const yes={type:'CHOOSE',yes:true},no={type:'CHOOSE',yes:false};assert.equal(policy.action(state,[yes,no]),null);
-  state.choice.optionalResponse=true;assert.equal(policy.action(state,[yes,no]),null);
+  state.choice.optionalResponse=true;assert.equal(policy.action(state,[yes,no]),no);
   state.turn++;assert.equal(policy.action(state,[yes,no]),null);assert.equal(policy.isPassing(state),false);
   assert.match(effectBrief(get('Tribute to the Doomed')),/Discard 1 card/);assert.equal(effectBrief({desc:'x'.repeat(500)}).length,220);
   state.choice=null;state.window={priority:1};assert.equal(responseOffer(state,[activate,pass]),null);
@@ -101,5 +101,20 @@ test('native optional triggered effects use the same explanatory response card a
     r.$('[data-duel="response-pass"]').click();await waitFor(()=>r.state.phase==='main1'&&!r.state.choice);
     assert.ok(r.state.players[0].grave.some(c=>c.card.name==='Sinister Serpent'));
     assert.ok(r.state.log.some(e=>/pass on Sinister Serpent/.test(e.message)));assert.deepEqual(r.errors,[]);
+  }finally{r.close();}
+});
+test('Auto-pass declines native optional triggers without reopening their card preview',async()=>{
+  const r=await rig({trigger:true});try{
+    r.$('[data-duel="response-turn"]').click();await waitFor(()=>r.state.phase==='main1'&&!r.state.choice&&!r.state.window);
+    assert.equal(r.modal.hasAttribute('open'),false);assert.ok(r.$('[data-duel="ask-again"]'));
+    assert.ok(r.state.players[0].grave.some(c=>c.card.name==='Sinister Serpent'));
+    assert.ok(r.state.log.some(e=>/pass on Sinister Serpent/.test(e.message)));assert.deepEqual(r.errors,[]);
+  }finally{r.close();}
+});
+test('Auto-pass declines an optional Damage Step response and lets the native battle finish',async()=>{
+  const r=await rig({damage:true});try{
+    r.$('[data-duel="response-turn"]').click();await waitFor(()=>r.state.players[0].grave.some(c=>c.card.name==='Mystical Elf')&&!r.state.pending);
+    assert.equal(r.modal.hasAttribute('open'),false);assert.ok(r.state.players[0].spells.some(c=>c?.card.name==='Castle Walls'&&!c.faceUp));
+    assert.ok(r.state.log.some(e=>e.kind==='battle'&&/2500 ATK/.test(e.message)));assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });
