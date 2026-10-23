@@ -218,5 +218,5 @@ dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100
  .solo-format small { display:none; }
  .solo-setup .solo-filter-summary { gap:7px; }
  .solo-setup .solo-launch { padding-inline:10px; }
- .solo-ai-badge { font-size:7px; }
+ .solo-ai-badge { display:none; }
 }

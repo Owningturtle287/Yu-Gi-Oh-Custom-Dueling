@@ -43,7 +43,7 @@ try{
   }
   for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
   await capture(`setup-${width}x${height}`);
-  if(width===844||width===390){
+  if([844,390,568,320].includes(width)){
    // Mount the production controller at a genuine native Type/Attribute prompt.
    for(const card of ['DNA Surgery','DNA Transplant']){
     await page.evaluate(async card=>{
@@ -66,6 +66,9 @@ try{
     await page.locator('.duel-choice-footer button[data-choice-tone="teal"]:enabled').waitFor();
     await visibleControls('.duel-choice-footer button');await capture(`${card.replaceAll(' ','-')}-${width}x${height}`);
     await page.locator('.duel-choice-footer button[data-choice-tone="teal"]').click();await page.waitForFunction(()=>!window.layoutRig.getMatch().choice);
+    await page.locator('[data-duel="duel-menu"]').click();await page.locator('.duel-menu-body').waitFor();
+    await visibleControls('.duel-menu-body button,.duel-menu-body select');await capture(`pause-${width}x${height}`);
+    await page.locator('.duel-menu-body .primary[data-action="close"]').click();
     await page.evaluate(()=>window.layoutRig.destroy());
    }
   }
