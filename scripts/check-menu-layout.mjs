@@ -63,7 +63,7 @@ try{
   }
   assert.ok(await page.locator('.deck-inspect').first().evaluate(node=>{const art=node.querySelector('img,.image-fallback');return art.getBoundingClientRect().height/node.getBoundingClientRect().height>.75;}),'Most of each tile is card artwork');
   await capture(`builder-${width}x${height}`);
-  await page.locator('[data-action="deck-options"]').click();await visibleControls('.menu-body button');await page.locator('[data-action="app-info"]').click();await visibleControls('.menu-body button');await page.locator('.dialog-header [data-action="close"]').click();
+  await page.locator('[data-action="deck-options"]').click();assert.ok(await page.locator('#modal').evaluate(n=>n.clientWidth>=Math.min(480,Math.max(innerWidth,innerHeight)-24)-4),'Shared menus use the landscape width');await visibleControls('.menu-body button');await page.locator('[data-action="app-info"]').click();await visibleControls('.menu-body button');await page.locator('.dialog-header [data-action="close"]').click();
   const query=page.locator('#card-search');await query.fill('Mystical Elf');
   await page.locator('.builder-archive-panel [data-quick-add]').first().click();
   assert.equal(await query.inputValue(),'Mystical Elf');assert.ok(await page.locator('.builder-deck-panel .tray-card').count());

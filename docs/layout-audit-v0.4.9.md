@@ -12,7 +12,7 @@ The startup menu previously chose landscape dimensions only after `src/app.js` s
 
 This audit targets shipped layout code and selectors that compete with the current menus. The legacy engine and AI helpers remain because active fallbacks and regression tests still import them; they were not treated as dead code merely because they are older.
 
-Shared app/deck-option sheets now use the logical short-landscape breakpoint in physically portrait windows too; the old physical-orientation condition could leave their last actions clipped.
+The base dialog width also uses the logical landscape width; its old `100vw` cap could squeeze a rotated sheet into a portrait-width column. Shared app/deck-option sheets now use the logical short-landscape breakpoint in physically portrait windows too; the old physical-orientation condition could leave their last actions clipped.
 
 The virtual archive now measures its inner grid width rather than the outer scroll panel, so padding and a scrollbar cannot clip the last card column.
 
