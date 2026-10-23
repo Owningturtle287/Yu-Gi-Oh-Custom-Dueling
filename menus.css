@@ -1,0 +1,222 @@
+/* Landscape navigation and menu surfaces. All dimensions use the logical canvas. */
+html[data-app-rotated=true] { --duel-vw:1dvh; --duel-vh:1dvw; --duel-safe-left:env(safe-area-inset-top); --duel-safe-right:env(safe-area-inset-bottom); --duel-safe-top:env(safe-area-inset-right); --duel-safe-bottom:env(safe-area-inset-left); }
+html:not(.duel-playing) .app-shell { position:relative; display:grid; grid-template-columns:76px minmax(0,1fr); grid-template-rows:52px minmax(0,1fr); width:calc(var(--duel-vw) * 100); height:calc(var(--duel-vh) * 100); max-width:none; padding:var(--duel-safe-top) var(--duel-safe-right) var(--duel-safe-bottom) var(--duel-safe-left); background:#edf2ef; }
+html[data-app-rotated=true]:not(.duel-playing) .app-shell { position:fixed; left:100dvw; top:0; transform-origin:0 0; transform:rotate(90deg); }
+html:not(.duel-playing) .topbar { grid-column:1/-1; grid-row:1; height:52px; padding:5px 20px; gap:10px; background:#f8faf7; }
+html:not(.duel-playing) .brand img { height:32px; width:32px; }
+html:not(.duel-playing) .brand>span { font-size:13px; }
+html:not(.duel-playing) .brand small { display:none; }
+html:not(.duel-playing) .topbar .icon-button { height:40px; min-height:40px; }
+html:not(.duel-playing) .bottom-nav { grid-column:1; grid-row:2; display:flex; flex-direction:column; height:auto; min-height:0; padding:8px 5px; gap:5px; border:0; border-right:1px solid #d1ddd6; background:#f8faf7; }
+html:not(.duel-playing) .bottom-nav button { display:flex; flex:1; min-height:44px; max-height:80px; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:4px 2px; font-size:9px; border-radius:12px; }
+html:not(.duel-playing) .bottom-nav button[aria-current=page] { background:#e1eae3; box-shadow:inset 3px 0 #a88a4f; color:#195d4e; }
+html:not(.duel-playing) .bottom-nav button span:last-child { font-size:9px; }
+html:not(.duel-playing) #main { grid-column:2; grid-row:2; padding:16px 22px; min-height:0; }
+html:not(.duel-playing) #modal { max-width:calc(var(--duel-vw) * 100 - var(--duel-safe-left) - var(--duel-safe-right) - 24px); max-height:calc(var(--duel-vh) * 100 - var(--duel-safe-top) - var(--duel-safe-bottom) - 20px); }
+html:not(.duel-playing) #modal .dialog-body { max-height:calc(var(--duel-vh) * 100 - var(--duel-safe-top) - var(--duel-safe-bottom) - 24px); }
+html[data-app-rotated=true]:not(.duel-playing) #modal { position:fixed; inset:auto; left:50%; top:50%; margin:0; transform:translate(-50%,-50%) rotate(90deg); }
+html[data-app-rotated=true]:not(.duel-playing) #toast { bottom:auto; top:50%; left:50%; max-width:calc(var(--duel-vw) * 100 - 40px); transform:translate(-50%,-50%) rotate(90deg); }
+
+/* Home: one illustrated panel and four immediately available destinations. */
+#main .home { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:22px; width:100%; max-width:1250px; height:100%; min-height:0; margin:auto; }
+.home .home-hero { display:block; min-height:0; max-height:none; height:100%; padding:30px; border:1px solid #335d4c; border-radius:24px; background:radial-gradient(ellipse at 75% 65%,#417d5d88,transparent 65%),linear-gradient(135deg,#183d32,#0c2924); overflow:hidden; }
+.home .hero-copy { max-width:100%; }
+.home .hero-copy .eyebrow { color:#cfb781; font-size:10px; letter-spacing:2px; margin-bottom:14px; }
+.home .hero-copy h1 { color:#f5f5e8; font-size:clamp(26px,calc(var(--duel-vh) * 6),52px); line-height:1.07; letter-spacing:-1.5px; }
+.home .hero-copy h1 span { color:#d6c69c; }
+.home .hero-copy p { color:#bfd0be; font-size:12px; margin-top:12px; }
+.home .hero-art { position:absolute; width:58%; height:60%; top:35%; right:-3%; max-height:none; opacity:.75; }
+.home .hero-art:before { border-color:#d5bf7c30; background:radial-gradient(circle,#94b77c38,transparent 65%); }
+.home .hero-art img { width:64%; height:64%; transform:rotate(13deg); filter:sepia(.25) drop-shadow(0 12px 16px #061f1d99); }
+.hero-orbit { position:absolute; width:90%; aspect-ratio:1; border:1px solid #cbb77b3d; transform:rotate(32deg); border-radius:30%; }
+.home .home-status { position:absolute; left:30px; right:24px; bottom:26px; z-index:1; display:flex; justify-content:flex-start; min-height:0; padding:0; gap:9px; border:0; background:none; color:#d4dfd0; font-size:11px; line-height:1.4; }
+.home-status small { display:block; margin-top:3px; color:#b1c3b3; font-size:10px; }
+.home-status .status-dot { background:#afcda2; box-shadow:0 0 0 4px #aacb9a16; }
+.home-paths { display:flex; flex-direction:column; min-width:0; min-height:0; gap:12px; }
+.home-paths .section-label { flex:none; font-size:10px; letter-spacing:1.7px; color:#4d6259; }
+.home .home-grid { flex:1; min-height:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:1.2fr 1fr 44px; gap:10px; }
+.home .launch-card { display:flex; min-height:0; min-width:0; padding:18px; border:1px solid #c5d4c8; background:linear-gradient(145deg,#fffef8,#e8eee6); border-radius:17px; justify-content:center; box-shadow:inset 0 1px #fff,0 5px 12px #14352609; }
+.home .launch-card>svg { width:28px; height:28px; margin:0 0 12px; color:#456852; }
+.home .launch-card strong { color:#1d3f32; font-size:17px; line-height:1.15; }
+.home .launch-card small { color:#667565; font-size:11px; margin-top:6px; }
+.home .launch-card .arrow { top:14px; right:15px; color:#70846b; font-size:18px; }
+.home .solo-launch-card { grid-column:1/-1; background:linear-gradient(120deg,#dce9d9,#c5d9c0); border-color:#9eb397; padding-left:70px; }
+.home .solo-launch-card>svg { position:absolute; left:22px; top:50%; width:32px; height:32px; margin:0; transform:translateY(-50%); }
+.home .solo-launch-card strong { font-size:25px; }
+.home .solo-launch-card .soon-label { position:static; padding:0; margin-bottom:5px; background:none; color:#55734c; font-size:9px; letter-spacing:1.5px; }
+.home .coming { grid-column:1/-1; flex-direction:row; align-items:center; justify-content:flex-start; gap:9px; padding:7px 14px; background:#e5eae2; border-style:dashed; box-shadow:none; }
+.home .coming>svg { width:20px; height:20px; margin:0; color:#76816f; }
+.home .coming strong { color:#5c6a56; font-size:12px; }
+.home .coming .soon-label { position:static; margin-left:auto; font-size:8px; color:#6b775e; background:#d8dfcf; border-color:#ccd3c4; }
+.home .launch-card:hover { border-color:#73926c; background:#dfead8; box-shadow:0 5px 16px #173d2420; }
+
+/* Setup: persistent section navigation, a bounded panel and launch summary. */
+html:not(.duel-playing) #main:has(.solo-setup) { padding:16px 22px; }
+#main .solo-setup { display:grid; grid-template-columns:140px minmax(0,1fr) 200px; grid-template-rows:54px minmax(0,1fr); width:100%; height:100%; max-width:1250px; min-height:0; gap:16px; margin:auto; overflow:hidden; }
+.solo-setup .duel-heading { grid-column:1/-1; grid-row:1; display:flex; align-items:center; justify-content:space-between; min-height:0; }
+.solo-setup .duel-heading h1 { font-size:27px; line-height:1.1; }
+.solo-setup .duel-heading .eyebrow { display:block; color:#697c64; font-size:9px; margin-bottom:3px; }
+.solo-setup .duel-era { display:flex; flex-direction:column; align-items:flex-end; gap:3px; padding:6px 10px; min-height:44px; background:#e2e8da; border-color:#d0d7c3; font-size:10px; color:#675b37; }
+.solo-setup .duel-era span { font-size:9px; }
+.solo-setup .solo-tabs { grid-column:1; grid-row:2; display:flex; flex-direction:column; gap:7px; }
+.solo-setup .solo-tabs button { display:flex; align-items:center; gap:10px; min-height:48px; padding:10px; font-size:12px; text-align:left; border:1px solid transparent; color:#5e6c5d; background:transparent; box-shadow:none; }
+.solo-setup .solo-tabs button svg { width:19px; height:19px; }
+.solo-setup .solo-tabs [aria-selected=true] { color:#1c543d; background:#dce7d7; border-color:#c2d1b9; box-shadow:inset 3px 0 #9c8247; }
+.solo-setup #solo-panel { grid-column:2; grid-row:2; display:flex; flex-direction:column; align-content:initial; gap:18px; min-width:0; min-height:0; padding:22px; border:1px solid #d2dccd; border-radius:20px; background:linear-gradient(135deg,#fffffa,#f4f6ef); box-shadow:0 5px 14px #163d2208; overflow:hidden; }
+.solo-panel-title { display:flex; align-items:center; gap:13px; flex:none; min-width:0; }
+.solo-panel-title>div { min-width:0; }
+.solo-panel-title small { font-size:8px; letter-spacing:1.4px; color:#7d805f; }
+.solo-panel-title h2 { font-size:23px; margin:4px 0 0; color:#214734; }
+.solo-panel-title .solo-sigil { display:grid; place-items:center; width:44px; height:52px; flex:none; background:#e4ebd7; color:#537044; border:1px solid #ccd5b8; outline:0; transform:rotate(-6deg); border-radius:8px; }
+.solo-sigil svg { width:24px; height:24px; }
+.solo-pool-count { margin-left:auto; text-align:right; color:#35624b; font-size:25px; }
+.solo-pool-count small { display:block; font-size:8px; }
+.solo-deck-fields,.solo-match-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:end; gap:18px 12px; min-width:0; }
+.solo-setup .solo-panel label { display:flex; flex-direction:column; gap:6px; font-size:11px; color:#667561; min-width:0; }
+.solo-setup .solo-panel select { width:100%; min-height:44px; padding:9px; font-size:16px; background:#edf1e8; border-color:#d2dccb; }
+.solo-format { display:flex; align-items:center; gap:9px; min-height:44px; color:#527148; }
+.solo-format>b { font-size:29px; font-weight:500; }
+.solo-format>span { font-size:11px; }
+.solo-format small { display:block; color:#7a846c; font-size:9px; margin-top:3px; }
+.solo-setup .solo-filter-summary { grid-column:1/-1; display:flex; align-items:center; min-height:60px; padding:10px 13px; gap:12px; background:#e6ecdf; border-color:#cad5c0; box-shadow:none; }
+.solo-filter-summary>svg { color:#617f50; }
+.solo-filter-summary>span:first-of-type { flex:1; min-width:0; }
+.solo-setup .solo-filter-summary strong { font-size:12px; margin:0 0 4px; color:#375a35; }
+.solo-setup .solo-filter-summary small { font-size:10px; line-height:1.3; color:#6d7a62; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.solo-setup .solo-saved-row { display:flex; gap:6px; }
+.solo-saved-row label { flex:1; min-width:0; }
+.solo-setup .solo-saved-row button { display:flex; flex-direction:column; justify-content:center; align-items:center; padding:4px 7px; gap:2px; color:#5c7243; font-size:9px; min-height:44px; }
+.solo-saved-row button svg { width:17px; height:17px; }
+.solo-setup .solo-set-status { grid-column:1/-1; color:#69734d; font-size:10px; }
+.solo-setup .solo-launch { grid-column:3; grid-row:2; display:flex; flex-direction:column; justify-content:flex-end; align-self:stretch; margin:0; padding:20px 16px; min-width:0; gap:14px; border-radius:20px; border:1px solid #375d47; background:radial-gradient(ellipse at 100% 0,#4f754b66,transparent 75%),#193b2e; }
+.solo-versus { display:flex; flex:1; flex-direction:column; justify-content:center; gap:18px; min-height:0; }
+.solo-versus>div { min-width:0; }
+.solo-versus small { display:block; font-size:8px; letter-spacing:2px; color:#c7b782; margin-bottom:5px; }
+.solo-versus strong { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:15px; line-height:1.2; font-weight:500; color:#e9efdd; overflow-wrap:anywhere; }
+.solo-versus>span { font-size:12px; color:#92a17c; letter-spacing:3px; }
+.solo-setup .solo-launch p { color:#bdc9af; font-size:9px; text-align:left; line-height:1.4; }
+.solo-setup .solo-launch .primary { flex:none; min-height:48px; width:100%; color:#263d28; background:linear-gradient(135deg,#e6d2a2,#c8ac6b); border-color:#d6c08a; font-size:15px; padding:10px 14px; box-shadow:inset 0 1px #fff8,0 4px 10px #0a241f44; }
+.solo-ai-badge { margin-left:auto; padding:6px 8px; border-radius:6px; font-size:9px; color:#557047; background:#e7eddf; white-space:nowrap; }
+.solo-setup .solo-panel .solo-checkbox { flex-direction:row; align-items:center; min-height:44px; gap:9px; }
+.solo-empty { display:flex; flex:1; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#6a7a5d; text-align:center; }
+.solo-empty svg { width:36px; height:36px; opacity:.65; }
+.solo-empty strong { font-size:17px; font-weight:500; }
+.solo-empty p { font-size:11px; line-height:1.5; max-width:240px; }
+#solo-panel .duel-saved-list { flex:1; min-height:0; }
+.duel-saved-list article { flex:none; }
+
+/* Type and attribute declarations scroll independently of their confirmation. */
+dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100 - var(--duel-safe-left) - var(--duel-safe-right) - 28px)); }
+.duel-picker-body.duel-declaration-picker:has(.duel-choice-grid[data-has-cards=false]) { display:flex; flex-direction:column; height:min(540px,calc(var(--duel-vh) * 100 - var(--duel-safe-top) - var(--duel-safe-bottom) - 32px)); min-height:0; overflow:hidden; }
+.duel-declaration-picker .dialog-header { flex:none; }
+.duel-declaration-picker .duel-choice-source { display:none; }
+.duel-declaration-picker .duel-choice-help { color:#5b705d; font-size:11px; }
+.duel-declaration-picker .duel-choice-grid[data-has-cards=false] { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); grid-auto-rows:52px; align-content:start; flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; touch-action:pan-y; gap:6px; padding:4px; scroll-padding-block:4px; }
+.duel-declaration-picker .duel-choice-grid>.duel-declaration { position:relative; display:flex; align-items:center; gap:9px; padding:6px 10px; min-width:0; min-height:52px; height:52px; border-radius:10px; border:1px solid #cbd7c7; background:linear-gradient(145deg,#fffef6,#e8efdf); color:#354f35; text-align:left; box-shadow:inset 0 1px #fff; }
+.declaration-icon { display:grid; place-items:center; width:32px; height:34px; flex:none; border-radius:8px; color:#6d794a; background:#dbe5cc; }
+.declaration-icon svg { width:25px; height:25px; stroke-width:1.5; }
+.duel-declaration strong { font-size:11px; line-height:1.2; font-weight:650; overflow-wrap:anywhere; }
+.duel-declaration-picker .duel-declaration[aria-pressed=true] { border-color:#417149; box-shadow:inset 0 0 0 1px #417149; background:#d8e7ce; color:#214b30; }
+.duel-declaration[aria-pressed=true] .declaration-icon { color:#fffce7; background:#557c45; }
+.declaration-check { position:absolute; right:3px; top:1px; color:#35653b; font-size:10px; }
+.duel-declaration-picker .duel-choice-footer { flex:none; border-color:#c5d4c1; padding-top:8px; }
+.duel-declaration-picker .duel-choice-footer>button { min-height:44px; }
+/* Pause menu keeps every action in a visible 2 × 2 grid. */
+.duel-menu-body .duel-menu-footer { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.duel-menu-body .duel-menu-footer button { min-height:48px; justify-content:flex-start; padding:10px 14px; }
+.duel-menu-body .duel-menu-note { font-size:10px; margin:0; }
+
+@media(max-height:540px), (orientation:portrait) and (max-width:540px) {
+ html:not(.duel-playing) .app-shell { grid-template-rows:44px minmax(0,1fr); grid-template-columns:66px minmax(0,1fr); }
+ html:not(.duel-playing) .topbar { height:44px; padding:2px 14px; }
+ html:not(.duel-playing) .bottom-nav { gap:1px; padding:4px; }
+ html:not(.duel-playing) .bottom-nav button { gap:1px; min-height:44px; }
+ html:not(.duel-playing) .bottom-nav button span:last-child { font-size:8px; }
+ html:not(.duel-playing) #main,html:not(.duel-playing) #main:has(.solo-setup) { padding:10px 14px; }
+ #main .home { gap:14px; }
+ .home .home-hero { padding:20px; border-radius:18px; }
+ .home .hero-copy .eyebrow { font-size:8px; margin-bottom:10px; }
+ .home .hero-copy h1 { font-size:clamp(25px,calc(var(--duel-vh) * 7.5),40px); }
+ .home .hero-copy p { font-size:10px; margin-top:8px; }
+ .home .home-status { left:20px; bottom:18px; right:15px; font-size:9px; }
+ .home-status small { font-size:8px; }
+ .home-paths { gap:8px; }
+ .home-paths .section-label { font-size:8px; }
+ .home-paths .section-label span:last-child { font-size:8px; }
+ .home .home-grid { gap:7px; grid-template-rows:1.1fr 1fr 40px; }
+ .home .launch-card { padding:12px; border-radius:13px; }
+ .home .launch-card>svg { width:22px; height:22px; margin-bottom:7px; }
+ .home .launch-card strong { font-size:14px; }
+ .home .launch-card small { font-size:9px; margin-top:4px; }
+ .home .solo-launch-card { padding-left:58px; }
+ .home .solo-launch-card>svg { left:18px; width:27px; height:27px; margin:0; }
+ .home .solo-launch-card strong { font-size:21px; }
+ .home .coming { padding:6px 12px; }
+ .home .coming strong { font-size:10px; }
+ .home .coming>svg { margin:0; width:18px; height:18px; }
+ #main .solo-setup { grid-template-columns:112px minmax(0,1fr) 166px; grid-template-rows:40px minmax(0,1fr); gap:8px 10px; }
+ .solo-setup .duel-heading h1 { font-size:23px; }
+ .solo-setup .duel-heading .eyebrow { font-size:7px; }
+ .solo-setup .duel-era { min-height:36px; padding:4px 8px; font-size:9px; }
+ .solo-setup .solo-tabs { gap:5px; }
+ .solo-setup .solo-tabs button { min-height:44px; padding:7px; gap:7px; font-size:11px; }
+ .solo-setup .solo-tabs button svg { width:17px; height:17px; }
+ .solo-setup #solo-panel { padding:14px; gap:14px; border-radius:15px; }
+ .solo-panel-title { gap:10px; }
+ .solo-panel-title .solo-sigil { width:34px; height:42px; }
+ .solo-panel-title h2 { font-size:19px; }
+ .solo-panel-title small { font-size:7px; }
+ .solo-deck-fields,.solo-match-fields { gap:12px 9px; }
+ .solo-setup .solo-panel label { font-size:10px; gap:4px; }
+ .solo-setup .solo-panel select { padding:7px; }
+ .solo-setup .solo-filter-summary { min-height:56px; padding:8px 10px; }
+ .solo-setup .solo-launch { padding:14px 12px; gap:10px; border-radius:15px; }
+ .solo-versus { gap:10px; }
+ .solo-versus strong { font-size:13px; }
+ .solo-setup .solo-launch .primary { min-height:46px; padding:8px 10px; font-size:13px; }
+ .solo-setup .solo-launch p { font-size:8px; }
+ .solo-ai-badge { font-size:8px; padding:4px; }
+}
+@media(max-height:360px), (orientation:portrait) and (max-width:360px) {
+ html:not(.duel-playing) .app-shell { grid-template-rows:40px minmax(0,1fr); }
+ html:not(.duel-playing) .topbar { height:40px; }
+ html:not(.duel-playing) #main,html:not(.duel-playing) #main:has(.solo-setup) { padding:7px 10px; }
+ .solo-setup #solo-panel { padding:10px; gap:8px; }
+ .solo-panel-title .solo-sigil { height:32px; width:30px; }
+ .solo-panel-title h2 { font-size:17px; }
+ .solo-panel-title small { font-size:6px; letter-spacing:1px; }
+ .solo-deck-fields,.solo-match-fields { gap:8px; }
+ .solo-setup .solo-filter-summary { min-height:44px; padding:6px 8px; }
+ .solo-setup .solo-filter-summary strong { margin-bottom:2px; font-size:11px; }
+ .solo-setup .solo-filter-summary small { font-size:9px; }
+ .solo-pool-count { font-size:20px; }
+ .solo-versus { flex-direction:row; align-items:center; gap:6px; }
+ .solo-versus>div { flex:1; }
+ .solo-versus strong { font-size:10px; }
+ .solo-versus>span { font-size:9px; letter-spacing:0; }
+ .solo-versus small { font-size:7px; letter-spacing:1px; }
+ .solo-setup .solo-launch { padding:12px 10px; }
+ .home .launch-card small { display:none; }
+ .home .hero-copy p { display:none; }
+ .home .solo-launch-card strong { font-size:18px; }
+ .home .coming .soon-label { font-size:7px; }
+ .duel-declaration-picker .duel-choice-grid[data-has-cards=false] { grid-auto-rows:48px; }
+ .duel-declaration-picker .duel-choice-grid>.duel-declaration { min-height:48px; height:48px; padding:5px 7px; gap:6px; }
+ .duel-declaration strong { font-size:10px; }
+ .duel-menu-body .duel-menu-footer button { min-height:44px; padding:7px 10px; }
+}
+
+/* Short landscape phones reserve more width for deck controls. */
+@media(orientation:landscape) and (max-width:700px), (orientation:portrait) and (max-height:700px) {
+ #main .solo-setup { grid-template-columns:90px minmax(0,1fr) 142px; column-gap:8px; }
+ .solo-setup .solo-tabs button { padding:6px; gap:5px; font-size:10px; }
+ .solo-panel-title h2 { font-size:17px; }
+ .solo-panel-title { gap:8px; }
+ .solo-format { gap:5px; }
+ .solo-format>b { font-size:24px; }
+ .solo-format>span { font-size:10px; }
+ .solo-format small { display:none; }
+ .solo-setup .solo-filter-summary { gap:7px; }
+ .solo-setup .solo-launch { padding-inline:10px; }
+ .solo-ai-badge { display:none; }
+}

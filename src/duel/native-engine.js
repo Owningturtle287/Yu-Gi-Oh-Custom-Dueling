@@ -212,6 +212,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       case T.HINT:if(msg.hint_type===1&&CORE_BATTLE_HINTS[Number(msg.hint)]&&(s.battleStep||s.pending?.kind==='attack'))battleStep(r,CORE_BATTLE_HINTS[Number(msg.hint)]);if(msg.hint_type===(m.OcgHintType?.CARD||10)){
         const code=Number(msg.hint),card=cardsIn(s).find(c=>c.coreCode===code&&(c.faceUp||c.public));
         if(card?.card.id===9603356&&s.chain.length){r.subeffectSource={uid:card.uid,card:card.card,side:card.controller};notice(r,r.subeffectSource,'automatic','Required targeting protection: roll a die. A 3 negates the opponent’s targeting effect.');}
+        if(code===88132637&&s.pending?.target){const wolf=[findCard(s,s.pending.uid),findCard(s,s.pending.target)].find(c=>c?.coreCode===code);if(wolf){r.battleNegation={source:{uid:wolf.uid,card:wolf.card,side:wolf.controller},target:wolf.uid===s.pending.uid?s.pending.target:s.pending.uid};notice(r,r.battleNegation.source,'automatic','Another face-up Fiend is controlled. Negate the effects of the Flip monster destroyed by this battle.');}}
       }if(msg.hint_type===3){const key=[...r.scripts['constant.lua'].matchAll(/HINTMSG_(\w+)\s*=\s*(\d+)/g)].find(x=>BigInt(x[2])===msg.hint)?.[1];r.hint=key?'Select '+key.toLowerCase().replaceAll('_',' '):'Choose cards';}break;
       case T.SUMMONING:case T.SPSUMMONING:case T.FLIPSUMMONING:{const name=descriptor(r,msg.code).name;if(msg.type===T.SUMMONING)s.normalSummons[r.side(msg.controller)]++;log(r,`${who(r.side(msg.controller))} ${msg.type===T.SPSUMMONING?'Special Summoned':msg.type===T.FLIPSUMMONING?'Flip Summoned':'Normal Summoned'} ${name}.`,'summon',[cardAt(r,msg)?.uid].filter(Boolean),r.side(msg.controller));break;}
       case T.CHAINING:{
@@ -230,16 +231,16 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         if(link){
           const outcomes=s.log.filter(e=>e.id>(link.solveStart||s.serial)&&(['leave','stats','damage','heal','cost','discard','draw','position','reveal'].includes(e.kind)||e.resolutionOutcome)).map(e=>e.message);
           const ready=!link.description&&['Continuous','Field','Equip'].includes(link.card.race)&&link.card.type!=='Effect Monster';
-          const text=link.negated?'This effect was negated; its effect does not apply.':outcomes.slice(-2).join(' ')||(ready?effectExplanation(link.card,{phase:s.phase}):'Effect resolved. See the duel feed for the sequence; any ongoing effect follows this card’s conditions.');
+          const text=link.negated?`This effect was negated${link.negatedBy?' by '+link.negatedBy:''}; its effect does not apply.`:outcomes.slice(-2).join(' ')||(ready?effectExplanation(link.card,{phase:s.phase}):'Effect resolved. See the duel feed for the sequence; any ongoing effect follows this card’s conditions.');
           notice(r,link,link.negated?'negated':ready?'ready':'resolve',text,msg.chain_size);
         }
         if(link?.card.name==='Exchange')log(r,'Exchange changes the cards in each hand; it does not grant an additional Normal Summon/Set.','effect',[link.uid].filter(Boolean),link.side);
         r.resolving=null;r.subeffectSource=null;r.automaticSource=null;break;
       }
-      case T.CHAIN_NEGATED:case T.CHAIN_DISABLED:{const link=s.chain[msg.chain_size-1];if(link){link.negated=true;notice(r,link,'negated','This effect was negated; it will not apply.',msg.chain_size);}log(r,`${link?.card.name||'Effect'} · chain link ${msg.chain_size} was negated; its effect will not apply.`,'effect',link?.uid?[link.uid]:[],link?.side);break;}
+      case T.CHAIN_NEGATED:case T.CHAIN_DISABLED:{const link=s.chain[msg.chain_size-1],source=msg.type===T.CHAIN_DISABLED&&r.battleNegation&&r.battleNegation.target===link?.uid?r.battleNegation.source:null;if(link){link.negated=true;if(source)link.negatedBy=source.card.name;notice(r,link,'negated',`This effect was negated${source?' by '+source.card.name:''}; it will not apply.`,msg.chain_size);}log(r,`${link?.card.name||'Effect'} · chain link ${msg.chain_size} was negated${source?' by '+source.card.name+' (another face-up Fiend is controlled)':''}; its effect will not apply.`,'effect',link?.uid?[link.uid]:[],link?.side);break;}
       case T.ATTACK_DISABLED:log(r,`${findCard(s,r.lastAttack?.uid)?.card.name||'The monster'}’s attack was negated${effectName(r)?' by '+effectName(r):''}; this attack will not deal battle damage.`,'battle');s.pending=null;s.battleStep=null;r.lastAttack=null;r.battleStrike=null;break;
       case T.DAMAGE_STEP_START:battleStep(r,'start');break;
-      case T.DAMAGE_STEP_END:commitStrike(r);s.pending=null;r.lastAttack=null;battleStep(r,null);log(r,'Damage Step complete. Return to the Battle Step.','timing');break;
+      case T.DAMAGE_STEP_END:r.battleNegation=null;commitStrike(r);s.pending=null;r.lastAttack=null;battleStep(r,null);log(r,'Damage Step complete. Return to the Battle Step.','timing');break;
       case T.CONFIRM_CARDS:confirmCards(r,msg);break;
       case T.BECOME_TARGET:{const cards=msg.cards.map(loc=>({card:cardAt(r,loc),loc}));for(const {card,loc} of cards){const name=card&&(r.side(loc.controller)===0||card.faceUp||card.public||loc.location===m.OcgLocation.GRAVE)?card.card.name:'a face-down card';log(r,`${effectName(r)||'The effect'} targets ${name}${loc.location===m.OcgLocation.MZONE?` in ${r.side(loc.controller)===0?'your':'AI’s'} Monster Zone ${loc.sequence+1}`:''}.`,'target',[effectSource(r)?.uid,card?.uid].filter(Boolean));}break;}
       case T.ATTACK:notePattern(s,s.active,'attacks');r.attackSelectionUid=null;s.attacksUsed??={};if(at)s.attacksUsed[at.uid]=(s.attacksUsed[at.uid]||0)+1;r.lastAttack={kind:'attack',uid:at?.uid,target:target?.uid||null,side:at?.controller??s.active};s.pending=r.lastAttack;s.visualAction={type:'DECLARE_ATTACK',uid:at?.uid,target:target?.uid||null};r.battleStrike=null;battleStep(r,'attack');log(r,`${at?.card.name||'A monster'} attacked ${target?target.faceUp?target.card.name:'a face-down Defense Position monster':'Life Points directly'}.`,'attack',[at?.uid,target?.uid].filter(Boolean));break;
@@ -409,7 +410,8 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     if(p.type===T.ANNOUNCE_CARD){choice.title='Declare a card name';choice.searchable=true;for(const record of r.records.values())if(m.cardMatchesOpcode(record,p.opcodes)&&!(record.type&m.OcgType.TOKEN))option(record.name,{type:R.ANNOUNCE_CARD,card:record.code},{cardId:descriptor(r,record.code).id});return;}
     if(p.type===T.ANNOUNCE_ATTRIB||p.type===T.ANNOUNCE_RACE){
       const attribute=p.type===T.ANNOUNCE_ATTRIB,values=Object.entries(attribute?m.OcgAttribute:m.OcgRace).filter(([,value])=>attribute?((p.available&value)===value):((p.available&value)===value));
-      choice.title='Declare '+(attribute?'attribute':'monster type');choice.stage=true;;
+      choice.title='Declare '+(attribute?'attribute':'monster type');choice.stage=true;
+      choice.instructions=`Choose ${p.count} ${attribute?'attribute':'monster type'}${p.count===1?'':'s'} · ${r.selected.length} / ${p.count} selected. Tap again to deselect.`;
       values.forEach(([label],index)=>add({type:'CHOOSE',label:label.replaceAll('_',' '),selected:r.selected.includes(index),declaration:attribute?'attribute':'race'},null,{kind:'toggle',index}));
       if(r.selected.length===p.count){option('Confirm declaration',attribute?{type:R.ANNOUNCE_ATTRIB,attributes:r.selected.map(i=>values[i][1])}:{type:R.ANNOUNCE_RACE,races:r.selected.map(i=>values[i][1])},{finish:true});choice.canFinish=true;}return;
     }

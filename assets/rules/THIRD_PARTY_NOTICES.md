@@ -15,3 +15,5 @@ Duel Atlas runs these components locally. No duel service or game server is used
 ## Rebuild and inspect
 
 The complete application adapter and local patches are in this repository. `npm ci && npm test && npm run build` reconstructs the distributed JavaScript/WASM files from the pinned npm dependency, tests them, and includes the complete licenses, source links, original Lua sources, and manifest in the static output and offline shell. To rebuild the underlying WASM rather than use the npm binary, clone the pinned wrapper source with its recorded submodules and follow its Emscripten build instructions.
+
+Local correction: `overrides/c88132637.lua` rechecks Twin-Headed Wolf’s live controller and supporting Fiend before applying negation, and emits a card hint for attribution. It is included in the bundled script pack and retained by `scripts/update-rules.py`.
