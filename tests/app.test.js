@@ -66,7 +66,7 @@ test('home, archive detail, named deck, save/reopen, format, and export menus wo
     assert.equal($('.preview-panel button').disabled, true);
     $('.bottom-nav [data-route="home"]').click(); $('.launch-card[data-route="solo"]').click();
     assert.equal(app.state.route, 'solo');
-    assert.match($('#main').textContent, /supported 2004 TCG cards/);
+    assert.match($('#main').textContent, /[Ss]upported 2004 TCG cards/);
     assert.ok($('[data-duel="start"]'));
     $('#app-menu').click(); assert.ok($('[data-action="install"]')); assert.ok($('[data-action="settings"]'));
     $('[data-action="install"]').click(); assert.match($('#modal').textContent, /Add to Home Screen/);
@@ -312,7 +312,7 @@ test('Solo setup has one AI policy and saves independent eligibility, speed, sav
     $('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
     let config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
     assert.equal(config.sides[1].race,'Warrior');assert.equal(config.sides[1].traps,false);assert.equal(config.sides[0].race,'');
-    $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-identity').textContent,/Strategic AI.*Always full strength/);change('#solo-ai-speed','relaxed');change('#solo-first','you');
+    $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-badge').textContent,/Strategic AI/);assert.equal($('.solo-ai-badge').title,'Always full strength');change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
     assert.equal(app.state.route,'decks');assert.match($('.duel-design-banner').textContent,/AI Solo deck/);
     assert.equal(app.state.draft.releaseYear,2004);assert.equal(app.state.filtered.length,24);

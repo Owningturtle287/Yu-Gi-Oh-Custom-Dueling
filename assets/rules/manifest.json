@@ -41,7 +41,7 @@
     },
     {
       "path": "scripts-08.json",
-      "sha256": "e972a2ff6f7cfa1dc2caff9477c7aa8f63eafb32139ca7ad45b34509d08c1b09"
+      "sha256": "bdd6d0edd03d38f844b64b325a703e187b835f119173546155fdaa99f6df3c47"
     },
     {
       "path": "scripts-09.json",
@@ -95,5 +95,8 @@
       "path": "cards-07.json",
       "sha256": "fbf6e19385503339841287cbd4bcec8b550e5915418e348fb8fc942e4601ff8d"
     }
+  ],
+  "localOverrides": [
+    "overrides/c88132637.lua"
   ]
 }

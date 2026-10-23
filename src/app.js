@@ -95,15 +95,13 @@ function navigate(route, focus = true) {
 function renderHome() {
   const archiveStatus = state.cardStatus === 'ready' ? `${state.cards.length.toLocaleString()} cards ${state.source === 'api' ? 'in your archive' : 'available from cache'}` : state.cardStatus === 'loading' ? 'Preparing your card archive…' : 'Archive unavailable · open to retry';
   main.innerHTML = `<section class="screen home" aria-label="Home">
-    <div class="home-hero"><div class="hero-copy"><div class="eyebrow">THE DUELIST’S WORKSHOP</div><h1>Your next deck<br><span>starts here.</span></h1><p>Explore the cards. Shape your strategy.<br>Keep your collection close.</p></div><div class="hero-art" aria-hidden="true"><img src="./assets/emblem.svg" alt=""></div></div>
-    <div class="section-label"><span>CHOOSE YOUR PATH</span><span>EARLY ACCESS</span></div>
-    <div class="home-grid">
-      <button class="launch-card archive-launch" data-route="archive">${icon('archive')}<span class="arrow" aria-hidden="true">↗</span><strong>Card Archive</strong><small>Discover every possibility</small></button>
-      <button class="launch-card" data-route="decks">${icon('deck')}<span class="arrow" aria-hidden="true">↗</span><strong>Deck Builder</strong><small>Your strategy, your rules</small></button>
-      <button class="launch-card" data-route="solo">${icon('solo')}<span class="soon-label">2004 LAB</span><strong>Solo Duel</strong><small>A classic deck. A new challenge.</small></button>
-      <button class="launch-card coming" data-route="multiplayer">${icon('people')}<span class="soon-label">COMING SOON</span><strong>Multiplayer</strong><small>A connection. A rivalry.</small></button>
-    </div>
-    <div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<br>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'} · stored on this device</span><a href="#solo" data-route="solo">Play Solo ↗</a></div>
+    <div class="home-hero"><div class="hero-copy"><div class="eyebrow">THE DUELIST’S WORKSHOP</div><h1>Build a deck.<br><span>Make your move.</span></h1><p>Your cards. Your next duel.</p></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><img src="./assets/emblem.svg" alt=""></div><div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<small>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'}</small></span></div></div>
+    <div class="home-paths"><div class="section-label"><span>CHOOSE YOUR PATH</span><span>2004 ERA</span></div><div class="home-grid">
+      <button class="launch-card solo-launch-card" data-route="solo">${icon('solo')}<span class="arrow" aria-hidden="true">↗</span><span class="soon-label">PLAY SOLO</span><strong>Enter the arena</strong><small>Classic cards. A strategic rival.</small></button>
+      <button class="launch-card archive-launch" data-route="archive">${icon('archive')}<span class="arrow" aria-hidden="true">↗</span><strong>Card Archive</strong><small>Find your next ace</small></button>
+      <button class="launch-card" data-route="decks">${icon('deck')}<span class="arrow" aria-hidden="true">↗</span><strong>Deck Builder</strong><small>Craft your strategy</small></button>
+      <button class="launch-card coming" data-route="multiplayer">${icon('people')}<strong>Multiplayer</strong><span class="soon-label">COMING SOON</span></button>
+    </div></div>
   </section>`;
 }
 function renderArchive() {
@@ -556,6 +554,12 @@ $('#import-file').onchange = event => handleImport(event.target.files[0]);
 window.addEventListener('hashchange', () => { const route = location.hash.slice(1); if (route !== state.route) navigate(route); });
 window.addEventListener('beforeunload', event => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
 document.querySelectorAll('[data-icon]').forEach(element => element.innerHTML = icon(element.dataset.icon));
+// Menus and gameplay share a landscape canvas, even when rotation lock is on.
+function syncAppViewport() {
+  document.documentElement.dataset.appRotated = String(window.innerHeight > window.innerWidth);
+}
+syncAppViewport();
+window.addEventListener('resize', syncAppViewport);
 navigate(location.hash.slice(1) || 'home', false);
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').catch(() => toast('Offline app installation is unavailable in this browser session.', true));

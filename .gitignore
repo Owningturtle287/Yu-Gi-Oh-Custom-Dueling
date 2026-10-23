@@ -4,3 +4,4 @@ coverage/
 .DS_Store
 vendor/
 audit-output/
+ui-checks/

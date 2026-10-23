@@ -12,7 +12,7 @@ const cards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.met
 const get=name=>cards.find(card=>card.name===name);
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
 const waitFor=async predicate=>{const end=Date.now()+2000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,5));assert.ok(predicate(),'Duel UI ready');};
-async function rig({search=false,exchange=false,alreadySummoned=false}={}){
+async function rig({search=false,exchange=false,alreadySummoned=false,declaration=null}={}){
   const engine=createNativeBackend({rules:()=>pack});
   const discardCards=search?Array.from({length:55},(_,i)=>({...get('Summoned Skull'),id:700000+i,name:`Backup card ${String(i).padStart(2,'0')}`})):['Summoned Skull','Blue-Eyes White Dragon'].map(get);
   const catalog=[...cards,...discardCards];
@@ -23,6 +23,7 @@ async function rig({search=false,exchange=false,alreadySummoned=false}={}){
     state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ACTIVATE'&&engine.findCard(state,a.uid)?.card.name==='Exchange'),0);
     while(state.choice||state.window){const side=state.actions[0].length?0:1;state=engine.applyAction(state,engine.chooseAIAction(state,side),side);}
   }
+  if(declaration){engine.destroyMatch(state);state=await engine.createMatch([0,1].map(()=>({name:'Declaration test',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,cards:catalog,openingHands:[[],[]],initialFields:[{spells:[{card:get(declaration),faceUp:false}]},{}]});state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ACTIVATE'),0);}
   const window=new Window({url:'https://example.com/repo/'});window.happyDOM.setWindowSize({width:844,height:390});
   window.document.body.innerHTML='<main id="main"></main><dialog id="modal"></dialog>';
   for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],writable:true,configurable:true});
@@ -112,4 +113,20 @@ test('an exchanged monster explains the Normal Summon limit when the allowance w
     assert.match(r.$('.duel-summon-note').textContent,/already Normal Summoned\/Set this turn/);
     assert.equal(r.modal.querySelectorAll('[data-duel-group]').length,0);assert.match(r.$('.duel-inspect-description').textContent,/horse/);
   }finally{r.close();}
+});
+
+for(const [card,kind] of [['DNA Surgery','race'],['DNA Transplant','attribute']])test(`${card} shares the icon declaration picker and commits a real native selection`,async()=>{
+ const r=await rig({declaration:card});try{
+  await waitFor(()=>r.$('.duel-declaration-picker'));
+  const options=r.state.actions[0].filter(a=>a.declaration),buttons=[...r.modal.querySelectorAll('.duel-declaration')];
+  assert.equal(buttons.length,options.length);assert.ok(buttons.length>5);
+  assert.ok(buttons.every(b=>b.querySelector(`[data-declaration-icon="${kind}"]`)&&b.getAttribute('aria-pressed')==='false'));
+  assert.ok(r.$('.duel-choice-footer button:disabled'));
+  const selected=options.find(a=>a.label===(kind==='race'?'MACHINE':'WATER')),index=r.state.actions[0].indexOf(selected);
+  r.$(`[data-duel-choice="${index}"]`).click();await waitFor(()=>r.$('.duel-declaration[aria-pressed="true"]'));
+  assert.ok(r.$('.duel-declaration-picker'));assert.match(r.$('.duel-choice-help').textContent,/1 \/ 1 selected/);
+  const confirm=r.$('.duel-choice-footer [data-choice-tone="teal"]');assert.ok(!confirm.disabled);assert.equal(r.$('#duel-options-list .duel-choice-footer'),null);
+  confirm.click();await waitFor(()=>!r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
+  assert.ok(r.state.players[0].spells.some(c=>c?.card.name===card&&c.faceUp));assert.deepEqual(r.messages,[]);
+ }finally{r.close();}
 });
