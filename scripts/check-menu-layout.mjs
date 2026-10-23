@@ -57,8 +57,8 @@ try{
   await capture(`archive-${width}x${height}`);
   await page.locator('.archive-menu').click();await visibleControls('.menu-body button');await page.locator('.dialog-header [data-action="close"]').click();
   await page.locator('#archive-panel').evaluate(n=>n.scrollTop=n.scrollHeight/2);
-  await page.waitForFunction(()=>{const p=document.querySelector('#archive-panel'),r=p.getBoundingClientRect();return [...p.querySelectorAll('.quick-add')].some(n=>{const b=n.getBoundingClientRect();return b.top>r.top&&b.bottom<r.bottom;});});
-  const target=await page.locator('#archive-panel').evaluate(p=>{const r=p.getBoundingClientRect();const add=[...p.querySelectorAll('.quick-add:not(:disabled)')].find(n=>{const b=n.getBoundingClientRect();return b.top>r.top&&b.bottom<r.bottom;});return {id:add.dataset.quickAdd,scroll:p.scrollTop};});
+  await page.waitForFunction(()=>{const p=document.querySelector('#archive-panel'),r=p.getBoundingClientRect();return [...p.querySelectorAll('.quick-add:not(:disabled)')].some(n=>{const b=n.getBoundingClientRect();return b.left>r.left&&b.right<r.right&&b.top>r.top&&b.bottom<r.bottom;});});
+  const target=await page.locator('#archive-panel').evaluate(p=>{const r=p.getBoundingClientRect();const add=[...p.querySelectorAll('.quick-add:not(:disabled)')].find(n=>{const b=n.getBoundingClientRect();return b.left>r.left&&b.right<r.right&&b.top>r.top&&b.bottom<r.bottom;});return {id:add.dataset.quickAdd,scroll:p.scrollTop};});
   await page.locator(`.archive-screen [data-quick-add="${target.id}"]`).click();
   assert.ok(Math.abs(await page.locator('#archive-panel').evaluate(n=>n.scrollTop)-target.scroll)<2,'Archive add retains scroll');
   await page.locator(`.archive-screen [data-quick-remove="${target.id}"]`).click();
