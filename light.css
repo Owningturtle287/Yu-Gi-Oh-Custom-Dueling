@@ -269,3 +269,5 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .duel-menu-body .duel-menu-footer button[data-duel=exit-duel] { color:#485e6e; border-color:#b9cad2; background:linear-gradient(145deg,#fff,#e5edf1); }
 #main,#modal .dialog-body { touch-action:manipulation; }
 @media(prefers-reduced-motion:reduce) { button { transition:none; } }
+
+@media(prefers-reduced-motion:reduce) { .duel-intro-stage { animation:none!important; transition:none!important; } }

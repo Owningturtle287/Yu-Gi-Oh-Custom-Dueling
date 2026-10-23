@@ -12,6 +12,8 @@ The startup menu previously chose landscape dimensions only after `src/app.js` s
 
 This audit targets shipped layout code and selectors that compete with the current menus. The legacy engine and AI helpers remain because active fallbacks and regression tests still import them; they were not treated as dead code merely because they are older.
 
+The virtual archive now measures its inner grid width rather than the outer scroll panel, so padding and a scrollbar cannot clip the last card column.
+
 ## Verification
 
 `npm test` exercises deck edits, filters, saved-deck switching/deletion, imports/exports, Solo Save & return, shared modal styles, PWA shell files, and native game behavior. The builder grid test verifies its tile dimensions reserve most of each tile for artwork.
