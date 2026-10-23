@@ -217,8 +217,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(match.choice?.ordering){showOrderPicker();return;}
     const coinChoice=actions.some(action=>action.coinCall),declaration=actions.find(action=>action.declaration)?.declaration;
     const staged=!!match.choice?.stage,purpose=match.choice?.purpose||title,archive=new Map(getCards().map(card=>[card.id,card]));
-    const nativeSource=match.choice?.source;
-    const source=(match.choice?.trigger?.uid?choiceVisuals(match,{uid:match.choice.trigger.uid},{isHidden,archive})[0]:null)||(nativeSource?{card:nativeSource.card,name:nativeSource.card.name,hidden:false}:null);
+    const source=selectionSource();
     const context=source?`<button class="duel-choice-source" ${source.hidden?'disabled':'data-duel="read-choice-source"'} aria-label="Read ${escape(source.name)} effect"><span class="duel-choice-source-art">${source.hidden?cardBack():image(source.card)}</span><span><small>${source.hidden?'Resolving effect':'Tap to read effect'}</small><strong>${escape(source.name)}</strong></span></button>`:'';
     const utilities=actions.map((action,index)=>({action,index})).filter(({action})=>action.finish||action.cancel||action.reset);
     const footer=utilities.map(({action,index})=>`<button data-duel-choice="${index}" data-choice-tone="${choiceIntent(action,purpose).tone}">${escape(action.label||actionDetail(action))}</button>`).join('');
@@ -241,6 +240,10 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       list.dataset.hasCards=String(options.some(option=>option.visuals.length));
     };
     const search=modal.querySelector('#duel-choice-search');if(search)search.oninput=update;update();
+  }
+  function selectionSource(){
+    const native=match?.choice?.source,uid=match?.choice?.trigger?.uid;
+    return (uid?choiceVisuals(match,{uid},{isHidden,archive:new Map(getCards().map(c=>[c.id,c]))})[0]:null)||(native?{card:native.card,name:native.card.name,hidden:false}:null);
   }
   function readSelection(card,returnTo='choice'){
     if(!card)return;selectionRead={card,returnTo,query:modal.querySelector('#duel-choice-search')?.value,scroll:modal.querySelector('#duel-options-list')?.scrollTop};cancelArt();
@@ -579,7 +582,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(target.dataset.orderRead!==undefined){const card=match.choice?.ordering?.cards.find(c=>c.index===Number(target.dataset.orderRead))?.card;readSelection(card);return;}
     if(target.dataset.orderMove!==undefined){if(!orderDraft)return;const from=orderDraft.indices.indexOf(Number(target.dataset.orderMove)),to=from+Number(target.dataset.orderDirection);if(from>=0&&to>=0&&to<orderDraft.indices.length){[orderDraft.indices[from],orderDraft.indices[to]]=[orderDraft.indices[to],orderDraft.indices[from]];showOrderPicker();modal.querySelector(`[data-order-move="${target.dataset.orderMove}"][data-order-direction="${target.dataset.orderDirection}"]:not([disabled])`)?.focus({preventScroll:true});}return;}
     const action=target.dataset.duel;
-    if(action==='read-choice-source'){readSelection(match?.choice?.source?.card);return;}
+    if(action==='read-choice-source'){const source=selectionSource();if(source&&!source.hidden)readSelection(source.card);return;}
     if(action==='read-reveal-source'){readSelection(match?.reveals?.[0]?.source,'reveal');return;}
     if(action==='selection-back'){selectionBack();return;}
     if(action==='order-reset'){if(orderDraft){orderDraft.indices=[...orderDraft.original];showOrderPicker();}return;}

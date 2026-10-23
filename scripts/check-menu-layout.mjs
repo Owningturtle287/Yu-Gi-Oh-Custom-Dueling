@@ -42,7 +42,7 @@ try{
   });
   await page.locator('.builder-panels .card-tile').first().waitFor();
   for(const view of ['browse','deck']){
-   await page.locator(`[data-workspace="${view}"]`).click();
+   await page.locator(`button[data-workspace="${view}"]`).click();
    await visibleControls('.deck-switch-row button,.deck-switch-row select,.builder-toolbar button,.builder-panel-heading button,.deck-tabs button,#deck-query,.builder-archive-panel .search-row button,#card-search');
    assert.ok(await page.locator('.builder-deck-panel .deck-tray').evaluate(e=>e.clientHeight>60),'Deck has usable scroll space');
    assert.ok(await page.locator('#archive-panel').evaluate(e=>e.clientHeight>90),'Archive remains visible beside deck');
