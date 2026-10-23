@@ -197,7 +197,7 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .duel-intro-stage[data-stage=duel] { gap:8px; background:linear-gradient(90deg,transparent,#27544e9c 30%,#324144b8 70%,transparent); }
 .duel-intro-stage[data-stage=duel] h2 { font-size:clamp(44px,calc(var(--duel-vw,1dvw) * 9),80px); line-height:1; font-weight:850; font-style:italic; letter-spacing:10px; text-shadow:0 2px #538578,0 8px 24px #0006; }
 .duel-arena[data-intro=true] .duel-hand,.duel-arena[data-intro=true] .duel-opponent-hand { visibility:hidden; }
-@media (orientation:landscape) and (max-height:540px) {
+@media(max-height:540px), (orientation:portrait) and (max-width:540px) {
   .home-hero { padding:12px; }
   .menu-body { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; padding:12px; }
   .menu-item { min-height:58px; padding:9px; }

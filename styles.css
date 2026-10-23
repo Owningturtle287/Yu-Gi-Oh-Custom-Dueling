@@ -1391,7 +1391,7 @@ dialog::backdrop {
     font-size:10px
   }
 }
-@media(orientation:landscape) and (max-height:540px) {
+@media(max-height:540px), (orientation:portrait) and (max-width:540px) {
   .menu-body,.about-body,.settings-body,.backup-body {
     display:grid;
     grid-template-columns:1fr 1fr;
