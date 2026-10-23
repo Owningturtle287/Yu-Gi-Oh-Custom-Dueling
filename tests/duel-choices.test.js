@@ -12,7 +12,7 @@ const cards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.met
 const get=name=>cards.find(card=>card.name===name);
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
 const waitFor=async predicate=>{const end=Date.now()+2000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,5));assert.ok(predicate(),'Duel UI ready');};
-async function rig({search=false,exchange=false,alreadySummoned=false,declaration=null}={}){
+async function rig({search=false,exchange=false,alreadySummoned=false,declaration=null,ordering=false}={}){
   const engine=createNativeBackend({rules:()=>pack});
   const discardCards=search?Array.from({length:55},(_,i)=>({...get('Summoned Skull'),id:700000+i,name:`Backup card ${String(i).padStart(2,'0')}`})):['Summoned Skull','Blue-Eyes White Dragon'].map(get);
   const catalog=[...cards,...discardCards];
@@ -24,6 +24,7 @@ async function rig({search=false,exchange=false,alreadySummoned=false,declaratio
     while(state.choice||state.window){const side=state.actions[0].length?0:1;state=engine.applyAction(state,engine.chooseAIAction(state,side),side);}
   }
   if(declaration){engine.destroyMatch(state);state=await engine.createMatch([0,1].map(()=>({name:'Declaration test',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,cards:catalog,openingHands:[[],[]],initialFields:[{spells:[{card:get(declaration),faceUp:false}]},{}]});state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ACTIVATE'),0);}
+  if(ordering){engine.destroyMatch(state);state=await bigEye(engine);}
   const window=new Window({url:'https://example.com/repo/'});window.happyDOM.setWindowSize({width:844,height:390});
   window.document.body.innerHTML='<main id="main"></main><dialog id="modal"></dialog>';
   for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],writable:true,configurable:true});
@@ -35,7 +36,7 @@ async function rig({search=false,exchange=false,alreadySummoned=false,declaratio
   const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog,closeDialog,dialogHeader:title=>`<header class="dialog-header"><h2>${title}</h2><button data-action="close" aria-label="Close">×</button></header>`,toast:message=>messages.push(message),onDesign(){},onKeepDeck(){},engine:{...engine,createMatch:async()=>state}});
   controller.enter();main.querySelector('[data-duel="start"]').click();
   await waitFor(()=>main.querySelector('.duel-arena')?.dataset.moving==='false');
-  return {window,controller,main,modal,messages,$:selector=>window.document.querySelector(selector),get state(){return controller.getMatch();},close(){controller.destroy();window.close();}};
+  return {engine,window,controller,main,modal,messages,$:selector=>window.document.querySelector(selector),get state(){return controller.getMatch();},close(){controller.destroy();window.close();}};
 }
 async function activateDoomed(r){
   const card=r.state.players[0].hand.find(c=>c.card.name==='Tribute to the Doomed');
@@ -129,4 +130,62 @@ for(const [card,kind] of [['DNA Surgery','race'],['DNA Transplant','attribute']]
   confirm.click();await waitFor(()=>!r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
   assert.ok(r.state.players[0].spells.some(c=>c?.card.name===card&&c.faceUp));assert.deepEqual(r.messages,[]);
  }finally{r.close();}
+});
+
+async function bigEye(engine,{count=5,rulesVersion=2}={}){
+  const names=['Mystical Elf','Summoned Skull','Dark Magician','Blue-Eyes White Dragon','Man-Eater Bug','Big Eye'];
+  let s=await engine.createMatch([0,1].map(()=>({name:'Order test',main:Array.from({length:40},(_,i)=>get(names[i%names.length])),extra:[]})),{cards,seed:17,rulesVersion,openingHands:[[],[]],initialFields:[{monsters:[{card:get('Big Eye'),defense:true,faceUp:false}]},{}]});
+  s=engine.applyAction(s,s.actions[0].find(a=>a.type==='FLIP'||a.type==='POSITION'),0);
+  for(let n=0;n<30&&s.choice?.selectionType!=='sort_card';n++){const side=s.actions[0].length?0:1;s=engine.applyAction(s,s.actions[side].find(a=>a.number===count)||s.actions[side].find(a=>a.type==='PASS')||engine.chooseAIAction(s,side),side);}
+  assert.equal(s.choice?.selectionType,'sort_card');return s;
+}
+test('Big Eye honors the chosen amount and its confirmed permutation changes only those top cards',async()=>{
+  for(const count of [1,3,5]){
+    const e=createNativeBackend({rules:()=>pack});let s=await bigEye(e,{count});
+    try{
+      assert.equal(s.choice.ordering.kind,'deck-top');assert.equal(s.choice.ordering.cards.length,count);
+      const before=s.players[0].deck.map(c=>c.card.id),order=[...s.choice.ordering.cards].reverse();
+      for(const card of order)s=e.applyAction(s,s.actions[0].find(a=>a.orderIndex===card.index),0);
+      s=e.applyAction(s,s.actions[0].find(a=>a.finish),0);
+      assert.deepEqual(s.players[0].deck.slice(-count).reverse().map(c=>c.card.id),order.map(c=>c.card.id));
+      assert.deepEqual(s.players[0].deck.slice(0,-count).map(c=>c.card.id),before.slice(0,-count));
+      const restored=await e.restoreMatch(e.exportMatch(s),{cards});assert.deepEqual(restored.players[0].deck.map(c=>c.card.id),s.players[0].deck.map(c=>c.card.id));e.destroyMatch(restored);
+    }finally{e.destroyMatch(s);}
+  }
+});
+test('Big Eye saves made before the count fix retain their original five-card replay',async()=>{
+  const e=createNativeBackend({rules:()=>pack});let s=await bigEye(e,{count:1,rulesVersion:1});
+  try{
+    assert.equal(s.choice.ordering.cards.length,5);const save=e.exportMatch(s);delete save.options.rulesVersion;
+    const restored=await e.restoreMatch(save,{cards});assert.equal(restored.choice.ordering.cards.length,5);e.destroyMatch(restored);
+  }finally{e.destroyMatch(s);}
+});
+test('required selection effects can be reread without spending or clearing staged cards',async()=>{
+  const r=await rig();try{
+    await activateDoomed(r);r.$('.duel-choice-card').click();await waitFor(()=>r.state.choice.selected.length===1&&r.$('.duel-arena').dataset.moving==='false');
+    const selected=[...r.state.choice.selected],history=r.engine.exportMatch(r.state).history.length;
+    for(const reader of ['[data-duel="read-choice-source"]','[data-choice-read]']){
+      r.$(reader).click();assert.ok(r.$('.duel-selection-info .effect-text').textContent.length);r.$('[data-duel="selection-back"]').click();
+      assert.deepEqual(r.state.choice.selected,selected);assert.equal(r.engine.exportMatch(r.state).history.length,history);assert.equal(r.$('.duel-choice-footer [data-choice-tone="teal"]').disabled,false);
+    }
+    assert.deepEqual(r.messages,[]);
+  }finally{r.close();}
+});
+test('Big Eye shows the real top-first order, preserves edits while reading, and applies the displayed order',async()=>{
+  const r=await rig({ordering:true});try{
+    await waitFor(()=>r.$('.duel-order-picker'));
+    const deck=r.state.players[0].deck.map(c=>c.card.id),before=deck.slice(-5).reverse(),history=r.engine.exportMatch(r.state).history.length;
+    const rows=()=>[...r.modal.querySelectorAll('[data-order-index]')].map(row=>Number(row.dataset.orderIndex));
+    const original=rows();assert.deepEqual(original.map(i=>r.state.choice.ordering.cards.find(c=>c.index===i).card.id),before);
+    r.$(`[data-order-move="${original[4]}"][data-order-direction="-1"]`).click();const wanted=rows();assert.notDeepEqual(wanted,original);
+    assert.equal(r.engine.exportMatch(r.state).history.length,history,'Draft moves do not advance the core');
+    for(const read of ['[data-duel="read-choice-source"]','[data-order-read]']){
+      r.$(read).click();assert.ok(r.$('.effect-text').textContent.length);r.$('[data-duel="selection-back"]').click();assert.deepEqual(rows(),wanted);
+    }
+    const expected=wanted.map(i=>r.state.choice.ordering.cards.find(c=>c.index===i).card.id);
+    assert.match(r.$('.order-position').textContent,/TOP.*draw next/);r.$('[data-duel="order-confirm"]').click();
+    await waitFor(()=>!r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
+    assert.deepEqual(r.state.players[0].deck.slice(-5).reverse().map(c=>c.card.id),expected);
+    assert.deepEqual(r.state.players[0].deck.slice(0,-5).map(c=>c.card.id),deck.slice(0,-5));assert.deepEqual(r.messages,[]);
+  }finally{r.close();}
 });
