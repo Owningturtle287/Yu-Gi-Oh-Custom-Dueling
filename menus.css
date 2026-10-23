@@ -1,7 +1,7 @@
 /* Landscape navigation and menu surfaces. All dimensions use the logical canvas. */
-html[data-app-rotated=true] { --duel-vw:1dvh; --duel-vh:1dvw; --duel-safe-left:env(safe-area-inset-top); --duel-safe-right:env(safe-area-inset-bottom); --duel-safe-top:env(safe-area-inset-right); --duel-safe-bottom:env(safe-area-inset-left); }
-html:not(.duel-playing) .app-shell { position:relative; display:grid; grid-template-columns:76px minmax(0,1fr); grid-template-rows:52px minmax(0,1fr); width:calc(var(--duel-vw) * 100); height:calc(var(--duel-vh) * 100); max-width:none; padding:var(--duel-safe-top) var(--duel-safe-right) var(--duel-safe-bottom) var(--duel-safe-left); background:#edf2ef; }
-html[data-app-rotated=true]:not(.duel-playing) .app-shell { position:fixed; left:100dvw; top:0; transform-origin:0 0; transform:rotate(90deg); }
+html { --duel-vw:max(1dvw,1dvh); --duel-vh:min(1dvw,1dvh); -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+
+html:not(.duel-playing) .app-shell { position:fixed; top:0; left:0; margin:0; display:grid; grid-template-columns:76px minmax(0,1fr); grid-template-rows:52px minmax(0,1fr); width:calc(var(--duel-vw) * 100); height:calc(var(--duel-vh) * 100); max-width:none; padding:var(--duel-safe-top) var(--duel-safe-right) var(--duel-safe-bottom) var(--duel-safe-left); background:#edf2ef; }
 html:not(.duel-playing) .topbar { grid-column:1/-1; grid-row:1; height:52px; padding:5px 20px; gap:10px; background:#f8faf7; }
 html:not(.duel-playing) .brand img { height:32px; width:32px; }
 html:not(.duel-playing) .brand>span { font-size:13px; }
@@ -14,8 +14,13 @@ html:not(.duel-playing) .bottom-nav button span:last-child { font-size:9px; }
 html:not(.duel-playing) #main { grid-column:2; grid-row:2; padding:16px 22px; min-height:0; }
 html:not(.duel-playing) #modal { max-width:calc(var(--duel-vw) * 100 - var(--duel-safe-left) - var(--duel-safe-right) - 24px); max-height:calc(var(--duel-vh) * 100 - var(--duel-safe-top) - var(--duel-safe-bottom) - 20px); }
 html:not(.duel-playing) #modal .dialog-body { max-height:calc(var(--duel-vh) * 100 - var(--duel-safe-top) - var(--duel-safe-bottom) - 24px); }
-html[data-app-rotated=true]:not(.duel-playing) #modal { position:fixed; inset:auto; left:50%; top:50%; margin:0; transform:translate(-50%,-50%) rotate(90deg); }
-html[data-app-rotated=true]:not(.duel-playing) #toast { bottom:auto; top:50%; left:50%; max-width:calc(var(--duel-vw) * 100 - 40px); transform:translate(-50%,-50%) rotate(90deg); }
+
+@media(orientation:portrait) {
+ html { --duel-safe-left:env(safe-area-inset-top); --duel-safe-right:env(safe-area-inset-bottom); --duel-safe-top:env(safe-area-inset-right); --duel-safe-bottom:env(safe-area-inset-left); }
+ html:not(.duel-playing) .app-shell { left:100dvw; transform-origin:0 0; transform:rotate(90deg); }
+ html:not(.duel-playing) #modal { position:fixed; inset:auto; left:50%; top:50%; margin:0; transform:translate(-50%,-50%) rotate(90deg); }
+ html:not(.duel-playing) #toast { bottom:auto; top:50%; left:50%; max-width:calc(var(--duel-vw) * 100 - 40px); transform:translate(-50%,-50%) rotate(90deg); }
+}
 
 /* Home: one illustrated panel and four immediately available destinations. */
 #main .home { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:22px; width:100%; max-width:1250px; height:100%; min-height:0; margin:auto; }

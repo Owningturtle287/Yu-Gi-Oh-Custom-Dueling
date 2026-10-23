@@ -57,8 +57,6 @@
 .duel-log [data-kind=activate], .duel-log [data-kind=effect] { border-color:var(--teal); }
 .duel-log [data-kind=battle], .duel-log [data-kind=damage] { border-color:var(--rose); }
 .duel-log [data-kind=phase] { color:var(--gold); border-color:var(--gold); }
-.duel-design-banner { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:44px; padding-left:8px; border:1px solid #806540; border-radius:9px; color:var(--gold); font-size:10px; background:#30291e; flex:none; }
-.duel-design-banner button { font-size:10px; padding:7px; border-color:#ab9460; color:var(--gold); }
 @media(orientation:landscape) and (max-height:540px) {
   #main:has(.solo-setup), #main:has(.duel-arena) { padding:4px max(12px,var(--duel-safe-right,env(safe-area-inset-right))) 4px max(12px,var(--duel-safe-left,env(safe-area-inset-left))); }
   .solo-setup { max-width:900px; display:grid; grid-template-columns:150px minmax(0,1fr); grid-template-rows:auto 1fr auto; gap:6px 15px; }

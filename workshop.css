@@ -1,52 +1,65 @@
-/* Deck and archive are separate, persistent panes with independent lists. */
-#main .deck-screen { display:flex; flex-direction:column; gap:6px; height:100%; min-height:0; position:relative; padding:0; }
-.deck-screen .deck-switch-row { height:40px; flex:none; }
-.deck-screen .deck-switch-row select,.deck-screen .deck-switch-row button { height:40px; min-height:40px; }
-.builder-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex:none; min-height:30px; }
-.builder-title { font-size:12px; color:#385f49; font-weight:750; }
-.builder-toolbar .deck-state { font-size:9px; color:#6c7b62; text-align:right; }
-.builder-toolbar .deck-workspace-tabs { display:flex; gap:2px; padding:2px; }
-.builder-toolbar .deck-workspace-tabs button { height:28px; min-height:28px; font-size:10px; padding:3px 9px; }
-.builder-panels { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:12px; flex:1; min-height:0; }
-.deck-screen[data-workspace=deck] .builder-panels { grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); }
-.builder-deck-panel,.builder-archive-panel { display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; border:1px solid #ccd9c8; background:#fbfcf7; border-radius:15px; padding:10px; gap:7px; }
+/* The builder owns its layout here; legacy tray/workspace styles were removed. */
+html:not(.duel-playing) .app-shell:has(.deck-screen) { grid-template-rows:minmax(0,1fr); }
+html:not(.duel-playing) .app-shell:has(.deck-screen) .topbar { display:none; }
+html:not(.duel-playing) .app-shell:has(.deck-screen) #main,html:not(.duel-playing) .app-shell:has(.deck-screen) .bottom-nav { grid-row:1; }
+html:not(.duel-playing) #main:has(.deck-screen) { padding:6px 8px; }
+#main .deck-screen { display:flex; flex-direction:column; gap:6px; width:100%; max-width:none; height:100%; min-height:0; padding:0; overflow:hidden; }
+.deck-switch-row { display:flex; align-items:center; gap:6px; flex:none; height:36px; min-width:0; }
+.deck-switch-row select { flex:1; min-width:0; }
+.deck-switch-row select,.deck-switch-row button { min-height:36px; height:36px; padding:4px 10px; }
+.deck-switch-row .icon-button { min-width:36px; width:36px; padding:6px; }
+.deck-switch-row .deck-state { max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:9px; color:#698060; }
+.builder-panels { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); gap:8px; flex:1; min-height:0; }
+.builder-deck-panel,.builder-archive-panel { display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; border:1px solid #ccd9c8; background:#fbfcf7; border-radius:10px; padding:5px; gap:5px; }
 .builder-deck-panel { background:linear-gradient(145deg,#f9fbf3,#e9f0e1); }
-.builder-panel-heading { display:flex; align-items:center; justify-content:space-between; flex:none; min-height:28px; gap:7px; }
-.builder-panel-heading>strong { font-size:13px; color:#31593c; }
-.builder-panel-heading>small { color:#6a7d5d; font-size:10px; }
-.builder-panel-heading>button { display:flex; align-items:center; gap:5px; min-height:28px; height:28px; padding:3px 7px; font-size:10px; color:#57704c; background:#e3ebd9; }
-.builder-panel-heading>button svg { width:15px; height:15px; }
-.builder-deck-panel .deck-tabs { height:34px; gap:3px; }
-.builder-deck-panel .deck-tabs button { height:34px; min-height:34px; gap:4px; padding:4px; font-size:10px; }
-.builder-deck-panel .deck-tabs [data-section-count] { font-size:9px; }
-.builder-deck-panel .deck-query { height:34px; border-color:#c7d5bc; }
-.builder-deck-panel .deck-query input { height:32px; min-height:32px; font-size:16px; }
-.builder-deck-panel .deck-view-tools { gap:4px; }
-.builder-deck-panel .deck-view-summary { font-size:9px; min-height:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.deck-screen .builder-deck-panel .deck-tray { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(225px,100%),1fr)); grid-template-rows:none; grid-auto-flow:row; grid-auto-columns:auto; grid-auto-rows:76px; align-content:start; flex:1; height:auto; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; gap:6px; padding:2px 2px 6px; }
-.deck-screen .builder-deck-panel .tray-card { position:relative; display:block; width:auto; height:76px; min-height:0; aspect-ratio:auto; border:1px solid #c6d6c4; border-radius:11px; background:#fffef8; }
-.deck-screen .builder-deck-panel .deck-inspect { position:absolute; inset:0; display:flex; flex-direction:row; align-items:center; gap:8px; padding:6px 66px 6px 6px; width:100%; height:100%; min-height:0; background:none; border:0; border-radius:11px; box-shadow:none; }
-.deck-screen .builder-deck-panel .deck-inspect>img,.deck-screen .builder-deck-panel .deck-inspect>.image-fallback { display:block; position:static; flex:none; width:40px; height:58px; object-fit:contain; border-radius:3px; min-height:0; }
-.deck-entry-copy { display:flex; flex-direction:column; gap:5px; min-width:0; align-items:flex-start; }
-.deck-screen .builder-deck-panel .deck-inspect strong { display:-webkit-box; position:static; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; width:100%; font-size:11px; line-height:1.25; color:#294b35; background:none; padding:0; text-align:left; }
-.deck-entry-copy small { display:block; font-size:8px; color:#7d876a; line-height:1.3; text-align:left; }
-.deck-screen .builder-deck-panel .tray-card .quick-controls { right:5px; bottom:7px; gap:4px; }
-.deck-screen .builder-deck-panel .quick-controls button { width:26px; height:28px; min-height:28px; border-radius:7px; }
-.deck-screen[data-workspace] .builder-deck-panel .tray-card .copy-count { top:7px; left:auto; right:10px; background:#e9efdf; border-color:#d1ddc2; color:#42603a; font-size:11px; }
-.deck-screen .builder-deck-panel .deck-tray.is-empty { display:flex; align-items:center; justify-content:center; }
-.builder-deck-panel .tray-empty { padding:8px; width:100%; min-width:0; height:auto; text-align:center; gap:8px; }
-.builder-deck-panel .tray-empty small { font-size:10px; line-height:1.4; }
-.builder-deck-panel .tray-empty strong { font-size:13px; }
-.builder-archive-panel .search-row { flex:none; min-height:36px; height:36px; gap:6px; }
-.builder-archive-panel .search-wrap { min-width:0; flex:1; }
-.deck-screen .builder-archive-panel .search-row input { font-size:16px; min-height:36px; height:36px; padding-left:32px; }
-.builder-archive-panel .filter-toggle { height:36px; min-height:36px; width:36px; padding:7px; }
-.builder-archive-panel .result-meta { display:flex; flex:none; min-height:18px; font-size:9px; margin:0; gap:4px; }
-.builder-archive-panel .result-meta button { min-height:22px; padding:2px 4px; font-size:9px; }
-.deck-screen .builder-archive-panel .archive-panel { display:block; flex:1; height:auto; min-height:0; padding:3px; }
-.deck-screen>.duel-design-banner { position:static; min-height:30px; height:30px; flex:none; }
-.deck-screen>.duel-design-banner button { height:28px; min-height:28px; }
-.deck-view-filter-body .deck-view-filters { display:grid; grid-template-columns:1fr 1fr; }
+.builder-panel-heading { display:flex; align-items:center; gap:5px; flex:none; height:34px; }
+.builder-panel-heading>button { width:34px; min-width:34px; height:34px; min-height:34px; padding:6px; }
+.deck-query { display:flex; align-items:center; gap:6px; min-width:0; flex:1; height:34px; padding-left:8px; border:1px solid #c7d5bc; border-radius:8px; background:#fff; }
+.deck-query>svg { width:17px; height:17px; color:#789181; }
+.deck-query input { flex:1; width:100%; height:32px; min-height:32px; border:0; background:none; padding:3px 4px; font-size:16px; }
+.deck-tabs { display:flex; gap:3px; height:28px; flex:none; }
+.deck-tabs button { flex:1; min-width:0; height:28px; min-height:28px; padding:3px; font-size:10px; border-color:#d4dfd0; color:#617958; }
+.deck-tabs button[aria-pressed=true] { color:#225f4c; background:#dcebe0; border-color:#aac9b2; }
+.deck-tabs [data-section-count] { margin-left:3px; font-size:9px; }
+.deck-tray { display:grid; grid-template-columns:repeat(auto-fill,minmax(78px,1fr)); grid-auto-rows:max-content; align-content:start; flex:1; height:auto; min-height:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; touch-action:pan-y; gap:5px; padding:2px; }
+.deck-tray:focus,.deck-tray:focus-visible { outline:none; box-shadow:none; }
+.tray-card { position:relative; min-width:0; aspect-ratio:421/690; overflow:hidden; border:1px solid #c6d6c4; border-radius:5px; background:#fffef8; }
+.deck-screen .card-inspect,.deck-screen .deck-inspect { position:absolute; inset:0; display:flex; flex-direction:column; align-items:stretch; gap:0; padding:2px; width:100%; height:100%; min-height:0; background:none; border:0; border-radius:5px; box-shadow:none; }
+.deck-screen .card-inspect .card-image,.deck-screen .deck-inspect>img,.deck-screen .deck-inspect>.image-fallback { position:static; display:block; width:100%; flex:1; height:calc(100% - 16px); min-height:0; object-fit:contain; border-radius:3px; background:none; }
+.deck-screen .card-inspect>.image-fallback,.deck-screen .deck-inspect>.image-fallback { display:grid; place-items:center; }
+.deck-screen .card-inspect strong,.deck-screen .deck-inspect strong { display:block; position:static; flex:none; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; height:14px; min-height:14px; width:100%; margin:0; padding:0 1px; font-size:9px; line-height:14px; text-align:left; color:#294b35; background:none; }
+.deck-screen .card-inspect small { display:none; }
+.deck-screen .card-tile { border-radius:5px; background:#fffef8; }
+.deck-screen .quick-controls { right:3px; bottom:17px; gap:2px; border-radius:5px; background:#ffffffed; box-shadow:0 1px 4px #163c2c33; }
+.deck-screen .quick-controls button { width:22px; min-width:22px; height:22px; min-height:22px; padding:0; border-radius:5px; font-size:16px; line-height:1; box-shadow:none; }
+.deck-screen .quick-remove:disabled { display:none; }
+.deck-screen .copy-count { top:4px; left:4px; right:auto; height:16px; min-width:18px; padding:1px 3px; border-radius:4px; font-size:9px; }
+.deck-inspect:focus-visible { outline-offset:-3px; }
+.deck-tray.is-empty { display:flex; align-items:center; justify-content:center; }
+.tray-empty { display:flex; align-items:center; flex-direction:column; padding:8px; text-align:center; gap:7px; }
+.tray-empty strong { font-size:12px; }
+.tray-empty small { display:block; font-size:10px; margin-top:6px; color:#71836b; }
+.tray-empty button { min-height:30px; font-size:10px; padding:5px; margin-top:8px; }
+.deck-view-summary { flex:none; font-size:9px; line-height:14px; height:14px; min-height:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#72816a; }
+.builder-archive-panel .search-row { display:flex; flex:none; height:34px; min-height:34px; gap:5px; }
+.builder-archive-panel .search-wrap { flex:1; min-width:0; }
+.deck-screen .search-row input { height:34px; min-height:34px; padding:3px 26px 3px 29px; font-size:16px; }
+.builder-archive-panel .search-wrap>svg { left:8px; width:17px; height:17px; }
+.builder-archive-panel .search-clear { right:2px; top:2px; width:28px; min-width:28px; height:30px; min-height:30px; padding:0; box-shadow:none; }
+.deck-screen .filter-toggle { width:34px; min-width:34px; height:34px; min-height:34px; padding:6px; }
+.deck-screen .archive-panel { display:block; flex:1; height:auto; min-height:0; padding:1px; }
+.deck-screen .result-meta { flex:none; display:flex; align-items:center; justify-content:space-between; min-height:14px; height:14px; margin:0; gap:3px; font-size:9px; line-height:14px; }
+.deck-screen .result-meta>span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.deck-screen .result-meta button { flex:none; min-height:14px; height:14px; padding:0; border:0; box-shadow:none; font-size:8px; background:none; }
+.deck-view-filters { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.deck-view-filters label { min-width:0; }
+@media(max-height:540px), (orientation:portrait) and (max-width:540px) {
+ .deck-switch-row .deck-state { display:none; }
+ .builder-panels { gap:6px; }
+ .deck-tray { grid-template-columns:repeat(auto-fill,minmax(62px,1fr)); }
+ .deck-tabs button { font-size:9px; }
+ .deck-tabs [data-section-count] { font-size:8px; margin-left:1px; }
+}
 
 /* Read effects without leaving a required choice or changing a draft order. */
 .duel-declaration-picker .duel-choice-source { display:flex; }
@@ -69,16 +82,14 @@ dialog:has(.duel-selection-info) { width:min(760px,calc(var(--duel-vw) * 100 - 2
 .selection-info-art img { width:100%; height:100%; object-fit:contain; }
 .selection-info-copy { min-height:0; display:flex; flex-direction:column; gap:10px; }
 .selection-info-copy>strong { font-size:11px; color:#6b805b; }
-.selection-info-copy .effect-text { flex:1; min-height:0; margin:0; padding:12px; font-size:14px; line-height:1.6; white-space:pre-wrap; overflow:auto; color:#284535; background:#eaf1e3; border:1px solid #cbd9bf; border-radius:10px; }
-
-/* A numbered top-to-bottom list keeps all five cards visible beside its actions. */
+.selection-info-copy .effect-text { flex:1; min-height:0; margin:0; padding:12px; font-size:14px; line-height:1.6; white-space:pre-wrap; overflow:auto; color:#284535; background:#eaf1e3; border:1px solid #cbd9bf; border-radius:10px; }/* A numbered top-to-bottom list keeps all five cards visible beside its actions. */
 dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28px)); max-height:calc(var(--duel-vh) * 100 - 24px); }
 .duel-order-picker { display:grid; grid-template-columns:175px minmax(0,1fr); gap:14px; height:min(460px,calc(var(--duel-vh) * 100 - 32px)); min-height:0; overflow:hidden; padding:12px; background:linear-gradient(140deg,#fcfdf7,#edf3e8); }
 .order-sidebar { display:flex; min-width:0; min-height:0; flex-direction:column; gap:10px; }
 .order-sidebar .dialog-header { min-height:24px; }
 .order-sidebar h2 { font-size:19px; line-height:1.1; color:#284b35; }
 .order-source { display:flex; align-items:center; gap:9px; min-height:48px; padding:6px; text-align:left; border-color:#cedbbf; background:#e6eedc; box-shadow:none; }
-.order-source>img,.order-source>.image-fallback,.order-source>.duel-no-image { width:27px; height:39px; object-fit:contain; flex:none; }
+.order-source>img, .order-source>.image-fallback, .order-source>.duel-no-image { width:27px; height:39px; object-fit:contain; flex:none; }
 .order-source>span:last-child { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .order-source strong { font-size:12px; }
 .order-source small { font-size:9px; color:#6e7f58; }
@@ -94,7 +105,7 @@ dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28p
 .order-position small { font-size:8px; color:#6e7c5c; text-align:center; }
 .duel-order-list li:first-child { border-color:#90ac72; background:#e6efdc; box-shadow:inset 3px 0 #6b8d4e; }
 .order-card-read { display:grid; place-items:center; width:40px; align-self:stretch; flex:none; min-height:0; padding:0; border:0; background:none; box-shadow:none; }
-.order-card-read>img,.order-card-read>.image-fallback,.order-card-read>.duel-no-image { width:32px; height:46px; object-fit:contain; }
+.order-card-read>img, .order-card-read>.image-fallback, .order-card-read>.duel-no-image { width:32px; height:46px; object-fit:contain; }
 .duel-order-list li>strong { flex:1; min-width:0; font-size:12px; line-height:1.3; }
 .order-moves { display:flex; gap:4px; flex:none; }
 .order-moves button { width:34px; height:36px; min-height:36px; padding:4px; font-size:18px; background:#edf2e5; color:#41603b; box-shadow:none; border-color:#c9d6bd; }
@@ -106,67 +117,35 @@ dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28p
 .reveal-effect-copy .effect-text { flex:1; min-height:0; margin:0; padding:10px; font-size:14px; line-height:1.5; overflow:auto; white-space:pre-wrap; }
 .reveal-source-read { min-height:28px; align-self:flex-start; padding:4px 9px; font-size:10px; }
 @media(max-height:540px), (orientation:portrait) and (max-width:540px) {
- html:not(.duel-playing) #main:has(.deck-screen) { padding:7px 10px; }
- #main .deck-screen { gap:4px; }
- .builder-toolbar { min-height:26px; }
- .builder-title { display:none; }
- .builder-panels { gap:7px; }
- .builder-deck-panel,.builder-archive-panel { border-radius:11px; padding:6px; gap:4px; }
- .builder-panel-heading { min-height:24px; }
- .builder-panel-heading>strong { font-size:11px; }
- .builder-panel-heading>small { font-size:8px; }
- .builder-panel-heading>button { font-size:9px; min-height:24px; height:24px; }
- .builder-deck-panel .deck-tabs,.builder-deck-panel .deck-tabs button { height:30px; min-height:30px; }
- .builder-deck-panel .deck-tabs button { font-size:9px; }
- .builder-deck-panel .deck-tabs [data-section-count] { font-size:8px; }
- .builder-deck-panel .deck-view-summary { font-size:8px; }
- .deck-screen .builder-deck-panel .deck-tray { grid-auto-rows:70px; }
- .deck-screen .builder-deck-panel .tray-card { height:70px; }
- .deck-screen .builder-deck-panel .deck-inspect { gap:6px; padding-right:60px; }
- .deck-screen .builder-deck-panel .deck-inspect>img,.deck-screen .builder-deck-panel .deck-inspect>.image-fallback { width:34px; height:50px; }
- .deck-screen .builder-deck-panel .deck-inspect strong { font-size:10px; }
- .deck-entry-copy small { font-size:7px; }
- .deck-screen .builder-deck-panel .quick-controls button { width:24px; height:28px; }
- .builder-archive-panel .result-meta>span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
- .duel-order-picker { grid-template-columns:145px minmax(0,1fr); gap:10px; padding:10px; }
- .order-sidebar { gap:7px; }
- .order-sidebar h2 { font-size:17px; }
- .order-sidebar p { font-size:10px; }
- .order-rest { font-size:8px; }
- .order-position { width:52px; }
- .order-position b { font-size:20px; }
- .duel-order-list li { gap:7px; padding:3px 6px; }
- .duel-order-list li>strong { font-size:11px; }
- .order-moves button { width:30px; height:34px; min-height:34px; }
+.duel-order-picker { grid-template-columns:145px minmax(0,1fr); gap:10px; padding:10px; }
+.order-sidebar { gap:7px; }
+.order-sidebar h2 { font-size:17px; }
+.order-sidebar p { font-size:10px; }
+.order-rest { font-size:8px; }
+.order-position { width:52px; }
+.order-position b { font-size:20px; }
+.duel-order-list li { gap:7px; padding:3px 6px; }
+.duel-order-list li>strong { font-size:11px; }
+.order-moves button { width:30px; height:34px; min-height:34px; }
 }
 @media(max-height:360px), (orientation:portrait) and (max-width:360px) {
- .deck-screen .deck-switch-row,.deck-screen .deck-switch-row select,.deck-screen .deck-switch-row button { height:34px; min-height:34px; }
- .builder-toolbar { min-height:24px; }
- .builder-toolbar .deck-state { font-size:8px; }
- .builder-toolbar .deck-workspace-tabs button { font-size:9px; height:24px; min-height:24px; }
- .builder-deck-panel .deck-query,.builder-deck-panel .deck-query input { height:30px; min-height:30px; }
- .builder-panel-heading>button>span { display:none; }
- .builder-panel-heading>small { display:none; }
- .builder-archive-panel .search-row,.deck-screen .builder-archive-panel .search-row input,.builder-archive-panel .filter-toggle { height:32px; min-height:32px; }
- .builder-archive-panel .result-meta { min-height:14px; }
- .duel-order-picker { grid-template-columns:132px minmax(0,1fr); padding:8px; gap:8px; }
- .order-sidebar { gap:5px; }
- .order-sidebar p { font-size:9px; line-height:1.35; }
- .order-sidebar .order-rest { display:none; }
- .order-sidebar footer { gap:4px; }
- .order-sidebar footer button { min-height:28px; font-size:10px; }
- .order-sidebar footer .primary { min-height:38px; }
- .order-source { min-height:40px; padding:4px; }
- .order-source>img,.order-source>.image-fallback,.order-source>.duel-no-image { height:30px; width:21px; }
- .duel-order-list { gap:4px; }
- .duel-order-list li { flex-basis:44px; min-height:44px; padding:2px 5px; }
- .order-card-read { width:27px; }
- .order-card-read>img,.order-card-read>.image-fallback,.order-card-read>.duel-no-image { width:24px; height:35px; }
- .order-position { width:44px; gap:1px; }
- .order-position b { font-size:18px; }
- .order-position small { font-size:7px; }
- .order-moves button { width:27px; height:30px; min-height:30px; }
- .duel-order-list li>strong { font-size:10px; }
+.duel-order-picker { grid-template-columns:132px minmax(0,1fr); padding:8px; gap:8px; }
+.order-sidebar { gap:5px; }
+.order-sidebar p { font-size:9px; line-height:1.35; }
+.order-sidebar .order-rest { display:none; }
+.order-sidebar footer { gap:4px; }
+.order-sidebar footer button { min-height:28px; font-size:10px; }
+.order-sidebar footer .primary { min-height:38px; }
+.order-source { min-height:40px; padding:4px; }
+.order-source>img, .order-source>.image-fallback, .order-source>.duel-no-image { height:30px; width:21px; }
+.duel-order-list { gap:4px; }
+.duel-order-list li { flex-basis:44px; min-height:44px; padding:2px 5px; }
+.order-card-read { width:27px; }
+.order-card-read>img, .order-card-read>.image-fallback, .order-card-read>.duel-no-image { width:24px; height:35px; }
+.order-position { width:44px; gap:1px; }
+.order-position b { font-size:18px; }
+.order-position small { font-size:7px; }
+.order-moves button { width:27px; height:30px; min-height:30px; }
+.duel-order-list li>strong { font-size:10px; }
 }
-
-.order-source .image-fallback svg,.order-card-read .image-fallback svg { width:80%; height:80%; }
+.order-source .image-fallback svg, .order-card-read .image-fallback svg { width:80%; height:80%; }

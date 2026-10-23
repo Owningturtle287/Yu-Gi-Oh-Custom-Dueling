@@ -41,7 +41,7 @@ input::placeholder { color:#6d7c89; }
 .home-status { border-color:#cddbdc; color:#576d7e; }
 .pill,.feature-tags span { color:#58706f; background:#e7efed; border-color:#ccdcd6; }
 .status-dot { background:#31866e; box-shadow:0 0 0 3px #388f6c17; }
-.search-wrap input,.deck-screen .search-row input { background:#fff; border-color:#c6d4dd; box-shadow:0 1px 4px #173f5805; }
+.search-wrap input { background:#fff; border-color:#c6d4dd; box-shadow:0 1px 4px #173f5805; }
 .search-wrap svg,.search-clear { color:#697f8b; }
 .filter-toggle { background:#fff; color:#306e66; }
 .filter-toggle[data-active=true] { background:#dfefea; border-color:#78ac9b; }
@@ -50,13 +50,13 @@ input::placeholder { color:#6d7c89; }
 .category-tabs button[aria-pressed=true] { background:#fff; color:#165f55; box-shadow:0 1px 5px #163c4a14; }
 .result-meta strong { color:#294e60; }
 .result-meta button { color:#376d63; }
-.card-tile,.tray-card { background:#fff; border-color:#c8d6de; box-shadow:0 2px 6px #173d5408; }
-.card-tile[data-kind=monster],.tray-card[data-kind=monster] { border-color:#cfbb8f; }
-.card-tile[data-kind=spell],.tray-card[data-kind=spell] { border-color:#91bba7; }
-.card-tile[data-kind=trap],.tray-card[data-kind=trap] { border-color:#cf9db8; }
-.card-tile[data-kind=extra],.tray-card[data-kind=extra] { border-color:#b4a2cc; }
-.card-inspect,.deck-inspect { color:#20374a; background:transparent; box-shadow:none; }
-.card-inspect:hover:not(:disabled),.deck-inspect:hover:not(:disabled) { background:#eef5f4; }
+.card-tile { background:#fff; border-color:#c8d6de; box-shadow:0 2px 6px #173d5408; }
+.card-tile[data-kind=monster] { border-color:#cfbb8f; }
+.card-tile[data-kind=spell] { border-color:#91bba7; }
+.card-tile[data-kind=trap] { border-color:#cf9db8; }
+.card-tile[data-kind=extra] { border-color:#b4a2cc; }
+.card-inspect { color:#20374a; background:transparent; box-shadow:none; }
+.card-inspect:hover:not(:disabled) { background:#eef5f4; }
 .card-inspect small { color:#5d7182; }
 .card-image,.image-fallback { background:#e4ebef; color:#788f9d; }
 .quick-controls .quick-add { color:#176a40; background:#d9f0df; border-color:#95c6a6; }
@@ -65,41 +65,8 @@ input::placeholder { color:#6d7c89; }
 .quick-controls .quick-remove:hover:not(:disabled) { background:#f1c6d0; }
 .quick-controls .quick-remove:disabled { color:#926c75; background:#f1eaec; border-color:#ded3d8; }
 .copy-count { background:#243e4d; color:#fff4cf; border-color:#a58a53; box-shadow:0 1px 5px #142a3c25; }
-.deck-switch-row select { background:#fff; color:#243b4e; border-color:#c0d0da; }
-.deck-switch-row .icon-button { background:#f8fbfc; border-color:#cbd8df; color:#396c66; }
-.deck-tabs button { background:#e4ebf0; color:#536b7f; border-bottom-color:#c6d4dd; }
-.deck-tabs button[aria-pressed=true] { color:#175e54; background:#daeee6; border-bottom-color:#398e72; }
-.deck-tabs button[data-section=extra][aria-pressed=true] { color:#71528a; background:#eae3f3; border-bottom-color:#9b7abc; }
-.deck-tabs button[data-section=side][aria-pressed=true] { color:#8d4267; background:#f3e4ec; border-bottom-color:#b77899; }
-.deck-list.is-empty { background:#f7fafb; border-color:#bdcfd7; }
-.tray-empty { color:#446a72; }
 .deck-state { color:#5c6f79; }
 .deck-state.restricted { color:#a3344c; }
-.workspace-caption>span:last-child { color:#426c66; }
-.deck-workspace-tabs { display:grid; flex:none; grid-template-columns:1fr 1fr; padding:3px; gap:3px; border-radius:11px; background:#dfe8eb; }
-.deck-workspace-tabs button { display:flex; align-items:center; justify-content:center; gap:6px; min-height:36px; height:36px; padding:4px 8px; font-size:12px; border:0; background:transparent; box-shadow:none; color:#4f6877; }
-.deck-workspace-tabs svg { width:16px; height:16px; }
-.deck-workspace-tabs button[aria-pressed=true] { background:#fff; color:#1b645a; box-shadow:0 1px 5px #1c3d4a14; }
-#deck-total { border-radius:6px; padding:2px 5px; background:#e5eeea; font-size:10px; }
-.deck-view-tools { display:flex; flex-direction:column; gap:6px; flex:none; }
-.deck-view-tools[hidden] { display:none; }
-.deck-query { display:flex; align-items:center; gap:7px; background:#fff; border:1px solid #c4d4dc; border-radius:10px; padding-left:10px; }
-.deck-query svg { width:18px; height:18px; color:#68818d; }
-.deck-query input { width:100%; min-height:36px; height:36px; padding:5px; background:transparent; border:0; }
-.deck-view-filters { display:grid; grid-template-columns:1fr 1.5fr; gap:8px; }
-.deck-view-filters label { display:flex; align-items:center; min-width:0; gap:6px; font-size:10px; color:#596f7c; }
-.deck-view-filters select { min-width:0; flex:1; padding:4px 7px; min-height:36px; height:36px; font-size:16px; }
-.deck-view-summary { font-size:10px; color:#57717c; min-height:13px; }
-.deck-screen[data-workspace=deck]>.workspace-caption,.deck-screen[data-workspace=deck]>.search-row,.deck-screen[data-workspace=deck]>.result-meta,.deck-screen[data-workspace=deck]>.archive-panel { display:none; }
-.deck-screen[data-workspace=deck]>.deck-list { display:grid; flex:1; height:auto; min-height:0; overflow-x:hidden; overflow-y:auto; touch-action:pan-y; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:none; grid-auto-flow:row; grid-auto-columns:auto; grid-auto-rows:max-content; align-content:start; gap:7px; padding:2px 2px 8px; }
-.deck-screen[data-workspace=deck] .tray-card { height:auto; aspect-ratio:.49; min-height:0; border-radius:10px; }
-.deck-screen[data-workspace=deck] .deck-inspect { padding:5px 4px 34px; display:flex; flex-direction:column; align-items:center; gap:5px; }
-.deck-screen[data-workspace=deck] .deck-inspect>img,.deck-screen[data-workspace=deck] .deck-inspect>.image-fallback { position:static; width:100%; height:calc(100% - 25px); min-height:0; object-fit:contain; border-radius:4px; }
-.deck-screen[data-workspace=deck] .deck-inspect strong { position:static; font-size:10px; width:100%; line-height:1.2; flex:none; -webkit-line-clamp:2; text-align:left; }
-.deck-screen[data-workspace=deck] .tray-card .quick-controls { right:4px; bottom:4px; gap:3px; }
-.deck-screen[data-workspace=deck] .tray-card .copy-count { left:4px; top:4px; }
-.deck-screen[data-workspace=deck]>.deck-list.is-empty { display:flex; align-items:center; justify-content:center; }
-.tray-empty button { display:block; margin-top:9px; min-height:36px; padding:6px 10px; font-size:11px; }
 .preview-panel { background:#fff; border-color:#cbd8de; box-shadow:0 5px 18px #2041540a; }
 .placeholder-art { background:radial-gradient(circle,#d0e7de,#e5eff0 65%); color:#2c7a6b; border-color:#b9d2c9; }
 .preview-panel input { background:#f2f6f8; }
@@ -159,8 +126,7 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .solo-filter-summary>span:last-child { color:#387967; }
 .solo-launch p { color:#6d7363; }
 .solo-launch .primary { color:#fff; background:linear-gradient(100deg,#146b60,#268475); border-color:#176d61; }
-.solo-design-banner,.duel-design-banner { color:#7c5e20; background:#f5eedc; border-color:#d6c99f; }
-.duel-design-banner button { color:#775c23; background:#fffaf0; border-color:#dac794; }
+.solo-design-banner { color:#7c5e20; background:#f5eedc; border-color:#d6c99f; }
 .supported { color:#26724d; } .unsupported { color:#a13951; }
 .support-row { border-color:#d4dfe5; }
 
@@ -230,44 +196,15 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .duel-intro-stage p { color:#bddbd9; font-size:12px; }
 .duel-intro-stage[data-stage=duel] { gap:8px; background:linear-gradient(90deg,transparent,#27544e9c 30%,#324144b8 70%,transparent); }
 .duel-intro-stage[data-stage=duel] h2 { font-size:clamp(44px,calc(var(--duel-vw,1dvw) * 9),80px); line-height:1; font-weight:850; font-style:italic; letter-spacing:10px; text-shadow:0 2px #538578,0 8px 24px #0006; }
-.duel-intro-coin { position:relative; width:78px; height:78px; transform-style:preserve-3d; margin:8px 0; }
-.duel-intro-coin[hidden] { display:none; }
-.coin-face { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:50%; backface-visibility:hidden; -webkit-backface-visibility:hidden; border:4px solid #b88d39; background:radial-gradient(circle at 35% 25%,#fff3c0,#caa24e 65%,#987028); box-shadow:inset 0 0 0 2px #f9dc8a,inset 0 0 0 5px #a47d3b,0 8px 20px #0007; color:#69501f; }
-.coin-face i { font-size:38px; font-style:normal; line-height:1; text-shadow:0 1px #fff0bd; }
-.coin-face span { font-size:7px; font-weight:850; letter-spacing:1.7px; }
-.coin-tails { transform:rotateY(180deg); background:radial-gradient(circle at 35% 25%,#e4fff4,#8dbdb0 65%,#53786f); border-color:#789a84; box-shadow:inset 0 0 0 2px #c0dfcb,inset 0 0 0 5px #618d7a,0 8px 20px #0007; color:#345d51; }
 .duel-arena[data-intro=true] .duel-hand,.duel-arena[data-intro=true] .duel-opponent-hand { visibility:hidden; }
-@media (min-width:700px) { .deck-screen[data-workspace=deck] .tray-card { aspect-ratio:.64; } .deck-screen[data-workspace=deck] .deck-inspect strong { font-size:12px; } }
-@media (orientation:landscape) and (max-height:540px) {
+@media(max-height:540px), (orientation:portrait) and (max-width:540px) {
   .home-hero { padding:12px; }
   .menu-body { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; padding:12px; }
   .menu-item { min-height:58px; padding:9px; }
   .menu-item small { font-size:9px; }
   .settings-body>button:last-child { grid-column:1/-1; }
-  .deck-screen[data-workspace=browse]>.deck-workspace-tabs { grid-column:2; grid-row:1; }
-  .deck-screen[data-workspace=browse]>.workspace-caption { display:none; }
-  .deck-screen[data-workspace=deck] { display:grid; grid-template-columns:minmax(180px,25%) minmax(0,1fr); grid-template-rows:44px 44px minmax(0,1fr); gap:6px 12px; }
-  .deck-screen[data-workspace=deck]>.deck-switch-row { grid-column:1; grid-row:1; }
-  .deck-screen[data-workspace=deck]>.deck-workspace-tabs { grid-column:1; grid-row:2; }
-  .deck-screen[data-workspace=deck]>.deck-tabs { grid-column:2; grid-row:1; }
-  .deck-screen[data-workspace=deck]>.deck-view-tools { grid-column:1; grid-row:3; }
-  .deck-screen[data-workspace=deck]>.deck-list { grid-column:2; grid-row:2/4; }
-  .deck-screen[data-workspace=deck] .deck-view-filters { grid-template-columns:1fr; }
-  .deck-screen[data-workspace=deck] .deck-view-filters label { flex-direction:column; align-items:stretch; gap:2px; }
-  .deck-screen[data-workspace=deck] .tray-card { aspect-ratio:.55; }
-  .deck-screen:has(.duel-design-banner) { padding-bottom:36px; position:relative; }
-  .deck-screen>.duel-design-banner { position:absolute; bottom:0; left:0; right:0; min-height:32px; height:32px; }
-  .deck-screen>.duel-design-banner button { min-height:30px; height:30px; padding:4px 9px; }
-  .duel-intro-coin { width:66px; height:66px; margin:2px; }
 }
-@media (max-width:360px) { .menu-item { min-height:64px; padding:9px; gap:6px; } .menu-item svg { width:19px; height:19px; } .menu-item small { font-size:9px; } .deck-screen[data-workspace=deck] .tray-card .quick-controls { gap:2px; right:2px; } }
-@media (orientation:portrait) and (max-height:700px) {
-  .deck-screen { gap:5px; }
-  .deck-screen[data-workspace=browse]>.deck-tray,.deck-screen[data-workspace=browse]>.workspace-caption { display:none; }
-  .deck-workspace-tabs button { min-height:32px; height:32px; }
-  .deck-tabs button { min-height:40px; height:40px; }
-}
-@media (prefers-reduced-motion:reduce) { .duel-intro-stage,.duel-intro-coin { animation:none!important; transition:none!important; } }
+@media (max-width:360px) { .menu-item { min-height:64px; padding:9px; gap:6px; } .menu-item svg { width:19px; height:19px; } .menu-item small { font-size:9px; } }
 
 .solo-ai-identity { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid #b7d2c8; border-radius:12px; background:linear-gradient(120deg,#e1f0e8,#f7faf5); color:#245546; }
 .solo-ai-identity strong { font-size:15px; }
@@ -324,11 +261,13 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .icon-button,.duel-utility-actions button,.duel-hand-zoom,.duel-controls button:not(.primary) { box-shadow:inset 0 1px #fff,0 2px 6px #2d574b20; }
 .duel-utility-actions button,.duel-hand-zoom { background:linear-gradient(145deg,#fff,#e3eee8); border-color:#9dbdaf; color:#235c4c; }
 .duel-controls button:not(.primary):not(.duel-cancel-choice) { background:linear-gradient(145deg,#fffdf5,#eee8d8); color:#71572d; border-color:#c6b795; }
-.menu-item,.filter-toggle,.solo-tabs button,.deck-tabs button,.filter-tabs button,.duel-menu-body .duel-motion-toggle,.duel-menu-footer button:not(.primary):not(.danger) { background-image:linear-gradient(150deg,#ffffffa6,#ffffff00 70%); box-shadow:inset 0 1px #ffffffb3,0 2px 5px #254b4510; }
-.solo-tabs [aria-selected=true],.deck-tabs button[aria-pressed=true],.filter-tabs button[aria-selected=true] { box-shadow:inset 0 -3px #b49457,inset 0 1px #ffffffb3,0 2px 6px #254b4514; }
+.menu-item,.filter-toggle,.solo-tabs button,.filter-tabs button,.duel-menu-body .duel-motion-toggle,.duel-menu-footer button:not(.primary):not(.danger) { background-image:linear-gradient(150deg,#ffffffa6,#ffffff00 70%); box-shadow:inset 0 1px #ffffffb3,0 2px 5px #254b4510; }
+.solo-tabs [aria-selected=true],.filter-tabs button[aria-selected=true] { box-shadow:inset 0 -3px #b49457,inset 0 1px #ffffffb3,0 2px 6px #254b4514; }
 .quick-controls button,.duel-quick-action,#modal [data-choice-tone] { background-image:linear-gradient(160deg,#ffffff55,#ffffff00 65%); }
 .duel-menu-body .duel-menu-preferences { padding:10px; border:1px solid #c9d9d1; border-radius:14px; background:linear-gradient(135deg,#f6faf7,#e7f0e9); }
 .duel-menu-body .duel-menu-footer button[data-duel=save-exit] { color:#6d4f21; border-color:#c6b18b; background:linear-gradient(145deg,#fffaf0,#eee3cb); }
 .duel-menu-body .duel-menu-footer button[data-duel=exit-duel] { color:#485e6e; border-color:#b9cad2; background:linear-gradient(145deg,#fff,#e5edf1); }
 #main,#modal .dialog-body { touch-action:manipulation; }
 @media(prefers-reduced-motion:reduce) { button { transition:none; } }
+
+@media(prefers-reduced-motion:reduce) { .duel-intro-stage { animation:none!important; transition:none!important; } }
