@@ -40,9 +40,11 @@ export function nativeSeed(seed,version=2){
 // public events and field queries into the existing arena's presentation model.
 export function createNativeBackend({rules=defaultNativeRules}={}) {
   const matches=new Map();let nextMatch=0;
-  async function createMatch(decks,{seed=Date.now(),randomVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+  async function createMatch(decks,{seed=Date.now(),randomVersion=2,rulesVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
     if(![1,2].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
-    const pack=await rules(),{module:m,lib,records,scripts}=pack;
+    if(![1,2].includes(rulesVersion))throw new Error('Unsupported saved duel rules version.');
+    const pack=await rules(),{module:m,lib,records}=pack;
+    const scripts=rulesVersion===1?{...pack.scripts,'c16768387.lua':pack.scripts['c16768387.lua'].replace('Duel.SortDecktop(tp,tp,ac)','Duel.SortDecktop(tp,tp,ct)')}:pack.scripts;
     const api=new Map([...cards,...(openingHands||[]).flat(),...(initialFields||[]).flatMap(p=>Object.values(p).flat().filter(Boolean).map(c=>c.card)),...decks.flatMap(d=>[...d.main,...d.extra])].map(c=>[c.id,c]));
     const byName=new Map([...records.values()].map(r=>[r.name,r]));
     const canonical=new Map(),preferred=new Map();
@@ -59,7 +61,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:nativeSeed(seed,randomVersion),team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
     if(!handle)throw new Error('The duel rules engine could not start.');
     const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,revealSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
-    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
+    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
     r.reason=Object.fromEntries([...scripts['constant.lua'].matchAll(/^REASON_(\w+)\s*=\s*(0x[\da-f]+|\d+)/gmi)].map(([,key,value])=>[key,Number(value)]));
     r.side=team=>team===0?first:1-first;r.team=side=>side===first?0:1;
     r.state={aiMemory:createAIMemory(cards,eligibility),version:2,runtimeId:id,players:decks.map(d=>({...emptyPlayer(d.name),lp})),turn:0,normalSummons:[0,0],active:first,phase:'draw',seed:seed>>>0,serial:0,log:[],lastEvent:null,winner:null,chain:[],window:null,pending:null,choice:null,actions:[[],[]],visualAction:null};
@@ -112,7 +114,8 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   function confirmCards(r,msg){
     const s=r.state,L=r.module.OcgLocation,viewer=r.side(msg.player),source=effectSource(r);
     const deck=msg.cards.length>0&&msg.cards.every(c=>c.location===L.DECK&&c.controller===msg.cards[0].controller);
-    const topFirst=deck&&source?.card.id===17092736;
+    const sequences=msg.cards.map(c=>c.sequence),deckSize=deck?s.players[r.side(msg.cards[0].controller)].deck.length:0;
+    const topFirst=deck&&(source?.card.id===17092736||Math.max(...sequences)===deckSize-1&&new Set(sequences).size===msg.cards.length&&Math.max(...sequences)-Math.min(...sequences)+1===msg.cards.length);
     const ordered=topFirst?[...msg.cards].sort((a,b)=>b.sequence-a.sequence):msg.cards;
     const cards=ordered.map(item=>{
       const zone=({[L.DECK]:'deck',[L.HAND]:'hand',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'})[item.location]||'field';
@@ -389,6 +392,12 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       if(p.type===T.SORT_CARD||p.type===T.SORT_CHAIN)choice.instructions='Tap cards in the order you want them to resolve, then confirm.';
       if(p.type===T.SELECT_DISFIELD)candidates=places(r,p);
       const sorting=p.type===T.SORT_CARD||p.type===T.SORT_CHAIN;
+      if(sorting){
+        const locations=candidates.map(c=>c.location),sameDeck=p.type===T.SORT_CARD&&locations.every(l=>l===m.OcgLocation.DECK)&&candidates.every(c=>c.controller===candidates[0].controller);
+        const bottom=sameDeck&&Math.max(...candidates.map(c=>c.sequence))<r.state.players[r.side(candidates[0].controller)].deck.length-1&&Math.min(...candidates.map(c=>c.sequence))===0;
+        choice.ordering={kind:p.type===T.SORT_CHAIN?'chain':sameDeck?bottom?'deck-bottom':'deck-top':'cards',cards:candidates.map((item,index)=>{const instance=cardAt(r,item);return {index,uid:instance?.uid,card:item.code?descriptor(r,item.code):null,sequence:item.sequence,zone:({[m.OcgLocation.DECK]:'Deck',[m.OcgLocation.HAND]:'hand',[m.OcgLocation.GRAVE]:'Graveyard'})[item.location]||'cards'};}),selected:[...r.selected]};
+        choice.instructions=sameDeck?`Use ↑ ↓ to arrange the ${bottom?'bottom':'top'} cards. Position 1 ${bottom?'is the bottom':'is drawn next'}.`:p.type===T.SORT_CHAIN?'Set the chain links. Link 1 resolves last. Confirm when ready.':'Move cards into the order requested by the effect, then confirm.';
+      }
       if(p.type===T.SELECT_SUM&&r.sumPlan===undefined)r.sumPlan=sumPlan(r,p);
       candidates.forEach((item,index)=>{
         const card=cardAt(r,item),selected=r.selected.includes(index),count=r.selected.filter(i=>i===index).length;
@@ -396,7 +405,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         if(p.type===T.SELECT_DISFIELD)label=`${r.side(item.player)===side?'Your':'Opponent’s'} ${item.location===m.OcgLocation.MZONE?'Monster':'Spell / Trap'} Zone ${item.sequence+1}`;
         if(p.type===T.SELECT_COUNTER)label+=` · ${count}/${item.count} counters`;
         const canAdd=p.type===T.SELECT_COUNTER?count<item.count:!sorting||!selected;
-        if(canAdd)add({type:'CHOOSE',label:(selected?'Selected · ':'')+label,target:card?.uid,selected,recommended:p.type===T.SELECT_SUM&&r.sumPlan!==null&&(selected!==r.sumPlan.includes(index))},null,{kind:p.type===T.SELECT_COUNTER?'counter':sorting?'sort':'toggle',index});
+        if(canAdd)add({type:'CHOOSE',label:(selected?'Selected · ':'')+label,target:card?.uid,selected,...(sorting?{orderIndex:index}:{}),recommended:p.type===T.SELECT_SUM&&r.sumPlan!==null&&(selected!==r.sumPlan.includes(index))},null,{kind:p.type===T.SELECT_COUNTER?'counter':sorting?'sort':'toggle',index});
         if(selected&&card)choice.selected.push(card.uid);
       });
       if(r.selected.length&&(sorting||p.type===T.SELECT_COUNTER))add({type:'CHOOSE',label:'Reset selection',reset:true},null,{kind:'reset'});
@@ -406,7 +415,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       if(p.can_cancel)option(p.type===T.SELECT_TRIBUTE?'Cancel summon':'Cancel selection',{type:p.type===T.SELECT_TRIBUTE?R.SELECT_TRIBUTE:R.SELECT_CARD,indicies:null},{cancel:true});
       return;
     }
-    if(p.type===T.ANNOUNCE_NUMBER){choice.title='Declare a number';p.options.forEach((number,index)=>option(String(number),{type:R.ANNOUNCE_NUMBER,value:index},{number:Number(number)}));return;}
+    if(p.type===T.ANNOUNCE_NUMBER){choice.title=source?.card.id===16768387?'Big Eye · How many top cards?':'Declare a number';if(source?.card.id===16768387)choice.instructions='Choose how many cards from the top of your Deck to view and reorder.';p.options.forEach((number,index)=>option(source?.card.id===16768387&&r.bootstrap.options.rulesVersion!==1?`${number} card${Number(number)===1?'':'s'}`:String(number),{type:R.ANNOUNCE_NUMBER,value:index},{number:Number(number)}));return;}
     if(p.type===T.ANNOUNCE_CARD){choice.title='Declare a card name';choice.searchable=true;for(const record of r.records.values())if(m.cardMatchesOpcode(record,p.opcodes)&&!(record.type&m.OcgType.TOKEN))option(record.name,{type:R.ANNOUNCE_CARD,card:record.code},{cardId:descriptor(r,record.code).id});return;}
     if(p.type===T.ANNOUNCE_ATTRIB||p.type===T.ANNOUNCE_RACE){
       const attribute=p.type===T.ANNOUNCE_ATTRIB,values=Object.entries(attribute?m.OcgAttribute:m.OcgRace).filter(([,value])=>attribute?((p.available&value)===value):((p.available&value)===value));
@@ -450,7 +459,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
-    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,cards});
+    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,cards});
     const legacy=save.presentationRevision!==2;
     const acknowledgeLegacyLists=()=>{
       while(legacy&&state.reveals?.[0]?.presentationOnly){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}

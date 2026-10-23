@@ -49,7 +49,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   let revealSeen=null;
   const responsePolicy=createResponsePolicy();
   let responseSeen=null,responseIndex=0;
-  let saveId=null,handExpanded=false,resultShown=false;
+  let saveId=null,handExpanded=false,resultShown=false,orderDraft=null,selectionRead=null;
   let observedTable=null;
   const tableObserver=typeof window.ResizeObserver==='function'?new window.ResizeObserver(()=>{fitArena();attackArrows.refresh();}):null;
   function fitArena(){
@@ -214,11 +214,11 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(session){clearTimeout(timer);fieldSelection=session;closeDialog();render();focusFieldTarget();return;}
     if(actions.length===1&&!match.choice){step(actions[0]);return;}
     selection=actions;
+    if(match.choice?.ordering){showOrderPicker();return;}
     const coinChoice=actions.some(action=>action.coinCall),declaration=actions.find(action=>action.declaration)?.declaration;
     const staged=!!match.choice?.stage,purpose=match.choice?.purpose||title,archive=new Map(getCards().map(card=>[card.id,card]));
-    const nativeSource=match.choice?.source;
-    const source=(match.choice?.trigger?.uid?choiceVisuals(match,{uid:match.choice.trigger.uid},{isHidden,archive})[0]:null)||(nativeSource?{card:nativeSource.card,name:nativeSource.card.name,hidden:false}:null);
-    const context=source?`<div class="duel-choice-source"><span class="duel-choice-source-art">${source.hidden?cardBack():image(source.card)}</span><span><small>Resolving card</small><strong>${escape(source.name)}</strong></span></div>`:'';
+    const source=selectionSource();
+    const context=source?`<button class="duel-choice-source" ${source.hidden?'disabled':'data-duel="read-choice-source"'} aria-label="Read ${escape(source.name)} effect"><span class="duel-choice-source-art">${source.hidden?cardBack():image(source.card)}</span><span><small>${source.hidden?'Resolving effect':'Tap to read effect'}</small><strong>${escape(source.name)}</strong></span></button>`:'';
     const utilities=actions.map((action,index)=>({action,index})).filter(({action})=>action.finish||action.cancel||action.reset);
     const footer=utilities.map(({action,index})=>`<button data-duel-choice="${index}" data-choice-tone="${choiceIntent(action,purpose).tone}">${escape(action.label||actionDetail(action))}</button>`).join('');
     const markup=`${header(declaration&&source?source.name+' · '+title:title)}${context}${actions.length>50?'<label class="duel-choice-search-label">Find a card<input id="duel-choice-search" type="search" autocomplete="off" placeholder="Card name…"></label>':''}<p class="duel-choice-help">${escape(match.choice?.instructions||(staged?'Tap cards to select or deselect. Confirm when ready.':'Choose a card or action.'))}</p><div class="duel-choice-list duel-choice-grid" id="duel-options-list" data-owned-content aria-label="${declaration==='race'?'Monster types':declaration?'Attributes':'Card choices'}"></div><div class="duel-choice-footer">${footer}${staged&&!match.choice.canFinish?'<button data-choice-tone="teal" disabled>Confirm selection</button>':''}<button data-action="close">Return to field</button></div>`;
@@ -234,23 +234,57 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
         if(action.coinCall)return `<button class="duel-coin-choice" data-duel-choice="${index}" aria-label="Call ${action.coinCall}"><span class="duel-coin-choice-art">${coinMarkup(action.coinCall)}</span><span><small>CALL</small><strong>${action.coinCall}</strong></span><span class="duel-coin-choice-check" aria-hidden="true">→</span></button>`;
         const art=visuals.map(visual=>`<span class="duel-choice-thumb">${visual.hidden?cardBack():image(visual.card)}</span>`).join('');
         const detail=primary?[primary.place,primary.type].filter(Boolean).join(' · '):action.effectText||'';
-        return `<button class="${primary?'duel-choice-card':'duel-choice-action'}" data-render-key="choice:${primary?.uid||action.cardId||'option'}:${index}" data-duel-choice="${index}" data-choice-tone="${intent.tone}" ${staged?`aria-pressed="${selected}"`:''} aria-label="${escape((selected?'Selected: ':'')+(primary?.name||actionDetail(action))+' · '+intent.label)}">${primary?`<span class="duel-choice-art">${art}</span>`:`<span class="duel-choice-symbol" aria-hidden="true">${action.coinCall?coinMarkup(action.coinCall):action.yes===false?'×':action.yes===true?'✦':action.defense!==undefined?'↻':'◇'}</span>`}<span class="duel-choice-copy"><strong>${escape(primary?.name||actionDetail(action))}</strong>${detail?`<small>${escape(detail)}</small>`:''}<span class="duel-choice-badge">${selected?'✓ Selected':escape(intent.label)}</span></span></button>`;
+        return `${primary?`<article class="duel-choice-entry" data-render-key="entry:${primary.uid||action.cardId||index}:${index}">`:''}<button class="${primary?'duel-choice-card':'duel-choice-action'}" data-render-key="choice:${primary?.uid||action.cardId||'option'}:${index}" data-duel-choice="${index}" data-choice-tone="${intent.tone}" ${staged?`aria-pressed="${selected}"`:''} aria-label="${escape((selected?'Selected: ':'')+(primary?.name||actionDetail(action))+' · '+intent.label)}">${primary?`<span class="duel-choice-art">${art}</span>`:`<span class="duel-choice-symbol" aria-hidden="true">${action.coinCall?coinMarkup(action.coinCall):action.yes===false?'×':action.yes===true?'✦':action.defense!==undefined?'↻':'◇'}</span>`}<span class="duel-choice-copy"><strong>${escape(primary?.name||actionDetail(action))}</strong>${detail?`<small>${escape(detail)}</small>`:''}<span class="duel-choice-badge">${selected?'✓ Selected':escape(intent.label)}</span></span></button>${primary?`${!primary.hidden?`<button class="duel-choice-read" data-choice-read="${index}" aria-label="Read ${escape(primary.name)} effect"><span>Read</span></button>`:''}</article>`:''}`;
       }).join('')||'<p class="duel-choice-empty">No matching cards. Try another name.</p>';
       patchArena(list,content);
       list.dataset.hasCards=String(options.some(option=>option.visuals.length));
     };
     const search=modal.querySelector('#duel-choice-search');if(search)search.oninput=update;update();
   }
+  function selectionSource(){
+    const native=match?.choice?.source,uid=match?.choice?.trigger?.uid;
+    return (uid?choiceVisuals(match,{uid},{isHidden,archive:new Map(getCards().map(c=>[c.id,c]))})[0]:null)||(native?{card:native.card,name:native.card.name,hidden:false}:null);
+  }
+  function readSelection(card,returnTo='choice'){
+    if(!card)return;selectionRead={card,returnTo,query:modal.querySelector('#duel-choice-search')?.value,scroll:modal.querySelector('#duel-options-list')?.scrollTop};cancelArt();
+    showDialog(`<div class="dialog-header"><h2 id="dialog-title">${escape(card.name)}</h2><button data-duel="selection-back" aria-label="Back to ${returnTo==='reveal'?'revealed cards':'selection'}">← Back</button></div><div class="selection-info-art">${image(card)}</div><div class="selection-info-copy"><strong>${escape(cardTypeLabel(card))}</strong><div class="effect-text" tabindex="0" aria-label="Card effect">${escape(card.desc||'No effect text available for this card.')}</div></div>`,'duel-selection-info');
+    cancelArt=sharpenCardArt(modal.querySelector('.selection-info-art'),card);
+  }
+  function selectionBack(){
+    const saved=selectionRead,back=saved?.returnTo;selectionRead=null;cancelArt();
+    if(back==='reveal'){showReveal();return;}
+    if(match?.choice?.ordering)showOrderPicker();else if(match?.choice)choose(legalActions(match,0),match.choice.title,true);else closeDialog();
+    const search=modal.querySelector('#duel-choice-search');if(search&&saved?.query!==undefined){search.value=saved.query;search.oninput?.();}const list=modal.querySelector('#duel-options-list');if(list&&saved?.scroll!==undefined)list.scrollTop=saved.scroll;
+  }
+  function showOrderPicker(){
+    const ordering=match.choice?.ordering;if(!ordering)return;
+    const original=[...ordering.cards].sort((a,b)=>ordering.kind.startsWith('deck')?(ordering.kind==='deck-bottom'?a.sequence-b.sequence:b.sequence-a.sequence):a.index-b.index).map(c=>c.index);
+    if(orderDraft?.promptId!==match.choice.promptId)orderDraft={promptId:match.choice.promptId,original,indices:[...ordering.selected,...original.filter(i=>!ordering.selected.includes(i))]};
+    const source=match.choice.source?.card,kind=ordering.kind,label=kind==='deck-top'?'Top of Deck':kind==='deck-bottom'?'Bottom of Deck':kind==='chain'?'Chain links':'Card order';
+    const position=i=>kind==='deck-top'?(i===0?'TOP · draw next':`${i+1} · from top`):kind==='deck-bottom'?(i===0?'BOTTOM':`${i+1} · above bottom`):kind==='chain'?`Link ${i+1}${i===0?' · resolves last':''}`:`Position ${i+1}`;
+    const rows=orderDraft.indices.map((index,i)=>{const entry=ordering.cards.find(c=>c.index===index),name=entry.card?.name||'Face-down card';return `<li data-order-index="${index}"><span class="order-position"><b>${i+1}</b><small>${escape(position(i))}</small></span><button class="order-card-read" data-order-read="${index}" ${entry.card?'':'disabled'} aria-label="Read ${escape(name)} effect">${entry.card?image(entry.card):cardBack()}</button><strong>${escape(name)}</strong><div class="order-moves"><button data-order-move="${index}" data-order-direction="-1" ${i===0?'disabled':''} aria-label="Move ${escape(name)} up">↑</button><button data-order-move="${index}" data-order-direction="1" ${i===orderDraft.indices.length-1?'disabled':''} aria-label="Move ${escape(name)} down">↓</button></div></li>`;}).join('');
+    showDialog(`<aside class="order-sidebar"><div class="dialog-header"><h2 id="dialog-title">${escape(label)}</h2></div>${source?`<button class="order-source" data-duel="read-choice-source">${image(source)}<span><strong>${escape(source.name)}</strong><small>Read effect ↗</small></span></button>`:''}<p>${escape(match.choice.instructions)}</p><small class="order-rest">${kind.startsWith('deck')?`Only these ${ordering.cards.length} cards move. The rest of the Deck stays in order.`:kind==='chain'?'Last link resolves first.':'Review each position before confirming.'}</small><footer><button data-duel="order-reset" aria-label="Reset order">Reset</button><button class="primary" data-duel="order-confirm">Confirm order</button><button data-action="close" aria-label="Return to field">Field</button></footer></aside><ol class="duel-order-list" id="duel-options-list" aria-label="${escape(label)} · position 1 first">${rows}</ol>`,'duel-order-picker');
+  }
+  function commitOrder(){
+    if(moving||!match?.choice?.ordering||orderDraft?.promptId!==match.choice.promptId)return;
+    const previous=match,indices=[...orderDraft.indices];
+    try{
+      let next=match;const reset=legalActions(next,0).find(a=>a.reset);if(reset)next=applyAction(next,reset,0);
+      for(const index of indices){const action=legalActions(next,0).find(a=>a.orderIndex===index);if(!action)throw new Error('That order is no longer available.');next=applyAction(next,action,0);}
+      const finish=legalActions(next,0).find(a=>a.finish);if(!finish)throw new Error('Choose an order for every card.');
+      next=applyAction(next,finish,0);orderDraft=null;selectionRead=null;present(previous,next);
+    }catch(error){toast(error.message,true);}
+  }
   function showReveal(index=null){
     const reveal=match?.reveals?.[0];if(!reveal||reveal.viewer!==0)return;
     revealSeen=reveal.id;clearTimeout(timer);cancelArt();inspectedUid=null;
     if(Number.isInteger(index)&&index>=0&&index<reveal.cards.length){
       const card=reveal.cards[index].card,source=modal.querySelector(`[data-duel-reveal-card="${index}"] img`);
-      showDialog(`<h2 id="dialog-title" class="sr-only">${escape(card.name)}</h2><button class="duel-reveal-back" data-duel="reveal-list" data-reveal-return="${index}" aria-label="Back to revealed cards">${icon('close')}</button><div class="duel-reveal-art" role="img" aria-label="${escape(card.name)} · card ${index+1} of ${reveal.cards.length}">${image(card)}</div>`,`duel-reveal-body duel-reveal-zoom${config.animations&&!reducedMotion.matches?' reveal-motion':''}`);
+      showDialog(`<h2 id="dialog-title" class="sr-only">${escape(card.name)}</h2><button class="duel-reveal-back" data-duel="reveal-list" data-reveal-return="${index}" aria-label="Back to revealed cards">${icon('close')}</button><div class="duel-reveal-art" role="img" aria-label="${escape(card.name)} · card ${index+1} of ${reveal.cards.length}">${image(card)}</div><aside class="reveal-effect-copy"><h3>${escape(card.name)}</h3><div class="effect-text" tabindex="0" aria-label="Revealed card effect">${escape(card.desc||'No effect text available.')}</div></aside>`,`duel-reveal-body duel-reveal-zoom${config.animations&&!reducedMotion.matches?' reveal-motion':''}`);
       cancelArt=sharpenCardArt(modal.querySelector('.duel-reveal-art'),card,{source});
       modal.querySelector('[data-duel="reveal-list"]').focus({preventScroll:true});return;
     }
-    showDialog(`${header(reveal.source?.name||'Revealed cards')}<p class="duel-reveal-caption">${reveal.ordered?'Top of Deck → bottom':[...new Set(reveal.cards.map(c=>(c.controller===0?'Your ':'AI’s ')+({deck:'Deck',hand:'hand',grave:'Graveyard',banished:'banished cards',extra:'Extra Deck'}[c.zone]||'cards')))].join(' · ')} · Tap to inspect</p><ol class="duel-reveal-list" aria-label="Revealed cards${reveal.ordered?', top first':''}">${reveal.cards.map((entry,i)=>`<li><button data-duel-reveal-card="${i}" aria-label="Card ${i+1}${i===0&&reveal.ordered?', top of Deck':''}: ${escape(entry.card.name)}; enlarge"><span class="duel-reveal-number">${i+1}</span>${image(entry.card)}</button></li>`).join('')}</ol><footer class="duel-reveal-footer"><button class="primary" data-duel="reveal-done">Done</button></footer>`,'duel-reveal-body');
+    showDialog(`${header(reveal.source?.name||'Revealed cards')}${reveal.source?'<button class="reveal-source-read" data-duel="read-reveal-source">Read resolving card effect ↗</button>':''}<p class="duel-reveal-caption">${reveal.ordered?'Top of Deck → bottom':[...new Set(reveal.cards.map(c=>(c.controller===0?'Your ':'AI’s ')+({deck:'Deck',hand:'hand',grave:'Graveyard',banished:'banished cards',extra:'Extra Deck'}[c.zone]||'cards')))].join(' · ')} · Tap to inspect</p><ol class="duel-reveal-list" aria-label="Revealed cards${reveal.ordered?', top first':''}">${reveal.cards.map((entry,i)=>`<li><button data-duel-reveal-card="${i}" aria-label="Card ${i+1}${i===0&&reveal.ordered?', top of Deck':''}: ${escape(entry.card.name)}; enlarge"><span class="duel-reveal-number">${i+1}</span>${image(entry.card)}</button></li>`).join('')}</ol><footer class="duel-reveal-footer"><button class="primary" data-duel="reveal-done">Done</button></footer>`,'duel-reveal-body');
   }
   function revealList(index){showReveal();modal.querySelector(`[data-duel-reveal-card="${index}"]`)?.focus({preventScroll:true});}
   function acknowledgeReveal(){const action=legalActions(match,0).find(a=>a.type==='ACK_REVEAL');if(action)step(action);}
@@ -314,8 +348,8 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const uid=inspectedUid;cancelArt();inspectedUid=null;render();
     if(fieldSelection)focusFieldTarget();else main.querySelector(`[data-duel-card="${uid}"]`)?.focus({preventScroll:true});
   }
-  const dialogClosed=()=>{if(!modal.open&&active){if(!moving&&modal.querySelector('.duel-reveal-body')&&match?.reveals?.[0]?.id===revealSeen){if(modal.querySelector('.duel-reveal-zoom'))revealList(Number(modal.querySelector('[data-reveal-return]')?.dataset.revealReturn));else acknowledgeReveal();}else if(inspectedUid)dismissInspection();else schedule();}};
-  const revealCancel=event=>{if(active&&modal.querySelector('.duel-reveal-zoom')){event.preventDefault();event.stopImmediatePropagation();revealList(Number(modal.querySelector('[data-reveal-return]')?.dataset.revealReturn));}};
+  const dialogClosed=()=>{if(!modal.open&&active){if(!moving&&selectionRead){selectionBack();return;}if(!moving&&modal.querySelector('.duel-reveal-body')&&match?.reveals?.[0]?.id===revealSeen){if(modal.querySelector('.duel-reveal-zoom'))revealList(Number(modal.querySelector('[data-reveal-return]')?.dataset.revealReturn));else acknowledgeReveal();}else if(inspectedUid)dismissInspection();else schedule();}};
+  const revealCancel=event=>{if(active&&selectionRead){event.preventDefault();event.stopImmediatePropagation();selectionBack();return;}if(active&&modal.querySelector('.duel-reveal-zoom')){event.preventDefault();event.stopImmediatePropagation();revealList(Number(modal.querySelector('[data-reveal-return]')?.dataset.revealReturn));}};
   modal.addEventListener('close',dialogClosed);
   modal.addEventListener('cancel',revealCancel,true);
   function quickButtons(uid,field=false){
@@ -414,7 +448,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const before=captureArena(main),motions=planMotion(previous,next,next.version===2?((next.visualAction?.presentation==='paired'?null:next.visualAction)||(action?.type==='ATTACK'?null:action)):action),token=++presentation;
     const nextCue=activityCue(previous,next,next.visualAction||action);
     cue=action?.cancel?null:nextCue||(previous?.phase===next.phase?cue:null);
-    fieldSelection=null;cancelArt();inspectedUid=null;match=next;
+    fieldSelection=null;cancelArt();inspectedUid=null;selectionRead=null;match=next;
     if(match.active===0&&match.phase==='draw')openingTurn=match.turn;
     moving=true;if(!keepPicker)closeDialog();render();
 
@@ -544,7 +578,15 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(target.dataset.action==='close'&&target.closest('.duel-reveal-body')){acknowledgeReveal();return;}
     if(target.dataset.duelChoice!==undefined){const action=selection[Number(target.dataset.duelChoice)];if(action)step(action);return;}
     if(target.dataset.duelGroup!==undefined){const group=cardGroups[Number(target.dataset.duelGroup)];if(group)choose(group.actions,group.label);return;}
+    if(target.dataset.choiceRead!==undefined){const action=selection[Number(target.dataset.choiceRead)],visual=action&&choiceVisuals(match,action,{isHidden,archive:new Map(getCards().map(c=>[c.id,c]))})[0];if(visual&&!visual.hidden)readSelection(visual.card);return;}
+    if(target.dataset.orderRead!==undefined){const card=match.choice?.ordering?.cards.find(c=>c.index===Number(target.dataset.orderRead))?.card;readSelection(card);return;}
+    if(target.dataset.orderMove!==undefined){if(!orderDraft)return;const from=orderDraft.indices.indexOf(Number(target.dataset.orderMove)),to=from+Number(target.dataset.orderDirection);if(from>=0&&to>=0&&to<orderDraft.indices.length){[orderDraft.indices[from],orderDraft.indices[to]]=[orderDraft.indices[to],orderDraft.indices[from]];showOrderPicker();modal.querySelector(`[data-order-move="${target.dataset.orderMove}"][data-order-direction="${target.dataset.orderDirection}"]:not([disabled])`)?.focus({preventScroll:true});}return;}
     const action=target.dataset.duel;
+    if(action==='read-choice-source'){const source=selectionSource();if(source&&!source.hidden)readSelection(source.card);return;}
+    if(action==='read-reveal-source'){readSelection(match?.reveals?.[0]?.source,'reveal');return;}
+    if(action==='selection-back'){selectionBack();return;}
+    if(action==='order-reset'){if(orderDraft){orderDraft.indices=[...orderDraft.original];showOrderPicker();}return;}
+    if(action==='order-confirm'){commitOrder();return;}
     if(action==='response-activate'){responseAction('activate');return;}
     if(action==='response-pass'){responseAction('pass');return;}
     if(action==='response-turn'){responseAction('turn');return;}
@@ -562,7 +604,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(action==='inspect-source'){if(fieldSelection?.sourceUid)inspect(fieldSelection.sourceUid);return;}
     if(action==='duel-menu')duelMenu();if(action==='log')showLog();if(action==='log-latest')jumpToLatest();
     if(action==='toggle-motion'){config.animations=!config.animations;persist();duelMenu();}
-    if(action==='rematch'){cancelThinking();engine.destroyMatch?.(match);match=null;closeDialog();render();}
+    if(action==='rematch'){if(moving||starting||match?.winner===null)return;target.disabled=true;target.textContent='Dealing…';cancelThinking();cancelMotion();clearTimeout(timer);presentation++;engine.destroyMatch?.(match);match=null;moving=false;fieldSelection=null;inspectedUid=null;orderDraft=null;selectionRead=null;cue=null;openingTurn=null;responseSeen=null;revealSeen=null;closeDialog();start();return;}
     if(action==='surrender'){
       showDialog(`${header('Surrender this duel?')}<p>The current match will end. Your saved decks stay on this device.</p><div class="dialog-actions"><button data-action="close">Keep playing</button><button class="danger" data-duel="confirm-surrender">Surrender</button></div>`);
     }

@@ -21,16 +21,17 @@ async function telescope(engine,{viewer=0,size=40}={}){
   assert.ok(s.reveals?.length,'The reveal pauses for viewing');return {s,expected,order};
 }
 const waitFor=async fn=>{const until=Date.now()+2500;while(!fn()&&Date.now()<until)await new Promise(r=>setTimeout(r,5));assert.ok(fn(),'Arena interaction ready');};
-async function ui(engine,state){
+async function ui(engine,state,{first='you',restart=false}={}){
   const window=new Window({url:'https://example.com/repo/'});window.happyDOM.setWindowSize({width:844,height:390});window.document.body.innerHTML='<main id="main"></main><dialog id="modal"></dialog>';
   for(const key of ['window','document','localStorage'])Object.defineProperty(globalThis,key,{value:window[key],writable:true,configurable:true});
   const main=window.document.querySelector('main'),modal=window.document.querySelector('dialog'),errors=[];
   const closeDialog=()=>modal.removeAttribute('open');
   window.document.addEventListener('click',e=>{if(e.target.closest('[data-action="close"]'))closeDialog();});
-  localStorage.setItem('duel-atlas.solo-config.v1',JSON.stringify({animations:false,first:'you',aiSpeed:'deliberate'}));
-  const controller=createSoloController({engine:{...engine,createMatch:async()=>state},main,modal,getCards:()=>cards,getDecks:()=>[],getStatus:()=>'ready',closeDialog,showDialog:(html,kind='')=>{modal.innerHTML=`<div class="dialog-body ${kind}">${html}</div>`;modal.setAttribute('open','');},dialogHeader:title=>`<header class="dialog-header"><h2>${title}</h2><button data-action="close" aria-label="Close">×</button></header>`,toast:m=>errors.push(m),onDesign(){},onKeepDeck(){}});
+  localStorage.setItem('duel-atlas.solo-config.v1',JSON.stringify({animations:false,first,lp:4000,aiSpeed:'deliberate'}));
+  let launches=0;const starts=[];
+  const controller=createSoloController({engine:{...engine,createMatch:async(decks,options)=>{starts.push(options);return launches++&&restart?engine.createMatch(decks,options):state;}},main,modal,getCards:()=>cards,getDecks:()=>[],getStatus:()=>'ready',closeDialog,showDialog:(html,kind='')=>{modal.innerHTML=`<div class="dialog-body ${kind}">${html}</div>`;modal.setAttribute('open','');},dialogHeader:title=>`<header class="dialog-header"><h2>${title}</h2><button data-action="close" aria-label="Close">×</button></header>`,toast:m=>errors.push(m),onDesign(){},onKeepDeck(){}});
   controller.enter();main.querySelector('[data-duel="start"]').click();await waitFor(()=>main.querySelector('.duel-arena')?.dataset.moving==='false');
-  return {window,main,modal,controller,errors,$:s=>window.document.querySelector(s),get s(){return controller.getMatch();},close(){controller.destroy();window.close();}};
+  return {window,main,modal,controller,errors,starts,$:s=>window.document.querySelector(s),get s(){return controller.getMatch();},close(){controller.destroy();window.close();}};
 }
 test('Enchanted Javelin is offered at attack declaration and heals before battle continues',async()=>{
   const e=backend();let s=await damageDuel(e,cards,{traps:['Enchanted Javelin']});try{
@@ -76,7 +77,7 @@ test('Telescope UI displays numbered real card art, supports inspection, and pau
     assert.equal(r.$('.duel-reveal-inspector,.duel-reveal-layout'),null);
     for(let i=0;i<5;i++){
       r.$(`[data-duel-reveal-card="${i}"]`).click();assert.ok(r.$('.duel-reveal-zoom'));assert.match(r.$('.duel-reveal-art').getAttribute('aria-label'),new RegExp(cards.find(c=>c.id===expected[i]).name));
-      assert.equal(r.$('.duel-reveal-zoom').querySelectorAll('button').length,1);assert.equal(r.$('.duel-reveal-zoom .effect-text'),null);assert.equal(r.$('.duel-reveal-list'),null);
+      assert.equal(r.$('.duel-reveal-zoom').querySelectorAll('button').length,1);assert.equal(r.$('.duel-reveal-zoom .effect-text').textContent,cards.find(c=>c.id===expected[i]).desc);assert.equal(r.$('.duel-reveal-list'),null);
       r.$('[data-duel="reveal-list"]').click();assert.ok(r.$('.duel-reveal-list'));assert.equal(r.window.document.activeElement,r.$(`[data-duel-reveal-card="${i}"]`));
       assert.equal(r.s.reveals.length,1);assert.deepEqual(r.s.players[1].deck.map(c=>c.card.id),order);
     }
@@ -138,4 +139,19 @@ test('Jirai Gumo renders distinct coin faces and explains the actual call and LP
     for(const button of options){const css=r.window.getComputedStyle(button);assert.equal(css.gridTemplateColumns,'48px minmax(0,1fr) 12px');assert.equal(css.minHeight,'82px');assert.equal(button.querySelector('.duel-coin-choice-art').nextElementSibling.querySelector('strong').textContent,button.getAttribute('aria-label').replace('Call ',''));}
     assert.deepEqual(r.errors,[]);
   }finally{r.close();}
+});
+
+test('New duel starts immediately after victory or defeat and reuses coin, LP and pace settings',async()=>{
+  for(const winner of [0,1])for(const first of ['coin','you']){
+    const e=backend();let s=await e.createMatch(decks(),{cards,seed:27,openingHands:[[],[]]});s=e.applyAction(s,{type:'SURRENDER'},1-winner);
+    const r=await ui(e,s,{first,restart:true});try{
+      assert.equal(r.s.winner,winner);const runtime=r.s.runtimeId;r.$('[data-duel="rematch"]').click();assert.equal(r.$('.solo-setup'),null);
+      await waitFor(()=>r.s&&r.s.runtimeId!==runtime&&r.$('.duel-arena')?.dataset.moving==='false');
+      assert.equal(r.s.winner,null);assert.equal(r.s.players[0].lp,4000);assert.equal(r.s.players[1].lp,4000);assert.equal(r.s.players[0].hand.length,5);
+      assert.equal(r.starts.length,2);assert.equal(r.starts[1].lp,4000);assert.equal(r.starts[1].eligibility.length,2);
+      assert.equal(r.s.log.some(event=>event.message.includes('Opening coin toss')),first==='coin');
+      if(first==='you')assert.equal(r.starts[1].first,0);assert.deepEqual(r.errors,[]);
+      assert.throws(()=>e.applyAction(s,{type:'END'},0),/ended/,'Previous runtime is released');
+    }finally{r.close();}
+  }
 });

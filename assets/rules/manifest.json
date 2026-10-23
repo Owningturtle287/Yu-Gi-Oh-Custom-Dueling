@@ -9,7 +9,7 @@
   "files": [
     {
       "path": "scripts-00.json",
-      "sha256": "14bdf568f8bb2bda958bb064a798d346767d257d7bcc9f6e8633d6b22466ae68"
+      "sha256": "e163ce88e44cf2955603ba28cc621b4cf07d43858c31fee6d66797f60882f5c5"
     },
     {
       "path": "scripts-01.json",
@@ -97,6 +97,7 @@
     }
   ],
   "localOverrides": [
+    "overrides/c16768387.lua",
     "overrides/c88132637.lua"
   ]
 }

@@ -35,7 +35,24 @@ try{
   await page.goto(origin);await page.waitForFunction(()=>document.querySelector('.home-status')?.textContent.includes('cards'));
   assert.equal(await page.locator('html').getAttribute('data-app-rotated'),String(height>width));
   await visibleControls('.home button,.bottom-nav button,#app-menu');await capture(`home-${width}x${height}`);
-  await page.locator('.solo-launch-card').click();await visibleControls('.solo-setup button,.solo-setup select');
+  await page.evaluate(async()=>{
+   const {navigate,state}=await import('/src/app.js'),{createDeck,addCard}=await import('/src/core.js');
+   let deck=createDeck('Workshop check','layout-deck');for(const card of state.cards.filter(c=>/Monster|Spell Card|Trap Card/.test(c.type)&&!/Fusion|Synchro|Xyz|Link/.test(c.type)).slice(0,14))deck=addCard(deck,card);
+   state.draft=deck;navigate('decks');
+  });
+  await page.locator('.builder-panels .card-tile').first().waitFor();
+  for(const view of ['browse','deck']){
+   await page.locator(`button[data-workspace="${view}"]`).click();
+   await visibleControls('.deck-switch-row button,.deck-switch-row select,.builder-toolbar button,.builder-panel-heading button,.deck-tabs button,#deck-query,.builder-archive-panel .search-row button,#card-search');
+   assert.ok(await page.locator('.builder-deck-panel .deck-tray').evaluate(e=>e.clientHeight>60),'Deck has usable scroll space');
+   assert.ok(await page.locator('#archive-panel').evaluate(e=>e.clientHeight>90),'Archive remains visible beside deck');
+   assert.ok(await page.locator('.builder-deck-panel .copy-count').first().evaluate(e=>e.getBoundingClientRect().width<45),'Quantity badges must not stretch across card names');
+  }
+  await capture(`builder-${width}x${height}`);
+  const query=page.locator('#card-search');await query.fill('Mystical Elf');
+  await page.locator('.builder-archive-panel [data-quick-add]').first().click();
+  assert.equal(await query.inputValue(),'Mystical Elf');assert.ok(await page.locator('.builder-deck-panel .tray-card').count());
+  await page.evaluate(async()=>{const {navigate}=await import('/src/app.js');navigate('solo');});await visibleControls('.solo-setup button,.solo-setup select');
   for(const source of ['saved','set','cards']){
    await page.locator('#solo-source').selectOption(source);
    if(source==='set')await page.waitForFunction(()=>document.querySelector('#solo-set')?.textContent.includes('Layout test set'));
@@ -72,6 +89,38 @@ try{
     await page.evaluate(()=>window.layoutRig.destroy());
    }
   }
+  // A real Big Eye prompt: five visible rows, stable reads, actual native order.
+  await page.evaluate(async()=>{
+   const {navigate,state}=await import('/src/app.js');navigate('home');
+   const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js');
+   const catalog=state.cards,get=name=>catalog.find(c=>c.name===name),engine=createNativeBackend(),names=['Mystical Elf','Summoned Skull','Dark Magician','Blue-Eyes White Dragon','Man-Eater Bug','Big Eye'];
+   let match=await engine.createMatch([0,1].map(()=>({name:'Order check',main:Array.from({length:40},(_,i)=>get(names[i%names.length])),extra:[]})),{cards:catalog,seed:17,openingHands:[[],[]],initialFields:[{monsters:[{card:get('Big Eye'),defense:true,faceUp:false}]},{}]});
+   match=engine.applyAction(match,match.actions[0].find(a=>a.type==='FLIP'||a.type==='POSITION'),0);
+   for(let n=0;n<30&&match.choice?.selectionType!=='sort_card';n++){const side=match.actions[0].length?0:1;match=engine.applyAction(match,match.actions[side].find(a=>a.number===5)||match.actions[side].find(a=>a.type==='PASS')||engine.chooseAIAction(match,side),side);}
+   const main=document.querySelector('#main'),modal=document.querySelector('#modal');let launches=0;
+   const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:title=>`<div class="dialog-header"><h2>${title}</h2><button data-action="close">×</button></div>`,toast:message=>{throw Error(message);},onDesign(){},engine:{...engine,createMatch:async(...args)=>launches++?engine.createMatch(...args):match}});
+   controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
+  });
+  await page.locator('.duel-order-picker').waitFor();await visibleControls('.duel-order-picker button');
+  assert.equal(await page.locator('[data-order-index]').count(),5);
+  await page.locator('[data-order-index]').last().locator('[data-order-direction="-1"]').click();
+  const order=await page.locator('[data-order-index]').evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.orderIndex)));
+  for(const selector of ['[data-duel="read-choice-source"]','[data-order-read]']){
+   await page.locator(selector).first().click();await visibleControls('.duel-selection-info button');
+   assert.ok(await page.locator('.selection-info-copy .effect-text').evaluate(e=>e.clientHeight>40));
+   if(selector.includes('source'))await capture(`effect-reader-${width}x${height}`);
+   await page.locator('[data-duel="selection-back"]').click();
+   assert.deepEqual(await page.locator('[data-order-index]').evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.orderIndex))),order);
+  }
+  await visibleControls('.duel-order-picker button');await capture(`reorder-${width}x${height}`);
+  const expected=await page.evaluate(order=>order.map(i=>window.layoutRig.getMatch().choice.ordering.cards.find(c=>c.index===i).card.id),order);
+  await page.locator('[data-duel="order-confirm"]').click();await page.waitForFunction(()=>!window.layoutRig.getMatch().choice);
+  assert.deepEqual(await page.evaluate(()=>window.layoutRig.getMatch().players[0].deck.slice(-5).reverse().map(c=>c.card.id)),expected);
+  await page.locator('[data-duel="duel-menu"]').click();await page.locator('[data-duel="surrender"]').click();await page.locator('[data-duel="confirm-surrender"]').click();
+  await page.locator('.duel-arena[data-moving="false"] [data-duel="rematch"]').click();
+  await page.waitForFunction(()=>window.layoutRig.getMatch()?.winner===null&&document.querySelector('.duel-arena')?.dataset.moving==='false');
+  assert.equal(await page.locator('.solo-setup').count(),0);assert.equal(await page.locator('.duel-hand-card').count(),5);
+  await page.evaluate(()=>window.layoutRig.destroy());
   await context.close();page=null;
   console.log(`Menu controls fit ${width} × ${height}`);
  }

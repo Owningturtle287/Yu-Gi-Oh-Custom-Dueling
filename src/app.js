@@ -298,18 +298,18 @@ function renderDeck() {
   main.innerHTML = `<section class="screen deck-screen" data-workspace="${deckView.workspace}" aria-label="Deck Builder">
     ${Number.isInteger(duelDesign) ? `<div class="duel-design-banner"><span>${duelDesign === 0 ? 'Your' : 'AI'} Solo deck · playable 2004 cards</span><button data-action="return-solo">Save & return to Solo</button></div>` : ''}
     <div class="deck-switch-row"><label class="sr-only" for="deck-picker">Current deck · switch saved decks</label><select id="deck-picker">${deckPickerOptions()}</select><button class="icon-button new-deck-button" data-action="new-deck" aria-label="Create a new deck">${icon('plus')}</button><button class="primary compact-save" data-action="save-deck">Save</button><button class="icon-button deck-options-button" data-action="deck-options" aria-label="Deck options: rename, saved decks, rules, import and export" aria-haspopup="dialog">⋯</button></div>
-    <nav class="deck-workspace-tabs" aria-label="Deck workspace"><button data-workspace="browse" aria-pressed="${deckView.workspace==='browse'}">${icon('search')} Find & add</button><button data-workspace="deck" aria-pressed="${deckView.workspace==='deck'}">${icon('deck')} Your deck <span id="deck-total"></span></button></nav>
-    <div class="deck-tabs" aria-label="Visible deck section">${SECTIONS.map(section => `<button data-section="${section}" aria-pressed="${state.section === section}">${sectionName(section)} <span data-section-count="${section}"></span></button>`).join('')}</div>
-    <div class="deck-view-tools" ${deckView.workspace==='deck'?'':'hidden'}><label class="deck-query">${icon('search')}<span class="sr-only">Search this deck</span><input id="deck-query" type="search" placeholder="Search this deck…" value="${escape(deckView.query)}" autocomplete="off"></label><div class="deck-view-filters"><label>Show<select id="deck-category">${['All','Monster','Spell','Trap'].map(value=>`<option value="${value}" ${deckView.category===value?'selected':''}>${value==='All'?'All cards':value+'s'}</option>`).join('')}</select></label><label>Order<select id="deck-sort">${[['type','Card type'],['az','Name A–Z'],['atk','Highest ATK'],['def','Highest DEF'],['level','Highest Level / Rank']].map(([value,label])=>`<option value="${value}" ${deckView.sort===value?'selected':''}>${label}</option>`).join('')}</select></label></div><div class="deck-view-summary" role="status"></div></div>
-    <div class="deck-list deck-tray" aria-label="Scrollable two-row ${sectionName(state.section)} Deck" tabindex="0"></div>
-    <div class="workspace-caption"><span class="deck-state" role="status"></span><span>FIND & ADD CARDS</span></div>
-    ${searchControls()}
-    <div class="result-meta" id="result-meta" role="status"></div>
-    <div class="archive-panel" id="archive-panel" aria-label="Scrollable cards to add to your deck" tabindex="0"></div>
+    <div class="builder-toolbar"><span class="builder-title">Deck workshop</span><nav class="deck-workspace-tabs" aria-label="Panel sizes"><button data-workspace="browse" aria-pressed="${deckView.workspace==='browse'}">Balanced</button><button data-workspace="deck" aria-pressed="${deckView.workspace==='deck'}">Deck focus <span id="deck-total"></span></button></nav><span class="deck-state" role="status"></span></div>
+    <div class="builder-panels">
+      <section class="builder-deck-panel" aria-label="Your deck"><div class="builder-panel-heading"><strong>Your deck</strong><button data-action="deck-view-filters" aria-label="Filter and sort your deck">${icon('filter')}<span>Organize</span></button></div>
+        <div class="deck-tabs" aria-label="Visible deck section">${SECTIONS.map(section => `<button data-section="${section}" aria-pressed="${state.section === section}">${sectionName(section)} <span data-section-count="${section}"></span></button>`).join('')}</div>
+        <div class="deck-view-tools"><label class="deck-query">${icon('search')}<span class="sr-only">Search this deck</span><input id="deck-query" type="search" placeholder="Search your deck…" value="${escape(deckView.query)}" autocomplete="off"></label><div class="deck-view-summary" role="status"></div></div>
+        <div class="deck-list deck-tray" aria-label="Scrollable ${sectionName(state.section)} Deck" tabindex="0"></div>
+      </section>
+      <section class="builder-archive-panel" aria-label="Card archive"><div class="builder-panel-heading"><strong>Card archive</strong><small>Tap + to add</small></div>${searchControls()}<div class="result-meta" id="result-meta" role="status"></div><div class="archive-panel" id="archive-panel" aria-label="Scrollable cards to add to your deck" tabindex="0"></div></section>
+    </div>
   </section>`;
   $('#card-search').addEventListener('input', event => { state.filters.query = event.target.value; updateArchive(); });
   $('#deck-query').addEventListener('input', event => { deckView.query=event.target.value; refreshDeckWorkspace({resetTray:true}); });
-  for(const [id,key] of [['deck-category','category'],['deck-sort','sort']])$('#'+id).addEventListener('change', event => { deckView[key]=event.target.value; refreshDeckWorkspace({resetTray:true}); });
   refreshDeckWorkspace();
   updateArchive();
 }
@@ -330,15 +330,15 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
   });
   $('.deck-screen').dataset.workspace=deckView.workspace;
   document.querySelectorAll('[data-workspace]').forEach(button=>{if(button.tagName==='BUTTON')button.setAttribute('aria-pressed',button.dataset.workspace===deckView.workspace);});
-  $('.deck-view-tools').hidden=deckView.workspace!=='deck';
+  $('.deck-view-tools').hidden=false;
   $('#deck-total').textContent=counts.main+counts.extra+counts.side;
-  tray.setAttribute('aria-label', `Scrollable ${deckView.workspace==='deck'?'four-column':'two-row'} ${sectionName(state.section)} Deck`);
+  tray.setAttribute('aria-label', `Scrollable ${sectionName(state.section)} Deck · card names, quantities and controls`);
   const allEntries = state.draft.sections[state.section];
-  const entries = deckView.workspace==='deck'?visibleDeckEntries(allEntries,deckView):allEntries;
+  const entries = visibleDeckEntries(allEntries,deckView);
   const visibleCopies=entries.reduce((sum,entry)=>sum+entry.quantity,0);
   $('.deck-view-summary').textContent=`${visibleCopies} of ${counts[state.section]} cards · ${entries.length} unique · ${sectionName(state.section)} Deck${state.storageError?' · Storage unavailable':state.dirty?' · Unsaved':''}`;
   tray.classList.toggle('is-empty', !entries.length);
-  const content = entries.length ? entries.map(entry => `<article class="tray-card" data-kind="${cardAccent(entry.card)}" data-deck-card="${entry.card.id}" data-render-key="deck:${entry.card.id}"><button class="deck-inspect" data-card="${entry.card.id}" aria-label="Inspect ${escape(entry.card.name)}">${imageTag(entry.card, true)}<strong>${escape(entry.card.name)}</strong></button>${quickControls(entry.card, state.section, true)}</article>`).join('') : `<div class="tray-empty">${icon('deck')}<span><strong>${allEntries.length?'No matching cards':sectionName(state.section)+' Deck is empty'}</strong><small>${allEntries.length?'Try another search or show all cards.':deckView.workspace==='deck'?'Use Find & add to choose cards.':state.section === 'extra' ? 'Fusion, Synchro, Xyz, and Link monsters' : state.section === 'side' ? 'Keep alternate options here' : 'Search below, then tap the green + on a card'}</small>${allEntries.length?'<button data-action="reset-deck-view">Show all cards</button>':''}</span></div>`;
+  const content = entries.length ? entries.map(entry => `<article class="tray-card" data-kind="${cardAccent(entry.card)}" data-deck-card="${entry.card.id}" data-render-key="deck:${entry.card.id}"><button class="deck-inspect" data-card="${entry.card.id}" aria-label="Inspect ${escape(entry.card.name)}">${imageTag(entry.card, true)}<span class="deck-entry-copy"><strong>${escape(entry.card.name)}</strong><small>${escape(entry.card.atk!==undefined?`ATK ${entry.card.atk<0?'?':entry.card.atk} · ${entry.card.race}`:cardLabel(entry.card))}</small></span></button>${quickControls(entry.card, state.section, true)}</article>`).join('') : `<div class="tray-empty">${icon('deck')}<span><strong>${allEntries.length?'No matching cards':sectionName(state.section)+' Deck is empty'}</strong><small>${allEntries.length?'Try another search or show all cards.':deckView.workspace==='deck'?'Add cards from the archive beside your deck.':state.section === 'extra' ? 'Fusion, Synchro, Xyz, and Link monsters' : state.section === 'side' ? 'Keep alternate options here' : 'Tap + on a card in the archive beside your deck'}</small>${allEntries.length?'<button data-action="reset-deck-view">Show all cards</button>':''}</span></div>`;
   patchContent(tray,content);
   tray.scrollLeft = scrollLeft; tray.scrollTop = scrollTop;
   if (focusedAction) {
@@ -347,8 +347,12 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
   }
   renderGrid();
 }
+function showDeckViewFilters() {
+  showDialog(`${dialogHeader('Organize your deck view')}<div class="deck-view-filters"><label>Show<select id="deck-category">${['All','Monster','Spell','Trap'].map(value=>`<option value="${value}" ${deckView.category===value?'selected':''}>${value==='All'?'All cards':value+'s'}</option>`).join('')}</select></label><label>Order<select id="deck-sort">${[['type','Card type'],['az','Name A–Z'],['atk','Highest ATK'],['def','Highest DEF'],['level','Highest Level / Rank']].map(([value,label])=>`<option value="${value}" ${deckView.sort===value?'selected':''}>${label}</option>`).join('')}</select></label></div><p>View settings keep the saved deck order intact.</p><div class="dialog-actions"><button data-action="reset-deck-view">Reset view</button><button class="primary" data-action="close">Done</button></div>`,'deck-view-filter-body');
+  for(const [id,key] of [['deck-category','category'],['deck-sort','sort']])$('#'+id).onchange=event=>{deckView[key]=event.target.value;refreshDeckWorkspace({resetTray:true});};
+}
 function showDeckOptions() {
-  showDialog(`${dialogHeader('Deck options')}<p>${escape(state.draft.name)} · ${state.dirty ? 'unsaved changes' : 'current deck'}</p><button class="menu-item" data-action="organize-deck">${icon('filter')}<span>View & organize<small>Four columns, card filters and sorting</small></span></button><button class="menu-item" data-action="rename">${icon('edit')}<span>Rename deck</span></button><button class="menu-item" data-action="open-decks">${icon('deck')}<span>Manage saved decks<small>Open or delete saved decks</small></span></button><button class="menu-item" data-action="rules">${icon('rules')}<span>Rules / Format<small>Summoning mechanic restrictions</small></span></button><button class="menu-item" data-action="backups">${icon('backup')}<span>Import / Export<small>JSON and YDK backups</small></span></button>`, 'menu-body');
+  showDialog(`${dialogHeader('Deck options')}<p>${escape(state.draft.name)} · ${state.dirty ? 'unsaved changes' : 'current deck'}</p><button class="menu-item" data-action="organize-deck">${icon('filter')}<span>View & organize<small>Deck focus, card filters and sorting</small></span></button><button class="menu-item" data-action="rename">${icon('edit')}<span>Rename deck</span></button><button class="menu-item" data-action="open-decks">${icon('deck')}<span>Manage saved decks<small>Open or delete saved decks</small></span></button><button class="menu-item" data-action="rules">${icon('rules')}<span>Rules / Format<small>Summoning mechanic restrictions</small></span></button><button class="menu-item" data-action="backups">${icon('backup')}<span>Import / Export<small>JSON and YDK backups</small></span></button>`, 'menu-body');
 }
 function changeCardQuantity(cardId, section, remove = false) {
   const card = state.cardIndex.get(cardId) || SECTIONS.flatMap(s => state.draft.sections[s]).find(entry => entry.card.id === cardId)?.card;
@@ -509,9 +513,9 @@ const actions = {
     } catch (error) { $('#detail-error').textContent = error.message; }
  },
  rename: () => showNameDialog(true), 'new-deck': () => showNameDialog(false), 'save-deck': persistDeck, 'open-decks': showSavedDecks,
- 'reset-deck-view': () => { deckView.query=''; deckView.category='All'; $('#deck-query').value=''; $('#deck-category').value='All'; refreshDeckWorkspace({resetTray:true}); },
+ 'reset-deck-view': () => { deckView.query=''; deckView.category='All'; $('#deck-query').value=''; if($('#deck-category'))$('#deck-category').value='All'; refreshDeckWorkspace({resetTray:true}); },
  'organize-deck': () => { closeDialog(); if(state.route!=='decks')navigate('decks'); deckView.workspace='deck'; refreshDeckWorkspace({resetTray:true}); },
- rules: showRules, backups: showBackups, 'deck-options': showDeckOptions, 'find-cards': () => { navigate('decks'); $('#card-search').focus({ preventScroll: true }); },
+ rules: showRules, backups: showBackups, 'deck-options': showDeckOptions, 'deck-view-filters':showDeckViewFilters, 'find-cards': () => { navigate('decks'); $('#card-search').focus({ preventScroll: true }); },
  'export-json': () => download(exportJSON(state.draft), safeFilename() + '.json'),
  'export-ydk': () => download(exportYDK(state.draft), safeFilename() + '.ydk', 'text/plain'),
  import: () => $('#import-file').click(), install: showInstall, settings: showSettings, about: showAbout,
