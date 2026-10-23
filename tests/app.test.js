@@ -82,8 +82,8 @@ test('persistent deck and archive panes filter and sort without changing saved o
   const {window,app,$}=await boot('deck-overview',JSON.stringify({version:1,decks:[deck]}));
   try{
     app.navigate('decks');const search=$('#card-search');search.value='Blue-Eyes';search.dispatchEvent(new window.Event('input',{bubbles:true}));
-    const before=JSON.stringify(app.state.draft);$('[data-workspace="deck"]').click();
-    assert.equal($('.deck-screen').dataset.workspace,'deck');assert.ok($('.builder-deck-panel .deck-tray'));assert.ok($('.builder-archive-panel #archive-panel'));
+    const before=JSON.stringify(app.state.draft);
+    assert.ok($('.builder-deck-panel .deck-tray'));assert.ok($('.builder-archive-panel #archive-panel'));
     assert.deepEqual([...document.querySelectorAll('.tray-card')].map(c=>Number(c.dataset.deckCard)),[89631139,83764718,44095762]);
     $('[data-action="deck-view-filters"]').click();$('#deck-category').value='Trap';$('#deck-category').dispatchEvent(new window.Event('change',{bubbles:true}));
     assert.equal(document.querySelectorAll('.tray-card').length,1);assert.match($('.deck-view-summary').textContent,/1 of 3 cards/);
@@ -93,7 +93,7 @@ test('persistent deck and archive panes filter and sort without changing saved o
     $('#deck-sort').value='atk';$('#deck-sort').dispatchEvent(new window.Event('change',{bubbles:true}));
     assert.equal($('.tray-card').dataset.deckCard,'89631139');assert.equal(JSON.stringify(app.state.draft),before);assert.equal(app.state.dirty,false);
     $('[data-action="close"]').click();const art=$('.tray-card img');$('.tray-card [data-quick-add]').click();assert.equal(totals(app.state.draft).main,4);assert.match($('.deck-view-summary').textContent,/4 of 4 cards/);assert.equal($('.tray-card img'),art,'Quantity edits retain loaded card art');
-    $('[data-workspace="browse"]').click();assert.equal($('#card-search'),search);assert.equal(search.value,'Blue-Eyes');assert.equal($('.deck-view-tools').hidden,false);
+    assert.equal($('#card-search'),search);assert.equal(search.value,'Blue-Eyes');assert.ok($('.builder-panel-heading #deck-query'));
     for(const section of ['extra','side','main']){$(`[data-section="${section}"]`).click();assert.equal($('.deck-tray').getAttribute('aria-label'),'Scrollable '+section[0].toUpperCase()+section.slice(1)+' Deck · card names, quantities and controls');assert.ok($('#archive-panel'));}
   }finally{window.close();}
 });
@@ -309,7 +309,7 @@ test('Solo setup has one AI policy and saves independent eligibility, speed, sav
     assert.equal(config.sides[1].race,'Warrior');assert.equal(config.sides[1].traps,false);assert.equal(config.sides[0].race,'');
     $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-badge').textContent,/Strategic AI/);assert.equal($('.solo-ai-badge').title,'Always full strength');change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
-    assert.equal(app.state.route,'decks');assert.match($('.duel-design-banner').textContent,/AI Solo deck/);
+    assert.equal(app.state.route,'decks');assert.match($('[data-action="return-solo"]').textContent,/Save & return/);
     assert.equal(app.state.draft.releaseYear,2004);assert.equal(app.state.filtered.length,24);
     $('.card-tile [data-quick-add]').click();$('[data-action="return-solo"]').click();
     assert.equal(app.state.route,'solo');assert.equal($('#solo-source').value,'saved');

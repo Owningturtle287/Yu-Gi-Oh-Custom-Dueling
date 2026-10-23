@@ -26,14 +26,24 @@ try{
   }));
   assert.deepEqual(clipped,[],`All ${selector} controls must be visible`);
  }
+ async function fittedShell(){
+  const fit=await page.locator('.app-shell').evaluate(shell=>{const r=shell.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height,logicalWidth:shell.clientWidth,logicalHeight:shell.clientHeight,viewportWidth:innerWidth,viewportHeight:innerHeight};});
+  for(const [actual,expected] of [[fit.left,0],[fit.top,0],[fit.width,fit.viewportWidth],[fit.height,fit.viewportHeight],[fit.logicalWidth,Math.max(fit.viewportWidth,fit.viewportHeight)],[fit.logicalHeight,Math.min(fit.viewportWidth,fit.viewportHeight)]])assert.ok(Math.abs(actual-expected)<2,JSON.stringify(fit));
+ }
  async function capture(name){await page.screenshot({path:`${output}/${name}.png`});}
  for(const [width,height] of [[844,390],[667,375],[568,320],[740,360],[390,844],[320,568],[1280,720],[1024,768]]){
   const context=await browser.newContext({viewport:{width,height},serviceWorkers:'block'});page=await context.newPage();
   await page.route('**/db.ygoprodeck.com/api/**',route=>route.fulfill({json:route.request().url().includes('cardsets.php')?[{set_name:'Layout test set',tcg_date:'2003-01-01'}]:{data:cards}}));
   await page.route('**/images.ygoprodeck.com/**',route=>route.abort());
   await page.addInitScript(()=>localStorage.setItem('duel-atlas.solo-config.v1',JSON.stringify({animations:false,aiSpeed:'deliberate',first:'you'})));
-  await page.goto(origin);await page.waitForFunction(()=>document.querySelector('.home-status')?.textContent.includes('cards'));
-  assert.equal(await page.locator('html').getAttribute('data-app-rotated'),String(height>width));
+  // Delay the app module: orientation and scale must already fit on first paint.
+  let release;const bootGate=new Promise(resolve=>release=resolve);
+  await page.route('**/src/app.js',route=>bootGate.then(()=>route.continue()));
+  await page.goto(origin,{waitUntil:'commit'});await page.waitForFunction(()=>document.querySelector('.app-shell')&&getComputedStyle(document.querySelector('.app-shell')).position==='fixed');
+  await fittedShell();release();await page.waitForFunction(()=>document.querySelector('.home-status')?.textContent.includes('cards'));await fittedShell();
+  await page.setViewportSize({width:height,height:width});await fittedShell();
+  await page.setViewportSize({width,height});await fittedShell();
+  await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));await fittedShell();
   await visibleControls('.home button,.bottom-nav button,#app-menu');await capture(`home-${width}x${height}`);
   await page.evaluate(async()=>{
    const {navigate,state}=await import('/src/app.js'),{createDeck,addCard}=await import('/src/core.js');
@@ -41,14 +51,19 @@ try{
    state.draft=deck;navigate('decks');
   });
   await page.locator('.builder-panels .card-tile').first().waitFor();
-  for(const view of ['browse','deck']){
-   await page.locator(`button[data-workspace="${view}"]`).click();
-   await visibleControls('.deck-switch-row button,.deck-switch-row select,.builder-toolbar button,.builder-panel-heading button,.deck-tabs button,#deck-query,.builder-archive-panel .search-row button,#card-search');
-   assert.ok(await page.locator('.builder-deck-panel .deck-tray').evaluate(e=>e.clientHeight>60),'Deck has usable scroll space');
-   assert.ok(await page.locator('#archive-panel').evaluate(e=>e.clientHeight>90),'Archive remains visible beside deck');
-   assert.ok(await page.locator('.builder-deck-panel .copy-count').first().evaluate(e=>e.getBoundingClientRect().width<45),'Quantity badges must not stretch across card names');
+  await fittedShell();assert.equal(await page.locator('.topbar').isVisible(),false,'Builder removes the app header');
+  await visibleControls('.deck-switch-row button,.deck-switch-row select,.builder-panel-heading button,.deck-tabs button,#deck-query,.builder-archive-panel .search-row button,#card-search');
+  assert.ok(await page.locator('.builder-deck-panel .deck-tray').evaluate(e=>e.clientHeight>140),'Deck has room for card tiles');
+  assert.ok(await page.locator('#archive-panel').evaluate(e=>e.clientHeight>180),'Archive uses the recovered header space');
+  assert.ok(await page.locator('.builder-deck-panel .copy-count').first().evaluate(e=>e.getBoundingClientRect().width<30),'Quantity badges stay small');
+  assert.ok(await page.locator('.deck-screen .quick-add').first().evaluate(e=>{const r=e.getBoundingClientRect();return r.width<=24&&r.height<=24;}),'Quantity buttons stay compact');
+  for(const [panel,items] of [['.deck-tray','.tray-card'],['#archive-panel','.card-tile']]){
+   const full=await page.locator(panel).evaluate((node,items)=>{const p=node.getBoundingClientRect();return [...node.querySelectorAll(items)].filter(c=>{const r=c.getBoundingClientRect();return r.left>=p.left&&r.right<=p.right+1&&r.top>=p.top&&r.bottom<=p.bottom+1;}).length;},items);
+   assert.ok(full>=3,`${panel} shows at least three complete cards at ${width}x${height}`);
   }
+  assert.ok(await page.locator('.deck-inspect').first().evaluate(node=>{const art=node.querySelector('img,.image-fallback');return art.getBoundingClientRect().height/node.getBoundingClientRect().height>.75;}),'Most of each tile is card artwork');
   await capture(`builder-${width}x${height}`);
+  await page.locator('[data-action="deck-options"]').click();await page.locator('[data-action="app-info"]').click();await visibleControls('.menu-body button');await page.locator('.dialog-header [data-action="close"]').click();
   const query=page.locator('#card-search');await query.fill('Mystical Elf');
   await page.locator('.builder-archive-panel [data-quick-add]').first().click();
   assert.equal(await query.inputValue(),'Mystical Elf');assert.ok(await page.locator('.builder-deck-panel .tray-card').count());
