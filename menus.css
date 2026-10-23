@@ -25,7 +25,7 @@ html[data-app-rotated=true]:not(.duel-playing) #toast { bottom:auto; top:50%; le
 .home .hero-copy h1 { color:#f5f5e8; font-size:clamp(26px,calc(var(--duel-vh) * 6),52px); line-height:1.07; letter-spacing:-1.5px; }
 .home .hero-copy h1 span { color:#d6c69c; }
 .home .hero-copy p { color:#bfd0be; font-size:12px; margin-top:12px; }
-.home .hero-art { position:absolute; width:60%; height:70%; top:30%; right:-3%; max-height:none; opacity:.75; }
+.home .hero-art { position:absolute; width:58%; height:60%; top:35%; right:-3%; max-height:none; opacity:.75; }
 .home .hero-art:before { border-color:#d5bf7c30; background:radial-gradient(circle,#94b77c38,transparent 65%); }
 .home .hero-art img { width:64%; height:64%; transform:rotate(13deg); filter:sepia(.25) drop-shadow(0 12px 16px #061f1d99); }
 .hero-orbit { position:absolute; width:90%; aspect-ratio:1; border:1px solid #cbb77b3d; transform:rotate(32deg); border-radius:30%; }
@@ -204,4 +204,19 @@ dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100
  .duel-declaration-picker .duel-choice-grid>.duel-declaration { min-height:48px; height:48px; padding:5px 7px; gap:6px; }
  .duel-declaration strong { font-size:10px; }
  .duel-menu-body .duel-menu-footer button { min-height:44px; padding:7px 10px; }
+}
+
+/* Short landscape phones reserve more width for deck controls. */
+@media(orientation:landscape) and (max-width:700px), (orientation:portrait) and (max-height:700px) {
+ #main .solo-setup { grid-template-columns:90px minmax(0,1fr) 142px; column-gap:8px; }
+ .solo-setup .solo-tabs button { padding:6px; gap:5px; font-size:10px; }
+ .solo-panel-title h2 { font-size:17px; }
+ .solo-panel-title { gap:8px; }
+ .solo-format { gap:5px; }
+ .solo-format>b { font-size:24px; }
+ .solo-format>span { font-size:10px; }
+ .solo-format small { display:none; }
+ .solo-setup .solo-filter-summary { gap:7px; }
+ .solo-setup .solo-launch { padding-inline:10px; }
+ .solo-ai-badge { font-size:7px; }
 }
