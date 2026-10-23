@@ -11,12 +11,11 @@ import { support } from './duel/catalog.js';
 const $ = (selector, root = document) => root.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 const main = $('#main'), modal = $('#modal');
-const state = { route: 'home', cards: [], cardIndex: new Map(), cardStatus: 'loading', source: '', cardError: '', cacheWarning: false, filters: { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' }, filtered: [], yearHighlights: new Map(), decks: [], draft: createDeck(), section: 'main', dirty: false, storageError: '', showStats: true };
+const state = { route: 'home', cards: [], cardIndex: new Map(), cardStatus: 'loading', source: '', cardError: '', cacheWarning: false, filters: { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' }, filtered: [], yearHighlights: new Map(), decks: [], draft: createDeck(), section: 'main', dirty: false, storageError: '' };
 let cache;
 try {
   state.decks = readDecks(localStorage);
   if (state.decks.length) state.draft = structuredClone(state.decks[0]);
-  state.showStats = localStorage.getItem('duel-atlas.show-stats') !== 'false';
 } catch (error) { state.storageError = error.message; }
 try { cache = browserCardCache(); } catch { /* API browsing can work without IndexedDB. */ }
 let toastTimer, gridObserver, gridFrame, previousFocus, detailCard, cardRequest;
@@ -105,12 +104,13 @@ function renderHome() {
   </section>`;
 }
 function renderArchive() {
-  main.innerHTML = `<section class="screen archive-screen" aria-label="Card Archive">
-    <div class="page-heading"><div><div class="eyebrow">EXPLORE & DISCOVER</div><h1>Card Archive</h1></div><span class="pill">YGOPRODeck</span></div>
-    <div class="search-row"><div class="search-wrap">${icon('search')}<label class="sr-only" for="card-search">Search card name, archetype, or effect text</label><input id="card-search" type="search" placeholder="Name, archetype, or card text" value="${escape(state.filters.query)}" autocomplete="off"><button class="search-clear" data-action="clear-search" aria-label="Clear search">×</button></div><button class="filter-toggle" data-action="filters" data-active="${Boolean(state.filters.attribute || state.filters.race || state.filters.subtype || state.filters.mechanic || state.draft.releaseYear !== null || state.filters.sort !== 'az')}" aria-haspopup="dialog">${icon('filter')}<span>Filters</span></button></div>
-    <div class="category-tabs" aria-label="Card category">${[['All', 'All'], ['Monster', 'Monster'], ['Spell', 'Spell'], ['Trap', 'Trap'], ['Extra', 'Extra Deck']].map(([key, label]) => `<button data-category="${key}" aria-pressed="${state.filters.category === key}">${label}</button>`).join('')}</div>
-    <div class="result-meta" id="result-meta" role="status"></div>
+  main.innerHTML = `<section class="screen card-workspace archive-screen" aria-label="Card Archive"><h1 class="sr-only">Card Archive</h1>
+    <div class="archive-toolbar">${searchControls()}
+      <div class="category-tabs" aria-label="Card category">${[['All', 'All'], ['Monster', 'Monster'], ['Spell', 'Spell'], ['Trap', 'Trap'], ['Extra', 'Extra Deck']].map(([key, label]) => `<button data-category="${key}" aria-pressed="${state.filters.category === key}">${label}</button>`).join('')}</div>
+      <button class="icon-button archive-menu" data-action="app-info" aria-label="App menu" aria-haspopup="dialog">⋯</button>
+    </div>
     <div class="archive-panel" id="archive-panel" aria-label="Scrollable card results" tabindex="0"></div>
+    <div class="result-meta" id="result-meta" role="status"></div>
   </section>`;
   $('#card-search').addEventListener('input', event => { state.filters.query = event.target.value; updateArchive(); });
   updateArchive();
@@ -169,7 +169,7 @@ function renderGrid() {
   const panel = $('#archive-panel'), grid = $('#virtual-grid');
   if (!panel || !grid) return;
   const width = grid.clientWidth || panel.clientWidth || 350;
-  const { columns, gap, tileWidth, tileHeight, stride } = cardGridLayout(width, state.route === 'decks');
+  const { columns, gap, tileWidth, tileHeight, stride } = cardGridLayout(width);
   const startRow = Math.max(0, Math.floor(panel.scrollTop / stride) - 1);
   const endRow = Math.min(Math.ceil(state.filtered.length / columns), Math.ceil((panel.scrollTop + (panel.clientHeight || 500)) / stride) + 1);
   grid.style.height = `${Math.ceil(state.filtered.length / columns) * stride - gap}px`;
@@ -177,12 +177,11 @@ function renderGrid() {
   const needed = new Set();
   state.filtered.slice(startRow * columns, endRow * columns).forEach((card, offset) => {
     const index = startRow * columns + offset;
-    const subtitle = state.showStats && card.atk !== undefined ? `ATK ${card.atk < 0 ? '?' : card.atk} · ${card.linkval !== undefined ? 'LINK ' + card.linkval : 'DEF ' + (card.def < 0 ? '?' : card.def ?? '—')}` : cardLabel(card);
     const key = String(card.id); needed.add(key);
     let tile = existing.get(key);
     if (!tile) {
       const template = document.createElement('template');
-      template.innerHTML = `<article class="card-tile" data-card-id="${card.id}" data-kind="${cardAccent(card)}"><button class="card-inspect" data-card="${card.id}" aria-label="Inspect ${escape(card.name)}">${imageTag(card, true, 'card-image')}<strong>${escape(card.name)}</strong><small>${escape(subtitle)}</small></button>${quickControls(card, defaultCardSection(card))}</article>`;
+      template.innerHTML = `<article class="card-tile" data-card-id="${card.id}" data-kind="${cardAccent(card)}"><button class="card-inspect" data-card="${card.id}" aria-label="Inspect ${escape(card.name)}">${imageTag(card, true, 'card-image')}<strong>${escape(card.name)}</strong></button>${quickControls(card, defaultCardSection(card))}</article>`;
       tile = template.content.firstElementChild;
       grid.append(tile);
     }
@@ -295,7 +294,7 @@ function deckPickerOptions() {
 }
 function renderDeck() {
   gridObserver?.disconnect();
-  main.innerHTML = `<section class="screen deck-screen" aria-label="Deck Builder">
+  main.innerHTML = `<section class="screen card-workspace deck-screen" aria-label="Deck Builder">
     <div class="deck-switch-row"><label class="sr-only" for="deck-picker">Current deck · switch saved decks</label><select id="deck-picker">${deckPickerOptions()}</select><span class="deck-state" role="status"></span><button class="icon-button" data-action="new-deck" aria-label="Create a new deck">${icon('plus')}</button><button class="primary" data-action="${Number.isInteger(duelDesign)?'return-solo':'save-deck'}">${Number.isInteger(duelDesign)?'Save & return':'Save'}</button><button class="icon-button" data-action="deck-options" aria-label="Deck options: rename, saved decks, rules, import and export" aria-haspopup="dialog">⋯</button></div>
     <div class="builder-panels">
       <section class="builder-deck-panel" aria-label="Your deck"><h2 class="sr-only">Your deck</h2><div class="builder-panel-heading"><label class="deck-query">${icon('search')}<span class="sr-only">Search this deck</span><input id="deck-query" type="search" placeholder="Search your deck…" value="${escape(deckView.query)}" autocomplete="off"></label><button data-action="deck-view-filters" aria-label="Filter and sort your deck">${icon('filter')}</button></div>
@@ -480,11 +479,7 @@ function showInstall() {
   if ($('#install-now')) $('#install-now').onclick = async () => { await installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; showInstall(); };
 }
 function showSettings() {
-  showDialog(`${dialogHeader('App settings')}<section class="settings-card"><h3>Card display</h3><label class="settings-label"><span>Show ATK / DEF in archive</span><input id="show-stats" type="checkbox" ${state.showStats ? 'checked' : ''}></label><p>Search and filters run on your device.</p></section><section class="settings-card"><h3>On this device</h3><p>${state.decks.length} saved decks · archive refreshes daily</p><button data-action="refresh-settings">Refresh archive</button><button data-action="backup-all">Back up all decks</button></section>${state.storageError ? '<p class="inline-error">Browser storage could not be read. Back up the saved data before fixing or clearing it in browser settings.</p>' : ''}<button data-action="close">Done</button>`, 'settings-body');
-  $('#show-stats').onchange = event => {
-    state.showStats = event.target.checked;
-    try { localStorage.setItem('duel-atlas.show-stats', String(state.showStats)); } catch { toast('Setting applied for this session. Browser storage is unavailable.', true); }
-  };
+  showDialog(`${dialogHeader('App settings')}<section class="settings-card"><h3>On this device</h3><p>${state.decks.length} saved decks · archive refreshes daily</p><button data-action="refresh-settings">Refresh archive</button><button data-action="backup-all">Back up all decks</button></section>${state.storageError ? '<p class="inline-error">Browser storage could not be read. Back up the saved data before fixing or clearing it in browser settings.</p>' : ''}<button data-action="close">Done</button>`, 'settings-body');
 }
 function showAbout() {
   showDialog(`${dialogHeader('About Duel Atlas')}<span class="pill gold">v${VERSION} · FUNCTIONALITY TEST</span><p>Explore the full archive, build local decks and play Solo with the supported 2004 TCG pool. Multiplayer is coming later.</p><p>Solo uses current card text and modern turn rules. Open Solo → Rules & cards for supported cards and limits.</p><p>Data and official card art: <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. An independent fan app, unaffiliated with Konami. Card names and images belong to their rights holders; Duel Atlas branding is original.</p><p>Rules powered by <a href="https://github.com/n1xx1/ocgcore-wasm">ocgcore-wasm</a>, <a href="https://github.com/edo9300/ygopro-core">EDOPro</a> and <a href="https://github.com/ProjectIgnis/CardScripts">Project Ignis</a>. <a href="./assets/rules/THIRD_PARTY_NOTICES.md">Licenses & source</a>.</p><button data-action="close">Done</button>`, 'about-body');

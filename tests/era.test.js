@@ -76,22 +76,13 @@ test('year context derives real introductions and new archetypes from first-rele
   assert.ok(context.get(2017).introduced.includes('Link monsters'));
   assert.ok(context.get(2017).introduced.includes('Cyberse type'));
 });
-test('phone grids fit at least three columns without overflow while narrower panels adapt', () => {
-  for (const width of [280, 296, 320, 350, 366, 390]) {
+test('card workspaces fit dense columns without overflow while narrower panels adapt', () => {
+  for (const width of [230, 280, 296, 320, 350, 366, 390, 500, 750, 1200]) {
     const layout = cardGridLayout(width);
-    assert.equal(layout.columns, 3, `three columns at ${width}px`);
-    assert.ok(layout.tileWidth >= 88);
+    assert.ok(layout.columns >= 3, `at least three columns at ${width}px`);
+    assert.ok(layout.tileWidth >= 67);
     assert.ok(Math.abs(layout.columns * layout.tileWidth + (layout.columns - 1) * layout.gap - width) < 0.001);
+    assert.equal(layout.tileHeight, Math.round((layout.tileWidth - 4) * 614 / 421) + 18);
   }
-  assert.equal(cardGridLayout(230).columns, 2);
-  assert.ok(cardGridLayout(750).columns > 3);
-});
-
-test('builder grids devote tile height to card art and fit more columns',()=>{
-  for(const width of [230,280,350,500]){
-    const compact=cardGridLayout(width,true),archive=cardGridLayout(width);
-    assert.ok(compact.columns>=3);assert.ok(compact.columns>=archive.columns);
-    assert.equal(compact.tileHeight,Math.round((compact.tileWidth-4)*614/421)+18);
-    assert.ok(Math.abs(compact.columns*compact.tileWidth+(compact.columns-1)*compact.gap-width)<.001);
-  }
+  assert.equal(cardGridLayout(160).columns, 2);
 });

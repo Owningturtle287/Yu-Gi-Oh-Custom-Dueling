@@ -203,6 +203,28 @@ test('quick controls enforce copy limits and disable removal at zero', async () 
     assert.equal($('.card-tile[data-card-id="89631139"] .copy-count').hidden, true);
   } finally { window.close(); }
 });
+test('archive toolbar keeps app settings accessible and quantity edits retain search, card art and scroll', async () => {
+  const { window, app, $ } = await boot('compact-archive');
+  try {
+    app.navigate('archive');
+    assert.ok($('.archive-toolbar #card-search'));
+    assert.equal($('.archive-screen .page-heading'), null);
+    $('[data-action="app-info"]').click(); $('[data-action="settings"]').click();
+    assert.ok($('[data-action="refresh-settings"]'));
+    $('[data-action="close"]').click();
+    $('[data-category="Monster"]').click();
+    const search = $('#card-search'); search.value = 'Blue-Eyes'; search.dispatchEvent(new window.Event('input', { bubbles: true }));
+    const panel = $('#archive-panel'), tile = $('.card-tile[data-card-id="89631139"]'), art = tile.querySelector('img'); panel.scrollTop = 35;
+    $('[data-quick-add="89631139"]').click();
+    assert.equal(tile.querySelector('.copy-count').textContent, '×1');
+    assert.equal($('#card-search'), search); assert.equal(search.value, 'Blue-Eyes');
+    assert.equal($('#archive-panel'), panel); assert.equal(panel.scrollTop, 35);
+    assert.equal(tile.querySelector('img'), art); assert.equal($('#modal').open, false);
+    $('[data-quick-remove="89631139"]').click();
+    assert.equal(app.state.draft.sections.main.length, 0);
+    tile.querySelector('.card-inspect').click(); assert.match($('.effect-text').textContent, /powerful dragon/);
+  } finally { window.close(); }
+});
 test('top deck switcher opens saved decks directly and protects unsaved changes', async () => {
   let first = addCard(createDeck('First saved', 'first'), cards[0]);
   const second = createDeck('Second saved', 'second');
