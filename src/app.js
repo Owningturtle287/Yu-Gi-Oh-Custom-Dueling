@@ -169,7 +169,7 @@ function renderGrid() {
   const panel = $('#archive-panel'), grid = $('#virtual-grid');
   if (!panel || !grid) return;
   const width = grid.clientWidth || panel.clientWidth || 350;
-  const { columns, gap, tileWidth, tileHeight, stride } = cardGridLayout(width, panel.clientHeight || 500, state.route === 'decks');
+  const { columns, gap, tileWidth, tileHeight, stride } = cardGridLayout(width, state.route === 'decks');
   const startRow = Math.max(0, Math.floor(panel.scrollTop / stride) - 1);
   const endRow = Math.min(Math.ceil(state.filtered.length / columns), Math.ceil((panel.scrollTop + (panel.clientHeight || 500)) / stride) + 1);
   grid.style.height = `${Math.ceil(state.filtered.length / columns) * stride - gap}px`;

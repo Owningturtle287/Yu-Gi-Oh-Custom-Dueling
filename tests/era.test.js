@@ -78,7 +78,7 @@ test('year context derives real introductions and new archetypes from first-rele
 });
 test('phone grids fit at least three columns without overflow while narrower panels adapt', () => {
   for (const width of [280, 296, 320, 350, 366, 390]) {
-    const layout = cardGridLayout(width, 250, false);
+    const layout = cardGridLayout(width);
     assert.equal(layout.columns, 3, `three columns at ${width}px`);
     assert.ok(layout.tileWidth >= 88);
     assert.ok(Math.abs(layout.columns * layout.tileWidth + (layout.columns - 1) * layout.gap - width) < 0.001);
@@ -89,7 +89,7 @@ test('phone grids fit at least three columns without overflow while narrower pan
 
 test('builder grids devote tile height to card art and fit more columns',()=>{
   for(const width of [230,280,350,500]){
-    const compact=cardGridLayout(width,500,true),archive=cardGridLayout(width,500,false);
+    const compact=cardGridLayout(width,true),archive=cardGridLayout(width);
     assert.ok(compact.columns>=3);assert.ok(compact.columns>=archive.columns);
     assert.equal(compact.tileHeight,Math.round((compact.tileWidth-4)*614/421)+18);
     assert.ok(Math.abs(compact.columns*compact.tileWidth+(compact.columns-1)*compact.gap-width)<.001);

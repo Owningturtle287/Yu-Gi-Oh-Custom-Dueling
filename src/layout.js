@@ -1,4 +1,4 @@
-export function cardGridLayout(width, panelHeight = 500, compact = false) {
+export function cardGridLayout(width, compact = false) {
   const gap = compact ? 5 : 8;
   const columns = compact ? Math.max(2,Math.floor((width + gap) / 72)) : Math.max(width >= 270 ? 3 : 2, Math.floor((width + gap) / 120));
   const tileWidth = (width - gap * (columns - 1)) / columns;
