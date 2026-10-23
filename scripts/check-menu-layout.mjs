@@ -29,7 +29,7 @@ try{
  async function capture(name){await page.screenshot({path:`${output}/${name}.png`});}
  for(const [width,height] of [[844,390],[667,375],[568,320],[740,360],[390,844],[320,568],[1280,720],[1024,768]]){
   const context=await browser.newContext({viewport:{width,height},serviceWorkers:'block'});page=await context.newPage();
-  await page.route('**/api.ygoprodeck.com/**',route=>route.fulfill({json:route.request().url().includes('cardsets.php')?[{set_name:'Layout test set',tcg_date:'2003-01-01'}]:{data:cards}}));
+  await page.route('**/db.ygoprodeck.com/api/**',route=>route.fulfill({json:route.request().url().includes('cardsets.php')?[{set_name:'Layout test set',tcg_date:'2003-01-01'}]:{data:cards}}));
   await page.route('**/images.ygoprodeck.com/**',route=>route.abort());
   await page.addInitScript(()=>localStorage.setItem('duel-atlas.solo-config.v1',JSON.stringify({animations:false,aiSpeed:'deliberate',first:'you'})));
   await page.goto(origin);await page.waitForFunction(()=>document.querySelector('.home-status')?.textContent.includes('cards'));
