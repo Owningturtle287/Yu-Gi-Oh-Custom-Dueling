@@ -1,10 +1,12 @@
-# Duel Atlas · v0.4.9
+# Duel Atlas · v0.4.10
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2004 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.4.10 gives Card Archive the same compact card workspace as Deck Builder: no app-title bar, top-aligned search/filter/category controls, small +/− overlays and quantity badges, and artwork filling each tile. Wide screens keep the toolbar on one row; shorter phones use two compact rows. Card names, inspection, deck edits and continuous scrolling remain available. The ⋯ button opens the app menu. Removed the old split archive layout and the obsolete tile-stat setting; tap a card to read its full stats and effect.
 
 - v0.4.9 fits the landscape menu canvas in CSS before the app module loads, including physically portrait phones, resize and app restoration. It no longer waits for a JavaScript rotation flag and suppresses automatic text inflation without disabling pinch zoom.
 - Deck Builder removes the app header and workspace-mode toolbar. Searches sit at the top of both panes; Main/Extra/Side counts remain visible. Both panes use compact card tiles with small quantity controls overlaid on the art. An unowned archive card shows only +. Card names, full inspection, independent scrolling, saved decks, filters, import/export and Solo Save & return remain available. App settings/help are available through Deck options → App menu.
