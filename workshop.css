@@ -78,15 +78,15 @@ dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28p
 .order-sidebar .dialog-header { min-height:24px; }
 .order-sidebar h2 { font-size:19px; line-height:1.1; color:#284b35; }
 .order-source { display:flex; align-items:center; gap:9px; min-height:48px; padding:6px; text-align:left; border-color:#cedbbf; background:#e6eedc; box-shadow:none; }
-.order-source>img,.order-source>.duel-no-image { width:27px; height:39px; object-fit:contain; flex:none; }
-.order-source>span { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.order-source>img,.order-source>.image-fallback,.order-source>.duel-no-image { width:27px; height:39px; object-fit:contain; flex:none; }
+.order-source>span:last-child { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .order-source strong { font-size:12px; }
 .order-source small { font-size:9px; color:#6e7f58; }
 .order-sidebar p { font-size:11px; line-height:1.5; color:#4b644b; }
 .order-rest { font-size:9px; line-height:1.4; color:#7b876b; }
-.order-sidebar footer { display:flex; flex-direction:column; gap:6px; margin-top:auto; }
+.order-sidebar footer { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:auto; }
 .order-sidebar footer button { min-height:34px; padding:5px 8px; font-size:11px; }
-.order-sidebar footer .primary { min-height:44px; }
+.order-sidebar footer .primary { grid-column:1/-1; grid-row:1; min-height:44px; }
 .duel-order-list { display:flex; flex-direction:column; min-height:0; padding:2px; margin:0; list-style:none; overflow-y:auto; overflow-x:hidden; gap:6px; overscroll-behavior:contain; touch-action:pan-y; }
 .duel-order-list li { display:flex; align-items:center; flex:1 0 48px; min-height:48px; max-height:76px; gap:9px; padding:4px 8px; border:1px solid #c8d8c0; border-radius:10px; background:#fffef8; }
 .order-position { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; width:64px; flex:none; }
@@ -94,7 +94,7 @@ dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28p
 .order-position small { font-size:8px; color:#6e7c5c; text-align:center; }
 .duel-order-list li:first-child { border-color:#90ac72; background:#e6efdc; box-shadow:inset 3px 0 #6b8d4e; }
 .order-card-read { display:grid; place-items:center; width:40px; align-self:stretch; flex:none; min-height:0; padding:0; border:0; background:none; box-shadow:none; }
-.order-card-read>img { width:32px; height:46px; object-fit:contain; }
+.order-card-read>img,.order-card-read>.image-fallback,.order-card-read>.duel-no-image { width:32px; height:46px; object-fit:contain; }
 .duel-order-list li>strong { flex:1; min-width:0; font-size:12px; line-height:1.3; }
 .order-moves { display:flex; gap:4px; flex:none; }
 .order-moves button { width:34px; height:36px; min-height:36px; padding:4px; font-size:18px; background:#edf2e5; color:#41603b; box-shadow:none; border-color:#c9d6bd; }
@@ -157,14 +157,16 @@ dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28p
  .order-sidebar footer button { min-height:28px; font-size:10px; }
  .order-sidebar footer .primary { min-height:38px; }
  .order-source { min-height:40px; padding:4px; }
- .order-source>img { height:30px; width:21px; }
+ .order-source>img,.order-source>.image-fallback,.order-source>.duel-no-image { height:30px; width:21px; }
  .duel-order-list { gap:4px; }
  .duel-order-list li { flex-basis:44px; min-height:44px; padding:2px 5px; }
  .order-card-read { width:27px; }
- .order-card-read>img { width:24px; height:35px; }
+ .order-card-read>img,.order-card-read>.image-fallback,.order-card-read>.duel-no-image { width:24px; height:35px; }
  .order-position { width:44px; gap:1px; }
  .order-position b { font-size:18px; }
  .order-position small { font-size:7px; }
  .order-moves button { width:27px; height:30px; min-height:30px; }
  .duel-order-list li>strong { font-size:10px; }
 }
+
+.order-source .image-fallback svg,.order-card-read .image-fallback svg { width:80%; height:80%; }

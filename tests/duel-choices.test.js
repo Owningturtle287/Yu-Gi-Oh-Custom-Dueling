@@ -81,7 +81,8 @@ test('staged card searches and scroll remain in place while selecting and desele
     assert.equal(r.modal.querySelectorAll('.duel-choice-card[aria-pressed="true"]').length,1);
     r.$('.duel-choice-card[aria-pressed="true"]').click();await waitFor(()=>!r.$('.duel-choice-card[aria-pressed="true"]'));
     assert.equal(r.$('.duel-choice-footer [data-choice-tone="teal"]').disabled,true);
-    assert.equal(r.$('#duel-choice-search').value,'Backup card 3');
+    r.$('[data-choice-read]').click();r.$('[data-duel="selection-back"]').click();
+    assert.equal(r.$('#duel-choice-search').value,'Backup card 3');assert.equal(r.$('#duel-options-list').scrollTop,80);
   }finally{r.close();}
 });
 test('hidden opposing choices use only a card back and safe metadata; declaration and multi-tribute choices use available art',()=>{
@@ -132,12 +133,12 @@ for(const [card,kind] of [['DNA Surgery','race'],['DNA Transplant','attribute']]
  }finally{r.close();}
 });
 
-async function bigEye(engine,{count=5,rulesVersion=2}={}){
+async function bigEye(engine,{count=5,rulesVersion=2,stopAt='sort_card'}={}){
   const names=['Mystical Elf','Summoned Skull','Dark Magician','Blue-Eyes White Dragon','Man-Eater Bug','Big Eye'];
   let s=await engine.createMatch([0,1].map(()=>({name:'Order test',main:Array.from({length:40},(_,i)=>get(names[i%names.length])),extra:[]})),{cards,seed:17,rulesVersion,openingHands:[[],[]],initialFields:[{monsters:[{card:get('Big Eye'),defense:true,faceUp:false}]},{}]});
   s=engine.applyAction(s,s.actions[0].find(a=>a.type==='FLIP'||a.type==='POSITION'),0);
-  for(let n=0;n<30&&s.choice?.selectionType!=='sort_card';n++){const side=s.actions[0].length?0:1;s=engine.applyAction(s,s.actions[side].find(a=>a.number===count)||s.actions[side].find(a=>a.type==='PASS')||engine.chooseAIAction(s,side),side);}
-  assert.equal(s.choice?.selectionType,'sort_card');return s;
+  for(let n=0;n<30&&s.choice?.selectionType!==stopAt;n++){const side=s.actions[0].length?0:1;s=engine.applyAction(s,s.actions[side].find(a=>a.number===count)||s.actions[side].find(a=>a.type==='PASS')||engine.chooseAIAction(s,side),side);}
+  assert.equal(s.choice?.selectionType,stopAt);return s;
 }
 test('Big Eye honors the chosen amount and its confirmed permutation changes only those top cards',async()=>{
   for(const count of [1,3,5]){
@@ -188,4 +189,15 @@ test('Big Eye shows the real top-first order, preserves edits while reading, and
     assert.deepEqual(r.state.players[0].deck.slice(-5).reverse().map(c=>c.card.id),expected);
     assert.deepEqual(r.state.players[0].deck.slice(0,-5).map(c=>c.card.id),deck.slice(0,-5));assert.deepEqual(r.messages,[]);
   }finally{r.close();}
+});
+
+test('Big Eye amount prompts restore with legacy labels and the correct rules version',async()=>{
+  for(const rulesVersion of [1,2]){
+    const e=createNativeBackend({rules:()=>pack});let s=await bigEye(e,{rulesVersion,stopAt:'announce_number'}),restored;
+    try{
+      const labels=s.actions[0].map(a=>a.label),save=e.exportMatch(s);if(rulesVersion===1)delete save.options.rulesVersion;
+      restored=await e.restoreMatch(save,{cards});assert.deepEqual(restored.actions[0].map(a=>a.label),labels);
+      restored=e.applyAction(restored,restored.actions[0].find(a=>a.number===3),0);assert.equal(restored.choice.ordering.cards.length,rulesVersion===1?5:3);
+    }finally{e.destroyMatch(s);e.destroyMatch(restored);}
+  }
 });

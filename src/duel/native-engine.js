@@ -396,7 +396,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         const locations=candidates.map(c=>c.location),sameDeck=p.type===T.SORT_CARD&&locations.every(l=>l===m.OcgLocation.DECK)&&candidates.every(c=>c.controller===candidates[0].controller);
         const bottom=sameDeck&&Math.max(...candidates.map(c=>c.sequence))<r.state.players[r.side(candidates[0].controller)].deck.length-1&&Math.min(...candidates.map(c=>c.sequence))===0;
         choice.ordering={kind:p.type===T.SORT_CHAIN?'chain':sameDeck?bottom?'deck-bottom':'deck-top':'cards',cards:candidates.map((item,index)=>{const instance=cardAt(r,item);return {index,uid:instance?.uid,card:item.code?descriptor(r,item.code):null,sequence:item.sequence,zone:({[m.OcgLocation.DECK]:'Deck',[m.OcgLocation.HAND]:'hand',[m.OcgLocation.GRAVE]:'Graveyard'})[item.location]||'cards'};}),selected:[...r.selected]};
-        choice.instructions=sameDeck?`Move cards up or down. Position 1 will be ${bottom?'the bottom':'the top'} of the Deck. Confirm to apply this order.`:p.type===T.SORT_CHAIN?'Set the chain links. Link 1 resolves last. Confirm when ready.':'Move cards into the order requested by the effect, then confirm.';
+        choice.instructions=sameDeck?`Use ↑ ↓ to arrange the ${bottom?'bottom':'top'} cards. Position 1 ${bottom?'is the bottom':'is drawn next'}.`:p.type===T.SORT_CHAIN?'Set the chain links. Link 1 resolves last. Confirm when ready.':'Move cards into the order requested by the effect, then confirm.';
       }
       if(p.type===T.SELECT_SUM&&r.sumPlan===undefined)r.sumPlan=sumPlan(r,p);
       candidates.forEach((item,index)=>{
