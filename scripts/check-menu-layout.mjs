@@ -46,6 +46,7 @@ try{
    await visibleControls('.deck-switch-row button,.deck-switch-row select,.builder-toolbar button,.builder-panel-heading button,.deck-tabs button,#deck-query,.builder-archive-panel .search-row button,#card-search');
    assert.ok(await page.locator('.builder-deck-panel .deck-tray').evaluate(e=>e.clientHeight>60),'Deck has usable scroll space');
    assert.ok(await page.locator('#archive-panel').evaluate(e=>e.clientHeight>90),'Archive remains visible beside deck');
+   assert.ok(await page.locator('.builder-deck-panel .copy-count').first().evaluate(e=>e.getBoundingClientRect().width<45),'Quantity badges must not stretch across card names');
   }
   await capture(`builder-${width}x${height}`);
   const query=page.locator('#card-search');await query.fill('Mystical Elf');

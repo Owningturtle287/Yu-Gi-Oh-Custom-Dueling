@@ -32,7 +32,7 @@
 .deck-entry-copy small { display:block; font-size:8px; color:#7d876a; line-height:1.3; text-align:left; }
 .deck-screen .builder-deck-panel .tray-card .quick-controls { right:5px; bottom:7px; gap:4px; }
 .deck-screen .builder-deck-panel .quick-controls button { width:26px; height:28px; min-height:28px; border-radius:7px; }
-.deck-screen .builder-deck-panel .copy-count { top:7px; left:auto; right:10px; background:#e9efdf; border-color:#d1ddc2; color:#42603a; font-size:11px; }
+.deck-screen[data-workspace] .builder-deck-panel .tray-card .copy-count { top:7px; left:auto; right:10px; background:#e9efdf; border-color:#d1ddc2; color:#42603a; font-size:11px; }
 .deck-screen .builder-deck-panel .deck-tray.is-empty { display:flex; align-items:center; justify-content:center; }
 .builder-deck-panel .tray-empty { padding:8px; width:100%; min-width:0; height:auto; text-align:center; gap:8px; }
 .builder-deck-panel .tray-empty small { font-size:10px; line-height:1.4; }
