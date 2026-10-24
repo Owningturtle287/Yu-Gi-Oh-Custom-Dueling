@@ -27,11 +27,11 @@ async function rig(engine,state){
 }
 test('the whole hand fits without scrolling as its count and enlargement change',()=>{
   for(const [width,height] of [[320,293],[438,293],[714,363],[808,390],[988,740]])for(const count of [0,1,5,6,10,20,40])for(const expanded of [false,true]){
-    const hand=handGeometry(width,height,{count,expanded,baseSize:52});
+    const hand=handGeometry(width,height,{count,expanded,baseSize:52,dockWidth:224});
     assert.ok(hand.left>=0);assert.ok(hand.left+hand.rackWidth<=width+.01,`${count} cards at ${width}px`);
     assert.ok(hand.cardWidth*count+Math.max(0,count-1)*hand.values['--hand-card-gap']<=hand.rackWidth+.01);
     assert.ok(hand.cardHeight<=height*.48);if(expanded)assert.equal(hand.bottom,52);
-    const normal=handGeometry(width,height,{count,baseSize:52});
+    const normal=handGeometry(width,height,{count,baseSize:52,dockWidth:224});
     assert.equal(hand.toggleLeft,normal.toggleLeft);assert.equal(hand.toggleBottom,normal.toggleBottom);
   }
   assert.equal(handGeometry(808,390,{count:6,expanded:true,baseSize:52}).cardHeight,104);
