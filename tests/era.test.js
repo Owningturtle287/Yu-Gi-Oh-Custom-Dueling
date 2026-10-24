@@ -42,7 +42,7 @@ test('release years survive storage and JSON backups, and additions respect thei
   deck = addCard(deck, dragon);
   assert.throws(() => addCard(deck, link), /after this deck’s cutoff/);
   assert.throws(() => addCard(deck, { ...dragon, tcgDate: null }), /no verified TCG release date/);
-  const storage = memoryStorage(); saveDeck(storage, [], deck);
+  const storage = memoryStorage(); saveDeck(storage, deck);
   assert.equal(readDecks(storage)[0].releaseYear, 2013);
   assert.equal(importJSON(exportJSON(deck)).releaseYear, 2013);
 });
@@ -58,7 +58,7 @@ test('legacy snapshots and newly restricted decks are retained and flagged, then
   const hydrated = hydrateDeckDates(reopened, new Map([[dragon.id, normalizeCard(dragon)]]));
   assert.equal(hydrated.sections.main[0].card.tcgDate, '2002-03-08');
   let newer = addCard(hydrated, link); newer.releaseYear = 2013;
-  saveDeck(storage, [hydrated], newer);
+  saveDeck(storage, newer);
   assert.equal(readDecks(storage)[0].sections.extra.length, 1);
   assert.ok(deckWarnings(newer).some(warning => /release-year cutoff/.test(warning)));
 });

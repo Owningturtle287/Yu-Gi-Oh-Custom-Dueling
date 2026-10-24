@@ -1,4 +1,4 @@
-import { createDeck, addCard, normalizeCard } from '../core.js';
+import { createDeck, addCard, normalizeCard, cardCopyName } from '../core.js';
 import { ERA_END, support, supportedPool, isMonster } from './catalog.js';
 
 export const defaultSide = () => ({ source: 'cards', deckId: '', cutoff: ERA_END, race: '', attribute: '', subtype: '', spells: true, traps: true, set: '' });
@@ -13,12 +13,15 @@ export function validateDuelDeck(deck, cards, settings = defaultSide()) {
   if (total < 40 || total > 60) issues.push(`Main Deck needs 40–60 cards (currently ${total}).`);
   const copies = new Map();
   for (const [section, entries] of Object.entries(deck.sections)) {
+    for (const entry of entries) {
+      const name = cardCopyName(index.get(entry.card.id) || entry.card), quantity = entry.quantity;
+      copies.set(name, (copies.get(name) || 0) + quantity);
+      if (!Number.isInteger(quantity) || quantity < 1 || copies.get(name) > 3) issues.push(`${name}: maximum 3 copies across Main, Extra and Side, including same-name variants.`);
+    }
     if (section === 'side') continue; // Side Deck is never loaded into a single game.
     if (section === 'extra' && entries.reduce((n,e) => n+e.quantity,0)>15) issues.push('Extra Deck exceeds 15 cards.');
     for (const entry of entries) {
-      const card = index.get(entry.card.id), quantity = entry.quantity;
-      copies.set(entry.card.id, (copies.get(entry.card.id) || 0) + quantity);
-      if (!Number.isInteger(quantity) || quantity < 1 || copies.get(entry.card.id) > 3) issues.push(`${entry.card.name}: maximum 3 copies.`);
+      const card = index.get(entry.card.id);
       if (!card || !support(card).ok) issues.push(`${entry.card.name}: ${card ? support(card).reason : 'not in the loaded archive'}.`);
       else if (!allowed.has(card.id)) issues.push(`${card.name}: excluded by this duelist’s filters.`);
       if (card && (card.type.includes('Fusion') !== (section === 'extra'))) issues.push(`${card.name}: wrong deck section.`);
@@ -33,8 +36,8 @@ export function seededRandom(seed) {
 export function generationProblem(pool) {
   const main = pool.filter(c => !c.type.includes('Fusion'));
   const low = main.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||''));
-  if (main.length * 3 < 40) return 'These filters leave fewer than 40 available card copies. Broaden them or choose another set.';
-  if (low.length * 3 < 16) return 'These filters need at least 16 copies of Level 4 or lower monsters for a playable random deck.';
+  if (new Set(main.map(cardCopyName)).size * 3 < 40) return 'These filters leave fewer than 40 available card copies. Broaden them or choose another set.';
+  if (new Set(low.map(cardCopyName)).size * 3 < 16) return 'These filters need at least 16 copies of Level 4 or lower monsters for a playable random deck.';
   return '';
 }
 export function eligibleSets(cards, sets, settings) {
@@ -60,7 +63,9 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
   const high = pool.filter(c => isMonster(c) && c.level > 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !c.type.includes('Fusion'));
   // Weighted sampling with a strict copy cap; no rejected filter is relaxed.
   const choose = list => {
-    const candidates = list.filter(card => (deck.sections.main.find(e => e.card.id === card.id)?.quantity || 0) < 3);
+    const copies = new Map();
+    for (const entry of deck.sections.main) { const name=cardCopyName(entry.card); copies.set(name,(copies.get(name)||0)+entry.quantity); }
+    const candidates = list.filter(card => (copies.get(cardCopyName(card)) || 0) < 3);
     if (!candidates.length) return false;
     const ranked = candidates.map(card => ({ card, weight: isMonster(card) ? 1 + Math.max(card.atk,card.def)/1800 : 2 }));
     let pick = random() * ranked.reduce((n,e) => n+e.weight,0);

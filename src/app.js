@@ -1,7 +1,7 @@
 import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, saveDeck, deleteSavedDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
 import { loadCards, browserCardCache } from './cards.js';
 import { icon } from './icons.js';
-import { SUBTYPES, MIN_RELEASE_YEAR, currentYear, normalizeReleaseYear, releaseCutoff, hydrateDeckDates, buildYearHighlights } from './era.js';
+import { SUBTYPES, MIN_RELEASE_YEAR, currentYear, normalizeReleaseYear, hydrateDeckDates, buildYearHighlights } from './era.js';
 import { cardGridLayout } from './layout.js';
 import { visibleDeckEntries } from './deck-view.js';
 import { patchArena as patchContent } from './duel/dom.js';
@@ -317,10 +317,11 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
   const focusedAction = focused?.dataset.quickAdd ? 'quick-add' : focused?.dataset.quickRemove ? 'quick-remove' : focused?.dataset.card ? 'card' : null;
   const focusedId = focusedAction ? focused.getAttribute('data-' + focusedAction) : null;
   const counts = totals(state.draft), warnings = deckWarnings(state.draft);
+  const copyWarning = warnings.find(w => w.startsWith('Copy limit'));
   $('#deck-picker').innerHTML = deckPickerOptions();
   const status = $('.deck-state');
-  status.textContent = state.storageError ? 'Storage unavailable · export a backup' : warnings.some(w => w.includes('release-year')) ? 'Review cards outside this release year' : warnings.some(w => w.includes('disabled')) ? 'Review disabled mechanics in Deck options' : state.dirty ? 'Unsaved changes' : state.decks.some(deck => deck.id === state.draft.id) ? 'Saved on this device' : 'New deck · tap Save to keep it';
-  status.classList.toggle('restricted', warnings.some(w => w.includes('disabled') || w.includes('release-year')) || Boolean(state.storageError));
+  status.textContent = state.storageError ? 'Storage unavailable · export a backup' : copyWarning ? 'Review same-name copy limits' : warnings.some(w => w.includes('release-year')) ? 'Review cards outside this release year' : warnings.some(w => w.includes('disabled')) ? 'Review disabled mechanics in Deck options' : state.dirty ? 'Unsaved changes' : state.decks.some(deck => deck.id === state.draft.id) ? 'Saved on this device' : 'New deck · tap Save to keep it';
+  status.classList.toggle('restricted', Boolean(copyWarning) || warnings.some(w => w.includes('disabled') || w.includes('release-year')) || Boolean(state.storageError));
   SECTIONS.forEach(section => {
     $(`[data-section-count="${section}"]`).textContent = `${counts[section]}/${LIMITS[section]}`;
     $(`[data-section="${section}"]`).setAttribute('aria-pressed', state.section === section);
@@ -329,7 +330,8 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
   const allEntries = state.draft.sections[state.section];
   const entries = visibleDeckEntries(allEntries,deckView);
   const visibleCopies=entries.reduce((sum,entry)=>sum+entry.quantity,0);
-  $('.deck-view-summary').textContent=`${visibleCopies} of ${counts[state.section]} cards · ${entries.length} unique · ${sectionName(state.section)} Deck${state.storageError?' · Storage unavailable':state.dirty?' · Unsaved':''}`;
+  $('.deck-view-summary').textContent=`${copyWarning?'Copy limit exceeded · ':''}${visibleCopies} of ${counts[state.section]} cards · ${entries.length} unique · ${sectionName(state.section)} Deck${state.storageError?' · Storage unavailable':state.dirty?' · Unsaved':''}`;
+  $('.deck-view-summary').title=copyWarning||'';
   tray.classList.toggle('is-empty', !entries.length);
   const content = entries.length ? entries.map(entry => `<article class="tray-card" data-kind="${cardAccent(entry.card)}" data-deck-card="${entry.card.id}" data-render-key="deck:${entry.card.id}"><button class="deck-inspect" data-card="${entry.card.id}" aria-label="Inspect ${escape(entry.card.name)}">${imageTag(entry.card, true)}<strong>${escape(entry.card.name)}</strong></button>${quickControls(entry.card, state.section, true)}</article>`).join('') : `<div class="tray-empty">${icon('deck')}<span><strong>${allEntries.length?'No matching cards':sectionName(state.section)+' Deck is empty'}</strong><small>${allEntries.length?'Try another search or show all cards.':state.section === 'extra' ? 'Fusion, Synchro, Xyz, and Link monsters' : state.section === 'side' ? 'Keep alternate options here' : 'Tap + on a card in the archive beside your deck'}</small>${allEntries.length?'<button data-action="reset-deck-view">Show all cards</button>':''}</span></div>`;
   patchContent(tray,content);
@@ -383,7 +385,7 @@ function showNameDialog(rename = false) {
 function persistDeck() {
   try {
     if (state.storageError) throw new Error('Deck storage is unavailable. Export a JSON backup from Import / Export.');
-    state.decks = saveDeck(localStorage, state.decks, state.draft);
+    state.decks = saveDeck(localStorage, state.draft);
     state.draft = structuredClone(state.decks.find(d => d.id === state.draft.id)); state.dirty = false;
     if (state.route === 'decks') refreshDeckWorkspace();
     toast('Deck saved on this device.'); return true;

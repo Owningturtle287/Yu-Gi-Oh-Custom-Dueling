@@ -1,6 +1,5 @@
 import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,combatTraits,resourceValue,costValue} from './ai-knowledge.js';
 import {battleOutcome,battlePlan,incomingDamage} from './ai-combat.js';
-import {combatBoostTarget} from './battle-timing.js';
 import {planTurn} from './ai-turn.js';
 
 const harmful=new Set(['removal','backrowRemoval','bounce','harmfulEquip','graveRemoval']);
