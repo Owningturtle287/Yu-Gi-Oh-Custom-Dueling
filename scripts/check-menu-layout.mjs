@@ -185,6 +185,13 @@ try{
   await page.locator('.duel-arena[data-moving="false"] [data-duel="rematch"]').click();
   await page.waitForFunction(()=>window.layoutRig.getMatch()?.winner===null&&document.querySelector('.duel-arena')?.dataset.moving==='false');
   assert.equal(await page.locator('.solo-setup').count(),0);assert.equal(await page.locator('.duel-hand-card').count(),5);
+  // Random opening hands can legally offer Scapegoat during Draw/Standby.
+  // Resolve that real response before the final, presentation-only hand fixture.
+  await page.waitForFunction(()=>{const s=window.layoutRig.getMatch();return s.phase==='main1'&&!s.choice&&!s.window&&document.querySelector('.duel-arena')?.dataset.moving==='false'||document.querySelector('#modal').open&&document.querySelector('.duel-response-body');});
+  if(await page.locator('.duel-response-body').isVisible()){
+   await page.locator('[data-duel="response-turn"]').click();
+   await page.waitForFunction(()=>{const s=window.layoutRig.getMatch();return s.phase==='main1'&&!s.choice&&!s.window&&document.querySelector('.duel-arena')?.dataset.moving==='false';});
+  }
   for(const count of [5,10]){
    // This final layout fixture needs no further core actions: expose ten real
    // card instances to the renderer, then destroy the native match afterward.
