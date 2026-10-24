@@ -1,10 +1,12 @@
-# Duel Atlas · v0.4.11
+# Duel Atlas · v0.4.12
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2004 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.4.12 clarifies phase-triggered level-ups: the turn-ending control says End Phase, and inspecting an End Phase effect during Main Phase 2 explains when it is checked. Native optional-effect prompts now use their actual source and the active printed phase clause, replacing generic option text and stale battle-selection hints. Directed tests cover Armed Dragon LV5 → LV7, Horus LV4 → LV6 → LV8, Mystic Swordsman LV2 → LV4 → LV6, and Standby Phase upgrades. The native timing remains unchanged: LV5 levels up in the End Phase after a battle kill, with LV7 in hand/Deck. Auto-pass still declines optional triggers for the rest of the turn.
 
 - v0.4.11 fixes cross-tab deck-save data loss, permanent-name copy limits (Harpie Lady / Umi variants), late Solo start/resume results after navigation, and online art/assets failing when Cache Storage is unavailable. Existing over-limit decks remain editable with a warning. Removes unused imports/state and obsolete test/save arguments. The [audit report](docs/audit-v0.4.11.md) records 2,777 probes across all 1,555 supported cards, 440 completed matches, 78 verified replays and 335 passing regression tests.
 

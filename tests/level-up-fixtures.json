@@ -1,0 +1,510 @@
+{
+  "data": [
+    {
+      "id": 980973,
+      "name": "Armed Dragon LV3",
+      "type": "Effect Monster",
+      "desc": "During your Standby Phase: You can send this card to the GY; Special Summon 1 \"Armed Dragon LV5\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "WIND",
+      "atk": 1200,
+      "def": 900,
+      "level": 3,
+      "misc_info": [
+        {
+          "views": 329208,
+          "viewsweek": 736,
+          "upvotes": 11,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6105,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 980973,
+          "image_url": "https://images.ygoprodeck.com/images/cards/980973.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/980973.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/980973.jpg"
+        }
+      ]
+    },
+    {
+      "id": 46384672,
+      "name": "Armed Dragon LV5",
+      "type": "Effect Monster",
+      "desc": "You can send 1 monster from your hand to the GY, then target 1 monster your opponent controls with ATK less than or equal to the sent monster's ATK; destroy that target. During the End Phase, if this card destroyed a monster by battle this turn: You can send this card to the GY; Special Summon 1 \"Armed Dragon LV7\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "WIND",
+      "atk": 2400,
+      "def": 1700,
+      "level": 5,
+      "misc_info": [
+        {
+          "views": 352380,
+          "viewsweek": 735,
+          "upvotes": 11,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6106,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 46384672,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46384672.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46384672.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46384672.jpg"
+        }
+      ]
+    },
+    {
+      "id": 73879377,
+      "name": "Armed Dragon LV7",
+      "type": "Effect Monster",
+      "desc": "Cannot be Normal Summoned/Set. Must be Special Summoned by \"Armed Dragon LV5\". You can send 1 monster from your hand to the GY; destroy all monsters your opponent controls with ATK less than or equal to that sent monster's ATK.",
+      "race": "Dragon",
+      "attribute": "WIND",
+      "atk": 2800,
+      "def": 1000,
+      "level": 7,
+      "misc_info": [
+        {
+          "views": 233440,
+          "viewsweek": 567,
+          "upvotes": 13,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6107,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 73879377,
+          "image_url": "https://images.ygoprodeck.com/images/cards/73879377.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/73879377.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/73879377.jpg"
+        }
+      ]
+    },
+    {
+      "id": 75830094,
+      "name": "Horus the Black Flame Dragon LV4",
+      "type": "Effect Monster",
+      "desc": "Control of this face-up card cannot switch. During the End Phase, if this card destroyed a monster by battle this turn: You can send this face-up card to the Graveyard; Special Summon 1 \"Horus the Black Flame Dragon LV6\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "FIRE",
+      "atk": 1600,
+      "def": 1000,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 185372,
+          "viewsweek": 546,
+          "upvotes": 4,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6098,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 75830094,
+          "image_url": "https://images.ygoprodeck.com/images/cards/75830094.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/75830094.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/75830094.jpg"
+        }
+      ]
+    },
+    {
+      "id": 11224103,
+      "name": "Horus the Black Flame Dragon LV6",
+      "type": "Effect Monster",
+      "desc": "This card is unaffected by Spell effects. During the End Phase, if this card destroyed a monster by battle this turn: You can send this face-up card to the Graveyard; Special Summon 1 \"Horus the Black Flame Dragon LV8\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "FIRE",
+      "atk": 2300,
+      "def": 1600,
+      "level": 6,
+      "misc_info": [
+        {
+          "views": 346978,
+          "viewsweek": 967,
+          "upvotes": 5,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6099,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 11224103,
+          "image_url": "https://images.ygoprodeck.com/images/cards/11224103.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/11224103.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/11224103.jpg"
+        }
+      ]
+    },
+    {
+      "id": 48229808,
+      "name": "Horus the Black Flame Dragon LV8",
+      "type": "Effect Monster",
+      "desc": "Cannot be Normal Summoned/Set. Must be Special Summoned by \"Horus the Black Flame Dragon LV6\", and cannot be Special Summoned by other ways. During either player's turn, when a Spell Card is activated: You can negate the activation, and if you do, destroy it. You must control this face-up card to activate and to resolve this effect.",
+      "race": "Dragon",
+      "attribute": "FIRE",
+      "atk": 3000,
+      "def": 1800,
+      "level": 8,
+      "misc_info": [
+        {
+          "views": 205915,
+          "viewsweek": 420,
+          "upvotes": 8,
+          "downvotes": 4,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6100,
+          "has_effect": 1,
+          "md_rarity": "Ultra Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 48229808,
+          "image_url": "https://images.ygoprodeck.com/images/cards/48229808.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/48229808.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/48229808.jpg"
+        }
+      ]
+    },
+    {
+      "id": 47507260,
+      "name": "Mystic Swordsman LV2",
+      "type": "Effect Monster",
+      "desc": "At the start of the Damage Step, if this card attacked a face-down Defense Position monster: Destroy that monster. During the End Phase, if this card destroyed a monster by battle this turn: You can send this face-up card to the Graveyard; Special Summon 1 \"Mystic Swordsman LV4\" from your hand or Deck.",
+      "race": "Warrior",
+      "attribute": "EARTH",
+      "atk": 900,
+      "def": 0,
+      "level": 2,
+      "misc_info": [
+        {
+          "views": 281787,
+          "viewsweek": 841,
+          "upvotes": 4,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6103,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 47507260,
+          "image_url": "https://images.ygoprodeck.com/images/cards/47507260.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/47507260.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/47507260.jpg"
+        }
+      ]
+    },
+    {
+      "id": 74591968,
+      "name": "Mystic Swordsman LV4",
+      "type": "Effect Monster",
+      "desc": "Cannot be Normal Summoned (but can be Normal Set). At the start of the Damage Step, if this card attacked a face-down Defense Position monster: Destroy that monster. During the End Phase, if this card destroyed a monster by battle this turn: You can send this face-up card to the Graveyard; Special Summon 1 \"Mystic Swordsman LV6\" from your hand or Deck.",
+      "race": "Warrior",
+      "attribute": "EARTH",
+      "atk": 1900,
+      "def": 1600,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 171312,
+          "viewsweek": 357,
+          "upvotes": 2,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6104,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 74591968,
+          "image_url": "https://images.ygoprodeck.com/images/cards/74591968.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/74591968.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/74591968.jpg"
+        }
+      ]
+    },
+    {
+      "id": 60482781,
+      "name": "Mystic Swordsman LV6",
+      "type": "Effect Monster",
+      "desc": "Cannot be Normal Summoned (but can be Normal Set). At the start of the Damage Step, if this card attacked a face-down Defense Position monster: Destroy that monster, and if you do, you can place it on top of your opponent's Deck instead of sending it to the Graveyard.",
+      "race": "Warrior",
+      "attribute": "EARTH",
+      "atk": 2300,
+      "def": 1700,
+      "level": 6,
+      "misc_info": [
+        {
+          "views": 79683,
+          "viewsweek": 168,
+          "upvotes": 3,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-11-20",
+          "ocg_date": "2004-08-05",
+          "konami_id": 6179,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 60482781,
+          "image_url": "https://images.ygoprodeck.com/images/cards/60482781.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/60482781.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/60482781.jpg"
+        }
+      ]
+    },
+    {
+      "id": 15025844,
+      "name": "Mystical Elf",
+      "type": "Normal Monster",
+      "desc": "A delicate elf that lacks offense, but has a terrific defense backed by mystical power.",
+      "race": "Spellcaster",
+      "attribute": "LIGHT",
+      "atk": 800,
+      "def": 2000,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 379283,
+          "viewsweek": 946,
+          "upvotes": 19,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-27",
+          "konami_id": 4008,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 15025844,
+          "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/15025844.jpg"
+        }
+      ]
+    },
+    {
+      "id": 49441499,
+      "name": "Ultimate Insect LV1",
+      "type": "Effect Monster",
+      "desc": "While this card is on the field, it is unaffected by the effects of Spell Cards. During your Standby Phase, by sending this face-up card to the Graveyard, Special Summon 1 \"Ultimate Insect LV3\" from your hand or Deck. (You cannot activate this effect the turn this card is Normal Summoned, Special Summoned, or flipped face-up.)",
+      "race": "Insect",
+      "attribute": "WIND",
+      "atk": 0,
+      "def": 0,
+      "level": 1,
+      "misc_info": [
+        {
+          "views": 62795,
+          "viewsweek": 168,
+          "upvotes": 3,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6097,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 49441499,
+          "image_url": "https://images.ygoprodeck.com/images/cards/49441499.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/49441499.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/49441499.jpg"
+        }
+      ]
+    },
+    {
+      "id": 34088136,
+      "name": "Ultimate Insect LV3",
+      "type": "Effect Monster",
+      "desc": "If this card was Special Summoned by the effect of \"Ultimate Insect LV1\", while it remains on the field all of your opponent's monsters lose 300 ATK. During your Standby Phase, by sending this face-up card to the Graveyard, Special Summon 1 \"Ultimate Insect LV5\" from your hand or Deck. (You cannot activate this effect the turn this card is Normal Summoned, Special Summoned, or flipped face-up.)",
+      "race": "Insect",
+      "attribute": "WIND",
+      "atk": 1400,
+      "def": 900,
+      "level": 3,
+      "misc_info": [
+        {
+          "views": 70672,
+          "viewsweek": 147,
+          "upvotes": 2,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-11-20",
+          "ocg_date": "2004-08-05",
+          "konami_id": 6178,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 34088136,
+          "image_url": "https://images.ygoprodeck.com/images/cards/34088136.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/34088136.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/34088136.jpg"
+        }
+      ]
+    }
+  ]
+}
