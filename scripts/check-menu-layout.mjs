@@ -10,7 +10,7 @@ await mkdir(output,{recursive:true});
 let browser,page;
 try{
  browser=await chromium.launch({headless:true});
- const raw=[...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data];
+ const raw=[...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data,...JSON.parse(await readFile('tests/level-up-fixtures.json')).data];
  const cards=[...new Map(raw.map(c=>[c.id,{...c,card_sets:[{set_name:'Layout test set'}]}])).values()];
  async function visibleControls(selector){
   const clipped=await page.locator(selector).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden').flatMap(node=>{
@@ -127,6 +127,33 @@ try{
     await page.evaluate(()=>window.layoutRig.destroy());
    }
   }
+  // Win a real battle, inspect the MP2 timing note, then resolve the native
+  // End Phase trigger, target and battle-position choice through production UI.
+  await page.evaluate(async()=>{
+   const {navigate,state}=await import('/src/app.js');navigate('home');
+   const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js');
+   const catalog=state.cards,get=name=>catalog.find(c=>c.name===name),engine=createNativeBackend();
+   let match=await engine.createMatch([0,1].map(()=>({name:'Level-up check',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards:catalog,seed:17,first:1,openingHands:[[get('Armed Dragon LV7')],[]],initialFields:[{monsters:[{card:get('Armed Dragon LV5')}]},{monsters:[{card:get('Mystical Elf')}]}]});
+   const apply=(type,side=match.active)=>{const action=match.actions[side].find(a=>a.type===type);if(!action)throw Error('Missing level-up setup command '+type);match=engine.applyAction(match,action,side);};
+   apply('END',1);apply('NEXT',0);apply('ATTACK',0);
+   match=engine.applyAction(match,match.actions[0].find(a=>a.target===match.players[1].monsters.find(Boolean).uid),0);match=engine.applyAction(match,match.actions[0].find(a=>a.finish),0);
+   for(let n=0;n<120&&(match.choice||match.window||match.pending);n++){const side=match.actions[0].length?0:1;match=engine.applyAction(match,match.actions[side].find(a=>a.type==='PASS')||engine.chooseAIAction(match,side),side);}
+   apply('NEXT',0);if(match.phase!=='main2')throw Error('Expected Main Phase 2 after battle');
+   const main=document.querySelector('#main'),modal=document.querySelector('#modal');
+   const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:title=>`<div class="dialog-header"><h2>${title}</h2><button data-action="close">×</button></div>`,toast:message=>{throw Error(message);},onDesign(){},engine:{...engine,createMatch:async()=>match}});
+   controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
+  });
+  await page.locator('.duel-arena[data-moving="false"]').waitFor();
+  const levelSource=await page.evaluate(()=>window.layoutRig.getMatch().players[0].monsters.find(c=>c?.card.name==='Armed Dragon LV5').uid);
+  await page.locator(`[data-duel-card="${levelSource}"]`).click();await page.locator('.duel-summon-note').waitFor();
+  assert.match(await page.locator('.duel-summon-note').textContent(),/End Phase effect/);await visibleControls('.duel-card-viewer button');await capture(`level-up-timing-${width}x${height}`);
+  await page.locator('.dialog-header [data-action="close"]').click();assert.equal(await page.locator('[data-duel="end"]').textContent(),'End Phase');await page.locator('[data-duel="end"]').click();
+  await page.locator('.duel-response-body').waitFor();assert.match(await page.locator('.duel-response-description').textContent(),/^During the End Phase/);await visibleControls('.duel-response-body button');await capture(`level-up-trigger-${width}x${height}`);
+  await page.locator('[data-duel="response-activate"]').click();await page.locator('.duel-choice-card').filter({hasText:'Armed Dragon LV7'}).click();
+  await page.locator('.duel-arena[data-moving="false"]').waitFor();await page.locator('.duel-choice-footer [data-choice-tone="teal"]:enabled').click();
+  await page.locator('.duel-choice-action').filter({hasText:'Attack Position'}).waitFor();await page.locator('.duel-arena[data-moving="false"]').waitFor();await page.locator('.duel-choice-action').filter({hasText:'Attack Position'}).click();
+  await page.waitForFunction(()=>window.layoutRig.getMatch().players[0].monsters.some(c=>c?.card.name==='Armed Dragon LV7')&&document.querySelector('.duel-arena')?.dataset.moving==='false');
+  await page.evaluate(()=>window.layoutRig.destroy());
   // A real Big Eye prompt: five visible rows, stable reads, actual native order.
   await page.evaluate(async()=>{
    const {navigate,state}=await import('/src/app.js');navigate('home');

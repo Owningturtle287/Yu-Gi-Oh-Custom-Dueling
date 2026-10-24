@@ -13,6 +13,7 @@ import { declarationIcon, declarationLabel } from './declaration-icons.js';
 import { applyArenaGeometry, handGeometry } from './arena-layout.js';
 import {landscapeSize,isRotated} from './viewport.js';
 import {readDuelSaves,saveDuel,deleteDuelSave} from './saves.js';
+import {phaseEffectText} from './native-prompts.js';
 import { choiceIntent, choiceVisuals } from './choice-view.js';
 import { responseOffer, createResponsePolicy } from './responses.js';
 import { automaticEffectAction, effectExplanation, effectNotices, cardPresentations, createEffectPlayer } from './effects.js';
@@ -338,9 +339,10 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const ownHand=match.players[0].hand.some(c=>c.uid===card.uid);
     const usedNormal=match.normalSummons?.[0]||match.normalUsed;
     const summonNote=ownHand&&values&&match.active===0&&['main1','main2'].includes(match.phase)&&!match.window&&!match.choice&&!groups.some(g=>g.actions.some(a=>a.type==='SUMMON'))&&usedNormal?'You already Normal Summoned/Set this turn. Tribute Summons normally share that limit; another summon needs a card effect.':'';
+    const timingNote=match.phase==='main2'&&card.controller===0&&card.faceUp&&match.players[0].monsters.some(c=>c?.uid===card.uid)&&phaseEffectText(card.card,'end')?'End Phase effect: choose End Phase to reach its activation window. The effect is offered when its conditions are met.':'';
     cancelArt();
     const source=main.querySelector(`[data-motion-uid="${card.uid}"] img:not(.card-back-image)`)||modal.querySelector(`[data-duel-card="${card.uid}"] img`);
-    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(details))}</strong>${values?`<br>Level ${details.level} · ${escape(details.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
+    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(details))}</strong>${values?`<br>Level ${details.level} · ${escape(details.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}${timingNote?`<p class="duel-summon-note">${escape(timingNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
     cancelArt=sharpenCardArt(modal.querySelector('.duel-inspect-art'),card.card,{source});
   }
   function dismissInspection(){
@@ -414,7 +416,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     else if(needsChoice&&match.choice.optionalResponse)controls='<button class="primary" data-duel="respond">Review effect</button><button data-duel="response-pass">Pass once</button>';
     else if(needsChoice||discard)controls=`<button class="primary" data-duel="resolve-choice">${discard?'Discard':'Choose cards'}</button>${cancelChoice?'<button data-duel="cancel-choice" class="duel-cancel-choice">Cancel</button>':''}`;
     else if(respond)controls=`<button class="primary" data-duel="respond" ${actions.length<2?'disabled':''}>Review card</button><button data-duel="pass" ${!canPass?'disabled':''}>Pass</button>`;
-    else controls=`<button class="primary" data-duel="next" ${!canNext?'disabled':''}>${busy?'AI turn…':match.phase==='end'?'Next turn':`Next: ${actions.find(a=>a.type==='NEXT')?.label||nextLabel(match)}`}</button><button data-duel="end" ${!canEnd?'disabled':''}>End turn</button>`;
+    else controls=`<button class="primary" data-duel="next" ${!canNext?'disabled':''}>${busy?'AI turn…':match.phase==='end'?'Next turn':`Next: ${actions.find(a=>a.type==='NEXT')?.label||nextLabel(match)}`}</button><button data-duel="end" title="Enter the End Phase and resolve eligible effects before the next turn" ${!canEnd?'disabled':''}>End Phase</button>`;
     const phases=`<ol class="duel-phases" data-phase="${match.phase}" data-battle-step="${match.battleStep||''}" data-changed="${previousPhase!==match.phase}" aria-label="Phase tracker">${PHASES.map((phase,index)=>`<li ${match.phase===phase?'aria-current="step"':''} class="${index<PHASES.indexOf(match.phase)?'complete':''}" aria-label="${escape(PHASE_LABELS[phase])}" title="${escape(PHASE_LABELS[phase])}"><span>${['D','S','M1','B','M2','E'][index]}</span><small>${phase==='battle'&&BATTLE_STEPS[match.battleStep]?BATTLE_STEPS[match.battleStep].short:PHASE_LABELS[phase]}</small></li>`).join('')}</ol>`;
     patchArena(main,`<div class="duel-session">
       <section class="screen duel-arena ${config.animations&&!reducedMotion.matches?'animated':''}" data-selecting="${!!fieldSelection}" data-intro="${!!introPending}" aria-label="Solo Duel arena">
