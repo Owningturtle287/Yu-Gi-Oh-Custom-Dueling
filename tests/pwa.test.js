@@ -72,3 +72,19 @@ test('compact controls preserve tap targets and contain list focus and horizonta
   assert.match(css, /\.detail-add select\s*\{[^}]*font-size:16px/);
   assert.match(css, /\.card-inspect:focus-visible[^}]*outline-offset:-3px/);
 });
+
+test('unavailable Cache Storage does not break online app assets or card artwork, and duplicate image requests share one fetch',async()=>{
+ const source=await readFile(new URL('../sw.js',import.meta.url),'utf8');
+ for(const failure of ['open','match']){
+  const listeners={},scope='https://example.com/repo/',calls=[];
+  const self={registration:{scope},addEventListener:(name,handler)=>listeners[name]=handler};
+  const caches={open:async()=>{if(failure==='open')throw Error('Cache blocked');return {match:async()=>{throw Error('Cache evicted');},put:async()=>{throw Error('Quota');}};}};
+  runInNewContext(source,{self,caches,URL,Request,Map,Set,Date,Promise,Response,setTimeout,fetch:async request=>{calls.push(request.url);return new Response('Live bytes');}});
+  const request=url=>{let response;listeners.fetch({request:new Request(url),respondWith:promise=>response=promise});return response;};
+  assert.equal(await (await request(scope+'src/app.js')).text(),'Live bytes');
+  const url='https://images.ygoprodeck.com/images/cards_small/89631139.jpg';
+  const [one,two]=await Promise.all([request(url),request(url)]);
+  assert.equal(await one.text(),'Live bytes');assert.equal(await two.text(),'Live bytes');
+  assert.equal(calls.filter(call=>call===url).length,1);
+ }
+});

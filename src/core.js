@@ -1,5 +1,5 @@
 import { dateForBasis, cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
-export const VERSION = '0.4.10';
+export const VERSION = '0.4.11';
 export const MECHANICS = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link'];
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
@@ -7,6 +7,10 @@ export const STORAGE_KEY = 'duel-atlas.decks.v1';
 export const allMechanics = () => Object.fromEntries(MECHANICS.map(m => [m, true]));
 export const cardMechanics = card => MECHANICS.filter(m => card.type.toLowerCase().includes(m.toLowerCase()));
 export const isExtra = card => /Fusion|Synchro|XYZ|Xyz|Link/.test(card.type);
+// Only unconditional name clauses affect deck construction. Names that change
+// on the field/in the GY, and archetype membership clauses, remain separate.
+export const cardCopyName = card => String(card.desc || '').match(/^\s*\(This card(?:['’]s name)? is always treated as ["“]([^"”]+)["”]\.\)/i)?.[1] || card.name;
+export const deckCopyCount = (deck, card) => SECTIONS.reduce((total, section) => total + deck.sections[section].reduce((n, entry) => n + (cardCopyName(entry.card) === cardCopyName(card) ? entry.quantity : 0), 0), 0);
 export function normalizeCard(card) {
   if (!card || !Number.isSafeInteger(card.id) || card.id <= 0 || typeof card.name !== 'string' || typeof card.type !== 'string') throw new Error('Invalid card data.');
   const fields = ['id', 'name', 'type', 'humanReadableCardType', 'frameType', 'desc', 'race', 'attribute', 'archetype', 'atk', 'def', 'level', 'linkval', 'linkmarkers', 'scale'];
@@ -59,7 +63,7 @@ export function addCard(deck, card, section = isExtra(card) ? 'extra' : 'main', 
   if (section === 'main' && isExtra(card)) throw new Error('This card belongs in the Extra Deck or Side Deck.');
   if (section === 'extra' && !isExtra(card)) throw new Error('Only Fusion, Synchro, Xyz, and Link monsters belong in the Extra Deck.');
   const copies = SECTIONS.reduce((n, s) => n + (deck.sections[s].find(e => e.card.id === card.id)?.quantity || 0), 0);
-  if (copies >= 3) throw new Error('Copy limit reached: 3 copies across Main, Extra, and Side Deck.');
+  if (copies >= 3 || !preserveExisting && deckCopyCount(deck, card) >= 3) throw new Error(`Copy limit reached: 3 copies of ${cardCopyName(card)} across Main, Extra, and Side Deck, including cards always treated as that name.`);
   if (totals(deck)[section] >= LIMITS[section]) throw new Error(`${section === 'main' ? 'Main' : section === 'extra' ? 'Extra' : 'Side'} Deck is full (${LIMITS[section]} cards).`);
   const next = structuredClone(deck);
   const entry = next.sections[section].find(e => e.card.id === card.id);
@@ -75,6 +79,8 @@ export function removeCard(deck, cardId, section) {
 }
 export function deckWarnings(deck) {
   const warnings = [];
+  const names = new Set(SECTIONS.flatMap(section => deck.sections[section]).filter(entry => deckCopyCount(deck, entry.card) > 3).map(entry => cardCopyName(entry.card)));
+  if (names.size) warnings.push(`Copy limit exceeded for ${[...names].join(', ')}. Cards always treated as the same name share the 3-copy limit.`);
   if (totals(deck).main < 40) warnings.push('Main Deck has fewer than 40 cards. You can still save while building.');
   const restricted = SECTIONS.flatMap(s => deck.sections[s]).filter(e => cardMechanics(e.card).some(m => !deck.mechanics[m]));
   if (restricted.length) warnings.push(`${restricted.length} card type${restricted.length > 1 ? 's use' : ' uses'} a disabled mechanic. Remove them or update Rules / Format.`);
@@ -83,7 +89,7 @@ export function deckWarnings(deck) {
   return warnings;
 }
 // Backups and browser storage use the same strictly validated format.
-export function validateDeck(value) {
+export function validateDeck(value, { preserveNameLimit = false } = {}) {
   if (!value || typeof value.id !== 'string' || !value.id || value.id.length > 100) throw new Error('Invalid deck ID.');
   const deck = createDeck(validName(value.name), value.id);
   if (!value.mechanics || MECHANICS.some(m => typeof value.mechanics[m] !== 'boolean')) throw new Error('Invalid mechanic settings.');
@@ -103,6 +109,7 @@ export function validateDeck(value) {
   next.releaseYear = desiredYear;
   if(value.releaseBasis && !['tcg','ocg','earliest'].includes(value.releaseBasis))throw new Error('Invalid release region.');
   next.releaseBasis = value.releaseBasis || 'tcg';
+  if (!preserveNameLimit && SECTIONS.some(section => next.sections[section].some(entry => deckCopyCount(next, entry.card) > 3))) throw new Error('Copy limit reached: cards always treated as the same name share the 3-copy limit.');
   next.updatedAt = typeof value.updatedAt === 'string' ? value.updatedAt : deck.updatedAt;
   return next;
 }
@@ -111,11 +118,13 @@ export function readDecks(storage) {
   if (!raw) return [];
   const data = JSON.parse(raw);
   if (data.version !== 1 || !Array.isArray(data.decks)) throw new Error('Saved deck data is unreadable. Export a backup before changing browser storage.');
-  return data.decks.map(validateDeck);
+  // Older releases admitted too many same-name variants. Keep those decks
+  // editable with warnings so their owners can remove the excess copies.
+  return data.decks.map(deck => validateDeck(deck, { preserveNameLimit: true }));
 }
-export function saveDeck(storage, decks, deck) {
-  const valid = validateDeck({ ...deck, updatedAt: new Date().toISOString() });
-  const next = [...decks.filter(d => d.id !== valid.id), valid].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+export function saveDeck(storage, deck) {
+  const valid = validateDeck({ ...deck, updatedAt: new Date().toISOString() }, { preserveNameLimit: true });
+  const next = [...readDecks(storage).filter(d => d.id !== valid.id), valid].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, decks: next }));
   return next;
 }

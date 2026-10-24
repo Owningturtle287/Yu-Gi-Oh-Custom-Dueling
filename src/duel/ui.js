@@ -37,9 +37,9 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   const {createMatch,legalActions,applyAction,findCard,stats}=engine;
   const chooseAIAction=engine.chooseAIAction||legacyAI;
   const aiClient=createAIClient({choose:chooseAIAction});
-  let thinking=0;
+  let thinking=0,launchSequence=0;
   const cancelThinking=()=>{thinking=0;aiClient.cancel();};
-  let config={sides:[defaultSide(),defaultSide()],aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',setsError='',starting=false,selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[],inspectedUid=null,cardGroups=[],cancelArt=()=>{};
+  let config={sides:[defaultSide(),defaultSide()],aiSpeed:'normal',first:'coin',lp:8000,animations:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',starting=false,selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[],inspectedUid=null,cardGroups=[],cancelArt=()=>{};
   const motion=createMotionPlayer(main), reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
   const attackArrows=createAttackArrows(main);
   const effects=createEffectPlayer({getRoot:()=>main.querySelector('.duel-effect-host')});
@@ -100,7 +100,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(setsStatus==='loading')return;
     setsStatus='loading';render();
     try{const result=await loadSets({force});sets=result.sets;setsStatus=result.offline?'offline':'ready';}
-    catch(error){setsStatus='error';setsError=error.message;}
+    catch{setsStatus='error';}
     render();
   }
   function renderSetup(){
@@ -155,7 +155,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   async function start(){
     if(moving||match||starting)return;
-    starting=true; const launch=main.querySelector('[data-duel="start"]');if(launch){launch.disabled=true;launch.textContent='Preparing duel…';}
+    const launchToken=++launchSequence;starting=true; const launch=main.querySelector('[data-duel="start"]');if(launch){launch.disabled=true;launch.textContent='Preparing duel…';}
     try{
       const seed=globalThis.crypto?.getRandomValues?crypto.getRandomValues(new Uint32Array(1))[0]:Date.now();
       const decks=config.sides.map((settings,side)=>settings.source==='saved'?selectedDeck(side):generateDeck(getCards(),settings,sets,seed+side*76543));
@@ -163,12 +163,12 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       if(issues.length){showDialog(`${header('Decks need a quick review')}<div class="duel-choice-list" aria-label="Deck issues">${issues.map(issue=>`<p class="support-row">${escape(issue)}</p>`).join('')}</div><button data-action="close">Back to setup</button>`,'duel-list-body');return;}
       const first=config.first==='you'?0:config.first==='ai'?1:seed%2;
       const next=await createMatch(decks.map(deck=>({...expandDeck(deck,getCards()),name:deck.name})),{seed,first,lp:config.lp,cards:getCards(),eligibility:config.sides});
-      if(!active){engine.destroyMatch?.(next);return;}
+      if(!active||launchToken!==launchSequence){engine.destroyMatch?.(next);return;}
       saveId=null;handExpanded=false;resultShown=false;next.deckBackups=decks;introPending={coin:config.first==='coin',first,lp:config.lp};
       const entry={id:++next.serial,turn:next.turn||1,phase:next.phase,side:first,kind:'phase',uids:[],message:(config.first==='coin'?`Opening coin toss: ${first===0?'Heads':'Tails'}. `:'')+(first===0?'You go first.':'AI goes first.')};next.log.push(entry);next.lastEvent=entry;
       await present(null,next);
-    }catch(error){toast(error.message,true);}
-    finally{starting=false;if(!match)render();}
+    }catch(error){if(active&&launchToken===launchSequence)toast(error.message,true);}
+    finally{if(launchToken===launchSequence){starting=false;if(!match)render();}}
   }
   function saveCurrent(){
     if(!match||match.winner!==null)return false;
@@ -180,7 +180,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   async function resumeSaved(id){
     if(starting||match||getStatus()!=='ready')return;const save=readDuelSaves(localStorage).find(s=>s.id===id);if(!save)return;
-    starting=true;const button=[...main.querySelectorAll('[data-resume-duel]')].find(b=>b.dataset.resumeDuel===id);if(button){button.disabled=true;button.textContent='Resuming…';}try{const next=await engine.restoreMatch(save.replay,{cards:getCards()});if(!active){engine.destroyMatch?.(next);return;}config={...config,...save.config};saveId=id;resultShown=false;introPending=null;next.deckBackups=save.decks;match=next;render();schedule();}catch(error){toast(error.message,true);}finally{starting=false;if(!match)render();}
+    const launchToken=++launchSequence;starting=true;const button=[...main.querySelectorAll('[data-resume-duel]')].find(b=>b.dataset.resumeDuel===id);if(button){button.disabled=true;button.textContent='Resuming…';}try{const next=await engine.restoreMatch(save.replay,{cards:getCards()});if(!active||launchToken!==launchSequence){engine.destroyMatch?.(next);return;}config={...config,...save.config};saveId=id;resultShown=false;introPending=null;next.deckBackups=save.decks;match=next;render();schedule();}catch(error){if(active&&launchToken===launchSequence)toast(error.message,true);}finally{if(launchToken===launchSequence){starting=false;if(!match)render();}}
   }
   function exitCurrent(){
     cancelThinking();cancelMotion();clearTimeout(timer);presentation++;moving=false;engine.destroyMatch?.(match);match=null;introPending=null;handExpanded=false;inspectedUid=null;fieldSelection=null;closeDialog();render();onExit();
@@ -617,12 +617,12 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   document.addEventListener('click',handleClick);
   return {
     enter(){active=true;render();if(!match&&config.sides.some(s=>s.source==='set')&&setsStatus==='idle')requestSets();},
-    leave(){engine.destroyMatch?.(match);match=null;introPending=null;handExpanded=false;document.documentElement.dataset.duelRotated='false';cancelThinking();cancelArt();attackArrows.sync(null,null,{hidden:true});responseSeen=null;active=false;inspectedUid=null;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');},
+    leave(){launchSequence++;starting=false;engine.destroyMatch?.(match);match=null;introPending=null;handExpanded=false;document.documentElement.dataset.duelRotated='false';cancelThinking();cancelArt();attackArrows.sync(null,null,{hidden:true});responseSeen=null;active=false;inspectedUid=null;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');},
     refresh:render,
     setDesignedDeck:saveSide,
     getMatch:()=>match,
     getConfig:()=>structuredClone(config),
-    destroy(){tableObserver?.disconnect();cancelThinking();aiClient.destroy();engine.destroyMatch?.(match);cancelArt();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);modal.removeEventListener('cancel',revealCancel,true);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',suspendPresentation);window.removeEventListener('pageshow',resumePresentation);reducedMotion.removeEventListener?.('change',cancelMotion);}
+    destroy(){launchSequence++;starting=false;tableObserver?.disconnect();cancelThinking();aiClient.destroy();engine.destroyMatch?.(match);cancelArt();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);modal.removeEventListener('cancel',revealCancel,true);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',suspendPresentation);window.removeEventListener('pageshow',resumePresentation);reducedMotion.removeEventListener?.('change',cancelMotion);}
   };
 }
 function mainPhaseLabel(state){return ['main1','main2'].includes(state.phase)?state.turn===1?'Opening turn · Battle is skipped. Summon, Set, or activate a card.':'Summon, Set, or activate a card. Tap your hand to begin.':state.phase==='battle'?'Tap your Attack Position monster to choose an attack.':state.phase==='end'?'End Phase. Continue to your opponent’s turn.':`${PHASE_LABELS[state.phase]} Phase · continue when ready.`;}

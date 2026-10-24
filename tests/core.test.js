@@ -44,7 +44,7 @@ test('extra placement, capacities, and tokens have clear validation', () => {
     let full = createDeck(section);
     const limit = section === 'main' ? 60 : 15;
     const model = section === 'extra' ? fusion : dragon;
-    for (let n = 0; n < limit; n++) full = addCard(full, { ...model, id: 1000 + n }, section);
+    for (let n = 0; n < limit; n++) full = addCard(full, { ...model, id: 1000 + n, name: model.name + ' ' + n }, section);
     assert.throws(() => addCard(full, { ...model, id: 2000 }, section), /full/);
   }
 });
@@ -63,13 +63,13 @@ test('mechanic restrictions recognize uppercase XYZ and hybrid Pendulum monsters
 test('saved decks reopen, rename, and replace by identity with complete card snapshots', () => {
   const storage = memoryStorage();
   let deck = addCard(createDeck('First'), dragon);
-  let saved = saveDeck(storage, [], deck);
+  let saved = saveDeck(storage, deck);
   assert.equal(readDecks(storage)[0].sections.main[0].card.desc, dragon.desc);
   deck = { ...deck, name: 'Renamed' };
-  saved = saveDeck(storage, saved, deck);
+  saved = saveDeck(storage, deck);
   assert.equal(saved.length, 1);
   assert.equal(readDecks(storage)[0].name, 'Renamed');
-  saved = saveDeck(storage, saved, createDeck('Second'));
+  saved = saveDeck(storage, createDeck('Second'));
   assert.equal(readDecks(storage).length, 2);
 });
 test('storage errors and corrupt payloads never silently overwrite existing decks', () => {
@@ -77,12 +77,12 @@ test('storage errors and corrupt payloads never silently overwrite existing deck
   storage.setItem(STORAGE_KEY, '{broken');
   assert.throws(() => readDecks(storage));
   assert.equal(storage.getItem(STORAGE_KEY), '{broken');
-  const fail = { setItem() { throw new Error('Quota exceeded'); } };
-  assert.throws(() => saveDeck(fail, [], createDeck('Unsaved')), /Quota exceeded/);
+  const fail = { getItem() { return null; }, setItem() { throw new Error('Quota exceeded'); } };
+  assert.throws(() => saveDeck(fail, createDeck('Unsaved')), /Quota exceeded/);
 });
 test('deletion reads the latest saved list, removes only its ID, and preserves the old state on storage failure',()=>{
   const storage=memoryStorage(),first=createDeck('First','first'),second=createDeck('Second','second');
-  saveDeck(storage,[],first);saveDeck(storage,[first],second);
+  saveDeck(storage,first);saveDeck(storage,second);
   assert.deepEqual(deleteSavedDeck(storage,'first').map(d=>d.id),['second']);
   const before=storage.getItem(STORAGE_KEY),fail={getItem:storage.getItem,setItem(){throw new Error('Storage full');}};
   assert.throws(()=>deleteSavedDeck(fail,'second'),/Storage full/);assert.equal(storage.getItem(STORAGE_KEY),before);

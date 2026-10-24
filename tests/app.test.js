@@ -427,3 +427,16 @@ test('archive region cutoffs survive saving, and searching all years retains the
     $('.card-tile [data-quick-add]').click();app.navigate('decks');$('[data-action="save-deck"]').click();assert.equal(app.state.decks[0].releaseBasis,'ocg');assert.equal(app.state.decks[0].releaseYear,2004);
   }finally{app.navigate('home');window.close();}
 });
+
+test('legacy over-limit name variants stay editable and show a copy warning on the compact deck footer',async()=>{
+ const catalog=JSON.parse(await readFile(new URL('./deck-alias-fixtures.json',import.meta.url))).data;
+ const lady=catalog.find(c=>c.name==='Harpie Lady'),variant=catalog.find(c=>c.name==='Harpie Lady 1');
+ const deck=createDeck('Legacy Harpies','legacy-harpies');deck.sections.main=[{card:lady,quantity:3},{card:variant,quantity:1}];
+ const {window,app,$}=await boot('legacy-name-limits',JSON.stringify({version:1,decks:[deck]}),false,catalog);
+ try{
+  app.navigate('decks');assert.match($('.deck-view-summary').textContent,/Copy limit exceeded/);assert.match($('.deck-view-summary').title,/Harpie Lady/);
+  $(`.deck-tray [data-quick-remove="${variant.id}"]`).click();assert.doesNotMatch($('.deck-view-summary').textContent,/Copy limit/);
+  $('[data-action="save-deck"]').click();assert.equal(app.state.dirty,false);
+  assert.equal(app.state.decks[0].sections.main.length,1);
+ }finally{window.close();}
+});

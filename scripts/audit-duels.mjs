@@ -4,9 +4,9 @@ import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
-import {normalizeCard} from '../src/core.js';
+import {normalizeCard,cardCopyName} from '../src/core.js';
 import {supportedPool,ERA_END} from '../src/duel/catalog.js';
-import {defaultSide,eligibleSets,generateDeck,expandDeck,seededRandom} from '../src/duel/decks.js';
+import {defaultSide,eligibleSets,generateDeck,expandDeck,seededRandom,validateDuelDeck} from '../src/duel/decks.js';
 import {loadNativeRules} from '../src/duel/native-loader.js';
 import {createNativeBackend} from '../src/duel/native-engine.js';
 
@@ -23,6 +23,8 @@ const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFi
 report.configuration={games,gameStart,seed:start,limit,randomVersion:Number(process.env.AUDIT_RANDOM_VERSION||2),sweep:process.env.AUDIT_SWEEP!=='0',actionLimit:Number(process.env.AUDIT_MAX_ACTIONS||2500)};
 report.rulesRevision=pack.manifest.scriptsRevision;
 report.poolHash=createHash('sha256').update(JSON.stringify(pool.map(c=>[c.id,c.name,c.type,c.desc,c.level,c.atk,c.def,c.race,c.attribute,c.tcgDate]))).digest('hex');
+report.cardsSnapshotHash=createHash('sha256').update(await readFile(process.env.DUEL_CARD_SNAPSHOT)).digest('hex');
+if(process.env.DUEL_SET_SNAPSHOT)report.setsSnapshotHash=createHash('sha256').update(await readFile(process.env.DUEL_SET_SNAPSHOT)).digest('hex');
 const lib={...pack.lib,duelGetMessage(handle){const messages=pack.lib.duelGetMessage(handle);currentEvents.push(...messages);return messages;}};
 const engine=createNativeBackend({rules:()=>({...pack,lib})});
 const all=s=>s.players.flatMap(p=>['deck','hand','monsters','spells','extra','grave','banished'].flatMap(z=>p[z].filter(Boolean)).concat(p.field?[p.field]:[]));
@@ -50,6 +52,7 @@ async function replay(s){const saved=engine.exportMatch(s),restored=await engine
 async function run(label,decks,options,{probe=null,cap=180,full=false,replayAt=0}={}){
   let s,steps=0,replayed=false,lastPrompt='',staging=new Map();const recent=[];
   try{
+    if(full)for(const deck of decks)assert.deepEqual(validateDuelDeck({sections:{main:deck.main.map(card=>({card,quantity:1})),extra:deck.extra.map(card=>({card,quantity:1})),side:[]}},cards),[],'Full-game decks must pass the app’s actual deck validator');
     currentEvents=[];s=await engine.createMatch(decks,{cards,randomVersion:process.env.AUDIT_RANDOM_VERSION?Number(process.env.AUDIT_RANDOM_VERSION):2,...options});inspect(s);
     while(s.winner===null&&steps<cap&&(full||s.turn<3||s.choice||s.window)){
       const side=s.actions[0].length?0:1,actions=s.actions[side];let action;
@@ -95,7 +98,7 @@ const shuffle=(values,seed)=>{const a=[...values],random=seededRandom(seed);for(
 const staples=['Gemini Elf','Mechanicalchaser','Spear Dragon','D.D. Warrior Lady','Mystical Elf','Pot of Greed','Raigeki','Mystical Space Typhoon','Mirror Force','Monster Reborn','Graceful Charity','Waboku'];
 function coverageDeck(index){
   const list=shuffle(pool.filter(c=>!c.type.includes('Fusion')),Math.floor(index/50)+71),main=[],counts=new Map();
-  const add=c=>{if(main.length>=40||(counts.get(c.id)||0)>=3)return;main.push(c);counts.set(c.id,(counts.get(c.id)||0)+1);};
+  const add=c=>{const name=cardCopyName(c);if(main.length>=40||(counts.get(name)||0)>=3)return;main.push(c);counts.set(name,(counts.get(name)||0)+1);};
   for(let n=0;n<20;n++)add(list[(index*20+n)%list.length]);
   for(let n=0;main.length<40;n++)add(get(staples[n%staples.length]));
   return {name:'Coverage '+index,main,extra:pool.filter(c=>c.type.includes('Fusion')).slice(index%5,index%5+15)};

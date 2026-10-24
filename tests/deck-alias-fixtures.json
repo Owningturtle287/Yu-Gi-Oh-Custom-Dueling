@@ -1,0 +1,280 @@
+{
+  "data": [
+    {
+      "id": 295517,
+      "name": "A Legendary Ocean",
+      "type": "Spell Card",
+      "desc": "(This card's name is always treated as \"Umi\".)\r\nAll WATER monsters on the field gain 200 ATK/DEF. Reduce the Level of all WATER monsters in both players' hands and on the field by 1.",
+      "race": "Field",
+      "misc_info": [
+        {
+          "views": 526899,
+          "viewsweek": 863,
+          "upvotes": 27,
+          "downvotes": 8,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Umi",
+          "tcg_date": "2003-06-06",
+          "ocg_date": "2001-11-29",
+          "konami_id": 5387,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 80316585,
+      "name": "Cyber Harpie Lady",
+      "type": "Effect Monster",
+      "desc": "(This card's name is always treated as \"Harpie Lady\".)",
+      "race": "Winged Beast",
+      "attribute": "WIND",
+      "atk": 1800,
+      "def": 1300,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 199442,
+          "viewsweek": 504,
+          "upvotes": 11,
+          "downvotes": 4,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Harpie Lady",
+          "tcg_date": "2005-02-26",
+          "ocg_date": "2001-05-21",
+          "konami_id": 5239,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 76812113,
+      "name": "Harpie Lady",
+      "type": "Normal Monster",
+      "desc": "This human-shaped animal with wings is beautiful to watch but deadly in battle.",
+      "race": "Winged Beast",
+      "attribute": "WIND",
+      "atk": 1300,
+      "def": 1400,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 324251,
+          "viewsweek": 1144,
+          "upvotes": 14,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Harpie Lady",
+          "tcg_date": "2002-06-26",
+          "ocg_date": "1999-07-22",
+          "konami_id": 4068,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 91932350,
+      "name": "Harpie Lady 1",
+      "type": "Effect Monster",
+      "desc": "(This card's name is always treated as \"Harpie Lady\".)\nAll WIND monsters gain 300 ATK.",
+      "race": "Winged Beast",
+      "attribute": "WIND",
+      "atk": 1300,
+      "def": 1400,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 253735,
+          "viewsweek": 504,
+          "upvotes": 9,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Harpie Lady",
+          "tcg_date": "2004-11-20",
+          "ocg_date": "2004-08-05",
+          "konami_id": 6186,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 27927359,
+      "name": "Harpie Lady 2",
+      "type": "Effect Monster",
+      "desc": "(This card's name is always treated as \"Harpie Lady\".)\nNegate the effects of Flip monsters this card destroys by battle.",
+      "race": "Winged Beast",
+      "attribute": "WIND",
+      "atk": 1300,
+      "def": 1400,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 113302,
+          "viewsweek": 253,
+          "upvotes": 5,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Harpie Lady",
+          "tcg_date": "2004-11-20",
+          "ocg_date": "2004-08-05",
+          "konami_id": 6187,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 54415063,
+      "name": "Harpie Lady 3",
+      "type": "Effect Monster",
+      "desc": "(This card's name is always treated as \"Harpie Lady\".)\nAn opponent's monster that battles this card cannot declare an attack during your opponent's next 2 turns.",
+      "race": "Winged Beast",
+      "attribute": "WIND",
+      "atk": 1300,
+      "def": 1400,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 116952,
+          "viewsweek": 231,
+          "upvotes": 8,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Harpie Lady",
+          "tcg_date": "2004-11-20",
+          "ocg_date": "2004-08-05",
+          "konami_id": 6188,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 75064463,
+      "name": "Harpie Queen",
+      "type": "Effect Monster",
+      "desc": "This card's name becomes \"Harpie Lady\" while on the field or in the GY. You can discard this card to the GY; add 1 \"Harpies' Hunting Ground\" from your Deck to your hand.",
+      "race": "Winged Beast",
+      "attribute": "WIND",
+      "atk": 1900,
+      "def": 1200,
+      "level": 4,
+      "misc_info": [
+        {
+          "views": 249040,
+          "viewsweek": 527,
+          "upvotes": 15,
+          "downvotes": 0,
+          "formats": [
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2007-05-16",
+          "ocg_date": "2007-02-15",
+          "konami_id": 7111,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 22702055,
+      "name": "Umi",
+      "type": "Spell Card",
+      "desc": "All Fish, Sea Serpent, Thunder, and Aqua monsters on the field gain 200 ATK/DEF, also all Machine and Pyro monsters on the field lose 200 ATK/DEF.",
+      "race": "Field",
+      "misc_info": [
+        {
+          "views": 473636,
+          "viewsweek": 1158,
+          "upvotes": 13,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Umi",
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-06",
+          "konami_id": 4340,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    }
+  ]
+}

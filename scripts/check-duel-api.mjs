@@ -31,9 +31,8 @@ for(let seed=1;seed<=40;seed++){
   const settings=sources[seed%sources.length];
   const decks=[generateDeck(cards,settings,sets,seed),generateDeck(cards,sources[(seed+3)%sources.length],sets,seed+100)];
   let state=await createMatch(decks.map(deck=>expandDeck(deck,cards)),{seed,first:seed%2,lp:seed%2?4000:8000,cards}),steps=0;
-  const total=decks.reduce((sum,d)=>sum+d.sections.main.reduce((n,e)=>n+e.quantity,0)+d.sections.extra.reduce((n,e)=>n+e.quantity,0),0);
   while(state.winner===null&&steps++<2500){
-    const side=legalActions(state,0).length?0:1,action=chooseAIAction(state,side,['easy','normal','hard'][seed%3]);
+    const side=legalActions(state,0).length?0:1,action=chooseAIAction(state,side);
     assert.ok(action,`Match ${seed} stalled at ${state.phase}`);
     recent.push({turn:state.turn,phase:state.phase,side,type:action.type,label:action.label,name:state.players.flatMap(p=>[...p.hand,...p.monsters,...p.spells,...p.extra,...p.grave]).find(c=>c?.uid===action.uid)?.card.name});if(recent.length>12)recent.shift();
     state=applyAction(state,action,side);

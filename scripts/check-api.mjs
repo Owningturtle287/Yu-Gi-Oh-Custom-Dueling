@@ -19,7 +19,7 @@ assert.ok(spirits.every(card => card.type.includes('Spirit')));
 assert.ok(!filterCards(result.cards, { subtype: 'Spirit', year: 2012 }).some(card => card.name === 'Aratama'));
 const memory = new Map(), storage = { getItem: key => memory.get(key), setItem: (key, value) => memory.set(key, value) };
 const deck = addCard({ ...createDeck('Live API test'), releaseYear: 2013 }, dragon);
-saveDeck(storage, [], deck);
+saveDeck(storage, deck);
 assert.equal(readDecks(storage)[0].sections.main[0].card.name, dragon.name);
 assert.deepEqual(totals(importJSON(exportJSON(deck))), totals(deck));
 assert.equal(importJSON(exportJSON(deck)).releaseYear, 2013);
