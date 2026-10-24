@@ -27,22 +27,22 @@ async function rig(engine,state){
 }
 test('the whole hand fits without scrolling as its count and enlargement change',()=>{
   for(const [width,height] of [[320,293],[438,293],[714,363],[808,390],[988,740]])for(const count of [0,1,5,6,10,20,40])for(const expanded of [false,true]){
-    const hand=handGeometry(width,height,{count,expanded,baseSize:52});
+    const hand=handGeometry(width,height,{count,expanded,baseSize:52,dockWidth:224});
     assert.ok(hand.left>=0);assert.ok(hand.left+hand.rackWidth<=width+.01,`${count} cards at ${width}px`);
     assert.ok(hand.cardWidth*count+Math.max(0,count-1)*hand.values['--hand-card-gap']<=hand.rackWidth+.01);
     assert.ok(hand.cardHeight<=height*.48);if(expanded)assert.equal(hand.bottom,52);
-    const normal=handGeometry(width,height,{count,baseSize:52});
+    const normal=handGeometry(width,height,{count,baseSize:52,dockWidth:224});
     assert.equal(hand.toggleLeft,normal.toggleLeft);assert.equal(hand.toggleBottom,normal.toggleBottom);
   }
   assert.equal(handGeometry(808,390,{count:6,expanded:true,baseSize:52}).cardHeight,104);
 });
-test('default hand sits lower with safe-area clearance while enlarged cards and the toggle retain their positions',()=>{
+test('default hand uses spare bottom/right space while enlarged cards and the toggle retain their positions',()=>{
   for(const inset of [4,21,34])for(const count of [1,5,6,10]){
     const normal=handGeometry(714,363,{count,baseSize:64,bottomInset:inset}),large=handGeometry(714,363,{count,baseSize:64,bottomInset:inset,expanded:true});
-    assert.equal(normal.bottom,inset-8);assert.equal(large.bottom,inset+48);
+    assert.equal(normal.bottom,Math.max(-4,inset-16));assert.equal(large.bottom,inset+48);
     assert.equal(normal.toggleBottom,inset+Math.max(0,(normal.cardHeight-32)/2-10));
     assert.equal(large.toggleBottom,normal.toggleBottom);assert.equal(large.toggleLeft,normal.toggleLeft);
-    assert.ok(normal.left+normal.rackWidth<=714);assert.ok(large.left+large.rackWidth<=714);
+    assert.ok(normal.left+normal.rackWidth<=714-192,'The hand stays clear of the action dock');assert.ok(large.left+large.rackWidth<=714);
   }
 });
 test('the hand overlay cannot intercept empty-area phase taps, and the full-screen frame has no outer safe-area gutters',async()=>{

@@ -59,7 +59,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const rect=table.getBoundingClientRect(),size=landscapeSize(window),rotated=isRotated(table),width=table.clientWidth||(rotated?rect.height:rect.width)||size.width,height=table.clientHeight||(rotated?rect.width:rect.height)||size.height;
     const area=table.querySelector('.duel-hand-area'),bottomInset=parseFloat(window.getComputedStyle(area).paddingBottom)||4;
     const layout=applyArenaGeometry(table,width,height,{bottomInset});table.dataset.fitSize=`${width}:${height}:${bottomInset}`;
-    const hand=handGeometry(layout.fieldWidth,height,{count:match.players[0].hand.length,expanded:handExpanded,baseSize:layout.values['--hand-card-size'],bottomInset}),rack=table.querySelector('.duel-hand-rack');
+    const hand=handGeometry(layout.fieldWidth,height,{count:match.players[0].hand.length,expanded:handExpanded,baseSize:layout.values['--hand-card-size'],bottomInset,dockWidth:table.querySelector('.duel-action-area')?.clientWidth}),rack=table.querySelector('.duel-hand-rack');
     for(const [name,value] of Object.entries(hand.values))area?.style.setProperty(name,`${Math.round(value*100)/100}px`);
     if(rack)rack.dataset.compactHand=String(hand.cardWidth<32);
   }

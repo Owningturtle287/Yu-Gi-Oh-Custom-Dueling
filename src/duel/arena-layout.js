@@ -38,10 +38,10 @@ export function applyArenaGeometry(table,width,height,options){
 
 // Hand fitting is an overlay calculation. It never changes a field track.
 // Expanded hands lift above the controls. The toggle keeps its normal position.
-export function handGeometry(width,height,{count,expanded=false,baseSize=64,bottomInset=4}={}){
+export function handGeometry(width,height,{count,expanded=false,baseSize=64,bottomInset=4,dockWidth}={}){
   count=Math.max(0,Math.floor(Number(count)||0));
   bottomInset=clamp(Number(bottomInset)||0,0,60);
-  const dock=clamp(width*.27,188,224),lp=clamp(width*.1,76,104);
+  const dock=clamp(Number(dockWidth)||width*.27,188,224),lp=clamp(width*.1,76,104);
   const toggle=30,toggleGap=5,gap=count>12?1:3;
   const normalLifted=width-(lp+12)-(dock+12)<150;
   const fit=large=>{
@@ -52,9 +52,13 @@ export function handGeometry(width,height,{count,expanded=false,baseSize=64,bott
     const cardHeight=count?cardWidth/.686:target,cardSpan=count?cardWidth*count+gap*(count-1):80;
     return {cardWidth,cardHeight,rackWidth:cardSpan,left:left+(available-cardSpan-reserve)/2+reserve,bottom:bottomInset+(lifted?48:0)};
   };
-  const normal=fit(false),hand=expanded?fit(true):{...normal,bottom:normal.bottom-(normalLifted?0:8)};
-  // Lower only the default cards. Keep the toggle anchored to its existing
-  // baseline and leave expanded/narrow-screen overlays and field tracks intact.
+  const normal=fit(false);
+  const rightLimit=normalLifted?width-8:width-dock-8;
+  const shiftRight=Math.min(8,Math.max(0,rightLimit-normal.left-normal.rackWidth));
+  const hand=expanded?fit(true):{...normal,left:normal.left+shiftRight,bottom:normalLifted?normal.bottom:Math.max(-4,normal.bottom-16)};
+  // Use spare space below/right of the default cards without pushing a full
+  // rack into the controls or increasing the existing bottom-edge allowance.
+  // The zoom toggle and expanded overlay retain their own positions.
   const toggleLeft=Math.max(normalLifted?8:lp+28,normal.left-toggle-toggleGap-20),toggleBottom=normal.bottom+Math.max(0,(normal.cardHeight-32)/2-10);
   return {...hand,toggleLeft,toggleBottom,
     values:{'--hand-display-height':hand.cardHeight,'--hand-display-width':hand.cardWidth,'--hand-card-gap':gap,'--hand-rack-width':hand.rackWidth,'--hand-rack-left':hand.left,'--hand-rack-bottom':hand.bottom,'--hand-toggle-left':toggleLeft,'--hand-toggle-bottom':toggleBottom}};

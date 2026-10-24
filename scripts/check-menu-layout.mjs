@@ -185,6 +185,24 @@ try{
   await page.locator('.duel-arena[data-moving="false"] [data-duel="rematch"]').click();
   await page.waitForFunction(()=>window.layoutRig.getMatch()?.winner===null&&document.querySelector('.duel-arena')?.dataset.moving==='false');
   assert.equal(await page.locator('.solo-setup').count(),0);assert.equal(await page.locator('.duel-hand-card').count(),5);
+  for(const count of [5,10]){
+   // This final layout fixture needs no further core actions: expose ten real
+   // card instances to the renderer, then destroy the native match afterward.
+   if(count===10)await page.evaluate(()=>{const player=window.layoutRig.getMatch().players[0];player.hand.push(...player.deck.splice(-5));window.layoutRig.refresh();});
+   for(const inset of [4,21]){
+   await page.evaluate(inset=>{document.documentElement.style.setProperty('--duel-safe-bottom',`${inset}px`);window.layoutRig.refresh();},inset);
+   await visibleControls('.duel-hand-card,.duel-hand-zoom,.duel-controls button');
+   const collisions=await page.locator('.duel-hand-card').evaluateAll(cards=>{
+    const controls=[...document.querySelectorAll('.duel-controls button,.player-life,.duel-hand-zoom')].filter(n=>n.getClientRects().length).map(n=>n.getBoundingClientRect());
+    return cards.flatMap(n=>{const r=n.getBoundingClientRect();return controls.some(c=>Math.min(r.right,c.right)-Math.max(r.left,c.left)>1&&Math.min(r.bottom,c.bottom)-Math.max(r.top,c.top)>1)?[n.getAttribute('aria-label')]:[];});
+   });
+   assert.deepEqual(collisions,[],'The lowered/right-shifted hand stays clear of LP, zoom and phase actions');
+   await capture(`player-hand-${count}-${inset}-${width}x${height}`);
+   await page.locator('[data-duel="hand-zoom"]').click();await visibleControls('.duel-hand-card,.duel-hand-zoom,.duel-controls button');
+   await page.locator('[data-duel="hand-zoom"]').click();
+   }
+  }
+  await page.evaluate(()=>document.documentElement.style.removeProperty('--duel-safe-bottom'));
   await page.evaluate(()=>window.layoutRig.destroy());
   await context.close();page=null;
   console.log(`Menu controls fit ${width} × ${height}`);
