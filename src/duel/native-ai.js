@@ -310,7 +310,8 @@ function positionScore(ctx,a){
 }
 function makeContext(state,side,actions){
   const s=aiObservation(state,side),p=s.players[side],foe=s.players[1-side];
-  const available=s.battleOptions.length?s.battleOptions:actions.filter(a=>a.type==='ATTACK').map(a=>({uid:a.uid,canDirect:a.canDirect||a.target===null}));
+  s.battleOptions=s.battleOptions.filter(a=>a.battleExitBlocked||!s.declinedAttacks[side].includes(a.uid));
+  const available=s.battleOptions.length?s.battleOptions:actions.filter(a=>a.type==='ATTACK'&&(a.battleExitBlocked||!s.declinedAttacks[side].includes(a.uid))).map(a=>({uid:a.uid,canDirect:a.canDirect||a.target===null}));
   const plan=battlePlan(s,side,{available:available.length||s.phase==='battle'&&!s.choice&&!s.window?available:null});
   return {s,side,p,foe,actions,plan,choicePlan:null};
 }
@@ -318,12 +319,18 @@ function scoreChoice(ctx,a){
   const c=ctx.s.choice||{};const {source,intent}=ctx.selection??=choiceIntent(ctx);
   if(a.reset)return -100000;
   if(c.attackUid){
+    if(a.cancel)return c.attackRequired?-Infinity:0;
     if(a.finish)return Infinity;
     if(a.selected)return -100000;
     ctx.choicePlan??=battlePlan(ctx.s,ctx.side,{first:c.attackUid,targets:new Set(ctx.actions.filter(a=>a.target!==undefined).map(a=>a.target))});
     return ctx.choicePlan.roots.get(c.attackUid+':'+(a.target||'direct'))?.score??-10000;
   }
   if(a.finish){
+    if(c.attackCostUid&&!(c.selected?.length)){
+      const costs=ctx.actions.filter(a=>a.target&&!a.selected).map(a=>costValue(ctx.s,ctx.side,locate(ctx.s,a.target)));
+      const gain=Math.max(0,...[...ctx.plan.roots.values()].filter(n=>n.moves[0].uid===c.attackCostUid).map(n=>n.score));
+      if(costs.length&&(c.attackRequired||gain>Math.min(...costs)*.9))return -Infinity;
+    }
     if(['removal','backrowRemoval','bounce','search','recover','revive','control','graveRemoval'].includes(intent)){
       const useful=ctx.actions.some(x=>x.target&&!x.selected&&targetScore(ctx,x,intent,source)>0);
       if(useful&&(c.selected?.length||0)<(c.max??Infinity))return 0;
@@ -379,6 +386,7 @@ export function rankAIActions(state,side=1,{planning=true,weights}={}){
     if(a.type==='NEXT')return a.label==='Battle'&&ctx.plan.score>0?80:5;
     if(a.type==='CHOOSE')return scoreChoice(ctx,a);
     if(a.type==='ATTACK'){
+      if(!a.battleExitBlocked&&ctx.s.declinedAttacks[side].includes(a.uid))return -100000;
       const entries=[...ctx.plan.roots.values()].filter(n=>n.moves[0].uid===a.uid);
       return entries.length?Math.max(...entries.map(n=>n.score)):-1000;
     }

@@ -28,6 +28,11 @@ runtime=runtime.replace(move,'case 50:return{type:t,card:e.u32(),from:p(e),to:p(
 const queryAlias='else if(s===u.ALIAS&&o===4)t.alias=e.u32();';
 if(!runtime.includes(queryAlias))throw new Error('Pinned TYPE query patch no longer matches.');
 runtime=runtime.replace(queryAlias,queryAlias+'else if(s===u.TYPE&&o===4)t.type=e.u32();');
+// QUERY_COUNTERS packs the counter type in the low uint16, then its count.
+// The wrapper reversed them, displaying counter IDs as enormous totals.
+const counters='let c=e.u16(),a=e.u16();t.counters[a]=c';
+if(!runtime.includes(counters))throw new Error('Pinned counter query patch no longer matches.');
+runtime=runtime.replace(counters,'let c=e.u16(),a=e.u16();t.counters[c]=a');
 // Unknown monster stats use negative int32 sentinels, not unsigned billions.
 for(const [flag,property] of [['ATTACK','attack'],['DEFENSE','defense'],['BASE_ATTACK','baseAttack'],['BASE_DEFENSE','baseDefense']]){
   const unsigned=`s===u.${flag}&&o===4)t.${property}=e.u32()`;

@@ -31,6 +31,11 @@ export async function damageDuel(engine,cards,{defender='Mystical Elf',attacker=
   state=command(engine,state,'NEXT',attackingSide);
   state=advanceBattle(engine,state,s=>s.actions[attackingSide].some(a=>a.type==='ATTACK'));
   state=command(engine,state,'ATTACK',attackingSide);
+  // These are directed Damage Step fixtures, including deliberately bad
+  // attacks. Choose their specified defender rather than asking the AI whether
+  // to cancel after it sees the legal target list.
+  state=advanceBattle(engine,state,s=>s.pending?.kind==='attack'||s.choice?.attackUid);
+  if(state.choice?.attackUid)state=selectCard(engine,state,state.players[defendingSide].monsters.find(c=>c?.card.name===defender).uid);
   state=advanceBattle(engine,state,s=>s.pending?.kind==='attack');
   return state;
 }

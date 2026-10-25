@@ -48,4 +48,4 @@ for(let seed=1;seed<=40;seed++){
   assert.notEqual(state.winner,null,`Match ${seed} did not finish in ${steps} actions: ${JSON.stringify({choice:state.choice?.title,recent})}`);
   destroyMatch(state);completed++;stepsTotal+=steps;
 }
-console.log(JSON.stringify({archive:cards.length,through2004:era.length,supported:pool.length,playableSets:available.map(s=>({name:s.name,cards:s.remaining.length})),generationChecks:generated,completedMatches:completed,actions:stepsTotal,effectsExercised:[...exercised].sort()},null,2));
+console.log(JSON.stringify({archive:cards.length,eraEnd:ERA_END,datedCards:era.length,supported:pool.length,playableSets:available.map(s=>({name:s.name,cards:s.remaining.length})),generationChecks:generated,completedMatches:completed,actions:stepsTotal,effectsExercised:[...exercised].sort()},null,2));

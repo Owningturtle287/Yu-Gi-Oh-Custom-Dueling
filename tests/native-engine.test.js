@@ -21,8 +21,8 @@ test('the pinned pack initializes every early card script, including aliased pri
   const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5,seed:[1n,2n,3n,4n],team1:{startingLP:8000,startingDrawCount:0,drawCountPerTurn:1},team2:{startingLP:8000,startingDrawCount:0,drawCountPerTurn:1},cardReader:code=>records.get(code),scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
   try{
     lib.loadScript(handle,'constant.lua',scripts['constant.lua']);lib.loadScript(handle,'utility.lua',scripts['utility.lua']);
-    let count=0;for(const id of NATIVE_CARD_IDS){const code=id===81480461?81480460:id;if(!records.has(code))continue;lib.duelNewCard(handle,{team:0,controller:0,duelist:0,code,location:m.OcgLocation.DECK,sequence:1,position:m.OcgPosition.FACEDOWN_DEFENSE});count++;}
-    assert.ok(count>2000);assert.deepEqual(errors,[]);
+    let count=0;for(const id of NATIVE_CARD_IDS){const code=pack.manifest.cardAliases?.[id]||id;if(!records.has(code))continue;lib.duelNewCard(handle,{team:0,controller:0,duelist:0,code,location:m.OcgLocation.DECK,sequence:1,position:m.OcgPosition.FACEDOWN_DEFENSE});count++;}
+    assert.equal(count,NATIVE_CARD_IDS.size);assert.deepEqual(errors,[]);
   }finally{lib.destroyDuel(handle);}
 });
 test('native opening automatically reaches Main 1, retains full card queries and rejects stale responses',async()=>{

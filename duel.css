@@ -634,6 +634,8 @@ html[data-duel-rotated=true] #modal { position:fixed; inset:auto; left:50%; top:
 .duel-utility-actions { top:4px; right:calc(var(--phase-width) + var(--phase-gap) + 8px); }
 .duel-table [data-pile-zone=banished] .duel-pile-count { top:50%; bottom:auto; left:calc(100% + 3px); right:auto; width:auto; min-width:14px; transform:translateY(-50%); }
 .duel-table .opponent-side [data-pile-zone=banished] .duel-pile-count { left:auto; right:calc(100% + 3px); }
+.duel-counter-badge { position:absolute; z-index:2; top:1px; right:1px; min-width:16px; padding:1px 3px; border:1px solid #e2c77c; border-radius:5px; background:#203f47; color:#fff4c6; font-size:9px; line-height:12px; font-weight:800; pointer-events:none; }
+.duel-counter-description { color:#315951; font-weight:700; }
 .duel-phase-rail .duel-phases li { gap:1px; padding-left:0; border-radius:7px; }
 .duel-phase-rail .duel-phases li>span { font-size:10px; }
 .duel-phase-rail .duel-phases small { display:none; }

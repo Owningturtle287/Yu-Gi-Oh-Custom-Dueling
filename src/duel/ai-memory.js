@@ -1,12 +1,13 @@
 // Knowledge is recorded only from public events or a reveal addressed to that
 // player. Querying the core's hidden identities must never populate memory.
+import {ERA_END} from './catalog.js';
 const zones=['monsters','spells','grave','banished','hand','extra'];
 const cardData=c=>Object.fromEntries(['id','name','type','race','attribute','level','atk','def','desc','archetype'].filter(k=>c[k]!==undefined).map(k=>[k,c[k]]));
 export const DEFAULT_BELIEF=[{atk:1200,def:800,weight:1},{atk:1600,def:1400,weight:2},{atk:1800,def:1900,weight:3},{atk:1400,def:2200,weight:2},{atk:2400,def:2600,weight:1}];
 export function beliefPool(cards,filters={}){
   const bins=new Map();
   for(const c of cards){
-    if(!c.type?.includes('Monster')||/Fusion|Ritual|Token/.test(c.type)||!c.tcgDate||c.tcgDate>(filters.cutoff||'2004-12-31')||filters.race&&c.race!==filters.race||filters.attribute&&c.attribute!==filters.attribute||filters.subtype&&!c.type.includes(filters.subtype))continue;
+    if(!c.type?.includes('Monster')||/Fusion|Ritual|Token/.test(c.type)||!c.tcgDate||c.tcgDate>(filters.cutoff||ERA_END)||filters.race&&c.race!==filters.race||filters.attribute&&c.attribute!==filters.attribute||filters.subtype&&!c.type.includes(filters.subtype))continue;
     if(/Cannot be Normal Summoned|Must (?:first )?be Special Summoned/i.test(c.desc||''))continue;
     const atk=Math.round(Math.max(0,c.atk||0)/400)*400,def=Math.round(Math.max(0,c.def||0)/400)*400,key=atk+':'+def+':'+c.race;
     const row=bins.get(key)||{atk,def,race:c.race,weight:0};row.weight+=(c.level<=4?3:1)*(c.def>=c.atk?1.4:1);bins.set(key,row);

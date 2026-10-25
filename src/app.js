@@ -6,7 +6,7 @@ import { cardGridLayout } from './layout.js';
 import { visibleDeckEntries } from './deck-view.js';
 import { patchArena as patchContent } from './duel/dom.js';
 import { createSoloController } from './duel/ui.js';
-import { support } from './duel/catalog.js';
+import { support, ERA_YEAR } from './duel/catalog.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -23,10 +23,10 @@ let duelDesign = null;
 const deckView = {query:'',category:'All',sort:'type'};
 const solo = createSoloController({ main, modal, getCards: () => state.cards, getDecks: () => state.decks, getStatus: () => state.cardStatus, showDialog, dialogHeader, closeDialog, toast,
   onExit: () => navigate('home'),
-  onDesign: (side, deck) => confirmReplace(() => {
+  onDesign: (side, deck, eligibility) => confirmReplace(() => {
     duelDesign = side;
     state.draft = deck ? structuredClone(deck) : createDeck(side === 0 ? 'My classic deck' : 'AI classic deck');
-    state.draft.releaseYear = 2004; state.dirty = !deck; state.section = 'main';
+    state.draft.releaseYear = Number(eligibility.cutoff.slice(0,4)); state.dirty = !deck; state.section = 'main';
     state.filters = { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', sort: 'az' };
     navigate('decks');
   })
@@ -95,7 +95,7 @@ function renderHome() {
   const archiveStatus = state.cardStatus === 'ready' ? `${state.cards.length.toLocaleString()} cards ${state.source === 'api' ? 'in your archive' : 'available from cache'}` : state.cardStatus === 'loading' ? 'Preparing your card archive…' : 'Archive unavailable · open to retry';
   main.innerHTML = `<section class="screen home" aria-label="Home">
     <div class="home-hero"><div class="hero-copy"><div class="eyebrow">THE DUELIST’S WORKSHOP</div><h1>Build a deck.<br><span>Make your move.</span></h1><p>Your cards. Your next duel.</p></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><img src="./assets/emblem.svg" alt=""></div><div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<small>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'}</small></span></div></div>
-    <div class="home-paths"><div class="section-label"><span>CHOOSE YOUR PATH</span><span>2004 ERA</span></div><div class="home-grid">
+    <div class="home-paths"><div class="section-label"><span>CHOOSE YOUR PATH</span><span>THROUGH ${ERA_YEAR}</span></div><div class="home-grid">
       <button class="launch-card solo-launch-card" data-route="solo">${icon('solo')}<span class="arrow" aria-hidden="true">↗</span><span class="soon-label">PLAY SOLO</span><strong>Enter the arena</strong><small>Classic cards. A strategic rival.</small></button>
       <button class="launch-card archive-launch" data-route="archive">${icon('archive')}<span class="arrow" aria-hidden="true">↗</span><strong>Card Archive</strong><small>Find your next ace</small></button>
       <button class="launch-card" data-route="decks">${icon('deck')}<span class="arrow" aria-hidden="true">↗</span><strong>Deck Builder</strong><small>Craft your strategy</small></button>
@@ -473,7 +473,7 @@ let installPrompt;
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
 window.addEventListener('appinstalled', () => { installPrompt = null; toast('Duel Atlas added to your home screen.'); });
 function showMenu() {
-  showDialog(`${dialogHeader('Duel Atlas')}<p>Duel Atlas · v${VERSION}<br>Your cards. Your decks. Your next duel.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Playable 2004 Lab · local AI</small></span></button>`, 'menu-body');
+  showDialog(`${dialogHeader('Duel Atlas')}<p>Duel Atlas · v${VERSION}<br>Your cards. Your decks. Your next duel.</p><button class="menu-item" data-action="install">${icon('backup')}<span>Install on your phone<small>Add Duel Atlas to your home screen</small></span></button><button class="menu-item" data-action="settings">${icon('filter')}<span>App settings<small>Card display and archive refresh</small></span></button><button class="menu-item" data-action="about">${icon('info')}<span>About this release<small>Scope, card data, and credits</small></span></button><button class="menu-item" data-route="solo">${icon('solo')}<span>Solo Duel<small>Playable ${ERA_YEAR} Lab · local AI</small></span></button>`, 'menu-body');
 }
 function showInstall() {
   const installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -484,7 +484,7 @@ function showSettings() {
   showDialog(`${dialogHeader('App settings')}<section class="settings-card"><h3>On this device</h3><p>${state.decks.length} saved decks · archive refreshes daily</p><button data-action="refresh-settings">Refresh archive</button><button data-action="backup-all">Back up all decks</button></section>${state.storageError ? '<p class="inline-error">Browser storage could not be read. Back up the saved data before fixing or clearing it in browser settings.</p>' : ''}<button data-action="close">Done</button>`, 'settings-body');
 }
 function showAbout() {
-  showDialog(`${dialogHeader('About Duel Atlas')}<span class="pill gold">v${VERSION} · FUNCTIONALITY TEST</span><p>Explore the full archive, build local decks and play Solo with the supported 2004 TCG pool. Multiplayer is coming later.</p><p>Solo uses current card text and modern turn rules. Open Solo → Rules & cards for supported cards and limits.</p><p>Data and official card art: <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. An independent fan app, unaffiliated with Konami. Card names and images belong to their rights holders; Duel Atlas branding is original.</p><p>Rules powered by <a href="https://github.com/n1xx1/ocgcore-wasm">ocgcore-wasm</a>, <a href="https://github.com/edo9300/ygopro-core">EDOPro</a> and <a href="https://github.com/ProjectIgnis/CardScripts">Project Ignis</a>. <a href="./assets/rules/THIRD_PARTY_NOTICES.md">Licenses & source</a>.</p><button data-action="close">Done</button>`, 'about-body');
+  showDialog(`${dialogHeader('About Duel Atlas')}<span class="pill gold">v${VERSION} · FUNCTIONALITY TEST</span><p>Explore the full archive, build local decks and play Solo with the supported ${ERA_YEAR} TCG pool. Multiplayer is coming later.</p><p>Solo uses current card text and modern turn rules. Open Solo → Rules & cards for supported cards and limits.</p><p>Data and official card art: <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. An independent fan app, unaffiliated with Konami. Card names and images belong to their rights holders; Duel Atlas branding is original.</p><p>Rules powered by <a href="https://github.com/n1xx1/ocgcore-wasm">ocgcore-wasm</a>, <a href="https://github.com/edo9300/ygopro-core">EDOPro</a> and <a href="https://github.com/ProjectIgnis/CardScripts">Project Ignis</a>. <a href="./assets/rules/THIRD_PARTY_NOTICES.md">Licenses & source</a>.</p><button data-action="close">Done</button>`, 'about-body');
 }
 
 const actions = {

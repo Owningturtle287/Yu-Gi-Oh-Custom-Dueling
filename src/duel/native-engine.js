@@ -145,7 +145,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   function sync(r){
     const {lib,handle,module:m}=r,L=m.OcgLocation,Q=m.OcgQueryFlags;
     const previous=r.state.players,pool=cardsIn(r.state),used=new Set();
-    const flags=Q.CODE|Q.POSITION|Q.TYPE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.LEVEL|Q.RACE|Q.ATTRIBUTE|Q.IS_PUBLIC|Q.STATUS;
+    const flags=Q.CODE|Q.POSITION|Q.TYPE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.LEVEL|Q.RACE|Q.ATTRIBUTE|Q.IS_PUBLIC|Q.STATUS|Q.COUNTERS;
     const raceName=value=>({WINGEDBEAST:'Winged Beast',BEASTWARRIOR:'Beast-Warrior',SEASERPENT:'Sea Serpent',DIVINE:'Divine-Beast'})[value]||value?.toLowerCase().replace(/^./,c=>c.toUpperCase());
     const field=lib.duelQueryField(handle),players=previous.map(p=>({...emptyPlayer(p.name),lp:p.lp}));
     for(const side of [0,1]){
@@ -163,6 +163,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
           const card={uid,coreCode:q.code,card:descriptor(r,q.code),owner:r.side(q.owner??controller),controller:side,public:!!q.isPublic,disabled:!!(q.status&1),faceUp:!!(q.position&m.OcgPosition.FACEUP),position:q.position&m.OcgPosition.DEFENSE?'defense':'attack',currentStats:{atk:Math.max(0,q.attack||0),def:Math.max(0,q.defense||0)}};
           if(q.level!==undefined)card.currentLevel=q.level;
           if(q.type!==undefined)card.currentType=q.type;
+          if(q.counters)card.counters=q.counters;
           if(q.attack<0||q.defense<0)card.unknownStats={atk:q.attack<0,def:q.defense<0};
           if(q.race!==undefined)card.currentRace=raceName(Object.entries(m.OcgRace).find(([,value])=>value===q.race)?.[0])||card.card.race;
           if(q.attribute!==undefined)card.currentAttribute=Object.entries(m.OcgAttribute).find(([,value])=>value===q.attribute)?.[0]||card.card.attribute;
@@ -208,8 +209,8 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const at=cardAt(r,msg.card||msg),target=cardAt(r,msg.target);
     switch(msg.type){
       case T.RETRY:throw new Error('The rules engine rejected that selection. No fallback ruling was applied.');
-      case T.NEW_TURN:s.turn++;s.active=r.side(msg.player);s.normalSummons=[0,0];s.attacksUsed={};s.turnEffects=[];s.battleOptions=[];r.upkeepPaid=new Set();r.automaticSource=null;r.subeffectSource=null;s.battleStep=null;s.pending=null;r.lastAttack=null;r.battleStrike=null;r.resolving=null;log(r,`${who(s.active)} ${s.active===0?'begin':'begins'} Turn ${s.turn}.`,'phase');break;
-      case T.NEW_PHASE:{const phase={[m.OcgPhase.DRAW]:'draw',[m.OcgPhase.STANDBY]:'standby',[m.OcgPhase.MAIN1]:'main1',[m.OcgPhase.BATTLE_START]:'battle',[m.OcgPhase.BATTLE_STEP]:'battle',[m.OcgPhase.DAMAGE]:'battle',[m.OcgPhase.DAMAGE_CAL]:'battle',[m.OcgPhase.BATTLE]:'battle',[m.OcgPhase.MAIN2]:'main2',[m.OcgPhase.END]:'end'}[msg.phase];if(phase&&phase!==s.phase){s.phase=phase;if(!s.chain.length){r.sourceUid=null;r.automaticSource=null;r.subeffectSource=null;}if(phase==='standby')r.upkeepPaid=new Set();if(phase!=='battle'){s.battleStep=null;s.battleOptions=[];}log(r,PHASE_LABELS[phase]+' Phase.','phase');}break;}
+      case T.NEW_TURN:s.turn++;s.active=r.side(msg.player);s.normalSummons=[0,0];s.attacksUsed={};s.declinedAttacks=[[],[]];s.turnEffects=[];s.battleOptions=[];r.upkeepPaid=new Set();r.automaticSource=null;r.subeffectSource=null;s.battleStep=null;s.pending=null;r.lastAttack=null;r.battleStrike=null;r.resolving=null;log(r,`${who(s.active)} ${s.active===0?'begin':'begins'} Turn ${s.turn}.`,'phase');break;
+      case T.NEW_PHASE:{const phase={[m.OcgPhase.DRAW]:'draw',[m.OcgPhase.STANDBY]:'standby',[m.OcgPhase.MAIN1]:'main1',[m.OcgPhase.BATTLE_START]:'battle',[m.OcgPhase.BATTLE_STEP]:'battle',[m.OcgPhase.DAMAGE]:'battle',[m.OcgPhase.DAMAGE_CAL]:'battle',[m.OcgPhase.BATTLE]:'battle',[m.OcgPhase.MAIN2]:'main2',[m.OcgPhase.END]:'end'}[msg.phase];if(phase&&phase!==s.phase){s.phase=phase;s.declinedAttacks=[[],[]];if(!s.chain.length){r.sourceUid=null;r.automaticSource=null;r.subeffectSource=null;}if(phase==='standby')r.upkeepPaid=new Set();if(phase!=='battle'){s.battleStep=null;s.battleOptions=[];}log(r,PHASE_LABELS[phase]+' Phase.','phase');}break;}
       case T.SET:notePattern(s,r.side(msg.controller),'sets');if(msg.location===m.OcgLocation.MZONE)s.normalSummons[r.side(msg.controller)]++;log(r,`${who(r.side(msg.controller))} Set ${msg.location===m.OcgLocation.MZONE?'a monster (Normal Summon/Set)':'a Spell / Trap'}.`,'set',[],r.side(msg.controller));break;
       case T.DRAW:log(r,`${who(r.side(msg.player))} drew ${msg.drawn.length} card${msg.drawn.length===1?'':'s'}${r.resolving?' from '+r.resolving.card.name+'’s effect':''}.`,'draw',[r.resolving?.uid].filter(Boolean),r.side(msg.player));break;
       case T.HINT:if(msg.hint_type===1&&CORE_BATTLE_HINTS[Number(msg.hint)]&&(s.battleStep||s.pending?.kind==='attack'))battleStep(r,CORE_BATTLE_HINTS[Number(msg.hint)]);if(msg.hint_type===(m.OcgHintType?.CARD||10)){
@@ -226,7 +227,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         const text=effectExplanation(entry.card,{phase:s.phase,description:entry.description});
         log(r,`${who(entry.side)} activated ${entry.card.name} · chain link ${msg.chain_size}. ${effectBrief(entry.card,entry.effectText)}`,'activate',[card?.uid].filter(Boolean),entry.side,{effectNotice:{uid:entry.uid,card:entry.card,stage:'activate',text,chainLink:msg.chain_size}});break;
       }
-      case T.CHAIN_END:s.chain=[];r.sourceUid=null;r.resolving=null;r.automaticSource=null;r.subeffectSource=null;break;
+      case T.CHAIN_END:s.declinedAttacks=[[],[]];s.chain=[];r.sourceUid=null;r.resolving=null;r.automaticSource=null;r.subeffectSource=null;break;
       case T.CHAIN_SOLVING:{const link=s.chain[msg.chain_size-1];r.resolving=link||null;r.subeffectSource=null;if(link)link.solveStart=s.serial;log(r,`Resolving ${link?.card.name||'effect'} · chain link ${msg.chain_size}${s.chain.length>1?' (newest links resolve first)':''}.`,'effect',link?.uid?[link.uid]:[],link?.side);break;}
       case T.CHAIN_SOLVED:{
         const link=r.resolving;resolvedStats(r,link);
@@ -246,7 +247,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       case T.DAMAGE_STEP_END:r.battleNegation=null;commitStrike(r);s.pending=null;r.lastAttack=null;battleStep(r,null);log(r,'Damage Step complete. Return to the Battle Step.','timing');break;
       case T.CONFIRM_CARDS:confirmCards(r,msg);break;
       case T.BECOME_TARGET:{const cards=msg.cards.map(loc=>({card:cardAt(r,loc),loc}));for(const {card,loc} of cards){const name=card&&(r.side(loc.controller)===0||card.faceUp||card.public||loc.location===m.OcgLocation.GRAVE)?card.card.name:'a face-down card';log(r,`${effectName(r)||'The effect'} targets ${name}${loc.location===m.OcgLocation.MZONE?` in ${r.side(loc.controller)===0?'your':'AI’s'} Monster Zone ${loc.sequence+1}`:''}.`,'target',[effectSource(r)?.uid,card?.uid].filter(Boolean));}break;}
-      case T.ATTACK:notePattern(s,s.active,'attacks');r.attackSelectionUid=null;s.attacksUsed??={};if(at)s.attacksUsed[at.uid]=(s.attacksUsed[at.uid]||0)+1;r.lastAttack={kind:'attack',uid:at?.uid,target:target?.uid||null,side:at?.controller??s.active};s.pending=r.lastAttack;s.visualAction={type:'DECLARE_ATTACK',uid:at?.uid,target:target?.uid||null};r.battleStrike=null;battleStep(r,'attack');log(r,`${at?.card.name||'A monster'} attacked ${target?target.faceUp?target.card.name:'a face-down Defense Position monster':'Life Points directly'}.`,'attack',[at?.uid,target?.uid].filter(Boolean));break;
+      case T.ATTACK:s.declinedAttacks=[[],[]];notePattern(s,s.active,'attacks');r.attackSelectionUid=null;s.attacksUsed??={};if(at)s.attacksUsed[at.uid]=(s.attacksUsed[at.uid]||0)+1;r.lastAttack={kind:'attack',uid:at?.uid,target:target?.uid||null,side:at?.controller??s.active};s.pending=r.lastAttack;s.visualAction={type:'DECLARE_ATTACK',uid:at?.uid,target:target?.uid||null};r.battleStrike=null;battleStep(r,'attack');log(r,`${at?.card.name||'A monster'} attacked ${target?target.faceUp?target.card.name:'a face-down Defense Position monster':'Life Points directly'}.`,'attack',[at?.uid,target?.uid].filter(Boolean));break;
       case T.BATTLE:{
         const attacker=findCard(s,r.lastAttack?.uid)||cardAt(r,msg.card),defender=findCard(s,r.lastAttack?.target)||cardAt(r,msg.target);
         const side=attacker?.controller??r.lastAttack?.side??s.active,defense=!!(msg.target?.position&m.OcgPosition.DEFENSE);
@@ -352,12 +353,18 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       if(p.to_ep)add({type:'END'},{type:R.SELECT_IDLECMD,action:m.SelectIdleCMDAction.TO_EP,index:null});return;
     }
     if(p.type===T.SELECT_BATTLECMD){
+      // A declaration that returns here without an ATTACK event was cancelled
+      // (target or cost declined). Remember it for AI planning only; humans
+      // retain every legal core action. A real attack/chain/phase resets it.
+      s.declinedAttacks??=[[],[]];
+      if(r.attackSelectionUid&&!s.declinedAttacks[side].includes(r.attackSelectionUid))s.declinedAttacks[side].push(r.attackSelectionUid);
       r.attackSelectionUid=null;
       s.pending=null;s.battleStep=null;r.lastAttack=null;r.battleStrike=null;
       if(!s.chain.length)r.sourceUid=null;
       p.chains.forEach((item,index)=>located(item,'ACTIVATE','Activate effect',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_CHAIN,index}));
-      s.battleOptions=p.attacks.map(item=>({uid:sourceAt(r,item)?.uid,canDirect:!!item.can_direct})).filter(item=>item.uid);
-      p.attacks.forEach((item,index)=>located(item,'ATTACK','Attack',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_BATTLE,index},{canDirect:!!item.can_direct,...(!s.players[1-side].monsters.some(Boolean)&&item.can_direct?{target:null}:{})}));
+      const battleExitBlocked=!p.to_m2&&!p.to_ep;
+      s.battleOptions=p.attacks.map(item=>({uid:sourceAt(r,item)?.uid,canDirect:!!item.can_direct,battleExitBlocked})).filter(item=>item.uid);
+      p.attacks.forEach((item,index)=>located(item,'ATTACK','Attack',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_BATTLE,index},{canDirect:!!item.can_direct,battleExitBlocked,...(!s.players[1-side].monsters.some(Boolean)&&item.can_direct?{target:null}:{})}));
       if(p.to_m2)add({type:'NEXT',label:'Main 2'},{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.TO_M2,index:null});else if(p.to_ep)add({type:'NEXT',label:'End'},{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.TO_EP,index:null});
       if(p.to_ep)add({type:'END'},{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.TO_EP,index:null});return;
     }
@@ -374,8 +381,14 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     if(p.type===T.SELECT_CARD&&r.attackSelectionUid&&/attack/.test(r.hint)){
       choice.attackUid=r.attackSelectionUid;choice.trigger.uid=r.attackSelectionUid;
     }
+    if([T.SELECT_CARD,T.SELECT_UNSELECT_CARD].includes(p.type)&&r.attackSelectionUid&&/release|tribute/.test(r.hint)){
+      choice.attackCostUid=r.attackSelectionUid;choice.trigger.uid=r.attackSelectionUid;
+      const attacker=findCard(s,r.attackSelectionUid);if(attacker)choice.source={uid:attacker.uid,card:attacker.card,controller:side};
+    }
+    if(choice.attackUid||choice.attackCostUid)choice.attackRequired=!!r.battleExitBlocked;
     const option=(label,response,extra={})=>add({type:'CHOOSE',label,...extra},response);
     const context=choiceContext(source?.card,choice.selectionType,describe(r,p.description),r.hint,s.phase);if(context.instructions)choice.instructions=context.instructions;
+    if(choice.attackCostUid)choice.instructions='Choose a Tribute to pay the attack cost, then confirm. Confirming without a card cancels the attack.';
     if(p.type===T.SELECT_EFFECTYN||p.type===T.SELECT_YESNO){const target=sourceAt(r,p);choice.trigger.uid=target?.uid||(p.type===T.SELECT_YESNO?r.sourceUid:null);choice.optionalResponse=p.type===T.SELECT_EFFECTYN&&!!(choice.trigger.uid||p.code);choice.effectText=context.effectText||describe(r,p.description);choice.title=context.title||((target?.card.name||source?.card.name||'Effect')+' · '+choice.effectText);const responseType=p.type===T.SELECT_EFFECTYN?R.SELECT_EFFECTYN:R.SELECT_YESNO;option(context.yes||(p.type===T.SELECT_EFFECTYN?'Activate effect':'Yes · continue'),{type:responseType,yes:true},{yes:true,effectText:choice.effectText,...(p.code?{effectCard:descriptor(r,p.code)}:{})});option(context.no||(p.type===T.SELECT_EFFECTYN?'Skip effect':'No · decline'),{type:responseType,yes:false},{yes:false});return;}
     if(p.type===T.SELECT_OPTION){choice.title=context.title||(source?.card.name?source.card.name+' · Choose an option':'Choose an effect option');p.options.forEach((desc,index)=>{const label=describe(r,desc);option(label,{type:R.SELECT_OPTION,index},/^(Heads|Tails)$/.test(label)?{coinCall:label}:{});});return;}
     if(p.type===T.SELECT_POSITION){choice.positionCard=p.code?{card:descriptor(r,p.code)}:source;choice.title='Choose battle position';for(const [position,label] of [[m.OcgPosition.FACEUP_ATTACK,'Attack Position'],[m.OcgPosition.FACEUP_DEFENSE,'Defense Position'],[m.OcgPosition.FACEDOWN_DEFENSE,'Set in Defense'],[m.OcgPosition.FACEDOWN_ATTACK,'Face-down Attack']])if(p.positions&position)option(label,{type:R.SELECT_POSITION,position},{defense:!!(position&m.OcgPosition.DEFENSE)});return;}
@@ -386,7 +399,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     }
     if([T.SELECT_CARD,T.SELECT_TRIBUTE,T.SELECT_SUM,T.SELECT_COUNTER,T.SELECT_DISFIELD,T.SORT_CARD,T.SORT_CHAIN].includes(p.type)){
       choice.stage=true;let candidates=p.selects||p.cards;
-      if(p.type===T.SELECT_CARD)choice.instructions=p.min===p.max?`Select ${p.min} card${p.min===1?'':'s'}, then confirm.`:`Select ${p.min}–${p.max} cards, then confirm.`;
+      if(p.type===T.SELECT_CARD&&!choice.attackCostUid)choice.instructions=p.min===p.max?`Select ${p.min} card${p.min===1?'':'s'}, then confirm.`:`Select ${p.min}–${p.max} cards, then confirm.`;
       if(choice.attackUid)choice.instructions='Choose a highlighted monster to attack, then confirm. One arrow shows your selected target.';
       if(p.type===T.SELECT_TRIBUTE)choice.instructions=`Choose Tributes worth at least ${p.min} (up to ${p.max} monster${p.max===1?'':'s'}), then confirm.`;
       if(p.type===T.SELECT_COUNTER)choice.instructions=`Allocate ${p.count} counters by tapping their cards, then confirm.`;
@@ -450,7 +463,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     r.history.push({side,index:legalActions(state,side).indexOf(legal),type:legal.type});if(legal.coinCall)r.coinCall=legal.coinCall;
     if(reply.stage){const {kind,index}=reply.stage;if(kind==='toggle')r.selected=r.selected.includes(index)?r.selected.filter(i=>i!==index):r.prompt.type===r.module.OcgMessageType.SELECT_CARD&&r.prompt.max===1?[index]:[...r.selected,index];else if(kind==='reset')r.selected=[];else r.selected.push(index);actions(r);return r.state;}
     if(legal.uid&&['ACTIVATE','EFFECT','SUMMON'].includes(legal.type))r.sourceUid=legal.uid;
-    if(legal.type==='ATTACK')r.attackSelectionUid=legal.uid;
+    if(legal.type==='ATTACK'){r.attackSelectionUid=legal.uid;r.battleExitBlocked=legal.battleExitBlocked;}
     if(r.prompt.type===r.module.OcgMessageType.SELECT_EFFECTYN&&legal.yes)r.sourceUid=state.choice?.trigger?.uid||r.sourceUid;
     if(legal.type==='PASS'||r.prompt.type===r.module.OcgMessageType.SELECT_EFFECTYN&&legal.yes===false){const trigger=state.choice?.optionalResponse?findCard(state,state.choice.trigger.uid):null;const label=trigger&&(trigger.controller===0||trigger.faceUp||trigger.public||state.revealedUIDs?.includes(trigger.uid))?trigger.card.name:null;log(r,`${who(side)} ${side===0?'pass':'passes'}${label?' on '+label+'’s optional effect':state.chain.length?' on responding to '+state.chain.at(-1).card.name:' this response opportunity'}; play continues.`,'response',[],side);}
     r.lib.duelSetResponse(r.handle,reply.response);pump(r);return r.state;

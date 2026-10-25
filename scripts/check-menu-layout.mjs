@@ -10,7 +10,7 @@ await mkdir(output,{recursive:true});
 let browser,page;
 try{
  browser=await chromium.launch({headless:true});
- const raw=[...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data,...JSON.parse(await readFile('tests/level-up-fixtures.json')).data];
+ const raw=[...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data,...JSON.parse(await readFile('tests/level-up-fixtures.json')).data,...JSON.parse(await readFile('tests/era2006-fixtures.json')).data.filter(c=>['Alien Grey','Clock Tower Prison','Cyber Dragon','Elemental HERO Neos'].includes(c.name))];
  const cards=[...new Map(raw.map(c=>[c.id,{...c,card_sets:[{set_name:'Layout test set'}]}])).values()];
  async function visibleControls(selector){
   const clipped=await page.locator(selector).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden').flatMap(node=>{
@@ -97,6 +97,11 @@ try{
    await visibleControls('.solo-setup button,.solo-setup select');
   }
   for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
+  assert.match(await page.locator('.duel-era').textContent(),/2006 LAB/);
+  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2006-12-31');
+  await page.locator('[name="cutoff"]').selectOption('2005-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();
+  assert.match(await page.locator('.solo-filter-summary').textContent(),/2005 & earlier/);
+  await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption('2006-12-31');await page.locator('#duel-filters button[type="submit"]').click();
   await capture(`setup-${width}x${height}`);
   if([844,390,568,320].includes(width)){
    // Mount the production controller at a genuine native Type/Attribute prompt.
@@ -154,6 +159,23 @@ try{
   await page.locator('.duel-choice-action').filter({hasText:'Attack Position'}).waitFor();await page.locator('.duel-arena[data-moving="false"]').waitFor();await page.locator('.duel-choice-action').filter({hasText:'Attack Position'}).click();
   await page.waitForFunction(()=>window.layoutRig.getMatch().players[0].monsters.some(c=>c?.card.name==='Armed Dragon LV7')&&document.querySelector('.duel-arena')?.dataset.moving==='false');
   await page.evaluate(()=>window.layoutRig.destroy());
+  // A real Alien flip verifies the new live counter badge and inspector on
+  // the same eight small/rotated screens as the rest of the arena.
+  await page.evaluate(async()=>{
+   const {navigate,state}=await import('/src/app.js');navigate('home');
+   const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js');
+   const catalog=state.cards,get=name=>catalog.find(c=>c.name===name),engine=createNativeBackend();
+   let match=await engine.createMatch([0,1].map(()=>({name:'Counter layout',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards:catalog,seed:67,openingHands:[[],[]],initialFields:[{monsters:[{card:get('Alien Grey'),faceUp:false,defense:true}]},{monsters:[{card:get('Blue-Eyes White Dragon')}]}]});
+   match=engine.applyAction(match,match.actions[0].find(a=>a.type==='POSITION'),0);
+   for(let n=0;n<120&&(match.choice||match.window||match.reveals?.length);n++){const side=match.actions[0].length?0:1;match=engine.applyAction(match,match.actions[side].find(a=>a.type==='PASS')||engine.chooseAIAction(match,side),side);}
+   const main=document.querySelector('#main'),modal=document.querySelector('#modal');
+   const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:title=>`<div class="dialog-header"><h2>${title}</h2><button data-action="close">×</button></div>`,toast:message=>{throw Error(message);},onDesign(){},engine:{...engine,createMatch:async()=>match}});
+   controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
+  });
+  await page.locator('.duel-counter-badge').waitFor();await page.locator('.duel-arena[data-moving="false"]').waitFor();assert.equal(await page.locator('.duel-counter-badge').getAttribute('title'),'1 A-Counter');
+  await visibleControls('.duel-counter-badge,.duel-controls button');await capture(`alien-counter-${width}x${height}`);
+  await page.locator('.duel-zone:has(.duel-counter-badge)').click();assert.equal(await page.locator('.duel-counter-description').textContent(),'1 A-Counter');await visibleControls('.duel-card-viewer button');await capture(`counter-inspection-${width}x${height}`);
+  await page.locator('.dialog-header [data-action="close"]').click();await page.evaluate(()=>window.layoutRig.destroy());
   // A real Big Eye prompt: five visible rows, stable reads, actual native order.
   await page.evaluate(async()=>{
    const {navigate,state}=await import('/src/app.js');navigate('home');
