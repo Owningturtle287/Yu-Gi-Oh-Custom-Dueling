@@ -17,7 +17,21 @@ The 2,177 dated records also include five collector-only World Championship priz
 
 The committed 2005/2006 fixture contains every newly dated record, plus older controls. Directed native tests cover Cyber Dragon on both sides and three field conditions; Power Bond materials/ATK/delayed damage; HERO Fusion and revival restrictions; Neos Contact Fusion and End Phase return; Diamond Dude's delayed Spell after leaving the field; Dark World effect discards versus costs; Treeborn Frog restrictions; Macro Cosmos versus Dimensional Fissure; exact Ritual Levels and Demise's LP cost; variable Chimeratech materials; A-Counters/control changes; Clock Counters; all three Sacred Beast summon procedures; cancelled attack costs, restricted targets and compulsory attacks. Replay checkpoints accompany these cases. UI tests cover cutoff migration, persistence, deck-designer eligibility, and live counter inspection.
 
-The full baseline sweep exercised 3,959 synthetic hand/field contexts across all 2,170 cards without a native script or adapter error. It exposed AI loops during full matches, which were fixed as described above. Final sweep, expanded full-match and Chromium results are being verified before release.
+The [machine-readable report](audit-v0.5.0.json) records the repeated card sweep and final AI match run:
+
+| Check | Result |
+| --- | --- |
+| Regression tests | 405 passed, including 35 directed expansion/UI cases |
+| All-script initialization | All 2,630 worldwide IDs/aliases initialize without script errors |
+| Card sweep | 3,959 probes across every one of the 2,170 playable TCG cards |
+| Full validated matches | 600 / 600 complete; zero script/adapter failures or action-limit stalls |
+| Accepted actions | 260,155 across the sweep and final matches |
+| Verified replay checkpoints | 109 |
+| Distinct effects observed | 986 |
+| Runtime lifetime | 120 created/destroyed; zero retained callback closures |
+| Static build | Passed |
+
+The card sweep verifies scripts and adapter prompts. The full-match run uses the final AI handling for optional costs, restricted targets and compulsory attacks. Chromium checks cover eight viewport sizes, including rotated phones; final screenshots are verified in CI before deployment.
 
 ## Reproduce
 
