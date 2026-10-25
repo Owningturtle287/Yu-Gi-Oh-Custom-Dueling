@@ -8,6 +8,12 @@ export function currentCardData(instance){
   return {...instance.card,...(trapMonster?{type:(instance.currentType&32?'Effect':'Normal')+' Trap Monster'}:{}),level:instance.currentLevel??instance.card.level,race:instance.currentRace??instance.card.race,attribute:instance.currentAttribute??instance.card.attribute};
 }
 export const cardStatText=(instance,values)=>({atk:instance.unknownStats?.atk?'?':values.atk,def:instance.unknownStats?.def?'?':values.def});
+// Counter totals come from live core queries, never inferred from effect text.
+export function cardCounters(instance){
+  if(!instance?.faceUp)return [];
+  const names={1:'Spell Counter',4110:'A-Counter',27:'Clock Counter'};
+  return Object.entries(instance.counters||{}).filter(([,count])=>count>0).map(([type,count])=>({type:Number(type),count,label:`${count} ${names[type]||'Counter'}${count===1?'':'s'}`}));
+}
 
 export function cardArtURLs(card) {
   const supplied = card?.card_images?.[0];

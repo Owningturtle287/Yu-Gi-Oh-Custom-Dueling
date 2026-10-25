@@ -1,5 +1,5 @@
 import { defaultSide, poolFor, eligibleSets, generateDeck, validateDuelDeck, expandDeck, loadSets } from './decks.js';
-import { support, ERA_END, isMonster } from './catalog.js';
+import { support, ERA_END, ERA_YEAR, isMonster } from './catalog.js';
 import * as nativeEngine from './native-engine.js';
 import { PHASES, PHASE_LABELS } from './engine.js';
 import { chooseAIAction as legacyAI } from './ai.js';
@@ -21,7 +21,7 @@ import { createDuelIntro,coinMarkup } from './intro.js';
 import {battlePresentations,createBattlePlayer} from './battle-presentation.js';
 import { createAttackArrows } from './attack-arrows.js';
 import { BATTLE_STEPS, responseAdvice } from './battle-timing.js';
-import { cardArtURLs, cardTypeLabel, sharpenCardArt, currentCardData, cardStatText } from './card-view.js';
+import { cardArtURLs, cardTypeLabel, sharpenCardArt, currentCardData, cardStatText, cardCounters } from './card-view.js';
 import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, quickCardActions, activityCue, cardActivity } from './field.js';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
@@ -83,13 +83,17 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   reducedMotion.addEventListener?.('change',cancelMotion);
   try {
     const saved=JSON.parse(localStorage.getItem(CONFIG)||'null');
-    if(saved&&typeof saved==='object'){config={...config,...saved,sides:saved.sides?.length===2?saved.sides.map(side=>({...defaultSide(),...side})):config.sides};}
+    if(saved&&typeof saved==='object'){
+      const previousEnd=saved.eraEnd||'2004-12-31';
+      config={...config,...saved,sides:saved.sides?.length===2?saved.sides.map(side=>({...defaultSide(),...side,cutoff:side.cutoff===previousEnd?ERA_END:side.cutoff||ERA_END})):config.sides};
+    }
   }catch{/* corrupt settings never replace saved decks */}
   if(!AI_SPEEDS[config.aiSpeed])config.aiSpeed='normal';
   if(!['coin','you','ai'].includes(config.first))config.first='coin';
   delete config.difficulty; // Migrate older settings to the single full-strength policy.
   if(![4000,8000].includes(config.lp))config.lp=8000;
   config.animations=typeof config.animations==='boolean'?config.animations:true;
+  config.eraEnd=ERA_END;
   // Deck/config storage failures are visible; leaving a live match is explicit.
   const persist=()=>{try{localStorage.setItem(CONFIG,JSON.stringify(config));}catch{toast('Solo settings apply for this session; browser storage is unavailable.',true);}};
   const saveSide=(side,deckId)=>{config.sides[side].deckId=deckId;config.sides[side].source='saved';persist();};
@@ -113,13 +117,13 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       <button class="solo-filter-summary" data-duel="filters" aria-haspopup="dialog">${icon('filter')}<span><strong>Card eligibility</strong><small>${escape([side.cutoff.slice(0,4)+' & earlier',side.race||'All types',side.attribute,side.subtype,!side.spells?'No spells':'',!side.traps?'No traps':''].filter(Boolean).join(' · '))}</small></span><span aria-hidden="true">↗</span></button>
       ${side.source==='set'?`<div class="solo-set-status" role="status">${setsStatus==='loading'?'Loading sets…':setsStatus==='error'?'Set data unavailable':`${candidateSets(tab).filter(s=>!s.problem).length} eligible sets`}${setsStatus==='error'?'<button data-duel="sets-retry">Retry</button>':''}</div>`:''}</div>`:'';
     main.innerHTML=`<section class="screen solo-setup" aria-label="Solo Duel setup">
-      <div class="duel-heading"><div><div class="eyebrow">THE ARENA</div><h1>Solo Duel</h1></div><button class="duel-era" data-duel="coverage" aria-haspopup="dialog">2004 LAB <span>Rules & cards ↗</span></button></div>
+      <div class="duel-heading"><div><div class="eyebrow">THE ARENA</div><h1>Solo Duel</h1></div><button class="duel-era" data-duel="coverage" aria-haspopup="dialog">${ERA_YEAR} LAB <span>Rules & cards ↗</span></button></div>
       <div class="solo-tabs" role="tablist" aria-label="Duel setup">${[['Your deck','deck'],['AI deck','solo'],['Match','filter'],['Saved duels','save']].map(([name,glyph],index)=>`<button id="solo-tab-${index}" role="tab" aria-controls="solo-panel" aria-selected="${tab===index}" data-duel-tab="${index}">${icon(glyph)}<span>${name}</span></button>`).join('')}</div>
       <div class="solo-panel" id="solo-panel" role="tabpanel" aria-labelledby="solo-tab-${tab}" tabindex="0">
       ${tab===3?`<div class="solo-panel-title"><span class="solo-sigil" aria-hidden="true">${icon('save')}</span><div><small>PICK UP WHERE YOU LEFT OFF</small><h2>Saved duels</h2></div></div><div class="duel-saved-list">${readDuelSaves(localStorage).map(save=>`<article><div><strong>${escape(save.name)}</strong><small>Turn ${save.turn} · ${save.lp.join(' / ')} LP</small></div><button class="primary" data-resume-duel="${escape(save.id)}" ${ready?'':'disabled'}>Resume</button><button data-delete-duel="${escape(save.id)}" aria-label="Delete saved duel">×</button></article>`).join('')||`<div class="solo-empty">${icon('save')}<strong>Your next move, saved.</strong><p>Save a duel from the arena menu to resume it here.</p></div>`}</div>`:tab<2?deckFields:
       `<div class="solo-panel-title"><span class="solo-sigil" aria-hidden="true">${icon('solo')}</span><div><small>YOUR DUEL, YOUR PACE</small><h2>Match settings</h2></div><span class="solo-ai-badge" title="Always full strength">Strategic AI</span></div><div class="solo-match-fields"><label>AI decision speed<select id="solo-ai-speed">${Object.entries(AI_SPEEDS).map(([key,speed])=>option(key,speed.label,config.aiSpeed)).join('')}</select></label><label>Goes first<select id="solo-first">${[['coin','Coin toss'],['you','You'],['ai','AI']].map(([v,l])=>option(v,l,config.first)).join('')}</select></label><label>Life Points<select id="solo-lp">${[8000,4000].map(n=>option(n,n.toLocaleString(),config.lp)).join('')}</select></label><label class="solo-checkbox"><input id="solo-animations" type="checkbox" ${config.animations?'checked':''}> Duel animations</label></div>`}
       </div>
-      <aside class="solo-launch"><div class="solo-versus"><div><small>YOU</small><strong>${escape(deckSummary(0))}</strong></div><span aria-hidden="true">VS</span><div><small>AI</small><strong>${escape(deckSummary(1))}</strong></div></div><p role="status">${ready?'Supported 2004 TCG cards · no banlist':getStatus()==='error'?'Open Archive to retry loading cards.':'Preparing card data…'}</p><button class="primary" data-duel="start" ${!ready?'disabled':''}>Start duel <span aria-hidden="true">→</span></button></aside>
+      <aside class="solo-launch"><div class="solo-versus"><div><small>YOU</small><strong>${escape(deckSummary(0))}</strong></div><span aria-hidden="true">VS</span><div><small>AI</small><strong>${escape(deckSummary(1))}</strong></div></div><p role="status">${ready?`Supported ${ERA_YEAR} TCG cards · no banlist`:getStatus()==='error'?'Open Archive to retry loading cards.':'Preparing card data…'}</p><button class="primary" data-duel="start" ${!ready?'disabled':''}>Start duel <span aria-hidden="true">→</span></button></aside>
     </section>`;
     const tabs=[...main.querySelectorAll('[data-duel-tab]')];
     tabs.forEach((button,index)=>{button.tabIndex=index===tab?0:-1;button.onkeydown=event=>{const next=event.key==='ArrowDown'||event.key==='ArrowRight'?(index+1)%4:event.key==='ArrowUp'||event.key==='ArrowLeft'?(index+3)%4:event.key==='Home'?0:event.key==='End'?3:null;if(next===null)return;event.preventDefault();main.querySelector(`[data-duel-tab="${next}"]`).click();main.querySelector(`[data-duel-tab="${next}"]`).focus();};});
@@ -134,23 +138,23 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function filters(){
     const side=config.sides[tab],pool=getCards().filter(c=>c.tcgDate&&c.tcgDate<=ERA_END),races=[...new Set(pool.filter(isMonster).map(c=>c.race))].sort();
-    showDialog(`${header(`${tab===0?'Your':'AI'} card eligibility`)}<p class="solo-note">Cards must pass these filters and the engine’s effect support check. Type, attribute, and subtype affect monsters.</p><form id="duel-filters"><div class="solo-settings-grid"><label>Release year<select name="cutoff">${Array.from({length:9},(_,i)=>2004-i).map(year=>option(year+'-12-31',year+' & earlier',side.cutoff)).join('')}</select></label><label>Monster subtype<select name="subtype">${option('','All subtypes',side.subtype)}${['Normal','Effect','Flip','Fusion','Ritual','Spirit','Union','Toon'].map(s=>option(s,s,side.subtype)).join('')}</select></label><label>Monster type<select name="race">${option('','All types',side.race)}${races.map(r=>option(r,r,side.race)).join('')}</select></label><label>Attribute<select name="attribute">${option('','All attributes',side.attribute)}${['DARK','LIGHT','EARTH','FIRE','WATER','WIND'].map(a=>option(a,a,side.attribute)).join('')}</select></label></div><div class="solo-settings-grid">${['spells','traps'].map(key=>`<label class="solo-checkbox"><input name="${key}" type="checkbox" ${side[key]?'checked':''}> Allow ${key}</label>`).join('')}</div><p class="solo-note">Later years unlock as the engine grows. Early cutoffs or narrow filters may leave too few cards to generate a deck.</p><div class="dialog-actions"><button type="button" data-action="close">Cancel</button><button type="submit" class="primary">Apply filters</button></div></form>`,'duel-filter-body');
+    showDialog(`${header(`${tab===0?'Your':'AI'} card eligibility`)}<form id="duel-filters"><div class="solo-settings-grid"><label>Release year<select name="cutoff">${Array.from({length:ERA_YEAR-1996+1},(_,i)=>ERA_YEAR-i).map(year=>option(year+'-12-31',year+' & earlier',side.cutoff)).join('')}</select></label><label>Monster subtype<select name="subtype">${option('','All subtypes',side.subtype)}${['Normal','Effect','Flip','Fusion','Ritual','Spirit','Union','Toon'].map(s=>option(s,s,side.subtype)).join('')}</select></label><label>Monster type<select name="race">${option('','All types',side.race)}${races.map(r=>option(r,r,side.race)).join('')}</select></label><label>Attribute<select name="attribute">${option('','All attributes',side.attribute)}${['DARK','LIGHT','EARTH','FIRE','WATER','WIND'].map(a=>option(a,a,side.attribute)).join('')}</select></label></div><div class="solo-settings-grid">${['spells','traps'].map(key=>`<label class="solo-checkbox"><input name="${key}" type="checkbox" ${side[key]?'checked':''}> Allow ${key}</label>`).join('')}</div><div class="dialog-actions"><button type="button" data-action="close">Cancel</button><button type="submit" class="primary">Apply filters</button></div></form>`,'duel-filter-body');
     for(const key of ['cutoff','race','attribute','subtype'])modal.querySelector(`[name="${key}"]`).value=side[key];
     modal.querySelector('#duel-filters').onsubmit=event=>{
       event.preventDefault();const form=event.target;
       for(const key of ['cutoff','race','attribute','subtype'])side[key]=form.elements.namedItem(key).value;
       for(const key of ['spells','traps'])side[key]=form.elements.namedItem(key).checked;
-      if(side.cutoff>ERA_END||side.cutoff<'1996-01-01'){toast('Choose a date from 1996 through 2004.',true);return;}
+      if(side.cutoff>ERA_END||side.cutoff<'1996-01-01'){toast(`Choose a date from 1996 through ${ERA_YEAR}.`,true);return;}
       side.set='';persist();closeDialog();render();
     };
   }
   function coverage(list=false){
     const era=getCards().filter(c=>c.tcgDate&&c.tcgDate<=ERA_END),supported=era.filter(c=>support(c).ok);
     if(!list){
-      showDialog(`${header('2004 engine · test scope')}<p><strong>${supported.length} of ${era.length} dated cards supported.</strong> The offline EDOPro rules core handles Ritual and Fusion Summons, Tribute procedures, Spirit / Union / Toon effects, counters, chains, costs, targeting and special victory conditions. Collector-only prize cards are excluded.</p><p>Uses current card text, modern core turn rules, and a three-copy limit without a banlist. Core timing handles simultaneous triggers, damage-step chains, and attack replays. This is a functionality-testing release; report any prompt or AI issue.</p><p>Set pools use API memberships and first TCG dates; eligible older reprints may be grouped with an original set. Multiplayer is still planned.</p><button class="primary" data-duel="support-list">Browse card support</button><button data-action="close">Done</button>`,'duel-scope-body');
+      showDialog(`${header(`${ERA_YEAR} engine · test scope`)}<p><strong>${supported.length} of ${era.length} dated cards supported.</strong> The offline EDOPro rules core handles Ritual and Fusion Summons, Tribute procedures, Spirit / Union / Toon effects, counters, chains, costs, targeting and special victory conditions. Collector-only prize cards and deck-list placeholders are excluded; Tokens are created by effects.</p><p>Uses current card text, modern core turn rules, and a three-copy limit without a banlist. Core timing handles simultaneous triggers, damage-step chains, and attack replays. This is a functionality-testing release; report any prompt or AI issue.</p><p>Set pools use API memberships and first TCG dates; eligible older reprints may be grouped with an original set. Multiplayer is still planned.</p><button class="primary" data-duel="support-list">Browse card support</button><button data-action="close">Done</button>`,'duel-scope-body');
       return;
     }
-    showDialog(`${header('Card support · 2004 & earlier')}<label>Find support status<input id="support-search" type="search" placeholder="Card name…" autocomplete="off"></label><div class="duel-choice-list" id="support-list" aria-label="Card support results"></div><button data-duel="coverage">Back to rules</button>`,'duel-list-body');
+    showDialog(`${header(`Card support · ${ERA_YEAR} & earlier`)}<label>Find support status<input id="support-search" type="search" placeholder="Card name…" autocomplete="off"></label><div class="duel-choice-list" id="support-list" aria-label="Card support results"></div><button data-duel="coverage">Back to rules</button>`,'duel-list-body');
     const update=()=>{const query=modal.querySelector('#support-search').value.toLowerCase();modal.querySelector('#support-list').innerHTML=era.filter(c=>c.name.toLowerCase().includes(query)).sort((a,b)=>a.name.localeCompare(b.name)).map(card=>`<div class="support-row"><strong>${escape(card.name)}</strong><small class="${support(card).ok?'supported':'unsupported'}">${support(card).ok?'Playable':escape(support(card).reason)}</small></div>`).join('');};
     modal.querySelector('#support-search').oninput=update;update();
   }
@@ -335,14 +339,14 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function openInspection(){
     const selected=inspection();if(!selected)return;const {card,groups}=selected;cardGroups=groups;
-    const details=currentCardData(card),values=isMonster(details)?cardStatText(card,stats(match,card)):null;
+    const details=currentCardData(card),values=isMonster(details)?cardStatText(card,stats(match,card)):null,counters=cardCounters(card).map(c=>c.label).join(' · ');
     const ownHand=match.players[0].hand.some(c=>c.uid===card.uid);
     const usedNormal=match.normalSummons?.[0]||match.normalUsed;
     const summonNote=ownHand&&values&&match.active===0&&['main1','main2'].includes(match.phase)&&!match.window&&!match.choice&&!groups.some(g=>g.actions.some(a=>a.type==='SUMMON'))&&usedNormal?'You already Normal Summoned/Set this turn. Tribute Summons normally share that limit; another summon needs a card effect.':'';
     const timingNote=match.phase==='main2'&&card.controller===0&&card.faceUp&&match.players[0].monsters.some(c=>c?.uid===card.uid)&&phaseEffectText(card.card,'end')?'End Phase effect: choose End Phase to reach its activation window. The effect is offered when its conditions are met.':'';
     cancelArt();
     const source=main.querySelector(`[data-motion-uid="${card.uid}"] img:not(.card-back-image)`)||modal.querySelector(`[data-duel-card="${card.uid}"] img`);
-    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(details))}</strong>${values?`<br>Level ${details.level} · ${escape(details.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}</p><div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}${timingNote?`<p class="duel-summon-note">${escape(timingNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
+    showDialog(`${header(card.card.name)}<div class="duel-inspect-art">${image(card.card)}</div><aside class="duel-inspect-options"><p class="duel-inspect-meta"><strong class="duel-card-typing">${escape(cardTypeLabel(details))}</strong>${values?`<br>Level ${details.level} · ${escape(details.attribute)}<br>ATK ${values.atk} / DEF ${values.def}`:''}${counters?`<br><span class="duel-counter-description">${escape(counters)}</span>`:''}</p><div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}${timingNote?`<p class="duel-summon-note">${escape(timingNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
     cancelArt=sharpenCardArt(modal.querySelector('.duel-inspect-art'),card.card,{source});
   }
   function dismissInspection(){
@@ -364,11 +368,15 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const activity=cardActivity(match,uid,cue,fieldSelection);
     return activity.label?`<span class="duel-activity-tag" data-role="${activity.role}">${escape(activity.label)}</span>`:'';
   }
+  function counterBadge(card){
+    const counters=cardCounters(card);if(!counters.length)return '';
+    return `<span class="duel-counter-badge" title="${escape(counters.map(c=>c.label).join('; '))}" aria-hidden="true">● ${counters.reduce((sum,c)=>sum+c.count,0)}</span>`;
+  }
   function renderZone(card,side,zone,index){
     const hidden=side===1&&card&&!card.faceUp,available=card&&arenaActions.some(action=>action.uid===card.uid),activity=card?cardActivity(match,card.uid,cue,fieldSelection):{role:'',label:''};
     const label=card?(hidden?`Opponent’s face-down card, zone ${index+1}`:card.card.name):`${zone==='monsters'?'Monster':'Spell / Trap'} Zone ${index+1}`;
     const values=card&&zone==='monsters'?(hidden?{atk:'?',def:'?'}:card.faceUp?cardStatText(card,stats(match,card)):{atk:card.card.atk<0?'?':card.card.atk,def:card.card.def<0?'?':card.card.def}):null;
-    return `<article class="duel-zone-shell ${zone==='monsters'?'monster-slot':'spell-slot'} ${values?'has-stats':''}" data-role="${activity.role}"><div class="duel-zone-surface"><button class="duel-zone ${card?'occupied':''} ${card&&!card.faceUp?'face-down':''} ${card?.position==='defense'?'defense':''} ${available?'actionable':''}" ${card?`data-duel-card="${card.uid}" data-motion-uid="${card.uid}"`:''} data-role="${activity.role}" data-motion-zone="${side}:${zone}:${index}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${escape(label)}${card?.position==='defense'?' · Defense Position':''}${values?` · ATK ${values.atk} DEF ${values.def}`:''}${activity.label?' · '+escape(activity.label):''}">${card?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,card.position,zone)}deg">${hidden||!card.faceUp?cardBack():image(card.card)}</span>`:'<span class="duel-empty-mark" aria-hidden="true">◇</span>'}</button></div><div class="duel-card-rail">${values?`<div class="duel-card-stats" aria-hidden="true"><span><small>ATK</small><b>${values.atk}</b></span><span><small>DEF</small><b>${values.def}</b></span></div>`:''}${card?`<div class="duel-inline-actions">${quickButtons(card.uid,true)}</div>`:''}</div></article>`;
+    return `<article class="duel-zone-shell ${zone==='monsters'?'monster-slot':'spell-slot'} ${values?'has-stats':''}" data-role="${activity.role}"><div class="duel-zone-surface"><button class="duel-zone ${card?'occupied':''} ${card&&!card.faceUp?'face-down':''} ${card?.position==='defense'?'defense':''} ${available?'actionable':''}" ${card?`data-duel-card="${card.uid}" data-motion-uid="${card.uid}"`:''} data-role="${activity.role}" data-motion-zone="${side}:${zone}:${index}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${escape(label)}${card?.position==='defense'?' · Defense Position':''}${values?` · ATK ${values.atk} DEF ${values.def}`:''}${cardCounters(card).length?' · '+escape(cardCounters(card).map(c=>c.label).join('; ')):''}${activity.label?' · '+escape(activity.label):''}">${card?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,card.position,zone)}deg">${hidden||!card.faceUp?cardBack():image(card.card)}</span>${counterBadge(card)}`:'<span class="duel-empty-mark" aria-hidden="true">◇</span>'}</button></div><div class="duel-card-rail">${values?`<div class="duel-card-stats" aria-hidden="true"><span><small>ATK</small><b>${values.atk}</b></span><span><small>DEF</small><b>${values.def}</b></span></div>`:''}${card?`<div class="duel-inline-actions">${quickButtons(card.uid,true)}</div>`:''}</div></article>`;
   }
   function renderLife(side){
     const player=match.players[side],direct=fieldCandidates(fieldSelection).directSide===side;
@@ -383,7 +391,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function renderFieldZone(side){
     const field=match.players[side].field,hidden=side===1&&field&&!field.faceUp,activity=field?cardActivity(match,field.uid,cue,fieldSelection):{role:'',label:''};
-    return `<article class="duel-zone-shell duel-field-slot" data-pile-zone="field"><div class="duel-zone-surface"><button class="duel-zone duel-field-zone ${field?'occupied':''}" ${field?`data-duel-card="${field.uid}" data-motion-uid="${field.uid}"`:'disabled'} data-motion-zone="${side}:field" data-role="${activity.role}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${field?hidden?'Opponent’s Set Field Spell':escape(field.card.name):'Empty Field Spell zone'}">${field?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,null,'field')}deg">${hidden||!field.faceUp?cardBack():image(field.card)}</span>`:'<span class="duel-empty-mark" aria-hidden="true">◇</span>'}</button></div>${field?`<div class="duel-inline-actions">${quickButtons(field.uid,true)}</div>`:''}</article>`;
+    return `<article class="duel-zone-shell duel-field-slot" data-pile-zone="field"><div class="duel-zone-surface"><button class="duel-zone duel-field-zone ${field?'occupied':''}" ${field?`data-duel-card="${field.uid}" data-motion-uid="${field.uid}"`:'disabled'} data-motion-zone="${side}:field" data-role="${activity.role}" aria-label="${activity.role==='eligible'?'Legal target: ':''}${field?hidden?'Opponent’s Set Field Spell':escape(field.card.name):'Empty Field Spell zone'}${cardCounters(field).length?' · '+escape(cardCounters(field).map(c=>c.label).join('; ')):''}">${field?`<span class="duel-card-visual" style="--card-rotation:${cardRotation(side,null,'field')}deg">${hidden||!field.faceUp?cardBack():image(field.card)}</span>${counterBadge(field)}`:'<span class="duel-empty-mark" aria-hidden="true">◇</span>'}</button></div>${field?`<div class="duel-inline-actions">${quickButtons(field.uid,true)}</div>`:''}</article>`;
   }
   function renderHand(side){
     const player=match.players[side];
@@ -601,7 +609,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(action==='reveal-done'){acknowledgeReveal();return;}
     if(action==='cancel-choice'){const cancel=legalActions(match,0).find(a=>a.cancel);if(cancel)step(cancel);return;}
     if(action==='filters')filters();if(action==='coverage')coverage();if(action==='support-list')coverage(true);if(action==='start')start();if(action==='sets-retry')requestSets(true);
-    if(action==='design')onDesign(tab,selectedDeck(tab));
+    if(action==='design')onDesign(tab,selectedDeck(tab),config.sides[tab]);
     if(action==='cancel-target'){if(!fieldSelection?.mandatory){fieldSelection=null;render();}return;}
     if(action==='inspect-source'){if(fieldSelection?.sourceUid)inspect(fieldSelection.sourceUid);return;}
     if(action==='duel-menu')duelMenu();if(action==='log')showLog();if(action==='log-latest')jumpToLatest();

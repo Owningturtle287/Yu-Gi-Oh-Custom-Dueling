@@ -1,6 +1,7 @@
 // Capability registry: unregistered effects are never admitted as vanilla monsters.
-import { NATIVE_CARD_IDS } from './rules-manifest.js';
-export const ERA_END = '2004-12-31';
+import { NATIVE_CARD_IDS, NATIVE_ERA_END } from './rules-manifest.js';
+export const ERA_END = NATIVE_ERA_END;
+export const ERA_YEAR = Number(ERA_END.slice(0,4));
 export const NORMAL = 'Normal Monster';
 export const effects = {};
 const define = (names, rule) => names.split('|').forEach(name => effects[name] = rule);
@@ -89,11 +90,12 @@ define('Thunder Dragon', { op: 'thunderSearch' });
 define('Exodia the Forbidden One', { op: 'passive', exodia: true });
 
 export function support(card) {
-  if (!card?.tcgDate || card.tcgDate > ERA_END) return { ok: false, reason: 'Outside the verified 2004 TCG pool' };
+  if (!card?.tcgDate || card.tcgDate > ERA_END) return { ok: false, reason: `Outside the supported ${ERA_YEAR} TCG pool` };
+  if (card.type === 'Token') return {ok:false,reason:'Tokens are created by effects, not included in decks'};
+  if (['Meteo the Matchless', 'Ulevo', 'King of Destruction - Xexex', 'Queen of Fate - Eternia', 'Testament of the Arcane Lords', '???'].includes(card.name)) return {ok:false,reason:'Collector prize / non-duel card'};
   if (card.type === NORMAL && Number.isFinite(card.atk) && card.atk >= 0 && Number.isFinite(card.def) && card.def >= 0) return { ok: true, rule: { op: 'normal' } };
   if (card.type === 'Fusion Monster' && /^"[^"]+"(?: \+ "[^"]+")+\s*$/.test(card.desc?.split(/\r?\n/)[0]) && !card.desc?.split(/\r?\n/).slice(1).join('').trim()) return { ok: true, rule: { op: 'fusionBody', materials: [...card.desc.matchAll(/"([^"\\]+)"/g)].map(m => m[1]) } };
   if (Object.hasOwn(effects, card.name)) return { ok: true, rule: effects[card.name] };
-  if (['Meteo the Matchless', 'Ulevo', '???'].includes(card.name)) return {ok:false,reason:'Collector prize / non-duel card'};
   if (NATIVE_CARD_IDS.has(card.id)) return {ok:true,rule:{op:'native',materials:[...(card.desc?.split(/\r?\n/)[0]||'').matchAll(/"([^"]+)"/g)].map(m=>m[1])}};
   return { ok: false, reason: 'No verified rule script in this offline pack' };
 }

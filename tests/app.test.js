@@ -66,7 +66,7 @@ test('home, archive detail, named deck, save/reopen, format, and export menus wo
     assert.equal($('.preview-panel button').disabled, true);
     $('.bottom-nav [data-route="home"]').click(); $('.launch-card[data-route="solo"]').click();
     assert.equal(app.state.route, 'solo');
-    assert.match($('#main').textContent, /[Ss]upported 2004 TCG cards/);
+    assert.match($('#main').textContent, /[Ss]upported 2006 TCG cards/);
     assert.ok($('[data-duel="start"]'));
     $('#app-menu').click(); assert.ok($('[data-action="install"]')); assert.ok($('[data-action="settings"]'));
     $('[data-action="install"]').click(); assert.match($('#modal').textContent, /Add to Home Screen/);
@@ -332,7 +332,7 @@ test('Solo setup has one AI policy and saves independent eligibility, speed, sav
     $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-badge').textContent,/Strategic AI/);assert.equal($('.solo-ai-badge').title,'Always full strength');change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
     assert.equal(app.state.route,'decks');assert.match($('[data-action="return-solo"]').textContent,/Save & return/);
-    assert.equal(app.state.draft.releaseYear,2004);assert.equal(app.state.filtered.length,24);
+    assert.equal(app.state.draft.releaseYear,2006);assert.equal(app.state.filtered.length,24);
     $('.card-tile [data-quick-add]').click();$('[data-action="return-solo"]').click();
     assert.equal(app.state.route,'solo');assert.equal($('#solo-source').value,'saved');
     config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
@@ -396,7 +396,7 @@ test('set generation loads real memberships and preserves a visible retry when d
     app.navigate('solo');globalThis.fetch=async()=>{throw new Error('Offline');};
     $('#solo-source').value='set';$('#solo-source').dispatchEvent(new window.Event('change',{bubbles:true}));
     await new Promise(resolve=>setImmediate(resolve));assert.ok($('[data-duel="sets-retry"]'));
-    globalThis.fetch=async url=>String(url).startsWith('file:')?new Response(await readFile(new globalThis.URL(String(url)).pathname)):({ok:true,json:async()=>[{set_name:'Classic test set',tcg_date:'2002-06-26'},{set_name:'Too late',tcg_date:'2005-01-01'}]});
+    globalThis.fetch=async url=>String(url).startsWith('file:')?new Response(await readFile(new globalThis.URL(String(url)).pathname)):({ok:true,json:async()=>[{set_name:'Classic test set',tcg_date:'2002-06-26'},{set_name:'Too late',tcg_date:'2007-01-01'}]});
     $('[data-duel="sets-retry"]').click();await new Promise(resolve=>setImmediate(resolve));
     assert.match($('#solo-set').textContent,/Classic test set · 24 cards/);assert.doesNotMatch($('#solo-set').textContent,/Too late/);
     $('[data-duel="start"]').click();await waitFor(()=>!!$('.duel-arena'));assert.ok($('.duel-arena'));

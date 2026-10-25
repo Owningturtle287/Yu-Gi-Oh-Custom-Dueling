@@ -1,10 +1,12 @@
-# Duel Atlas · v0.4.13
+# Duel Atlas · v0.5.0
 
-A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2004 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
+A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2006 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.5.0 expands Solo through December 31, 2006: **615 additional playable TCG cards; 2,170 total**. The existing native engine and pinned shared card procedures handle the new cards, including HERO/Neos Fusions, Cyber Dragons, Dark World, Destiny HERO, Sacred Beasts and Aliens. No parallel JavaScript effect implementation is added. Live typed counters now appear in compact field badges and the inspector; the wrapper correctly decodes their type/count. Optional attack costs and cancelled target selections no longer cause AI retry loops. Earlier year filters remain available; old default 2004 cutoffs migrate to 2006 once, and the era-specific set cache refreshes. See the [2006 expansion audit](docs/audit-v0.5.0.md).
 
 - v0.4.13 nudges the default player hand 8px right and up to 8px lower into the spare home-indicator space. Edge limits keep crowded hands clear of the action dock and prevent additional bottom clipping on screens without that space. The enlarged hand and field geometry retain their positions; the zoom toggle stays anchored while switching sizes.
 
@@ -75,7 +77,7 @@ Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 - A compact, styled duel settings panel with AI speed, motion toggle, log/rules shortcuts, deck saving, resume and surrender.
 - Both players' ten zones, mirrored auxiliary piles, centered hands, POV life counters and iPhone safe areas remain in the bounded landscape arena. The phase rail and card metadata have dedicated tracks; no control covers the field card artwork.
-- A full EDOPro rules core replaces the production hand-written effect subset. The pinned pack covers the playable TCG pool through December 31, 2004, including Rituals, Fusion procedures, Chaos, Spirit, Union and Toon effects, counters, tokens, chains, costs, damage-step timing and alternate victories.
+- A full EDOPro rules core replaces the production hand-written effect subset. The pinned pack covers the playable TCG pool through December 31, 2006, including Rituals, Fusion procedures, Chaos, Spirit, Union and Toon effects, counters, tokens, chains, costs, damage-step timing and alternate victories.
 - Archive dates retain both TCG and OCG metadata. Choose TCG, OCG or earliest playable release, with year context for that region. Current-year browsing includes undated cards; historical cutoffs require verified dates. An empty search offers **Search all years** while retaining the query.
 - All three Egyptian God Cards remain searchable in the current archive. The API records their playable editions after 2002; collector promos and anime appearances are not used as playable release dates. Their historical exclusion is intentional, not a missing archive entry.
 
@@ -105,11 +107,11 @@ Quick red/green quantity controls edit cards without opening them or resetting s
 
 Release-year filters use the earliest valid API date in the chosen region, including December 31. A missing date is not invented from a reprint set. Current-year browsing includes unverified dates so OCG-only and undated entries remain discoverable; dated future releases remain excluded. Historical filters use verified dates and current card text, without past banlists. API metadata can be corrected upstream; **Refresh archive** requests a new snapshot. Old cache schemas refresh once and still fall back safely offline.
 
-## Solo Duel · 2004 Lab
+## Solo Duel · 2006 Lab
 
 The duel canvas stays in landscape automatically, rotating within the page when the phone is portrait. The AI stays above you. Both players share the same displayed zone columns, with Field/Extra left, Deck/Graveyard/Banished right, hands along the outer edges, a slim phase rail on the right and compact controls in the outer hand corners. There is no side console. Only card/pile/reveal lists, effect descriptions and the on-demand log scroll. The whole hand fits without sideways scrolling. The main arena never scrolls.
 
-**Your deck / AI deck** independently select saved/custom decks, random cards or random cards from a released set. Eligibility includes TCG cutoff through 2004, monster race, attribute, subtype and Spell/Trap switches. Narrow/set pools may be incomplete; generation explains insufficient pools without relaxing filters. Saved decks are checked against canonical API records before starting. One Strategic AI policy is used in every match; decision speed changes pauses independently of animations. AI choices use its own cards, public field information and selections revealed by rules, never hidden opposing stats.
+**Your deck / AI deck** independently select saved/custom decks, random cards or random cards from a released set. Eligibility includes TCG cutoff through 2006, monster race, attribute, subtype and Spell/Trap switches. Narrow/set pools may be incomplete; generation explains insufficient pools without relaxing filters. Saved decks are checked against canonical API records before starting. One Strategic AI policy is used in every match; decision speed changes pauses independently of animations. AI choices use its own cards, public field information and selections revealed by rules, never hidden opposing stats.
 
 The player automatically draws and reaches Main 1. Tap a card to inspect it; legal shortcuts appear on field cards. Targets and Tributes highlight on the board; directional arrows show attack source and destination. Tribute Summon / Tribute Set are labeled explicitly. Multi-card costs show selected cards and **Confirm**; **Cards** opens a compact picker for mixed field/pile targets. Card declarations have a searchable picker. Effect ordering and counter allocations can be reset before confirming. The native core supplies legal actions and validates every actual response.
 
@@ -121,9 +123,9 @@ The log button opens chronological events with filters and a jump-to-latest cont
 
 ### Coverage and limits
 
-The audit snapshot contains 14,612 archive records (the live API recheck returned 14,618 with identical early-card definitions) and 1,558 records with TCG dates through 2004. **1,555 playable records are supported.** The remaining records are `???` and two non-duel World Championship prize cards, **Meteo the Matchless** and **Ulevo**; they remain searchable. The offline pack contains the earlier worldwide card scripts and transitive helper dependencies, including alternate card IDs. **Solo → Rules & cards → Browse card support** shows live archive coverage.
+The v0.5.0 audit snapshot contains 14,642 archive records and 2,177 dated TCG records through December 31, 2006. **All 2,170 playable deck cards are supported**, adding 615 to the previous pool. The seven other records are five non-duel World Championship prizes (**Ulevo**, **Meteo the Matchless**, **King of Destruction - Xexex**, **Queen of Fate - Eternia**, **Testament of the Arcane Lords**), the `???` deck-profile placeholder, and **Sheep Token**, which is created by an effect rather than put in a deck. These records remain searchable. The offline pack contains 2,053 original Lua scripts/helpers, including transitive dependencies and alternate IDs. **Solo → Rules & cards → Browse card support** shows live archive coverage.
 
-Dueling uses the pinned upstream core/card scripts and their current errata, modern turn rules (five opening cards; first player skips the first draw and Battle Phase; six-card hand limit), separate Field zones, three copies and no banlist. **This is an early functionality-testing release, not an exact 2004 tournament emulator.** Exhaustive card-combination certification is not claimed. AI combines bounded combat planning, resource evaluation and explicit card-intent hints with conservative fallbacks; it has no exhaustive combo library or full duel-tree search. Side decking, historical text/rulings and multiplayer are not implemented. A match is kept in memory while navigating; reloading ends it. Saved decks and settings persist locally.
+Dueling uses the pinned upstream core/card scripts and their current errata, modern turn rules (five opening cards; first player skips the first draw and Battle Phase; six-card hand limit), separate Field zones, three copies and no banlist. **This is an early functionality-testing release, not an exact historical tournament emulator.** Exhaustive card-combination certification is not claimed. AI combines bounded combat planning, resource evaluation and explicit card-intent hints with conservative fallbacks; it has no exhaustive combo library or full duel-tree search. Side decking, historical text/rulings and multiplayer are not implemented. A match is kept in memory while navigating; reloading ends it. Saved decks and settings persist locally.
 
 The old pure engine remains as a regression fixture; production Solo uses `native-engine.js`. No unsupported card is silently converted into a Normal Monster.
 
@@ -134,12 +136,12 @@ The browser uses `ocgcore-wasm@0.1.2` in synchronous mode; it requires neither J
 Normal builds never fetch card scripts or SQL databases. To deliberately regenerate the rule pack, download the specified API snapshot, BabelCDB SQLite database and pinned CardScripts source archive, then run:
 
 ```sh
-python scripts/update-rules.py --cards cards.json --database cards.cdb --scripts CardScripts.tar.gz --scripts-revision 5138eb120d9f6f6caa04dbba22b64ef451302b95 --database-revision 70e53af2dc6c5cecebd48ff4f945c560625c99a2
+python scripts/update-rules.py --cards cards.json --database cards.cdb --scripts CardScripts.tar.gz --scripts-revision 5138eb120d9f6f6caa04dbba22b64ef451302b95 --database-revision 70e53af2dc6c5cecebd48ff4f945c560625c99a2 --era-end 2006-12-31
 npm test
 npm run build
 ```
 
-Review generated changes before changing upstream revisions. The manifest records SHA-256 hashes. Keep core and scripts compatible; new scripts can require newer core APIs.
+Review generated changes before changing upstream revisions. The manifest records the API snapshot hash, shard SHA-256 hashes, aliases and era end. Regeneration preserves the separate runtime provenance file and the audited Lua overrides. Keep core and scripts compatible; new scripts can require newer core APIs.
 
 ## Verify
 

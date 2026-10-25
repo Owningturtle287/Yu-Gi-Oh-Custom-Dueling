@@ -18,7 +18,7 @@ export function aiObservation(state,side){
   // In particular, query results for a face-down monster must not leak DEF,
   // effects, ID, race, or disabled status into planning. Deck order is unused.
   const known=new Set(state.version===2?[]:state.revealedUIDs||[]);
-  const hidden=c=>{const remembered=c&&knownCard(state,side,c.uid);if(remembered)return {...c,card:remembered,known:true,hidden:false,disabled:false,currentType:undefined,currentLevel:remembered.level,currentRace:remembered.race,currentAttribute:remembered.attribute,currentStats:{atk:Math.max(0,remembered.atk||0),def:Math.max(0,remembered.def||0)}};return c?{uid:c.uid,owner:c.owner,controller:c.controller,faceUp:false,position:c.position,hidden:true,card:{name:'Unknown card',type:'Unknown',atk:0,def:0}}:null;};
+  const hidden=c=>{const remembered=c&&knownCard(state,side,c.uid);if(remembered)return {...c,card:remembered,known:true,hidden:false,disabled:false,counters:undefined,currentType:undefined,currentLevel:remembered.level,currentRace:remembered.race,currentAttribute:remembered.attribute,currentStats:{atk:Math.max(0,remembered.atk||0),def:Math.max(0,remembered.def||0)}};return c?{uid:c.uid,owner:c.owner,controller:c.controller,faceUp:false,position:c.position,hidden:true,card:{name:'Unknown card',type:'Unknown',atk:0,def:0}}:null;};
   const visible=c=>c?{...c,card:currentCardData(c)}:c;
   const players=state.players.map((p,index)=>({...p,
     deck:index===side?[...p.deck].sort((a,b)=>String(a.card.id).localeCompare(String(b.card.id))):p.deck.map(hidden),
@@ -29,7 +29,7 @@ export function aiObservation(state,side){
     field:!p.field||index===side||p.field.faceUp?p.field:hidden(p.field),
     banished:p.banished.map(c=>index===side||c.faceUp?c:hidden(c))}));
   // Do not retain backups, hidden logs, or the raw state alongside this view.
-  return {memory:memoryFor(state,side),perspective:side,version:state.version,seed:state.seed,serial:state.serial,turn:state.turn,phase:state.phase,active:state.active,winner:state.winner,players,chain:state.chain||[],pending:state.pending,choice:state.choice,window:state.window,battleStep:state.battleStep,battleOptions:state.battleOptions||[],normalSummons:state.normalSummons,turnEffects:state.turnEffects||[],attacksUsed:state.attacksUsed||{}};
+  return {memory:memoryFor(state,side),perspective:side,version:state.version,seed:state.seed,serial:state.serial,turn:state.turn,phase:state.phase,active:state.active,winner:state.winner,players,chain:state.chain||[],pending:state.pending,choice:state.choice,window:state.window,battleStep:state.battleStep,battleOptions:state.battleOptions||[],normalSummons:state.normalSummons,turnEffects:state.turnEffects||[],attacksUsed:state.attacksUsed||{},declinedAttacks:[0,1].map(index=>index===side?state.declinedAttacks?.[side]||[]:[])};
 }
 const profiles=new Map();
 function define(names,intent,extra={}){for(const name of names.split('|'))profiles.set(name,{intent,...extra});}

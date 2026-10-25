@@ -96,7 +96,8 @@ export function expandDeck(deck, cards) {
 }
 
 export async function loadSets({ fetchImpl = fetch, storage = globalThis.localStorage, now = Date.now(), force = false } = {}) {
-  const key = 'duel-atlas.sets.v2'; let cached;
+  // A previous era's otherwise-fresh cache must not hide newly unlocked sets.
+  const key = `duel-atlas.sets.v3.${ERA_END}`; let cached;
   try { cached = JSON.parse(storage?.getItem(key) || 'null'); } catch { /* optional cache */ }
   const valid = value => Array.isArray(value) && value.every(set => typeof set.name === 'string' && /^\d{4}-\d\d-\d\d$/.test(set.date));
   if (!force && cached && valid(cached.sets) && now-cached.time<86400000) return {sets:cached.sets,offline:false};
