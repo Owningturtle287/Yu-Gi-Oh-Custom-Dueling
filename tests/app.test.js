@@ -414,6 +414,8 @@ test('set generation loads real memberships and preserves a visible retry when d
     globalThis.fetch=async url=>String(url).startsWith('file:')?new Response(await readFile(new globalThis.URL(String(url)).pathname)):({ok:true,json:async()=>[{set_name:'Classic test set',tcg_date:'2002-06-26'},{set_name:'Too late',tcg_date:'2007-01-01'}]});
     $('[data-duel="sets-retry"]').click();await new Promise(resolve=>setImmediate(resolve));
     assert.match($('#solo-set').textContent,/Classic test set \(2002\) · 24 cards/);assert.doesNotMatch($('#solo-set').textContent,/Too late/);
+    $('#solo-set').value='Classic test set';$('#solo-set').dispatchEvent(new window.Event('change',{bubbles:true}));
+    app.navigate('home');app.navigate('solo');assert.equal($('.solo-set-year').textContent,'2002');assert.equal($('#solo-set').value,'Classic test set');
     $('[data-duel="start"]').click();await waitFor(()=>!!$('.duel-arena'));assert.ok($('.duel-arena'));
   }finally{app.navigate('home');window.close();}
 });

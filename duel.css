@@ -37,6 +37,8 @@
 .solo-launch .primary { display:flex; justify-content:space-between; align-items:center; min-height:48px; padding-inline:18px; font-size:15px; background:linear-gradient(100deg,#90e0c9,#a8e8de); border-color:#a1e3d8; box-shadow:0 3px 20px #53a6951a; }
 .solo-settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; min-width:0; }
 .solo-panel .solo-checkbox, #duel-filters .solo-checkbox { flex-direction:row; align-items:center; gap:10px; min-height:44px; }
+.solo-set-label { display:flex; justify-content:space-between; align-items:center; gap:4px; }
+.solo-set-year { padding:0 5px; border:1px solid #d7cba8; border-radius:5px; background:#f5efdf; color:#715b2b; font-size:9px; line-height:14px; }
 .solo-set-status { font-size:10px; line-height:1.4; color:var(--gold); }
 .solo-set-status button { font-size:11px; min-height:32px; padding:3px 7px; }
 #duel-filters { display:flex; flex-direction:column; gap:14px; min-height:0; }
