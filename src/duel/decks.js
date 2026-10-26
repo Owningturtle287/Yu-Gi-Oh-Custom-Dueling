@@ -1,11 +1,14 @@
 import { createDeck, addCard, normalizeCard, cardCopyName } from '../core.js';
 import { ERA_END, support, supportedPool, isMonster } from './catalog.js';
+import {matchesMonsterFilters,matchesSpellTrapType} from '../card-filters.js';
+import {validReleaseDate} from '../era.js';
 
-export const defaultSide = () => ({ source: 'cards', deckId: '', cutoff: ERA_END, race: '', attribute: '', subtype: '', spells: true, traps: true, set: '' });
+export const defaultSide = () => ({ source: 'cards', deckId: '', cutoff: ERA_END, race: '', attribute: '', subtype: '', mechanic:'', spellTrapType:'', spells: true, traps: true, set: '' });
 export function poolFor(cards, settings) {
   const cutoff = /^\d{4}-\d\d-\d\d$/.test(settings.cutoff || '') && settings.cutoff <= ERA_END ? settings.cutoff : ERA_END;
-  return supportedPool(cards).filter(card => card.tcgDate <= cutoff && (!isMonster(card) || ((!settings.race || card.race === settings.race) && (!settings.attribute || card.attribute === settings.attribute) && (!settings.subtype || card.type.includes(settings.subtype)))) && (settings.spells || card.type !== 'Spell Card') && (settings.traps || card.type !== 'Trap Card'));
+  return supportedPool(cards).filter(card => card.tcgDate <= cutoff && (isMonster(card)?matchesMonsterFilters(card,settings):matchesSpellTrapType(card,settings.spellTrapType)) && (settings.spells || card.type !== 'Spell Card') && (settings.traps || card.type !== 'Trap Card'));
 }
+export const setLabel=set=>`${set.name}${validReleaseDate(set.date)?' ('+set.date.slice(0,4)+')':''}`;
 export function validateDuelDeck(deck, cards, settings = defaultSide()) {
   if (!deck?.sections) return ['Choose a saved deck or create one.'];
   const issues = [], index = new Map(cards.map(c => [c.id, c])), allowed = new Set(poolFor(cards, settings).map(c => c.id));
@@ -99,13 +102,13 @@ export async function loadSets({ fetchImpl = fetch, storage = globalThis.localSt
   // A previous era's otherwise-fresh cache must not hide newly unlocked sets.
   const key = `duel-atlas.sets.v3.${ERA_END}`; let cached;
   try { cached = JSON.parse(storage?.getItem(key) || 'null'); } catch { /* optional cache */ }
-  const valid = value => Array.isArray(value) && value.every(set => typeof set.name === 'string' && /^\d{4}-\d\d-\d\d$/.test(set.date));
+  const valid = value => Array.isArray(value) && value.every(set => typeof set.name === 'string' && validReleaseDate(set.date));
   if (!force && cached && valid(cached.sets) && now-cached.time<86400000) return {sets:cached.sets,offline:false};
   try {
     const response = await fetchImpl('https://db.ygoprodeck.com/api/v7/cardsets.php', {signal:AbortSignal.timeout(30000)});
     if (!response.ok) throw new Error('Set request failed.');
     const raw = await response.json(); if (!Array.isArray(raw)) throw new Error('Invalid set list.');
-    const sets = raw.filter(set => /^\d{4}-\d\d-\d\d$/.test(set.tcg_date || '') && set.tcg_date<=ERA_END).map(set => ({name:set.set_name,date:set.tcg_date}));
+    const sets = raw.filter(set => validReleaseDate(set.tcg_date) && set.tcg_date<=ERA_END).map(set => ({name:set.set_name,date:set.tcg_date}));
     if (!valid(sets) || !sets.length) throw new Error('No dated sets returned.');
     try { storage?.setItem(key,JSON.stringify({sets,time:now})); } catch { /* session still works */ }
     return {sets,offline:false};

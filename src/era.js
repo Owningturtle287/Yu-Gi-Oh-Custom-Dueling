@@ -1,5 +1,6 @@
 export const MIN_RELEASE_YEAR = 1996;
-export const SUBTYPES = ['Spirit', 'Flip', 'Gemini', 'Ritual', 'Toon', 'Tuner', 'Union'];
+import {SUBTYPES,MECHANICS} from './card-filters.js';
+export {SUBTYPES} from './card-filters.js';
 export const currentYear = (now = new Date()) => now.getFullYear();
 export function normalizeReleaseYear(value, now = new Date()) {
   if (value === null || value === undefined || value === '' || value === 'current') return null;
@@ -36,7 +37,7 @@ export function hydrateDeckDates(deck, index) {
 export function buildYearHighlights(cards,basis='tcg') {
   const groups = new Map(), archetypes = new Map(), counts = new Map();
   const today = releaseCutoff();
-  const features = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link', ...SUBTYPES];
+  const features = [...new Set([...MECHANICS,...SUBTYPES])];
   for (const card of cards) {
     const date=basis==='earliest'?[cardReleaseDate(card),cardReleaseDate(card,'ocg')].filter(Boolean).sort()[0]:cardReleaseDate(card,basis);
     if (!date || date > today || card.name === '???' || /Token|Skill Card/.test(card.type)) continue;

@@ -1,6 +1,7 @@
 import { dateForBasis, cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
-export const VERSION = '0.5.0';
-export const MECHANICS = ['Fusion', 'Synchro', 'Xyz', 'Pendulum', 'Link'];
+import {MECHANICS,effectFlag,matchesMonsterFilters,matchesSpellTrapType} from './card-filters.js';
+export {MECHANICS} from './card-filters.js';
+export const VERSION = '0.5.1';
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
 export const STORAGE_KEY = 'duel-atlas.decks.v1';
@@ -15,6 +16,7 @@ export function normalizeCard(card) {
   if (!card || !Number.isSafeInteger(card.id) || card.id <= 0 || typeof card.name !== 'string' || typeof card.type !== 'string') throw new Error('Invalid card data.');
   const fields = ['id', 'name', 'type', 'humanReadableCardType', 'frameType', 'desc', 'race', 'attribute', 'archetype', 'atk', 'def', 'level', 'linkval', 'linkmarkers', 'scale'];
   const normalized = Object.fromEntries(fields.filter(k => card[k] !== undefined).map(k => [k, card[k]]));
+  const hasEffect=effectFlag(card);if(hasEffect!==undefined)normalized.hasEffect=hasEffect;
   normalized.tcgDate = cardReleaseDate(card);
   normalized.ocgDate = cardReleaseDate(card, 'ocg');
   normalized.setNames = [...new Set(card.setNames || (card.card_sets || []).map(set => set.set_name))].filter(name => typeof name === 'string');
@@ -31,10 +33,8 @@ export function filterCards(cards, filters = {}) {
     if (filters.category === 'Spell' && card.type !== 'Spell Card') return false;
     if (filters.category === 'Trap' && card.type !== 'Trap Card') return false;
     if (filters.category === 'Extra' && !isExtra(card)) return false;
-    if (filters.attribute && card.attribute !== filters.attribute) return false;
-    if (filters.race && card.race !== filters.race) return false;
-    if (filters.subtype && !card.type.toLowerCase().includes(filters.subtype.toLowerCase())) return false;
-    if (filters.mechanic && !cardMechanics(card).includes(filters.mechanic)) return false;
+    if ((filters.attribute||filters.race||filters.subtype||filters.mechanic)&&!matchesMonsterFilters(card,filters)) return false;
+    if (!matchesSpellTrapType(card,filters.spellTrapType)) return false;
     return true;
   });
   return result.sort((a, b) => {

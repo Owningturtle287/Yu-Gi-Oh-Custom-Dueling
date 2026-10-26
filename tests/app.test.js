@@ -265,6 +265,21 @@ test('filter controls stay inside the deck workspace and saving preserves the re
     assert.equal(app.state.dirty, false);
   } finally { window.close(); }
 });
+test('builder, Archive and duel share every taxonomy choice, and independent duel selections persist',async()=>{
+  const added=JSON.parse(await readFile(new URL('./era2006-fixtures.json',import.meta.url))).data.filter(c=>['Cyber Dragon','Elemental HERO Flame Wingman'].includes(c.name));
+  const catalog=[...cards,...added],{window,app,$}=await boot('shared-taxonomy',null,false,catalog);
+  const fields=['race','attribute','subtype','mechanic','spellTrapType'];
+  const choices=()=>Object.fromEntries(fields.map(key=>[key,[...$(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))]));
+  try{
+    app.navigate('decks');$('[data-action="filters"]').click();const builder=choices();assert.ok(builder.subtype.some(o=>o.value==='Effect'));assert.ok(builder.attribute.some(o=>o.value==='DIVINE'));
+    $('[name="subtype"]').value='Effect';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.deepEqual(app.state.filtered.map(c=>c.name),['Cyber Dragon']);
+    app.navigate('archive');assert.deepEqual(app.state.filtered.map(c=>c.name),['Cyber Dragon','Elemental HERO Flame Wingman']);$('[data-action="filters"]').click();assert.deepEqual(choices(),builder);$('[data-action="close"]').click();
+    app.navigate('solo');$('[data-duel="filters"]').click();assert.deepEqual(choices(),builder);
+    $('[name="attribute"]').value='DIVINE';$('[name="subtype"]').value='Effect';$('[name="mechanic"]').value='Fusion';$('[name="spellTrapType"]').value='Quick-Play';$('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
+    const config=JSON.parse(localStorage.getItem('duel-atlas.solo-config.v1'));assert.equal(config.sides[0].attribute,'DIVINE');assert.equal(config.sides[0].subtype,'Effect');assert.equal(config.sides[0].mechanic,'Fusion');assert.equal(config.sides[0].spellTrapType,'Quick-Play');assert.equal(config.sides[1].attribute,'');
+    $('[data-duel="filters"]').click();assert.equal($('[name="attribute"]').value,'DIVINE');assert.equal($('[name="spellTrapType"]').value,'Quick-Play');
+  }finally{app.navigate('home');window.close();}
+});
 test('the builder shows loading and updates its card results when an API request completes', async () => {
   const { window, app, $ } = await boot('builder-loading');
   try {
@@ -398,7 +413,9 @@ test('set generation loads real memberships and preserves a visible retry when d
     await new Promise(resolve=>setImmediate(resolve));assert.ok($('[data-duel="sets-retry"]'));
     globalThis.fetch=async url=>String(url).startsWith('file:')?new Response(await readFile(new globalThis.URL(String(url)).pathname)):({ok:true,json:async()=>[{set_name:'Classic test set',tcg_date:'2002-06-26'},{set_name:'Too late',tcg_date:'2007-01-01'}]});
     $('[data-duel="sets-retry"]').click();await new Promise(resolve=>setImmediate(resolve));
-    assert.match($('#solo-set').textContent,/Classic test set · 24 cards/);assert.doesNotMatch($('#solo-set').textContent,/Too late/);
+    assert.match($('#solo-set').textContent,/Classic test set \(2002\) · 24 cards/);assert.doesNotMatch($('#solo-set').textContent,/Too late/);
+    $('#solo-set').value='Classic test set';$('#solo-set').dispatchEvent(new window.Event('change',{bubbles:true}));
+    app.navigate('home');app.navigate('solo');assert.equal($('.solo-set-year').textContent,'2002');assert.equal($('#solo-set').value,'Classic test set');
     $('[data-duel="start"]').click();await waitFor(()=>!!$('.duel-arena'));assert.ok($('.duel-arena'));
   }finally{app.navigate('home');window.close();}
 });

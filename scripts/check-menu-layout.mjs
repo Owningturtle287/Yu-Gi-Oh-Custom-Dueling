@@ -87,18 +87,34 @@ try{
   assert.ok(await page.locator('.deck-inspect').first().evaluate(node=>{const art=node.querySelector('img,.image-fallback');return art.getBoundingClientRect().height/node.getBoundingClientRect().height>.75;}),'Most of each tile is card artwork');
   await capture(`builder-${width}x${height}`);
   await page.locator('[data-action="deck-options"]').click();assert.ok(await page.locator('#modal').evaluate(n=>n.clientWidth>=Math.min(480,Math.max(innerWidth,innerHeight)-24)-4),'Shared menus use the landscape width');await visibleControls('.menu-body button');await page.locator('[data-action="app-info"]').click();await visibleControls('.menu-body button');await page.locator('.dialog-header [data-action="close"]').click();
+  const taxonomyFields=['attribute','race','subtype','mechanic','spellTrapType'];
+  await page.locator('[data-action="filters"]').click();
+  const taxonomy=await page.locator('#filters-form').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);
+  assert.ok(taxonomy.subtype.some(o=>o.value==='Effect'));assert.ok(taxonomy.attribute.some(o=>o.value==='DIVINE'));
+  await visibleControls('#filters-form select,#filters-form button');await capture(`builder-filters-${width}x${height}`);
+  await page.locator('[data-filter-panel="year"]').click();await visibleControls('#filters-form select,#filters-form button');await capture(`builder-year-filters-${width}x${height}`);await page.locator('[data-filter-panel="cards"]').click();
+  await page.locator('#filters-form [name="subtype"]').selectOption('Effect');await page.locator('#filters-form button[type="submit"]').click();
+  assert.ok(await page.locator('.builder-archive-panel .card-tile').count());
+  assert.ok(await page.evaluate(async()=>{const {state}=await import('/src/app.js');const {isEffectMonster}=await import('/src/card-filters.js');return state.filtered.every(isEffectMonster);}));
+  await page.locator('[data-action="filters"]').click();await page.locator('[data-action="reset-filters"]').click();
   const query=page.locator('#card-search');await query.fill('Mystical Elf');
   await page.locator('.builder-archive-panel [data-quick-add]').first().click();
   assert.equal(await query.inputValue(),'Mystical Elf');assert.ok(await page.locator('.builder-deck-panel .tray-card').count());
   await page.evaluate(async()=>{const {navigate}=await import('/src/app.js');navigate('solo');});await visibleControls('.solo-setup button,.solo-setup select');
   for(const source of ['saved','set','cards']){
    await page.locator('#solo-source').selectOption(source);
-   if(source==='set')await page.waitForFunction(()=>document.querySelector('#solo-set')?.textContent.includes('Layout test set'));
+   if(source==='set'){await page.waitForFunction(()=>document.querySelector('#solo-set')?.textContent.includes('Layout test set (2003)'));assert.equal(await page.locator('#solo-set option').filter({hasText:'Layout test set (2003)'}).getAttribute('value'),'Layout test set');await page.locator('#solo-set').selectOption('Layout test set');assert.equal(await page.locator('#solo-set').inputValue(),'Layout test set');assert.equal(await page.locator('.solo-set-year').textContent(),'2003');await visibleControls('.solo-set-year');await capture(`released-set-${width}x${height}`);}
    await visibleControls('.solo-setup button,.solo-setup select');
   }
   for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
   assert.match(await page.locator('.duel-era').textContent(),/2006 LAB/);
   await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2006-12-31');
+  const duelTaxonomy=await page.locator('#duel-filters').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);assert.deepEqual(duelTaxonomy,taxonomy);
+  await page.locator('#duel-filters [name="attribute"]').selectOption('DIVINE');await page.locator('#duel-filters [name="subtype"]').selectOption('Effect');await page.locator('#duel-filters [name="spellTrapType"]').selectOption('Continuous');
+  await visibleControls('#duel-filters select,#duel-filters button');await capture(`duel-filters-${width}x${height}`);
+  await page.locator('#duel-filters button[type="submit"]').click();assert.match(await page.locator('.solo-filter-summary').textContent(),/DIVINE/);
+  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('#duel-filters [name="attribute"]').inputValue(),'DIVINE');
+  for(const field of ['attribute','subtype','spellTrapType'])await page.locator(`#duel-filters [name="${field}"]`).selectOption('');
   await page.locator('[name="cutoff"]').selectOption('2005-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();
   assert.match(await page.locator('.solo-filter-summary').textContent(),/2005 & earlier/);
   await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption('2006-12-31');await page.locator('#duel-filters button[type="submit"]').click();

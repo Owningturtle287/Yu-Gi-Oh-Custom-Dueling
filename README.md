@@ -1,10 +1,12 @@
-# Duel Atlas · v0.5.0
+# Duel Atlas · v0.5.1
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2006 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.5.1 shares card filter choices and matching across Archive, Deck Builder, Solo eligibility and AI beliefs. Both pickers include Normal/Effect monsters, DIVINE, the same monster types/subtypes/mechanics and separate Spell/Trap types. Effect matching includes Spirit/Toon/Gemini/Tuner and effect Fusions, with printed Normal types taking precedence over API text-effect metadata. Archive caches refresh once for that metadata and retain offline fallbacks. Solo keeps its 2006 boundary and independent Spell/Trap switches. Released-set dropdowns show their actual TCG release year without changing stored set names. Compact filter grids keep all controls and confirmation visible in landscape.
 
 - v0.5.0 expands Solo through December 31, 2006: **615 additional playable TCG cards; 2,170 total**. The existing native engine and pinned shared card procedures handle the new cards, including HERO/Neos Fusions, Cyber Dragons, Dark World, Destiny HERO, Sacred Beasts and Aliens. No parallel JavaScript effect implementation is added. Live typed counters now appear in compact field badges and the inspector; the wrapper correctly decodes their type/count. Optional attack costs and cancelled target selections no longer cause AI retry loops. Earlier year filters remain available; old default 2004 cutoffs migrate to 2006 once, and the era-specific set cache refreshes. See the [2006 expansion audit](docs/audit-v0.5.0.md).
 

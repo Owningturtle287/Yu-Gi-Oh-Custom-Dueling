@@ -60,7 +60,8 @@ test('mobile layout contains page overflow and limits scroll regions', async () 
   assert.match(css, /\.effect-text\s*\{[^}]*overflow:auto/);
   assert.match(css, /\.saved-list\s*\{[^}]*overflow:auto/);
   const autoScrolls = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /overflow(?:-[xy])?:auto/.test(m[2])).map(m => m[1].trim());
-  assert.deepEqual([...new Set(autoScrolls)].sort(), ['.archive-panel', '.effect-text', '.saved-list'].sort());
+  assert.deepEqual([...new Set(autoScrolls)].sort(), ['.archive-panel', '.effect-text', '.saved-list', '.year-context'].sort());
+  assert.match(css,/\.year-context\s*\{[^}]*max-height:112px[^}]*overflow:auto/);
 });
 test('compact controls preserve tap targets and contain list focus and horizontal panning', async () => {
   const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
