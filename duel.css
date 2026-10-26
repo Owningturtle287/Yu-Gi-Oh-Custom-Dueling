@@ -42,9 +42,10 @@
 #duel-filters { display:flex; flex-direction:column; gap:14px; min-height:0; }
 dialog:has(.duel-filter-body) { width:min(700px,calc(var(--duel-vw,1dvw) * 100 - 24px)); }
 .duel-filter-body { padding:12px; gap:10px; max-height:calc(var(--duel-vh,1dvh) * 100 - 24px); }
-.duel-filter-body #duel-filters { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:10px; }
-.duel-filter-body .solo-settings-grid { gap:8px; }
-.duel-filter-body .solo-settings-grid:nth-child(2) { grid-template-columns:1fr; align-content:center; }
+.duel-filter-body #duel-filters { display:flex; flex-direction:column; gap:8px; }
+.duel-filter-body .solo-settings-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.duel-filter-body .solo-settings-grid:nth-child(2) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.duel-filter-body #duel-filters .solo-checkbox { min-height:30px; gap:8px; }
 .duel-filter-body .solo-settings-grid select { min-width:0; height:38px; margin-top:0; padding:6px; }
 .duel-filter-body #duel-filters label { gap:4px; font-size:11px; }
 .duel-filter-body .dialog-actions { grid-column:1/-1; }

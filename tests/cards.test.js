@@ -52,3 +52,8 @@ test('offline cache migration retains old metadata and never fabricates release 
   assert.equal(result.cards.length, cards.length);
   assert.ok(result.cards.every(card => card.tcgDate === null));
 });
+test('schema-4 caches refresh for effect metadata and the next cache load retains it',async()=>{
+  let stored={schema:4,cards,fetchedAt:1000},calls=0;const source={...cards[1],misc_info:[{has_effect:1}]};
+  const options={now:1001,cache:{read:async()=>stored,write:async value=>stored=value},fetchImpl:async()=>{calls++;return {ok:true,json:async()=>({data:[source]})};}};
+  assert.equal((await loadCards(options)).cards[0].hasEffect,true);assert.equal((await loadCards(options)).cards[0].hasEffect,true);assert.equal(calls,1);
+});
