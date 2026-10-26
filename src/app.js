@@ -238,11 +238,11 @@ function showFilters() {
     <div class="filter-tabs" role="tablist" aria-label="Filter panels"><button type="button" id="card-filter-tab" role="tab" aria-selected="true" aria-controls="card-filter-panel" data-filter-panel="cards">Card filters</button><button type="button" id="year-filter-tab" role="tab" aria-selected="false" aria-controls="year-filter-panel" data-filter-panel="year">Release year · ${selectedYear ?? currentYear()}</button></div>
     <div id="card-filter-panel" class="field-grid filter-panel" role="tabpanel" aria-labelledby="card-filter-tab">
       <label>Category<select name="category">${['All', 'Monster', 'Spell', 'Trap', 'Extra'].map(category => `<option value="${category}" ${state.filters.category === category ? 'selected' : ''}>${category === 'Extra' ? 'Extra Deck' : category === 'All' ? 'All cards' : category}</option>`).join('')}</select></label>
-      <label>Monster attribute<select name="attribute">${options(ATTRIBUTES, state.filters.attribute, 'All attributes')}</select></label>
-      <label>Monster type<select name="race">${options(races, state.filters.race, 'All types')}</select></label>
-      <label>Monster subtype<select name="subtype">${options(SUBTYPES, state.filters.subtype, 'All subtypes')}</select></label>
-      <label>Mechanic<select name="mechanic">${options(MECHANICS, state.filters.mechanic, 'All mechanics')}</select></label>
-      <label>Spell / Trap type<select name="spellTrapType">${options(SPELL_TRAP_TYPES, state.filters.spellTrapType, 'All types')}</select></label>
+      <label>Monster attribute<select name="attribute">${options(ATTRIBUTES, state.filters.attribute, 'All')}</select></label>
+      <label>Monster type<select name="race">${options(races, state.filters.race, 'All')}</select></label>
+      <label>Monster subtype<select name="subtype">${options(SUBTYPES, state.filters.subtype, 'All')}</select></label>
+      <label>Mechanic<select name="mechanic">${options(MECHANICS, state.filters.mechanic, 'All')}</select></label>
+      <label>Spell / Trap type<select name="spellTrapType">${options(SPELL_TRAP_TYPES, state.filters.spellTrapType, 'All')}</select></label>
       <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([value, label]) => `<option value="${value}" ${state.filters.sort === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
     </div>
     <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-year">Playable through year<select id="release-year" name="year">${yearOptions}</select></label><label>Release region<select name="releaseBasis">${[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']].map(([v,l])=>`<option value="${v}" ${(state.draft.releaseBasis||'tcg')===v?'selected':''}>${l}</option>`).join('')}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Historical years require a verified playable release date in this region. Current includes undated cards. Collector promos, anime dates, past card text and banlists are excluded.</p></div>

@@ -103,7 +103,7 @@ try{
   await page.evaluate(async()=>{const {navigate}=await import('/src/app.js');navigate('solo');});await visibleControls('.solo-setup button,.solo-setup select');
   for(const source of ['saved','set','cards']){
    await page.locator('#solo-source').selectOption(source);
-   if(source==='set'){await page.waitForFunction(()=>document.querySelector('#solo-set')?.textContent.includes('Layout test set (2003)'));assert.equal(await page.locator('#solo-set option').filter({hasText:'Layout test set (2003)'}).getAttribute('value'),'Layout test set');}
+   if(source==='set'){await page.waitForFunction(()=>document.querySelector('#solo-set')?.textContent.includes('Layout test set (2003)'));assert.equal(await page.locator('#solo-set option').filter({hasText:'Layout test set (2003)'}).getAttribute('value'),'Layout test set');await page.locator('#solo-set').selectOption('Layout test set');assert.equal(await page.locator('#solo-set').inputValue(),'Layout test set');await capture(`released-set-${width}x${height}`);}
    await visibleControls('.solo-setup button,.solo-setup select');
   }
   for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
