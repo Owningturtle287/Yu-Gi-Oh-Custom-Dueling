@@ -45,7 +45,7 @@ export function sharpenCardArt(container, card, { source, createImage = () => co
   upgrade.alt = ''; upgrade.className = 'duel-inspect-full'; upgrade.decoding = 'async';
   upgrade.onload = async () => {
     try { await upgrade.decode?.(); } catch { return; }
-    if (!cancelled && container.isConnected) container.append(upgrade);
+    if (!cancelled && container.isConnected) container.replaceChildren(upgrade);
   };
   upgrade.onerror = () => {}; // Keep the immediately visible preview.
   upgrade.src = full;

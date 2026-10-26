@@ -1,0 +1,2847 @@
+{
+  "data": [
+    {
+      "id": 32452818,
+      "name": "Beaver Warrior",
+      "typeline": [
+        "Beast-Warrior",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "What this creature lacks in size it makes up for in defense when battling in the prairie.",
+      "race": "Beast-Warrior",
+      "atk": 1200,
+      "def": 1500,
+      "level": 4,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/beaver-warrior-2759",
+      "card_sets": [
+        {
+          "set_name": "Dark Beginning 1",
+          "set_code": "DB1-EN121",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-064",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "3.08"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN064",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Magic Ruler",
+          "set_code": "MRL-E103",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "12.22"
+        },
+        {
+          "set_name": "Speed Duel Starter Decks: Match of the Millennium",
+          "set_code": "SS04-ENA05",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.34"
+        },
+        {
+          "set_name": "Starter Deck: Yugi",
+          "set_code": "SDY-005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.88"
+        },
+        {
+          "set_name": "Starter Deck: Yugi Evolution",
+          "set_code": "SYE-006",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.6"
+        },
+        {
+          "set_name": "Yugi's Legendary Decks",
+          "set_code": "YGLD-ENA12",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.26"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 32452818,
+          "image_url": "https://images.ygoprodeck.com/images/cards/32452818.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/32452818.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/32452818.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.04",
+          "tcgplayer_price": "0.13",
+          "ebay_price": "0.99",
+          "amazon_price": "1.03",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 488937,
+          "viewsweek": 1357,
+          "upvotes": 13,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-05-27",
+          "konami_id": 4033,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 40640057,
+      "name": "Kuriboh",
+      "typeline": [
+        "Fiend",
+        "Effect"
+      ],
+      "type": "Effect Monster",
+      "humanReadableCardType": "Effect Monster",
+      "frameType": "effect",
+      "desc": "During damage calculation, if your opponent's monster attacks (Quick Effect): You can discard this card; you take no battle damage from that battle.",
+      "race": "Fiend",
+      "atk": 300,
+      "def": 200,
+      "level": 1,
+      "attribute": "DARK",
+      "archetype": "Kuriboh",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/kuriboh-3456",
+      "card_sets": [
+        {
+          "set_name": "Brothers of Legend",
+          "set_code": "BROL-EN062",
+          "set_rarity": "Ultra Rare",
+          "set_rarity_code": "(UR)",
+          "set_price": "1.37"
+        },
+        {
+          "set_name": "Champion Pack: Game Two",
+          "set_code": "CP02-EN006",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Dark Beginning 2",
+          "set_code": "DB2-EN044",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Dark Legends",
+          "set_code": "DLG1-EN038",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.25"
+        },
+        {
+          "set_name": "Duel Terminal - Preview Wave 1",
+          "set_code": "DTP1-EN007",
+          "set_rarity": "Duel Terminal Normal Parallel Rare",
+          "set_rarity_code": "(DNPR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Duel Terminal 1",
+          "set_code": "DT01-EN007",
+          "set_rarity": "Duel Terminal Normal Parallel Rare",
+          "set_rarity_code": "(DNPR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Duelist League 2010 participation cards",
+          "set_code": "DL09-EN003",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "12.05"
+        },
+        {
+          "set_name": "Duelist Pack: Battle City",
+          "set_code": "DPBC-EN015",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Duelist Pack: Yugi",
+          "set_code": "DPYG-EN005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.24"
+        },
+        {
+          "set_name": "Forbidden Legacy",
+          "set_code": "FL1-EN003",
+          "set_rarity": "Secret Rare",
+          "set_rarity_code": "(ScR)",
+          "set_price": "12.67"
+        },
+        {
+          "set_name": "Hidden Arsenal: Chapter 1",
+          "set_code": "HAC1-EN005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Hidden Arsenal: Chapter 1",
+          "set_code": "HAC1-EN005",
+          "set_rarity": "Duel Terminal Normal Parallel Rare",
+          "set_rarity_code": "(DNPR)",
+          "set_price": "2.58"
+        },
+        {
+          "set_name": "Legendary Collection 3: Yugi's World Mega Pack",
+          "set_code": "LCYW-EN018",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-071",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "6.04"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E071",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "17.99"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN071",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Millennium Pack",
+          "set_code": "MIL1-EN034",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1"
+        },
+        {
+          "set_name": "Retro Pack",
+          "set_code": "RP01-EN037",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "13.5"
+        },
+        {
+          "set_name": "Speed Duel Starter Decks: Match of the Millennium",
+          "set_code": "SS04-ENA13",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.36"
+        },
+        {
+          "set_name": "Starter Deck 2006",
+          "set_code": "YSD-EN013",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Yugi Evolution",
+          "set_code": "SYE-019",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.89"
+        },
+        {
+          "set_name": "Starter Deck: Yugi Reloaded",
+          "set_code": "YSYR-EN008",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.76"
+        },
+        {
+          "set_name": "Structure Deck: Yugi Muto",
+          "set_code": "SDMY-EN020",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! Advent Calendar (2019)",
+          "set_code": "AC19-EN001",
+          "set_rarity": "Ultra Rare",
+          "set_rarity_code": "(UR)",
+          "set_price": "3.79"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! Power of Chaos: Yugi the Destiny promotional cards",
+          "set_code": "PCY-005",
+          "set_rarity": "Prismatic Secret Rare",
+          "set_rarity_code": "(PScR)",
+          "set_price": "66.85"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! Power of Chaos: Yugi the Destiny promotional cards",
+          "set_code": "PCY-E005",
+          "set_rarity": "Prismatic Secret Rare",
+          "set_rarity_code": "(PScR)",
+          "set_price": "0.00"
+        },
+        {
+          "set_name": "Yugi's Legendary Decks",
+          "set_code": "YGLD-ENA22",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.46"
+        },
+        {
+          "set_name": "Yugi's Legendary Decks",
+          "set_code": "YGLD-ENB15",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.39"
+        },
+        {
+          "set_name": "Yugi's Legendary Decks",
+          "set_code": "YGLD-ENC23",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.32"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 40640057,
+          "image_url": "https://images.ygoprodeck.com/images/cards/40640057.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/40640057.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/40640057.jpg"
+        },
+        {
+          "id": 40640058,
+          "image_url": "https://images.ygoprodeck.com/images/cards/40640058.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/40640058.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/40640058.jpg"
+        },
+        {
+          "id": 40640059,
+          "image_url": "https://images.ygoprodeck.com/images/cards/40640059.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/40640059.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/40640059.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.02",
+          "tcgplayer_price": "0.22",
+          "ebay_price": "49.99",
+          "amazon_price": "1.45",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 834575,
+          "viewsweek": 3682,
+          "upvotes": 59,
+          "downvotes": 10,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Kuriboh",
+          "tcg_date": "2002-06-26",
+          "ocg_date": "2000-01-27",
+          "konami_id": 4064,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 65878864,
+      "name": "Nobleman-Eater Bug",
+      "typeline": [
+        "Insect",
+        "Flip",
+        "Effect"
+      ],
+      "type": "Flip Effect Monster",
+      "humanReadableCardType": "Flip Effect Monster",
+      "frameType": "effect",
+      "desc": "FLIP: Destroy 2 monsters on the field.",
+      "race": "Insect",
+      "atk": 900,
+      "def": 1200,
+      "level": 5,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/nobleman-eater-bug-5546",
+      "card_sets": [
+        {
+          "set_name": "Dark Revelation Volume 3",
+          "set_code": "DR3-EN030",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Soul of the Duelist",
+          "set_code": "SOD-EN030",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 65878864,
+          "image_url": "https://images.ygoprodeck.com/images/cards/65878864.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/65878864.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/65878864.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.14",
+          "tcgplayer_price": "0.35",
+          "ebay_price": "1.29",
+          "amazon_price": "1.77",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 102862,
+          "viewsweek": 274,
+          "upvotes": 12,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6122,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 78636495,
+      "name": "Slate Warrior",
+      "typeline": [
+        "Fiend",
+        "Flip",
+        "Effect"
+      ],
+      "type": "Flip Effect Monster",
+      "humanReadableCardType": "Flip Effect Monster",
+      "frameType": "effect",
+      "desc": "FLIP: This card gains 500 ATK and DEF.\nIf this card is destroyed by battle: The monster that destroyed it loses 500 ATK and DEF.",
+      "race": "Fiend",
+      "atk": 1900,
+      "def": 400,
+      "level": 4,
+      "attribute": "WIND",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/slate-warrior-6606",
+      "card_sets": [
+        {
+          "set_name": "Battle Pack 2: War of the Giants",
+          "set_code": "BP02-EN027",
+          "set_rarity": "Mosaic Rare",
+          "set_rarity_code": "(MSR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Battle Pack 2: War of the Giants",
+          "set_code": "BP02-EN027",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Battle Pack 3: Monster League",
+          "set_code": "BP03-EN013",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Battle Pack 3: Monster League",
+          "set_code": "BP03-EN013",
+          "set_rarity": "Shatterfoil Rare",
+          "set_rarity_code": "(SHR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Battle Pack: Epic Dawn",
+          "set_code": "BP01-EN121",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Battle Pack: Epic Dawn",
+          "set_code": "BP01-EN121",
+          "set_rarity": "Starfoil Rare",
+          "set_rarity_code": "(SFR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Duel Terminal 5a",
+          "set_code": "DT05-EN011",
+          "set_rarity": "Duel Terminal Normal Parallel Rare",
+          "set_rarity_code": "(DNPR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Structure Deck: Lord of the Storm",
+          "set_code": "SD8-EN005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.04"
+        },
+        {
+          "set_name": "Tournament Pack 8",
+          "set_code": "TP8-EN003",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! The Falsebound Kingdom promotional cards",
+          "set_code": "TFK-EN003",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "57.94"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! World Championship Tournament 2004 promotional cards",
+          "set_code": "WC4-003",
+          "set_rarity": "Prismatic Secret Rare",
+          "set_rarity_code": "(PScR)",
+          "set_price": "10.45"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 78636495,
+          "image_url": "https://images.ygoprodeck.com/images/cards/78636495.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/78636495.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/78636495.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.15",
+          "tcgplayer_price": "0.30",
+          "ebay_price": "2.99",
+          "amazon_price": "1.27",
+          "coolstuffinc_price": "0.49"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 178029,
+          "viewsweek": 843,
+          "upvotes": 5,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-02-10",
+          "ocg_date": "2001-09-06",
+          "konami_id": 5037,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 23771716,
+      "name": "7 Colored Fish",
+      "typeline": [
+        "Fish",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A rare rainbow fish that has never been caught by mortal man.",
+      "race": "Fish",
+      "atk": 1800,
+      "def": 800,
+      "level": 4,
+      "attribute": "WATER",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/7-colored-fish-2049",
+      "card_sets": [
+        {
+          "set_name": "Gold Series",
+          "set_code": "GLD1-EN001",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-098",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.85"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E098",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "6.61"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN098",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel: Streets of Battle City",
+          "set_code": "SBC1-ENC09",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Joey",
+          "set_code": "SDJ-008",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.86"
+        },
+        {
+          "set_name": "Structure Deck: Fury from the Deep",
+          "set_code": "SD4-EN002",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.35"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 23771716,
+          "image_url": "https://images.ygoprodeck.com/images/cards/23771716.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/23771716.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/23771716.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.07",
+          "tcgplayer_price": "0.18",
+          "ebay_price": "1.99",
+          "amazon_price": "2.77",
+          "coolstuffinc_price": "0.39"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 530280,
+          "viewsweek": 1179,
+          "upvotes": 26,
+          "downvotes": 6,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "2000-01-27",
+          "konami_id": 4446,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 47372349,
+      "name": "Acrobat Monkey",
+      "typeline": [
+        "Machine",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "An autonomous monkey type robot which was developed with cutting-edge technology. It moves very acrobatically.",
+      "race": "Machine",
+      "atk": 1000,
+      "def": 1800,
+      "level": 3,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/acrobat-monkey-4041",
+      "card_sets": [
+        {
+          "set_name": "Dark Crisis",
+          "set_code": "DCR-003",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.05"
+        },
+        {
+          "set_name": "Dark Crisis",
+          "set_code": "DCR-EN003",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Dark Revelation Volume 1",
+          "set_code": "DR1-EN165",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Syrus Truesdale",
+          "set_code": "YSDS-EN004",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.57"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 47372349,
+          "image_url": "https://images.ygoprodeck.com/images/cards/47372349.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/47372349.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/47372349.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.09",
+          "tcgplayer_price": "0.14",
+          "ebay_price": "0.99",
+          "amazon_price": "0.99",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 70028,
+          "viewsweek": 169,
+          "upvotes": 4,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-12-01",
+          "ocg_date": "2002-11-21",
+          "konami_id": 5705,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 99785935,
+      "name": "Alpha The Magnet Warrior",
+      "typeline": [
+        "Rock",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "''Alpha, Beta, and Gamma meld as one to form a powerful monster.''",
+      "race": "Rock",
+      "atk": 1400,
+      "def": 1700,
+      "level": 4,
+      "attribute": "EARTH",
+      "archetype": "Magnet Warrior",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/alpha-the-magnet-warrior-8284",
+      "card_sets": [
+        {
+          "set_name": "Legendary Collection 3: Yugi's World Mega Pack",
+          "set_code": "LCYW-EN012",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.18"
+        },
+        {
+          "set_name": "Retro Pack 2",
+          "set_code": "RP02-EN089",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel: Battle City Box",
+          "set_code": "SBCB-EN023",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.19"
+        },
+        {
+          "set_name": "Structure Deck: Yugi Muto",
+          "set_code": "SDMY-EN007",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! The Duelists of the Roses promotional cards",
+          "set_code": "DOR-001",
+          "set_rarity": "Prismatic Secret Rare",
+          "set_rarity_code": "(PScR)",
+          "set_price": "8.32"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! The Duelists of the Roses promotional cards",
+          "set_code": "DOR-E001",
+          "set_rarity": "Prismatic Secret Rare",
+          "set_rarity_code": "(PScR)",
+          "set_price": "13.57"
+        },
+        {
+          "set_name": "Yugi's Legendary Decks",
+          "set_code": "YGLD-ENB11",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.59"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 99785935,
+          "image_url": "https://images.ygoprodeck.com/images/cards/99785935.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/99785935.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/99785935.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.11",
+          "tcgplayer_price": "0.41",
+          "ebay_price": "1.95",
+          "amazon_price": "9.93",
+          "coolstuffinc_price": "0.39"
+        }
+      ],
+      "misc_info": [
+        {
+          "beta_name": "Alpha the Magnet Warrior",
+          "views": 245793,
+          "viewsweek": 1164,
+          "upvotes": 4,
+          "downvotes": 5,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-02-16",
+          "ocg_date": "2000-07-13",
+          "konami_id": 4744,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 42431843,
+      "name": "Ancient Brain",
+      "typeline": [
+        "Fiend",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A fallen fairy that is powerful in the dark.",
+      "race": "Fiend",
+      "atk": 1000,
+      "def": 700,
+      "level": 3,
+      "attribute": "DARK",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/ancient-brain-3620",
+      "card_sets": [
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-082",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.39"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E082",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "3.86"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN082",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel: Trials of the Kingdom",
+          "set_code": "SBTK-EN004",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.08"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 42431843,
+          "image_url": "https://images.ygoprodeck.com/images/cards/42431843.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/42431843.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/42431843.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.06",
+          "tcgplayer_price": "0.10",
+          "ebay_price": "2.95",
+          "amazon_price": "1.48",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 127410,
+          "viewsweek": 336,
+          "upvotes": 2,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "2000-03-01",
+          "konami_id": 4181,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 93221206,
+      "name": "Ancient Elf",
+      "typeline": [
+        "Spellcaster",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "This elf is rumored to have lived for thousands of years. He leads an army of spirits against his enemies.",
+      "race": "Spellcaster",
+      "atk": 1450,
+      "def": 1200,
+      "level": 4,
+      "attribute": "LIGHT",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/ancient-elf-7760",
+      "card_sets": [
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-037",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.48"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E037",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.31"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN037",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Yugi",
+          "set_code": "SDY-024",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.08"
+        },
+        {
+          "set_name": "Starter Deck: Yugi",
+          "set_code": "SDY-E022",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "3.39"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 93221206,
+          "image_url": "https://images.ygoprodeck.com/images/cards/93221206.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/93221206.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/93221206.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.06",
+          "tcgplayer_price": "0.21",
+          "ebay_price": "1.00",
+          "amazon_price": "0.25",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 171559,
+          "viewsweek": 546,
+          "upvotes": 9,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-29",
+          "ocg_date": "1999-07-22",
+          "konami_id": 4439,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 43230671,
+      "name": "Ancient Lizard Warrior",
+      "typeline": [
+        "Reptile",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "Before the dawn of man, this lizard warrior ruled supreme.",
+      "race": "Reptile",
+      "atk": 1400,
+      "def": 1100,
+      "level": 4,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/ancient-lizard-warrior-3683",
+      "card_sets": [
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-050",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.43"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E050",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.43"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN050",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 43230671,
+          "image_url": "https://images.ygoprodeck.com/images/cards/43230671.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/43230671.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/43230671.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.02",
+          "tcgplayer_price": "0.18",
+          "ebay_price": "0.99",
+          "amazon_price": "0.20",
+          "coolstuffinc_price": "0.39"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 105386,
+          "viewsweek": 275,
+          "upvotes": 2,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "1999-07-22",
+          "konami_id": 4636,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 85639257,
+      "name": "Aqua Madoor",
+      "typeline": [
+        "Spellcaster",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A wizard of the waters that conjures a liquid wall to crush any enemies that oppose him.",
+      "race": "Spellcaster",
+      "atk": 1200,
+      "def": 2000,
+      "level": 4,
+      "attribute": "WATER",
+      "archetype": "Madoor",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/aqua-madoor-7176",
+      "card_sets": [
+        {
+          "set_name": "Dark Beginning 1",
+          "set_code": "DB1-EN109",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-027",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "1.98"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-E021",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "9.58"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN027",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Legendary Collection 3: Yugi's World Mega Pack",
+          "set_code": "LCYW-EN221",
+          "set_rarity": "Secret Rare",
+          "set_rarity_code": "(ScR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel: Battle City Box",
+          "set_code": "SBCB-EN002",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.08"
+        },
+        {
+          "set_name": "Starter Deck: Kaiba Reloaded",
+          "set_code": "YSKR-EN002",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.25"
+        },
+        {
+          "set_name": "Starter Deck: Pegasus",
+          "set_code": "SDP-008",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.78"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 85639257,
+          "image_url": "https://images.ygoprodeck.com/images/cards/85639257.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/85639257.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/85639257.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.05",
+          "tcgplayer_price": "0.21",
+          "ebay_price": "4.99",
+          "amazon_price": "1.28",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 451847,
+          "viewsweek": 1242,
+          "upvotes": 12,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-06",
+          "konami_id": 4219,
+          "has_effect": 0,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 75889523,
+      "name": "Archfiend Marmot of Nefariousness",
+      "typeline": [
+        "Beast",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "An air marmot that has a nefarious horn and wings. It attacks by throwing acorns.",
+      "race": "Beast",
+      "atk": 400,
+      "def": 600,
+      "level": 2,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/archfiend-marmot-of-nefariousness-6387",
+      "card_sets": [
+        {
+          "set_name": "Tournament Pack 6",
+          "set_code": "TP6-EN016",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "4.49"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 75889523,
+          "image_url": "https://images.ygoprodeck.com/images/cards/75889523.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/75889523.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/75889523.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "2.50",
+          "tcgplayer_price": "2.89",
+          "ebay_price": "3.99",
+          "amazon_price": "0.25",
+          "coolstuffinc_price": "4.99"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 37127,
+          "viewsweek": 252,
+          "upvotes": 7,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2005-06-01",
+          "ocg_date": "1999-02-04",
+          "konami_id": 4208,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 49881766,
+      "name": "Archfiend Soldier",
+      "typeline": [
+        "Fiend",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "An expert at battle who belongs to a crack diabolical unit. He's famous because he always gets the job done.",
+      "race": "Fiend",
+      "atk": 1900,
+      "def": 1500,
+      "level": 4,
+      "attribute": "DARK",
+      "archetype": "Archfiend",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/archfiend-soldier-4250",
+      "card_sets": [
+        {
+          "set_name": "2-Player Starter Deck: Yuya & Declan",
+          "set_code": "YS15-END02",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "6.26"
+        },
+        {
+          "set_name": "Battle Pack: Epic Dawn",
+          "set_code": "BP01-EN112",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Battle Pack: Epic Dawn",
+          "set_code": "BP01-EN112",
+          "set_rarity": "Starfoil Rare",
+          "set_rarity_code": "(SFR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Dark Crisis",
+          "set_code": "DCR-057",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "5.5"
+        },
+        {
+          "set_name": "Dark Crisis",
+          "set_code": "DCR-EN057",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Dark Legion Starter Deck",
+          "set_code": "YS15-ENL02",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.67"
+        },
+        {
+          "set_name": "Dark Revelation Volume 1",
+          "set_code": "DR1-EN219",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel GX: Duelists of Shadows",
+          "set_code": "SGX3-ENE02",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Syrus Truesdale",
+          "set_code": "YSDS-EN005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "3.37"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 49881766,
+          "image_url": "https://images.ygoprodeck.com/images/cards/49881766.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/49881766.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/49881766.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.23",
+          "tcgplayer_price": "0.54",
+          "ebay_price": "2.22",
+          "amazon_price": "2.99",
+          "coolstuffinc_price": "0.79"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 331286,
+          "viewsweek": 1051,
+          "upvotes": 11,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-12-01",
+          "ocg_date": "2003-02-20",
+          "konami_id": 5762,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 53153481,
+      "name": "Armaill",
+      "typeline": [
+        "Warrior",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A strange warrior who manipulates three deadly blades with both hands and his tail.",
+      "race": "Warrior",
+      "atk": 700,
+      "def": 1300,
+      "level": 3,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/armaill-4528",
+      "card_sets": [
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-079",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.86"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-E062",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "7.04"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN079",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 53153481,
+          "image_url": "https://images.ygoprodeck.com/images/cards/53153481.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53153481.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/53153481.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.02",
+          "tcgplayer_price": "0.11",
+          "ebay_price": "1.00",
+          "amazon_price": "0.25",
+          "coolstuffinc_price": "0.39"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 231644,
+          "viewsweek": 652,
+          "upvotes": 4,
+          "downvotes": 5,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-27",
+          "konami_id": 4178,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 15480588,
+      "name": "Armored Lizard",
+      "typeline": [
+        "Reptile",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A lizard with a very tough hide and a vicious bite.",
+      "race": "Reptile",
+      "atk": 1500,
+      "def": 1200,
+      "level": 4,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/armored-lizard-1332",
+      "card_sets": [
+        {
+          "set_name": "Dark Beginning 1",
+          "set_code": "DB1-EN143",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.43"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.23"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Joey",
+          "set_code": "SDJ-009",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.8"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 15480588,
+          "image_url": "https://images.ygoprodeck.com/images/cards/15480588.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15480588.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/15480588.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.05",
+          "tcgplayer_price": "0.17",
+          "ebay_price": "0.99",
+          "amazon_price": "0.99",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 217201,
+          "viewsweek": 652,
+          "upvotes": 5,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "1999-07-22",
+          "konami_id": 4057,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 17535588,
+      "name": "Armored Starfish",
+      "typeline": [
+        "Aqua",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A bluish starfish with a solid hide capable of fending off attacks.",
+      "race": "Aqua",
+      "atk": 850,
+      "def": 1400,
+      "level": 4,
+      "attribute": "WATER",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/armored-starfish-1523",
+      "card_sets": [
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-116",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.81"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-E094",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "7.79"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN116",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 17535588,
+          "image_url": "https://images.ygoprodeck.com/images/cards/17535588.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/17535588.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/17535588.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.03",
+          "tcgplayer_price": "0.08",
+          "ebay_price": "2.70",
+          "amazon_price": "0.25",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 231257,
+          "viewsweek": 294,
+          "upvotes": 4,
+          "downvotes": 4,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-05-27",
+          "konami_id": 4621,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 20277860,
+      "name": "Armored Zombie",
+      "typeline": [
+        "Zombie",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "This warrior blindly swings a deadly blade with devastating force.",
+      "race": "Zombie",
+      "atk": 1500,
+      "def": 0,
+      "level": 3,
+      "attribute": "DARK",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/armored-zombie-1739",
+      "card_sets": [
+        {
+          "set_name": "Dark Beginning 1",
+          "set_code": "DB1-EN149",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Legendary Collection 4: Joey's World Mega Pack",
+          "set_code": "LCJW-EN184",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-013",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.53"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E013",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.56"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN013",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel: Arena of Lost Souls",
+          "set_code": "SBLS-EN027",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.38"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 20277860,
+          "image_url": "https://images.ygoprodeck.com/images/cards/20277860.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/20277860.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/20277860.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.05",
+          "tcgplayer_price": "0.21",
+          "ebay_price": "0.99",
+          "amazon_price": "0.25",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 241767,
+          "viewsweek": 841,
+          "upvotes": 8,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "1999-09-23",
+          "konami_id": 4102,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 48305365,
+      "name": "Axe Raider",
+      "typeline": [
+        "Warrior",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "An axe-wielding monster of tremendous strength and agility.",
+      "race": "Warrior",
+      "atk": 1700,
+      "def": 1150,
+      "level": 4,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/axe-raider-4122",
+      "card_sets": [
+        {
+          "set_name": "Dark Beginning 2",
+          "set_code": "DB2-EN092",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Legendary Collection 4: Joey's World Mega Pack",
+          "set_code": "LCJW-EN007",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Legendary Decks II",
+          "set_code": "LDK2-ENJ07",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.09"
+        },
+        {
+          "set_name": "Speed Duel: Attack from the Deep",
+          "set_code": "SBAD-EN009",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.16"
+        },
+        {
+          "set_name": "Starter Deck: Yu-Gi-Oh! 5D's",
+          "set_code": "5DS1-EN003",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Tournament Pack: 1st Season",
+          "set_code": "TP1-002",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "488.48"
+        },
+        {
+          "set_name": "Tournament Pack: 1st Season",
+          "set_code": "TP1-E002",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "500.17"
+        },
+        {
+          "set_name": "Tournament Pack: 3rd Season",
+          "set_code": "TP3-006",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "16.4"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 48305365,
+          "image_url": "https://images.ygoprodeck.com/images/cards/48305365.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/48305365.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/48305365.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.09",
+          "tcgplayer_price": "0.14",
+          "ebay_price": "0.99",
+          "amazon_price": "2.33",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 228499,
+          "viewsweek": 1389,
+          "upvotes": 4,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-09-01",
+          "ocg_date": "1999-08-26",
+          "konami_id": 4084,
+          "has_effect": 0,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 88819587,
+      "name": "Baby Dragon",
+      "typeline": [
+        "Dragon",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "Much more than just a child, this dragon is gifted with untapped power.",
+      "race": "Dragon",
+      "atk": 1200,
+      "def": 700,
+      "level": 3,
+      "attribute": "WIND",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/baby-dragon-7424",
+      "card_sets": [
+        {
+          "set_name": "Dark Beginning 2",
+          "set_code": "DB2-EN035",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Dark Legends",
+          "set_code": "DLG1-EN035",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.05"
+        },
+        {
+          "set_name": "Legendary Collection 4: Joey's World Mega Pack",
+          "set_code": "LCJW-EN006",
+          "set_rarity": "Super Rare",
+          "set_rarity_code": "(SR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Legendary Decks II",
+          "set_code": "LDK2-ENJ09",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.29"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-061",
+          "set_rarity": "Short Print",
+          "set_rarity_code": "(SP)",
+          "set_price": "2.24"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-E061",
+          "set_rarity": "Short Print",
+          "set_rarity_code": "(SP)",
+          "set_price": "15.77"
+        },
+        {
+          "set_name": "Metal Raiders",
+          "set_code": "MRD-EN061",
+          "set_rarity": "Short Print",
+          "set_rarity_code": "(SP)",
+          "set_price": "0.00"
+        },
+        {
+          "set_name": "Metal Raiders (25th Anniversary Edition)",
+          "set_code": "MRD-EN061",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Retro Pack",
+          "set_code": "RP01-EN034",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "3.73"
+        },
+        {
+          "set_name": "Speed Duel Demo Deck",
+          "set_code": "DEM5-EN004",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.94"
+        },
+        {
+          "set_name": "Speed Duel Demo Deck 2020",
+          "set_code": "DEM6-EN009",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0.00"
+        },
+        {
+          "set_name": "Speed Duel Starter Decks: Duelists of Tomorrow",
+          "set_code": "SS02-ENB06",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.38"
+        },
+        {
+          "set_name": "Speed Duel: Streets of Battle City",
+          "set_code": "SBC1-ENB09",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Joey",
+          "set_code": "SDJ-003",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.25"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 88819587,
+          "image_url": "https://images.ygoprodeck.com/images/cards/88819587.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/88819587.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/88819587.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.04",
+          "tcgplayer_price": "0.13",
+          "ebay_price": "6.95",
+          "amazon_price": "0.83",
+          "coolstuffinc_price": "0.39"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 326854,
+          "viewsweek": 1433,
+          "upvotes": 7,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "1999-11-18",
+          "konami_id": 4010,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 86325596,
+      "name": "Baron of the Fiend Sword",
+      "typeline": [
+        "Fiend",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "An aristocrat who wields a sword possessed by a malicious spirit that preys on the weak.",
+      "race": "Fiend",
+      "atk": 1550,
+      "def": 800,
+      "level": 4,
+      "attribute": "DARK",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/baron-of-the-fiend-sword-7235",
+      "card_sets": [
+        {
+          "set_name": "Starter Deck: Yugi",
+          "set_code": "SDY-036",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.2"
+        },
+        {
+          "set_name": "Starter Deck: Yugi",
+          "set_code": "SDY-E033",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "3.62"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 86325596,
+          "image_url": "https://images.ygoprodeck.com/images/cards/86325596.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/86325596.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/86325596.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.17",
+          "tcgplayer_price": "0.55",
+          "ebay_price": "3.75",
+          "amazon_price": "0.69",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 41005,
+          "viewsweek": 171,
+          "upvotes": 3,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-29",
+          "ocg_date": "1999-12-16",
+          "konami_id": 4882,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 89091579,
+      "name": "Basic Insect",
+      "typeline": [
+        "Insect",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "Usually found traveling in swarms, this creature's ideal environment is the forest.",
+      "race": "Insect",
+      "atk": 500,
+      "def": 700,
+      "level": 2,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/basic-insect-7439",
+      "card_sets": [
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-008",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.57"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-E006",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "7.67"
+        },
+        {
+          "set_name": "Legend of Blue Eyes White Dragon",
+          "set_code": "LOB-EN008",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel Demo Deck 2020",
+          "set_code": "DEM6-EN011",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0.00"
+        },
+        {
+          "set_name": "Speed Duel Starter Decks: Ultimate Predators",
+          "set_code": "SS03-ENB04",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.06"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 89091579,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89091579.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89091579.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89091579.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.02",
+          "tcgplayer_price": "0.09",
+          "ebay_price": "1.49",
+          "amazon_price": "0.25",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 213897,
+          "viewsweek": 526,
+          "upvotes": 12,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-06",
+          "konami_id": 4056,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 48094997,
+      "name": "Battle Footballer",
+      "typeline": [
+        "Machine",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A cyborg with high defense power. Originally it was invented for a football machine.",
+      "race": "Machine",
+      "atk": 1000,
+      "def": 2100,
+      "level": 4,
+      "attribute": "FIRE",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/battle-footballer-4105",
+      "card_sets": [
+        {
+          "set_name": "Dark Crisis",
+          "set_code": "DCR-001",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.47"
+        },
+        {
+          "set_name": "Dark Crisis",
+          "set_code": "DCR-EN001",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Dark Revelation Volume 1",
+          "set_code": "DR1-EN163",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Starter Deck: Duelist Toolbox",
+          "set_code": "5DS3-EN001",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.17"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 48094997,
+          "image_url": "https://images.ygoprodeck.com/images/cards/48094997.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/48094997.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/48094997.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.07",
+          "tcgplayer_price": "0.16",
+          "ebay_price": "0.99",
+          "amazon_price": "0.99",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 82461,
+          "viewsweek": 274,
+          "upvotes": 3,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-12-01",
+          "ocg_date": "2002-11-21",
+          "konami_id": 5702,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 5053103,
+      "name": "Battle Ox",
+      "typeline": [
+        "Beast-Warrior",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A monster with tremendous power, it destroys enemies with a swing of its axe.",
+      "race": "Beast-Warrior",
+      "atk": 1700,
+      "def": 1000,
+      "level": 4,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/battle-ox-451",
+      "card_sets": [
+        {
+          "set_name": "25th Anniversary Ultimate Kaiba Set",
+          "set_code": "KC01-EN015",
+          "set_rarity": "Ultra Rare",
+          "set_rarity_code": "(UR)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Demo Deck 2015",
+          "set_code": "DEM2-EN004",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.26"
+        },
+        {
+          "set_name": "Legendary Decks II",
+          "set_code": "LDK2-ENK09",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.47"
+        },
+        {
+          "set_name": "Speed Duel Demo Deck",
+          "set_code": "DEM5-EN002",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.95"
+        },
+        {
+          "set_name": "Speed Duel Demo Deck 2020",
+          "set_code": "DEM6-EN004",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0.00"
+        },
+        {
+          "set_name": "Speed Duel Starter Decks: Duelists of Tomorrow",
+          "set_code": "SS02-ENA02",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.09"
+        },
+        {
+          "set_name": "Starter Deck: Kaiba",
+          "set_code": "SDK-005",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.49"
+        },
+        {
+          "set_name": "Starter Deck: Kaiba",
+          "set_code": "SDK-E004",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "11.2"
+        },
+        {
+          "set_name": "Starter Deck: Kaiba Evolution",
+          "set_code": "SKE-002",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.96"
+        },
+        {
+          "set_name": "Starter Deck: Kaiba Reloaded",
+          "set_code": "YSKR-EN004",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.39"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 5053103,
+          "image_url": "https://images.ygoprodeck.com/images/cards/5053103.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/5053103.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/5053103.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.09",
+          "tcgplayer_price": "0.17",
+          "ebay_price": "0.99",
+          "amazon_price": "1.03",
+          "coolstuffinc_price": "0.25"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 224145,
+          "viewsweek": 1203,
+          "upvotes": 8,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-29",
+          "ocg_date": "1999-12-01",
+          "konami_id": 4032,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 84990171,
+      "name": "Bean Soldier",
+      "typeline": [
+        "Plant",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A plant-warrior that attacks with seeds and sword.",
+      "race": "Plant",
+      "atk": 1400,
+      "def": 1300,
+      "level": 4,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/bean-soldier-7129",
+      "card_sets": [
+        {
+          "set_name": "Tournament Pack: 1st Season",
+          "set_code": "TP1-018",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "32.83"
+        },
+        {
+          "set_name": "Tournament Pack: 1st Season",
+          "set_code": "TP1-E018",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "11.08"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 84990171,
+          "image_url": "https://images.ygoprodeck.com/images/cards/84990171.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/84990171.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/84990171.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "1.97",
+          "tcgplayer_price": "23.43",
+          "ebay_price": "7.59",
+          "amazon_price": "1.48",
+          "coolstuffinc_price": "15.99"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 57858,
+          "viewsweek": 191,
+          "upvotes": 9,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-09-01",
+          "ocg_date": "1999-05-25",
+          "konami_id": 4517,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 16899564,
+      "name": "Beautiful Headhuntress",
+      "typeline": [
+        "Warrior",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "A vicious creature that has decapitated numerous enemy monsters.",
+      "race": "Warrior",
+      "atk": 1600,
+      "def": 800,
+      "level": 4,
+      "attribute": "EARTH",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/beautiful-headhuntress-1453",
+      "card_sets": [
+        {
+          "set_name": "Tournament Pack: 2nd Season",
+          "set_code": "TP2-011",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "125.26"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 16899564,
+          "image_url": "https://images.ygoprodeck.com/images/cards/16899564.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/16899564.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/16899564.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "175.84",
+          "tcgplayer_price": "112.49",
+          "ebay_price": "9.00",
+          "amazon_price": "101.85",
+          "coolstuffinc_price": "129.99"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 36787,
+          "viewsweek": 189,
+          "upvotes": 6,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-10-01",
+          "ocg_date": "1999-07-05",
+          "konami_id": 4240,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 94022093,
+      "name": "Behegon",
+      "typeline": [
+        "Aqua",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "With an enormous maw and massive teeth, this monstrosity is one dangerous and strange serpent from the deep.",
+      "race": "Aqua",
+      "atk": 1350,
+      "def": 1000,
+      "level": 4,
+      "attribute": "WATER",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/behegon-7823",
+      "card_sets": [
+        {
+          "set_name": "OTS Tournament Pack 4",
+          "set_code": "OP04-EN015",
+          "set_rarity": "Short Print",
+          "set_rarity_code": "(SP)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Tournament Pack 8",
+          "set_code": "TP8-EN014",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "2.88"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 94022093,
+          "image_url": "https://images.ygoprodeck.com/images/cards/94022093.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/94022093.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/94022093.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.16",
+          "tcgplayer_price": "0.94",
+          "ebay_price": "1.49",
+          "amazon_price": "1.91",
+          "coolstuffinc_price": "0.49"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 21504,
+          "viewsweek": 21,
+          "upvotes": 1,
+          "downvotes": 0,
+          "formats": [
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2006-04-28",
+          "ocg_date": "1999-10-17",
+          "konami_id": 4556,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 39256679,
+      "name": "Beta The Magnet Warrior",
+      "typeline": [
+        "Rock",
+        "Normal"
+      ],
+      "type": "Normal Monster",
+      "humanReadableCardType": "Normal Monster",
+      "frameType": "normal",
+      "desc": "''Alpha, Beta, and Gamma meld as one to form a powerful monster.''",
+      "race": "Rock",
+      "atk": 1700,
+      "def": 1600,
+      "level": 4,
+      "attribute": "EARTH",
+      "archetype": "Magnet Warrior",
+      "ygoprodeck_url": "https://ygoprodeck.com/card/beta-the-magnet-warrior-3329",
+      "card_sets": [
+        {
+          "set_name": "Legendary Collection 3: Yugi's World Mega Pack",
+          "set_code": "LCYW-EN013",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.59"
+        },
+        {
+          "set_name": "Retro Pack 2",
+          "set_code": "RP02-EN090",
+          "set_rarity": "Rare",
+          "set_rarity_code": "(R)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Speed Duel: Battle City Box",
+          "set_code": "SBCB-EN024",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.24"
+        },
+        {
+          "set_name": "Structure Deck: Yugi Muto",
+          "set_code": "SDMY-EN008",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "0"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! The Duelists of the Roses promotional cards",
+          "set_code": "DOR-002",
+          "set_rarity": "Prismatic Secret Rare",
+          "set_rarity_code": "(PScR)",
+          "set_price": "9.02"
+        },
+        {
+          "set_name": "Yu-Gi-Oh! The Duelists of the Roses promotional cards",
+          "set_code": "DOR-E002",
+          "set_rarity": "Prismatic Secret Rare",
+          "set_rarity_code": "(PScR)",
+          "set_price": "14.97"
+        },
+        {
+          "set_name": "Yugi's Legendary Decks",
+          "set_code": "YGLD-ENB12",
+          "set_rarity": "Common",
+          "set_rarity_code": "(C)",
+          "set_price": "1.61"
+        }
+      ],
+      "card_images": [
+        {
+          "id": 39256679,
+          "image_url": "https://images.ygoprodeck.com/images/cards/39256679.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/39256679.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/39256679.jpg"
+        }
+      ],
+      "card_prices": [
+        {
+          "cardmarket_price": "0.12",
+          "tcgplayer_price": "0.27",
+          "ebay_price": "3.83",
+          "amazon_price": "1.27",
+          "coolstuffinc_price": "0.39"
+        }
+      ],
+      "misc_info": [
+        {
+          "beta_name": "Beta the Magnet Warrior",
+          "views": 236579,
+          "viewsweek": 972,
+          "upvotes": 12,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-02-16",
+          "ocg_date": "2000-07-13",
+          "konami_id": 4763,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    }
+  ]
+}

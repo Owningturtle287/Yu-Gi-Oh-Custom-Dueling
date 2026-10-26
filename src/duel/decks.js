@@ -2,18 +2,21 @@ import { createDeck, addCard, normalizeCard, cardCopyName } from '../core.js';
 import { ERA_END, support, supportedPool, isMonster } from './catalog.js';
 import {matchesMonsterFilters,matchesSpellTrapType} from '../card-filters.js';
 import {validReleaseDate} from '../era.js';
+import {freshSeed,seededRandom,shuffled} from './random.js';
+export {seededRandom} from './random.js';
+export const deckSize=value=>Number.isInteger(Number(value))&&Number(value)>=30&&Number(value)<=60?Number(value):40;
 
-export const defaultSide = () => ({ source: 'cards', deckId: '', cutoff: ERA_END, race: '', attribute: '', subtype: '', mechanic:'', spellTrapType:'', spells: true, traps: true, set: '' });
+export const defaultSide = () => ({ source: 'cards', deckId: '', cutoff: ERA_END, race: '', attribute: '', subtype: '', mechanic:'', spellTrapType:'', spells: true, traps: true, set: '', size:40, supplement:false });
 export function poolFor(cards, settings) {
   const cutoff = /^\d{4}-\d\d-\d\d$/.test(settings.cutoff || '') && settings.cutoff <= ERA_END ? settings.cutoff : ERA_END;
   return supportedPool(cards).filter(card => card.tcgDate <= cutoff && (isMonster(card)?matchesMonsterFilters(card,settings):matchesSpellTrapType(card,settings.spellTrapType)) && (settings.spells || card.type !== 'Spell Card') && (settings.traps || card.type !== 'Trap Card'));
 }
 export const setLabel=set=>`${set.name}${validReleaseDate(set.date)?' ('+set.date.slice(0,4)+')':''}`;
-export function validateDuelDeck(deck, cards, settings = defaultSide()) {
+export function validateDuelDeck(deck, cards, settings = defaultSide(), {min=40,max=60}={}) {
   if (!deck?.sections) return ['Choose a saved deck or create one.'];
   const issues = [], index = new Map(cards.map(c => [c.id, c])), allowed = new Set(poolFor(cards, settings).map(c => c.id));
   const total = deck.sections.main.reduce((n, e) => n + e.quantity, 0);
-  if (total < 40 || total > 60) issues.push(`Main Deck needs 40–60 cards (currently ${total}).`);
+  if (total < min || total > max) issues.push(`Main Deck needs ${min}–${max} cards (currently ${total}).`);
   const copies = new Map();
   for (const [section, entries] of Object.entries(deck.sections)) {
     for (const entry of entries) {
@@ -32,34 +35,31 @@ export function validateDuelDeck(deck, cards, settings = defaultSide()) {
   }
   return [...new Set(issues)];
 }
-export function seededRandom(seed) {
-  let value = seed >>> 0 || 1;
-  return () => { value = (Math.imul(value, 1664525) + 1013904223) >>> 0; return value / 4294967296; };
-}
-export function generationProblem(pool) {
+export function generationProblem(pool,size=40) {
   const main = pool.filter(c => !c.type.includes('Fusion'));
   const low = main.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||''));
-  if (new Set(main.map(cardCopyName)).size * 3 < 40) return 'These filters leave fewer than 40 available card copies. Broaden them or choose another set.';
-  if (new Set(low.map(cardCopyName)).size * 3 < 16) return 'These filters need at least 16 copies of Level 4 or lower monsters for a playable random deck.';
+  if (new Set(main.map(cardCopyName)).size * 3 < size) return `These filters leave fewer than ${size} available card copies. Broaden them or choose another set.`;
+  if (new Set(low.map(cardCopyName)).size * 3 < Math.ceil(size*.4)) return `These filters need at least ${Math.ceil(size*.4)} copies of Level 4 or lower monsters for a playable random deck.`;
   return '';
 }
 export function eligibleSets(cards, sets, settings) {
   const pool = poolFor(cards, settings);
   return sets.filter(set => set.date && set.date <= (settings.cutoff || ERA_END)).map(set => {
     const remaining = pool.filter(card => card.setNames?.includes(set.name));
-    return { ...set, remaining, problem: generationProblem(remaining) };
+    return { ...set, remaining, problem: generationProblem(settings.supplement?pool:remaining,deckSize(settings.size)) };
   }).filter(set => set.remaining.length).sort((a,b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name));
 }
-export function generateDeck(cards, settings = defaultSide(), sets = [], seed = Date.now()) {
+export function generateDeck(cards, settings = defaultSide(), sets = [], seed = freshSeed()) {
   const random = seededRandom(seed);
-  let pool = poolFor(cards, settings), label = 'Random cards';
+  let pool = poolFor(cards, settings), preferred=null,label = 'Random cards';
+  const fallback=pool,size=deckSize(settings.size);
   if (settings.source === 'set') {
     const available = eligibleSets(cards, sets, settings).filter(set => !set.problem && (!settings.set || settings.set === set.name));
     if (!available.length) throw new Error('No released set has enough supported cards under these filters. Choose another set or broaden the filters.');
     const set = available[Math.floor(random() * available.length)];
-    pool = set.remaining; label = set.name;
+    pool = settings.supplement?fallback:set.remaining;preferred=set.remaining;label = set.name;
   }
-  const problem = generationProblem(pool);
+  const problem = generationProblem(pool,size);
   if (problem) throw new Error(problem);
   let deck = createDeck(label.slice(0,60)); deck.releaseYear = Number(settings.cutoff.slice(0,4));
   const low = pool.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !c.type.includes('Fusion'));
@@ -68,17 +68,18 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
   const choose = list => {
     const copies = new Map();
     for (const entry of deck.sections.main) { const name=cardCopyName(entry.card); copies.set(name,(copies.get(name)||0)+entry.quantity); }
-    const candidates = list.filter(card => (copies.get(cardCopyName(card)) || 0) < 3);
+    let candidates = list.filter(card => (copies.get(cardCopyName(card)) || 0) < 3);
+    const fromSet=preferred&&candidates.filter(card=>preferred.some(c=>c.id===card.id));if(fromSet?.length)candidates=fromSet;
     if (!candidates.length) return false;
     const ranked = candidates.map(card => ({ card, weight: isMonster(card) ? 1 + Math.max(card.atk,card.def)/1800 : 2 }));
     let pick = random() * ranked.reduce((n,e) => n+e.weight,0);
     const card = (ranked.find(e => (pick -= e.weight) <= 0) || ranked.at(-1)).card;
     deck = addCard(deck, card); return true;
   };
-  for (let n=0;n<20;n++) if (!choose(low)) break;
-  for (let n=0;n<4;n++) if (!choose(high)) break;
+  for (let n=0;n<Math.round(size*.5);n++) if (!choose(low)) break;
+  for (let n=0;n<Math.round(size*.1);n++) if (!choose(high)) break;
   const main = pool.filter(c => !c.type.includes('Fusion') && c.name !== 'Polymerization');
-  while (deck.sections.main.reduce((n,e) => n+e.quantity,0)<40) {
+  while (deck.sections.main.reduce((n,e) => n+e.quantity,0)<size) {
     if (!choose(main) && !choose(pool.filter(c => !c.type.includes('Fusion')))) throw new Error('Not enough card copies.');
   }
   // Add only Fusions whose exact materials actually exist in this deck.
@@ -90,6 +91,23 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
     const replace = deck.sections.main.find(e => !isMonster(e.card)) || deck.sections.main.at(-1);
     if (--replace.quantity === 0) deck.sections.main = deck.sections.main.filter(e => e !== replace);
     deck = addCard(deck,polymer);
+  }
+  return deck;
+}
+export function prepareAIDeck(saved,cards,settings,seed=freshSeed()) {
+  const issues=validateDuelDeck(saved,cards,settings,{min:0,max:60});
+  if(issues.length)throw new Error(issues.join(' '));
+  const random=seededRandom(seed),size=deckSize(settings.size),deck=structuredClone(saved);
+  const main=shuffled(deck.sections.main.flatMap(e=>Array(e.quantity).fill(e.card)),random).slice(0,size);
+  deck.sections.main=[];
+  for(const card of main){const entry=deck.sections.main.find(e=>e.card.id===card.id);if(entry)entry.quantity++;else deck.sections.main.push({card,quantity:1});}
+  const pool=poolFor(cards,settings).filter(c=>!c.type.includes('Fusion'));
+  while(deck.sections.main.reduce((n,e)=>n+e.quantity,0)<size){
+    const counts=new Map();for(const e of Object.values(deck.sections).flat())counts.set(cardCopyName(e.card),(counts.get(cardCopyName(e.card))||0)+e.quantity);
+    const candidates=pool.filter(c=>(counts.get(cardCopyName(c))||0)<3);
+    if(!candidates.length)throw new Error(`These filters cannot fill an AI deck of ${size} cards within the three-copy limit.`);
+    const card=candidates[random.int(candidates.length)],entry=deck.sections.main.find(e=>e.card.id===card.id);
+    if(entry)entry.quantity++;else deck.sections.main.push({card:normalizeCard(card),quantity:1});
   }
   return deck;
 }

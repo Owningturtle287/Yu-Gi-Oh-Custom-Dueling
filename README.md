@@ -1,10 +1,12 @@
-# Duel Atlas · v0.5.1
+# Duel Atlas · v0.5.2
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2006 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.5.2 fixes the early LP value flash, replaces decoded card art instead of stacking it, contains the effect reader, and gives the number sign its own readable font fallback on iOS. Public top-deck reveal events (including Cyber Jar) now open the shared viewer before continuing; position prompts display the actual summoned monster and allow reading it. Effect actions have a preview and distinct native effect labels. A staged activation can be canceled by verified replay only while no cost, reveal, response or result has committed; paid costs cannot be undone. Auto-pass no longer declines End/Standby Phase triggers such as Armed Dragon level-ups. AI Main Deck size is selectable from 30 to 60; undersized sets/custom lists receive random eligible cards while saved lists and three-copy limits remain intact. Fresh seeds, mixed independent deck streams, rejection-sampled Fisher–Yates shuffles and versioned replay compatibility replace correlated initial LCG ordering. Flip timing remains the official rule: after battle damage calculation; battle-destroyed monsters cannot be targets. Directed regressions verify Slate Warrior, Nobleman-Eater Bug, Cyber Jar, activation cancellation, LP monotonicity, AI sizes and shuffle distribution. See the [official Damage Step rules](https://www.yugioh-card.com/eu/play/damage-step-rules/) and [rulebook](https://www.yugioh-card.com/eu/wp-content/uploads/2022/07/Rulebook_v9_en.pdf).
 
 - v0.5.1 shares card filter choices and matching across Archive, Deck Builder, Solo eligibility and AI beliefs. Both pickers include Normal/Effect monsters, DIVINE, the same monster types/subtypes/mechanics and separate Spell/Trap types. Effect matching includes Spirit/Toon/Gemini/Tuner and effect Fusions, with printed Normal types taking precedence over API text-effect metadata. Archive caches refresh once for that metadata and retain offline fallbacks. Solo keeps its 2006 boundary and independent Spell/Trap switches. Released-set dropdowns show their actual TCG release year without changing stored set names. Compact filter grids keep all controls and confirmation visible in landscape.
 

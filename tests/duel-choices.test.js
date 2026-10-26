@@ -41,6 +41,7 @@ async function rig({search=false,exchange=false,alreadySummoned=false,declaratio
 async function activateDoomed(r){
   const card=r.state.players[0].hand.find(c=>c.card.name==='Tribute to the Doomed');
   r.$(`[data-duel-card="${card.uid}"]`).click();[...r.modal.querySelectorAll('[data-duel-group]')].find(button=>button.textContent.includes('Activate')).click();
+  r.$('[data-duel="confirm-activation"]')?.click();
   await waitFor(()=>r.$('.duel-picker-body')&&r.$('.duel-arena').dataset.moving==='false');
 }
 test('discard and targeting menus display real card art, action colors, selected state, and fixed confirmation',async()=>{

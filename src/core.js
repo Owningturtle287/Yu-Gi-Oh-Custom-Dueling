@@ -1,7 +1,7 @@
 import { dateForBasis, cardReleaseDate, normalizeReleaseYear, releaseCutoff, availableBy } from './era.js';
 import {MECHANICS,effectFlag,matchesMonsterFilters,matchesSpellTrapType} from './card-filters.js';
 export {MECHANICS} from './card-filters.js';
-export const VERSION = '0.5.1';
+export const VERSION = '0.5.2';
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
 export const STORAGE_KEY = 'duel-atlas.decks.v1';

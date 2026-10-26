@@ -89,11 +89,36 @@ dialog:has(.duel-selection-info) { width:min(760px,calc(var(--duel-vw) * 100 - 2
 .duel-selection-info .dialog-header { grid-column:1/-1; align-items:center; min-height:36px; }
 .duel-selection-info .dialog-header h2 { font-size:18px; }
 .duel-selection-info .dialog-header button { flex:none; min-height:36px; padding:5px 10px; font-size:12px; }
-.selection-info-art { min-height:0; display:flex; align-items:center; justify-content:center; }
-.selection-info-art img { width:100%; height:100%; object-fit:contain; }
-.selection-info-copy { min-height:0; display:flex; flex-direction:column; gap:10px; }
+.selection-info-art { min-width:0; min-height:0; display:grid; place-items:center; overflow:hidden; }
+.selection-info-art img { display:block; width:100%; height:100%; min-width:0; min-height:0; object-fit:contain; }
+.selection-info-copy { min-width:0; min-height:0; display:flex; flex-direction:column; gap:10px; overflow:hidden; overflow-wrap:anywhere; }
 .selection-info-copy>strong { font-size:11px; color:#6b805b; }
 .selection-info-copy .effect-text { flex:1; min-height:0; margin:0; padding:12px; font-size:14px; line-height:1.6; white-space:pre-wrap; overflow:auto; color:#284535; background:#eaf1e3; border:1px solid #cbd9bf; border-radius:10px; }/* A numbered top-to-bottom list keeps all five cards visible beside its actions. */
+.duel-position-card { display:flex; align-items:center; gap:10px; flex:none; min-height:70px; padding:5px 10px; text-align:left; background:#eaf1e3; border-color:#bdceac; }
+.duel-position-card>img,.duel-position-card>.duel-no-image { display:block; flex:none; width:43px; height:63px; object-fit:contain; }
+.duel-position-card>span:last-child { display:flex; flex-direction:column; min-width:0; gap:4px; }
+.duel-position-card strong { font-size:15px; color:#284b35; }
+.duel-position-card small { font-size:10px; color:#617955; }
+#modal .duel-picker-body.duel-position-picker { display:grid; grid-template-columns:minmax(100px,30%) minmax(0,1fr); grid-template-rows:auto auto auto minmax(0,1fr) auto; height:min(440px,calc(var(--duel-vh) * 100 - 28px)); min-height:0; overflow:hidden; }
+.duel-position-picker>.dialog-header,.duel-position-picker>.duel-choice-source,.duel-position-picker>.duel-choice-footer { grid-column:1/-1; }
+.duel-position-picker>.duel-position-card { grid-column:1; grid-row:3/5; min-width:0; min-height:0; flex-direction:column; justify-content:center; align-items:center; padding:4px; gap:5px; text-align:center; overflow:hidden; }
+.duel-position-picker>.duel-position-card>img,.duel-position-picker>.duel-position-card>.duel-no-image { width:48px; height:70px; }
+.duel-position-picker .duel-position-card strong { font-size:12px; line-height:1.2; }
+.duel-position-picker .duel-position-card small { font-size:8px; line-height:1.2; }
+.duel-position-picker>.duel-choice-help { grid-column:2; grid-row:3; }
+.duel-position-picker>.duel-choice-grid { grid-column:2; grid-row:4; min-height:0; align-content:center; }
+.duel-position-picker .duel-choice-action { min-height:52px; }
+dialog:has(.duel-activation-review) { width:min(760px,calc(var(--duel-vw) * 100 - 28px)); }
+#modal .duel-activation-review { display:grid; grid-template-columns:minmax(80px,28%) minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:10px; height:min(420px,calc(var(--duel-vh) * 100 - 32px)); min-height:0; overflow:hidden; }
+.duel-activation-review>.dialog-header { grid-column:1/-1; }
+.duel-activation-review>.duel-response-art { width:100%; height:100%; min-height:0; background:transparent; box-shadow:none; }
+.duel-activation-review .duel-response-caption { min-height:0; padding:8px; box-shadow:none; }
+.duel-activation-review .duel-response-description { flex:1; min-height:30px; max-height:none; margin:0; overflow:auto; font-size:13px; }
+.duel-activation-review .duel-response-context { flex:none; margin:0; max-height:44px; overflow:auto; font-size:10px; line-height:1.35; }
+.duel-activation-review .duel-response-copy { flex:none; }
+.duel-activation-review .duel-response-copy h3 { font-size:15px; }
+.duel-activation-review .duel-response-note { flex:none; font-size:9px; }
+.solo-deck-fields:has(#solo-size)>.solo-saved-row,.solo-deck-fields:has(#solo-size)>label:has(#solo-set) { grid-column:1/-1; }
 dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28px)); max-height:calc(var(--duel-vh) * 100 - 24px); }
 .duel-order-picker { display:grid; grid-template-columns:175px minmax(0,1fr); gap:14px; height:min(460px,calc(var(--duel-vh) * 100 - 32px)); min-height:0; overflow:hidden; padding:12px; background:linear-gradient(140deg,#fcfdf7,#edf3e8); }
 .order-sidebar { display:flex; min-width:0; min-height:0; flex-direction:column; gap:10px; }

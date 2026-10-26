@@ -44,7 +44,7 @@ test('Damage Step preview names the revealed defender and updates its field DEF 
   const r=await rig({damage:true});try{
     assert.match(r.$('.duel-response-context').textContent,/Mystical Elf is face-up/);
     assert.doesNotMatch(r.$('.duel-response-context').textContent,/attack is declared/);
-    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/declines optional effects.*Required choices still ask/);
+    assert.match(r.modal.textContent,/Castle Walls/);assert.match(r.$('.duel-response-note').textContent,/declines optional effects.*required choices still ask/);
     assert.equal(r.$('.duel-phases').dataset.battleStep,'beforeCalculation');
     r.$('[data-duel="response-activate"]').click();
     await waitFor(()=>r.state.choice&&r.$('.duel-arena').dataset.moving==='false');

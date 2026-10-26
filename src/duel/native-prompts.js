@@ -18,6 +18,25 @@ export function phaseEffectText(card,phase){
   const index=description.search(new RegExp(`(?:During|At) [^.;:]{0,60}\\b${label}\\b`,'i'));
   return index<0?'':description.slice(index);
 }
+export function activationText(card,action,phase){
+  const description=String(card?.desc||'').replace(/\s+/g,' ').trim(),detail=action?.effectText||'';
+  const phaseText=phaseEffectText(card,phase);
+  if(phaseText)return phaseText;
+  const sentences=description.match(/[^.!?]+[.!?]?/g)||[];
+  const verb=detail.match(/destroy|special summon|draw|discard|equip|banish|return|negate/i)?.[0];
+  const clause=verb&&sentences.find(text=>new RegExp(verb,'i').test(text)&&!/(?:During|At) .*Phase/i.test(text));
+  return clause?.trim()||description||detail||'Follow this effect’s instructions.';
+}
+export function activationLabel(action){
+  const detail=action?.effectText;
+  return detail&&!/Choose an effect option|Activate this effect\?|Continue\?/i.test(detail)?`Activate · ${detail}`:'Activate effect';
+}
+// Cancellation is available only while the core is still asking for the first
+// cost/target, before any payment, reveal, response or resolution has happened.
+export function activationUnchanged(before,after){
+  const snapshot=s=>JSON.stringify(s.players.map(p=>({lp:p.lp,zones:['deck','hand','monsters','spells','field','grave','banished','extra'].map(z=>(z==='field'?[p.field]:p[z]).map(c=>c?{uid:c.uid,code:c.coreCode,id:c.card.id,face:c.faceUp,pos:c.position,stats:c.currentStats,counters:c.counters}:null))})));
+  return !!(after.choice?.side===0&&!after.window&&after.winner===null&&before.turn===after.turn&&before.phase===after.phase&&after.chain.length>=before.chain.length&&after.chain.length<=before.chain.length+1&&snapshot(before)===snapshot(after)&&!(after.reveals?.length)&&!after.log.some(e=>e.id>before.serial&&(e.coinNotice||['cost','damage','heal','reveal','resolve'].includes(e.kind))));
+}
 export function choiceContext(card,type,text,hint,phase){
   const phaseText=type==='select_effectyn'&&phaseEffectText(card,phase);
   if(phaseText&&/Choose an effect option|Activate this effect\?|Continue\?/i.test(text))return {title:`${card.name} · ${phase==='end'?'End':'Standby'} Phase effect`,instructions:phaseText,effectText:phaseText};

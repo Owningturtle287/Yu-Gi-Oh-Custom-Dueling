@@ -2,6 +2,13 @@ import { cardRotation } from './field.js';
 import { appendAttackArrow } from './attack-arrows.js';
 import {localRect} from './viewport.js';
 export const CARD_BACK = './assets/card-back.jpg';
+export function paintLife(root,side,value){
+  const badge=root.querySelector(`[data-field-lp="${side}"]`);if(!badge)return;
+  const amount=Math.max(0,value),counter=badge.querySelector('[data-lp-value]'),meter=badge.querySelector('.duel-life-meter>i');
+  if(counter)counter.textContent=amount.toLocaleString();
+  badge.setAttribute('aria-label',(badge.getAttribute('aria-label')||'').replace(/Life Points: \d+/,`Life Points: ${amount}`));
+  if(meter)meter.style.width=`${Math.max(0,Math.min(100,amount/Number(badge.dataset.lpMax||8000)*100))}%`;
+}
 const fieldZones = new Set(['monsters', 'spells', 'field']);
 const publicZones = new Set(['grave', 'banished']);
 const frontURL = card => {
@@ -140,17 +147,17 @@ export function createMotionPlayer(root) {
         const counter = root.querySelector(`[data-lp-value="${motion.to[0]}"]`);
         if (counter) {
           const hold=motions.some(m=>m.type==='attack')?420:0;
-          counter.textContent=Math.max(0,motion.before).toLocaleString();
+          paintLife(root,motion.to[0],motion.before);
           run(counter, [{ color: motion.delta < 0 ? '#ff9eaf' : '#b1ffdc', transform: 'scale(1.08)' }, { color: 'inherit', transform: 'scale(1)' }], { duration: 650, delay:hold, easing: ease });
           const view=document.defaultView;
           if(view?.requestAnimationFrame)jobs.push(new Promise(resolve=>{
             let frame, start;
-            const stop=()=>{view.cancelAnimationFrame(frame);counter.textContent=Math.max(0,motion.after).toLocaleString();counters.delete(stop);resolve();};
+            const stop=()=>{view.cancelAnimationFrame(frame);paintLife(root,motion.to[0],motion.after);counters.delete(stop);resolve();};
             counters.add(stop);
             const tick=time=>{
               if(current!==generation){stop();return;}
               start??=time;const progress=Math.max(0,Math.min(1,(time-start-hold)/600)),amount=Math.round(motion.before+(motion.after-motion.before)*(1-(1-progress)**3));
-              counter.textContent=Math.max(0,amount).toLocaleString();
+              paintLife(root,motion.to[0],amount);
               if(progress<1)frame=view.requestAnimationFrame(tick);else stop();
             };
             frame=view.requestAnimationFrame(tick);

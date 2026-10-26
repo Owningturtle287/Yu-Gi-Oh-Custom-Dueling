@@ -29,7 +29,7 @@ test('inspection keeps the thumbnail visible through a delayed full-art load and
     const loading=r.upgrade.onload();await Promise.resolve();
     assert.equal(r.container.children.length,1,'Full art must decode before it can cover the preview');
     r.resolveDecode();await loading;
-    assert.equal(r.container.children.length,2);assert.equal(r.container.firstChild,preview);assert.equal(r.container.lastChild,r.upgrade);
+    assert.equal(r.container.children.length,1);assert.equal(r.container.firstChild,r.upgrade);assert.equal(preview.isConnected,false,'A decoded upgrade replaces the preview, including in flex readers');
   }finally{r.close();}
 });
 test('failed art upgrades and closing during decode preserve the preview and never mutate another popup',async()=>{
