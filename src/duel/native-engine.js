@@ -5,10 +5,10 @@ import { effectBrief } from './responses.js';
 import { chooseAIAction } from './native-ai.js';
 import { aiObservation,costValue,locate } from './ai-knowledge.js';
 export { chooseAIAction } from './native-ai.js';
-import { seededRandom } from './decks.js';
+import {freshSeed,seededRandom,legacyRandom,shuffled,deriveSeed} from './random.js';
 import { effectExplanation } from './effects.js';
 import { BATTLE_STEPS, CORE_BATTLE_HINTS, battleContext } from './battle-timing.js';
-import {describeNative,choiceContext} from './native-prompts.js';
+import {describeNative,choiceContext,phaseEffectText} from './native-prompts.js';
 export { findCard, PHASES, PHASE_LABELS };
 
 const names=['deck','hand','monsters','spells','grave','banished','extra'];
@@ -17,14 +17,8 @@ const who=side=>side===0?'You':'AI';
 export const stats=(_state,card)=>card?.currentStats||{atk:Math.max(0,card?.card.atk||0),def:Math.max(0,card?.card.def||0)};
 export const legalActions=(state,side)=>state.winner===null?(state.actions?.[side]||[]):[];
 const cardsIn=state=>state.players.flatMap(p=>[...names.flatMap(zone=>p[zone].filter(Boolean)),...(p.field?[p.field]:[])]);
-function shuffled(cards,seed){
-  const copy=[...cards],random=seededRandom(seed);
-  for(let i=copy.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}
-  return copy;
-}
-
 export function nativeSeed(seed,version=2){
-  let value=BigInt(seed>>>0||1);
+  let value=BigInt(version<3?(seed>>>0||1):seed>>>0);
   if(version===1)return [value,2n,3n,4n];
   // SplitMix64 expands the match seed into all four xoshiro state words.
   // Three constant small words made early core coin/dice results repeat.
@@ -40,8 +34,8 @@ export function nativeSeed(seed,version=2){
 // public events and field queries into the existing arena's presentation model.
 export function createNativeBackend({rules=defaultNativeRules}={}) {
   const matches=new Map();let nextMatch=0;
-  async function createMatch(decks,{seed=Date.now(),randomVersion=2,rulesVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
-    if(![1,2].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
+  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+    if(![1,2,3].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
     if(![1,2].includes(rulesVersion))throw new Error('Unsupported saved duel rules version.');
     const pack=await rules(),{module:m,lib,records}=pack;
     const scripts=rulesVersion===1?{...pack.scripts,'c16768387.lua':pack.scripts['c16768387.lua'].replace('Duel.SortDecktop(tp,tp,ac)','Duel.SortDecktop(tp,tp,ct)')}:pack.scripts;
@@ -70,7 +64,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       decks.forEach((deck,side)=>{
         // Startup does not shuffle the initial list. Shuffle a copy for each
         // player, then insert explicitly; saved/editor ordering stays intact.
-        for(const [zone,location] of [['main',m.OcgLocation.DECK],['extra',m.OcgLocation.EXTRA]])for(const card of zone==='main'?shuffled(deck.main,(seed+side*0x9e3779b9)>>>0):deck.extra)lib.duelNewCard(handle,{team:r.team(side),controller:r.team(side),duelist:0,code:canonical.get(card.id)||card.id,location,sequence:1,position:m.OcgPosition.FACEDOWN_DEFENSE});
+        for(const [zone,location] of [['main',m.OcgLocation.DECK],['extra',m.OcgLocation.EXTRA]])for(const card of zone==='main'?shuffled(deck.main,randomVersion<3?legacyRandom((seed+side*0x9e3779b9)>>>0):seededRandom(deriveSeed(seed,'opening-'+side))):deck.extra)lib.duelNewCard(handle,{team:r.team(side),controller:r.team(side),duelist:0,code:canonical.get(card.id)||card.id,location,sequence:1,position:m.OcgPosition.FACEDOWN_DEFENSE});
       });
       if(openingHands)openingHands.forEach((hand,side)=>hand.forEach(card=>lib.duelNewCard(handle,{team:r.team(side),controller:r.team(side),duelist:0,code:canonical.get(card.id)||card.id,location:m.OcgLocation.HAND,sequence:0,position:m.OcgPosition.FACEDOWN_DEFENSE})));
       if(initialFields)initialFields.forEach((fields,side)=>Object.entries(fields).forEach(([zone,cards])=>cards.forEach((item,sequence)=>{if(item)lib.duelNewCard(handle,{team:r.team(side),controller:r.team(side),duelist:0,code:canonical.get(item.card.id)||item.card.id,location:({monsters:m.OcgLocation.MZONE,grave:m.OcgLocation.GRAVE,banished:m.OcgLocation.REMOVED,extra:m.OcgLocation.EXTRA})[zone]||m.OcgLocation.SZONE,sequence:zone==='field'?5:sequence,position:item.defense?(item.faceUp===false?8:4):item.faceUp===false?2:1});})));
@@ -129,7 +123,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       const id=`${r.id}:reveal:${++r.revealSequence}`;
       const batch=s.reveals.find(reveal=>reveal.batch===r.promptSequence&&reveal.viewer===viewer&&reveal.source?.id===source?.card.id&&reveal.presentationOnly===!deck&&!reveal.ordered&&!topFirst);
       if(batch)batch.cards.push(...cards.filter(card=>!batch.cards.some(c=>c.uid&&c.uid===card.uid)));
-      else s.reveals.push({id,viewer,batch:r.promptSequence,presentationOnly:!deck,ordered:topFirst,source:source?.card||null,cards});
+      else s.reveals.push({id,viewer,batch:r.promptSequence,presentationOnly:!deck,deckTop:!!msg.publicReveal,ordered:topFirst,source:source?.card||null,cards});
       log(r,`${source?.card.name||'The effect'}: ${who(viewer)} ${viewer===0?'view':'views'} ${topFirst?'the top ':''}${cards.length} ${topFirst?'':'revealed '}card${cards.length===1?'':'s'} from ${cards[0].controller===0?'your':'AI’s'} ${deck?'Deck':cards[0].zone}${topFirst?', in order. The Deck order is unchanged.':'.'}`,'reveal',[],viewer);
     }else for(const c of cards){
       log(r,'Revealed '+c.card.name+'.','reveal',[c.uid].filter(Boolean),c.controller);
@@ -235,7 +229,9 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         if(link){
           const outcomes=s.log.filter(e=>e.id>(link.solveStart||s.serial)&&(['leave','stats','damage','heal','cost','discard','draw','position','reveal'].includes(e.kind)||e.resolutionOutcome)).map(e=>e.message);
           const ready=!link.description&&['Continuous','Field','Equip'].includes(link.card.race)&&link.card.type!=='Effect Monster';
-          const text=link.negated?`This effect was negated${link.negatedBy?' by '+link.negatedBy:''}; its effect does not apply.`:outcomes.slice(-2).join(' ')||(ready?effectExplanation(link.card,{phase:s.phase}):'Effect resolved. See the duel feed for the sequence; any ongoing effect follows this card’s conditions.');
+          const required=link.card.desc?.match(/FLIP:\s*(?:Target|Destroy) (\d+) monsters?/i)?.[1];
+          const noTargets=required&&!outcomes.length?`No cards changed. This Flip effect needs exactly ${required} legal monsters to target. A monster already destroyed by this battle cannot be targeted.`:'';
+          const text=link.negated?`This effect was negated${link.negatedBy?' by '+link.negatedBy:''}; its effect does not apply.`:outcomes.slice(-2).join(' ')||noTargets||(ready?effectExplanation(link.card,{phase:s.phase}):'Effect resolved. See the duel feed for the sequence; any ongoing effect follows this card’s conditions.');
           notice(r,link,link.negated?'negated':ready?'ready':'resolve',text,msg.chain_size);
         }
         if(link?.card.name==='Exchange')log(r,'Exchange changes the cards in each hand; it does not grant an additional Normal Summon/Set.','effect',[link.uid].filter(Boolean),link.side);
@@ -246,6 +242,9 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       case T.DAMAGE_STEP_START:battleStep(r,'start');break;
       case T.DAMAGE_STEP_END:r.battleNegation=null;commitStrike(r);s.pending=null;r.lastAttack=null;battleStep(r,null);log(r,'Damage Step complete. Return to the Battle Step.','timing');break;
       case T.CONFIRM_CARDS:confirmCards(r,msg);break;
+      // ConfirmDecktop is a different public protocol event from ConfirmCards.
+      // Cyber Jar and other reveal/summon effects use it before position choices.
+      case T.CONFIRM_DECKTOP:case T.CONFIRM_EXTRATOP:confirmCards(r,{...msg,player:r.team(0),publicReveal:true});break;
       case T.BECOME_TARGET:{const cards=msg.cards.map(loc=>({card:cardAt(r,loc),loc}));for(const {card,loc} of cards){const name=card&&(r.side(loc.controller)===0||card.faceUp||card.public||loc.location===m.OcgLocation.GRAVE)?card.card.name:'a face-down card';log(r,`${effectName(r)||'The effect'} targets ${name}${loc.location===m.OcgLocation.MZONE?` in ${r.side(loc.controller)===0?'your':'AI’s'} Monster Zone ${loc.sequence+1}`:''}.`,'target',[effectSource(r)?.uid,card?.uid].filter(Boolean));}break;}
       case T.ATTACK:s.declinedAttacks=[[],[]];notePattern(s,s.active,'attacks');r.attackSelectionUid=null;s.attacksUsed??={};if(at)s.attacksUsed[at.uid]=(s.attacksUsed[at.uid]||0)+1;r.lastAttack={kind:'attack',uid:at?.uid,target:target?.uid||null,side:at?.controller??s.active};s.pending=r.lastAttack;s.visualAction={type:'DECLARE_ATTACK',uid:at?.uid,target:target?.uid||null};r.battleStrike=null;battleStep(r,'attack');log(r,`${at?.card.name||'A monster'} attacked ${target?target.faceUp?target.card.name:'a face-down Defense Position monster':'Life Points directly'}.`,'attack',[at?.uid,target?.uid].filter(Boolean));break;
       case T.BATTLE:{
@@ -371,7 +370,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     if(p.type===T.SELECT_CHAIN){
       const timing=p.hint_timing|p.hint_timing_other,H=m.OcgHintTiming;
       const context=timing&H.MAIN_END?`Before ${PHASE_LABELS[s.phase]} ends, you may activate a legal fast effect.`:timing&(H.SUMMON|H.SPSUMMON|H.FLIPSUMMON)?'A monster was summoned. You may respond before play continues.':timing&H.CHAIN_END?'The previous chain has finished. You may start a new response chain.':`You may activate a legal fast effect during ${PHASE_LABELS[s.phase]}.`;
-      s.window={priority:side,promptId:`${r.id}:p${r.promptSequence}`,forced:p.forced,battleStep:s.battleStep,timing:battleContext(s)||context,event:{kind:s.pending?.kind||((timing&(H.SUMMON|H.SPSUMMON|H.FLIPSUMMON))?'summon':s.chain.length?'chain':'phase'),side:s.active}};
+      s.window={priority:side,promptId:`${r.id}:p${r.promptSequence}`,forced:p.forced,phaseTrigger:p.selects.some(item=>!!phaseEffectText(descriptor(r,item.code),s.phase)),battleStep:s.battleStep,timing:battleContext(s)||context,event:{kind:s.pending?.kind||((timing&(H.SUMMON|H.SPSUMMON|H.FLIPSUMMON))?'summon':s.chain.length?'chain':'phase'),side:s.active}};
       if(!p.forced)add({type:'PASS'},{type:R.SELECT_CHAIN,index:null});
       p.selects.forEach((item,index)=>located(item,'ACTIVATE','Activate '+descriptor(r,item.code).name,{type:R.SELECT_CHAIN,index},{effectText:describe(r,item.description)}));return;
     }
@@ -389,9 +388,9 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const option=(label,response,extra={})=>add({type:'CHOOSE',label,...extra},response);
     const context=choiceContext(source?.card,choice.selectionType,describe(r,p.description),r.hint,s.phase);if(context.instructions)choice.instructions=context.instructions;
     if(choice.attackCostUid)choice.instructions='Choose a Tribute to pay the attack cost, then confirm. Confirming without a card cancels the attack.';
-    if(p.type===T.SELECT_EFFECTYN||p.type===T.SELECT_YESNO){const target=sourceAt(r,p);choice.trigger.uid=target?.uid||(p.type===T.SELECT_YESNO?r.sourceUid:null);choice.optionalResponse=p.type===T.SELECT_EFFECTYN&&!!(choice.trigger.uid||p.code);choice.effectText=context.effectText||describe(r,p.description);choice.title=context.title||((target?.card.name||source?.card.name||'Effect')+' · '+choice.effectText);const responseType=p.type===T.SELECT_EFFECTYN?R.SELECT_EFFECTYN:R.SELECT_YESNO;option(context.yes||(p.type===T.SELECT_EFFECTYN?'Activate effect':'Yes · continue'),{type:responseType,yes:true},{yes:true,effectText:choice.effectText,...(p.code?{effectCard:descriptor(r,p.code)}:{})});option(context.no||(p.type===T.SELECT_EFFECTYN?'Skip effect':'No · decline'),{type:responseType,yes:false},{yes:false});return;}
+    if(p.type===T.SELECT_EFFECTYN||p.type===T.SELECT_YESNO){const target=sourceAt(r,p);choice.trigger.uid=target?.uid||(p.type===T.SELECT_YESNO?r.sourceUid:null);choice.optionalResponse=p.type===T.SELECT_EFFECTYN&&!!(choice.trigger.uid||p.code);choice.phaseTrigger=!!(choice.optionalResponse&&phaseEffectText(source?.card,s.phase));choice.effectText=context.effectText||describe(r,p.description);choice.title=context.title||((target?.card.name||source?.card.name||'Effect')+' · '+choice.effectText);const responseType=p.type===T.SELECT_EFFECTYN?R.SELECT_EFFECTYN:R.SELECT_YESNO;option(context.yes||(p.type===T.SELECT_EFFECTYN?'Activate effect':'Yes · continue'),{type:responseType,yes:true},{yes:true,effectText:choice.effectText,...(p.code?{effectCard:descriptor(r,p.code)}:{})});option(context.no||(p.type===T.SELECT_EFFECTYN?'Skip effect':'No · decline'),{type:responseType,yes:false},{yes:false});return;}
     if(p.type===T.SELECT_OPTION){choice.title=context.title||(source?.card.name?source.card.name+' · Choose an option':'Choose an effect option');p.options.forEach((desc,index)=>{const label=describe(r,desc);option(label,{type:R.SELECT_OPTION,index},/^(Heads|Tails)$/.test(label)?{coinCall:label}:{});});return;}
-    if(p.type===T.SELECT_POSITION){choice.positionCard=p.code?{card:descriptor(r,p.code)}:source;choice.title='Choose battle position';for(const [position,label] of [[m.OcgPosition.FACEUP_ATTACK,'Attack Position'],[m.OcgPosition.FACEUP_DEFENSE,'Defense Position'],[m.OcgPosition.FACEDOWN_DEFENSE,'Set in Defense'],[m.OcgPosition.FACEDOWN_ATTACK,'Face-down Attack']])if(p.positions&position)option(label,{type:R.SELECT_POSITION,position},{defense:!!(position&m.OcgPosition.DEFENSE)});return;}
+    if(p.type===T.SELECT_POSITION){choice.positionCard=p.code?{card:descriptor(r,p.code)}:source;choice.title='Choose battle position';choice.instructions=`Choose the position for ${choice.positionCard?.card.name||'this monster'}. Attack is face-up; Set is face-down Defense.`;for(const [position,label] of [[m.OcgPosition.FACEUP_ATTACK,'Attack Position'],[m.OcgPosition.FACEUP_DEFENSE,'Defense Position'],[m.OcgPosition.FACEDOWN_DEFENSE,'Set in Defense'],[m.OcgPosition.FACEDOWN_ATTACK,'Face-down Attack']])if(p.positions&position)option(label,{type:R.SELECT_POSITION,position},{defense:!!(position&m.OcgPosition.DEFENSE)});return;}
     if(p.type===T.SELECT_UNSELECT_CARD){
       choice.title=r.hint;choice.stage=true;
       [...p.select_cards,...p.unselect_cards].forEach((item,index)=>{const card=cardAt(r,item);option((index>=p.select_cards.length?'Unselect ':'Select ')+targetName(card,item),{type:R.SELECT_UNSELECT_CARD,index},{target:card?.uid,selected:index>=p.select_cards.length});if(index>=p.select_cards.length)choice.selected.push(card?.uid);});
@@ -469,14 +468,14 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     r.lib.duelSetResponse(r.handle,reply.response);pump(r);return r.state;
   }
   function destroyMatch(state){const r=matches.get(state?.runtimeId);if(r){r.lib.destroyDuel(r.handle);matches.delete(r.id);}}
-  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:2,queryRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
+  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:3,queryRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
     let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,cards});
-    const legacy=save.presentationRevision!==2;
+    const legacy=![2,3].includes(save.presentationRevision);
     const acknowledgeLegacyLists=()=>{
-      while(legacy&&state.reveals?.[0]?.presentationOnly){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}
+      while((legacy&&state.reveals?.[0]?.presentationOnly)||(save.presentationRevision!==3&&state.reveals?.[0]?.deckTop)){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}
     };
     try{
       for(let i=0;i<save.history.length;i++){

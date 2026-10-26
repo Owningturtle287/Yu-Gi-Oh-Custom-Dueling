@@ -27,6 +27,7 @@ export function choiceIntent(action, purpose='') {
   const text=String(purpose).toLowerCase();
   if (action.discard || /discard/.test(text)) return {tone:'danger',label:'Discard'};
   if (action.tribute || action.tributes?.length || /tribute|release/.test(text)) return {tone:'gold',label:'Tribute'};
+  if (/tograve|to grave|send to.*grave/.test(text)) return {tone:'danger',label:'Send to GY'};
   if (/destroy/.test(text)) return {tone:'danger',label:'Destroy'};
   if (/attack/.test(text)) return {tone:'danger',label:'Target'};
   if (/remove|banish/.test(text)) return {tone:'violet',label:'Banish'};

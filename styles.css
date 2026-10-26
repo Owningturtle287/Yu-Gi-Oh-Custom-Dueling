@@ -1,3 +1,10 @@
+/* Avenir's number-sign glyph can resemble a currency symbol on iOS. */
+@font-face {
+  font-family:AtlasSymbols;
+  src:local('Arial'),local('Helvetica'),local('Liberation Sans');
+  unicode-range:U+0023;
+  font-display:swap
+}
 @font-face {
   font-family:Atlas;
   src:local('Avenir Next'),local('Avenir'),local('Segoe UI');
@@ -25,7 +32,7 @@
   --green:#8ce8ad;
   --red:#ffabb3;
   --radius:18px;
-  font-family:Atlas,Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  font-family:AtlasSymbols,Atlas,Inter,system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:15px
 }
 * {

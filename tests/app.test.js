@@ -353,7 +353,7 @@ test('Solo setup has one AI policy and saves independent eligibility, speed, sav
     config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
     assert.equal(config.difficulty,undefined);assert.equal(config.sides[1].deckId,app.state.draft.id);
     assert.equal(config.aiSpeed,'relaxed');
-    $('[data-duel="start"]').click();assert.match($('#modal').textContent,/AI deck: Main Deck needs 40–60/);
+    assert.equal(config.sides[1].size,40);assert.equal(config.sides[1].supplement,true);assert.equal($('#solo-size').options.length,31);
   }finally{app.navigate('home');window.close();}
 });
 test('a Solo match starts, tracks phases, offers summons, exits cleanly and starts a fresh duel', async () => {

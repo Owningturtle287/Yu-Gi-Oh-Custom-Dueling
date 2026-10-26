@@ -45,7 +45,7 @@ export function createResponsePolicy() {
       sync(state);
       // Only the core's legal decline action is repeated. This includes optional
       // attack/chain/trigger windows, never committed costs, targets or options.
-      return passing?responseOffer(state, actions)?.pass||null:null;
+      return passing&&!state.choice?.phaseTrigger&&!state.window?.phaseTrigger?responseOffer(state, actions)?.pass||null:null;
     }
   };
 }

@@ -106,6 +106,12 @@ try{
    if(source==='set'){await page.waitForFunction(()=>document.querySelector('#solo-set')?.textContent.includes('Layout test set (2003)'));assert.equal(await page.locator('#solo-set option').filter({hasText:'Layout test set (2003)'}).getAttribute('value'),'Layout test set');await page.locator('#solo-set').selectOption('Layout test set');assert.equal(await page.locator('#solo-set').inputValue(),'Layout test set');assert.equal(await page.locator('.solo-set-year').textContent(),'2003');await visibleControls('.solo-set-year');await capture(`released-set-${width}x${height}`);}
    await visibleControls('.solo-setup button,.solo-setup select');
   }
+  await page.locator('[data-duel-tab="1"]').click();
+  for(const source of ['saved','set','cards']){
+   await page.locator('#solo-source').selectOption(source);await page.locator('#solo-size').selectOption('60');assert.equal(await page.locator('#solo-size').inputValue(),'60');await visibleControls('.solo-setup button,.solo-setup select');
+   if(source==='set')await capture(`ai-deck-size-${width}x${height}`);
+  }
+  await page.locator('#solo-size').selectOption('30');await page.locator('[data-duel-tab="0"]').click();await page.locator('[data-duel-tab="1"]').click();assert.equal(await page.locator('#solo-size').inputValue(),'30');
   for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
   assert.match(await page.locator('.duel-era').textContent(),/2006 LAB/);
   await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2006-12-31');
@@ -175,6 +181,25 @@ try{
   await page.locator('.duel-choice-action').filter({hasText:'Attack Position'}).waitFor();await page.locator('.duel-arena[data-moving="false"]').waitFor();await page.locator('.duel-choice-action').filter({hasText:'Attack Position'}).click();
   await page.waitForFunction(()=>window.layoutRig.getMatch().players[0].monsters.some(c=>c?.card.name==='Armed Dragon LV7')&&document.querySelector('.duel-arena')?.dataset.moving==='false');
   await page.evaluate(()=>window.layoutRig.destroy());
+  await page.evaluate(async()=>{
+   const {navigate,state}=await import('/src/app.js');navigate('home');const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js');
+   const catalog=state.cards,get=name=>catalog.find(c=>c.name===name),engine=createNativeBackend();
+   const match=await engine.createMatch([0,1].map(()=>({name:'Effect review',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards:catalog,seed:17,openingHands:[[get('Armed Dragon LV7')],[]],initialFields:[{monsters:[{card:get('Armed Dragon LV5')}]},{monsters:[{card:get('Mystical Elf')}]}]});
+   const main=document.querySelector('#main'),modal=document.querySelector('#modal');const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:title=>`<div class="dialog-header"><h2>${title}</h2><button data-action="close">×</button></div>`,toast:message=>{throw Error(message);},onDesign(){},engine:{...engine,createMatch:async()=>match}});controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
+  });
+  await page.locator('.duel-arena[data-moving="false"]').waitFor();const reviewSource=await page.evaluate(()=>window.layoutRig.getMatch().players[0].monsters[0].uid);await page.locator(`[data-duel-card="${reviewSource}"]`).click();await page.locator('[data-duel-group]').filter({hasText:'Activate · Destroy'}).click();
+  await visibleControls('.duel-activation-review button');assert.match(await page.locator('[aria-label="Effect to activate"]').textContent(),/send 1 monster from your hand/);await capture(`activation-review-${width}x${height}`);
+  await page.locator('[data-duel="confirm-activation"]').click();await page.locator('.duel-arena[data-moving="false"]').waitFor();await page.locator('.duel-choice-footer [data-duel="cancel-activation"]').click();await page.waitForFunction(()=>!window.layoutRig.getMatch().choice&&document.querySelector('.duel-arena')?.dataset.moving==='false');
+  assert.ok(await page.evaluate(()=>window.layoutRig.getMatch().players[0].hand.some(c=>c.card.name==='Armed Dragon LV7')));await page.evaluate(()=>window.layoutRig.destroy());
+  await page.route('**/images.ygoprodeck.com/images/cards_small/*.jpg',async route=>route.fulfill({body:await readFile('assets/card-back.jpg'),contentType:'image/jpeg'}));
+  await page.evaluate(async()=>{
+   const {navigate,state}=await import('/src/app.js');navigate('home');const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js');const catalog=state.cards,get=name=>catalog.find(c=>c.name===name),engine=createNativeBackend();
+   let match=await engine.createMatch([0,1].map(()=>({name:'Cyber Jar reveal',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards:catalog,seed:17,openingHands:[[],[]],initialFields:[{monsters:[{card:get('Cyber Jar'),faceUp:false,defense:true}]},{}]});match=engine.applyAction(match,match.actions[0].find(a=>a.type==='POSITION'),0);
+   const main=document.querySelector('#main'),modal=document.querySelector('#modal');const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:title=>`<div class="dialog-header"><h2>${title}</h2><button data-action="close">×</button></div>`,toast:message=>{throw Error(message);},onDesign(){},engine:{...engine,createMatch:async()=>match}});controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
+  });
+  await page.locator('.duel-reveal-list').waitFor();assert.equal(await page.locator('[data-duel-reveal-card]').count(),5);await visibleControls('.duel-reveal-body button');await capture(`cyber-jar-reveal-${width}x${height}`);
+  await page.locator('[data-duel="reveal-done"]').click();await page.locator('.duel-position-card').waitFor();assert.match(await page.locator('.duel-position-card').textContent(),/Mystical Elf/);await visibleControls('.duel-picker-body button,.duel-position-card>img,.duel-position-card strong,.duel-position-card small');await capture(`cyber-jar-position-${width}x${height}`);
+  await page.locator('[data-duel="read-position-card"]').click();await visibleControls('.duel-selection-info button');await page.locator('[data-duel="selection-back"]').click();assert.match(await page.locator('.duel-position-card').textContent(),/Mystical Elf/);await page.locator('.dialog-header [data-action="close"]').click();await page.evaluate(()=>window.layoutRig.destroy());
   // A real Alien flip verifies the new live counter badge and inspector on
   // the same eight small/rotated screens as the rest of the arena.
   await page.evaluate(async()=>{
@@ -211,6 +236,12 @@ try{
   for(const selector of ['[data-duel="read-choice-source"]','[data-order-read]']){
    await page.locator(selector).first().click();await visibleControls('.duel-selection-info button');
    assert.ok(await page.locator('.selection-info-copy .effect-text').evaluate(e=>e.clientHeight>40));
+   await page.route('**/images.ygoprodeck.com/images/cards/*.jpg',async route=>route.fulfill({body:await readFile('assets/card-back.jpg'),contentType:'image/jpeg'}));
+   // Reopen after installing the full-art response so decode actually runs.
+   await page.locator('[data-duel="selection-back"]').click();await page.locator(selector).first().click();
+   await page.waitForFunction(()=>document.querySelector('.selection-info-art img.duel-inspect-full')?.complete);
+   assert.equal(await page.locator('.selection-info-art img').count(),1,'Decoded art replaces the thumbnail');
+   assert.ok(await page.locator('.duel-selection-info').evaluate(panel=>{const art=panel.querySelector('.selection-info-art').getBoundingClientRect(),copy=panel.querySelector('.selection-info-copy').getBoundingClientRect();return innerWidth>innerHeight?art.right<=copy.left+1:art.bottom<=copy.top+1;}),'Art and effect text occupy separate columns even on a rotated phone');
    if(selector.includes('source'))await capture(`effect-reader-${width}x${height}`);
    await page.locator('[data-duel="selection-back"]').click();
    assert.deepEqual(await page.locator('[data-order-index]').evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.orderIndex))),order);
