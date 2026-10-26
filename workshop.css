@@ -119,6 +119,26 @@ dialog:has(.duel-activation-review) { width:min(760px,calc(var(--duel-vw) * 100 
 .duel-activation-review .duel-response-copy h3 { font-size:15px; }
 .duel-activation-review .duel-response-note { flex:none; font-size:9px; }
 .solo-deck-fields:has(#solo-size)>.solo-saved-row,.solo-deck-fields:has(#solo-size)>label:has(#solo-set) { grid-column:1/-1; }
+/* AI size shares the source row; source-specific controls fit below it. */
+.solo-setup #solo-panel:has(#solo-size) { padding:10px; gap:8px; }
+#solo-panel:has(#solo-size) .solo-panel-title { min-height:26px; }
+#solo-panel:has(#solo-size) .solo-panel-title .solo-sigil { width:25px; height:26px; }
+#solo-panel:has(#solo-size) .solo-panel-title>div>small { display:none; }
+#solo-panel:has(#solo-size) .solo-panel-title h2 { font-size:17px; margin:0; }
+#solo-panel:has(#solo-size) .solo-pool-count { font-size:19px; }
+#solo-panel:has(#solo-size) .solo-deck-fields { gap:8px; }
+#solo-panel:has(#solo-size) label { gap:3px; font-size:10px; }
+#solo-panel:has(#solo-size) select { min-height:40px; padding:6px; }
+#solo-panel:has(#solo-size) .solo-filter-summary { min-height:42px; padding:5px 8px; }
+@media(max-height:360px), (orientation:portrait) and (max-width:360px) {
+ .solo-setup #solo-panel:has(#solo-size) { padding:7px; gap:5px; }
+ #solo-panel:has(#solo-size) .solo-panel-title { min-height:22px; }
+ #solo-panel:has(#solo-size) .solo-panel-title .solo-sigil { width:22px; height:22px; }
+ #solo-panel:has(#solo-size) .solo-deck-fields { gap:5px; }
+ #solo-panel:has(#solo-size) select { min-height:36px; padding:4px 6px; }
+ #solo-panel:has(#solo-size) .solo-filter-summary { min-height:36px; padding:4px 6px; }
+ #solo-panel:has(#solo-size) .solo-saved-row button { min-height:36px; }
+}
 dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28px)); max-height:calc(var(--duel-vh) * 100 - 24px); }
 .duel-order-picker { display:grid; grid-template-columns:175px minmax(0,1fr); gap:14px; height:min(460px,calc(var(--duel-vh) * 100 - 32px)); min-height:0; overflow:hidden; padding:12px; background:linear-gradient(140deg,#fcfdf7,#edf3e8); }
 .order-sidebar { display:flex; min-width:0; min-height:0; flex-direction:column; gap:10px; }
