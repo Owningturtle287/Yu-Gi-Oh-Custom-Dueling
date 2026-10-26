@@ -131,6 +131,7 @@ dialog:has(.duel-activation-review) { width:min(760px,calc(var(--duel-vw) * 100 
 #solo-panel:has(#solo-size) select { min-height:40px; padding:6px; }
 #solo-panel:has(#solo-size) .solo-filter-summary { min-height:42px; padding:5px 8px; }
 @media(max-height:360px), (orientation:portrait) and (max-width:360px) {
+ .duel-position-picker>.duel-position-card>img { width:42px; height:60px; }
  .solo-setup #solo-panel:has(#solo-size) { padding:7px; gap:5px; }
  #solo-panel:has(#solo-size) .solo-panel-title { min-height:22px; }
  #solo-panel:has(#solo-size) .solo-panel-title .solo-sigil { width:22px; height:22px; }
