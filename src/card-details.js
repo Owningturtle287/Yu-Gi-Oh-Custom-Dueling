@@ -4,7 +4,7 @@ const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 export function publicationHTML(card){
   const dates=['tcg','ocg'].flatMap(region=>{const date=cardReleaseDate(card,region);return date?[`${region.toUpperCase()} <time datetime="${date}">${date}</time>`]:[];});
   const sets=[...new Set(card.setNames||(card.card_sets||[]).map(set=>set.set_name))].filter(name=>typeof name==='string'&&name.trim());
-  return `<div class="card-publication"><p class="card-release-date"><span>First release</span> ${dates.join(' · ')||'Not recorded'}</p>${sets.length?`<details class="card-set-details"><summary>${escape(sets[0])}${sets.length>1?` · +${sets.length-1} sets`:''}</summary><ul tabindex="0" aria-label="Set memberships">${sets.map(name=>`<li>${escape(name)}</li>`).join('')}</ul></details>`:'<p class="card-no-sets">Set not recorded</p>'}</div>`;
+  return `<div class="card-publication"><p class="card-release-date"><span>First release</span> ${dates.join(' · ')||'Not recorded'}</p>${sets.length?`<details class="card-set-details"><summary>${escape(sets[0])}${sets.length>1?` · +${sets.length-1} ${sets.length===2?'set':'sets'}`:''}</summary><ul tabindex="0" aria-label="Set memberships">${sets.map(name=>`<li>${escape(name)}</li>`).join('')}</ul></details>`:'<p class="card-no-sets">Set not recorded</p>'}</div>`;
 }
 export function cardFactsHTML(card){
   const facts=[card.attribute,card.linkval!==undefined?`Link ${card.linkval}`:card.level!==undefined?`${/xyz/i.test(card.type)?'Rank':'Level'} ${card.level}`:'',card.scale!==undefined?`Scale ${card.scale}`:'',card.archetype].filter(Boolean);

@@ -109,7 +109,7 @@ dialog:has(.duel-selection-info) { width:min(760px,calc(var(--duel-vw) * 100 - 2
 .duel-position-picker>.duel-choice-grid { grid-column:2; grid-row:4; min-height:0; align-content:center; }
 .duel-position-picker .duel-choice-action { min-height:52px; }
 dialog:has(.duel-activation-review) { width:min(760px,calc(var(--duel-vw) * 100 - 28px)); }
-#modal .duel-activation-review { display:grid; grid-template-columns:minmax(80px,28%) minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:10px; height:min(420px,calc(var(--duel-vh) * 100 - 32px)); min-height:0; overflow:hidden; }
+#modal .duel-activation-review { display:grid; grid-template-columns:minmax(80px,28%) minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:10px; height:min(420px,calc(var(--duel-vh) * 100 - 32px)); max-height:none; min-height:0; overflow:hidden; }
 .duel-activation-review>.dialog-header { grid-column:1/-1; }
 .duel-activation-review>.duel-response-art { width:100%; height:100%; min-height:0; background:transparent; box-shadow:none; }
 .duel-activation-review .duel-response-caption { min-height:0; padding:8px; box-shadow:none; }
@@ -251,3 +251,5 @@ dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28p
  .card-battle-stats { min-height:21px; font-size:9px; }
  .card-battle-stats b { font-size:14px; }
 }
+
+#modal .duel-response-caption .card-publication { flex:0 1 auto; min-height:18px; max-height:70px; overflow:auto; overscroll-behavior:contain; }

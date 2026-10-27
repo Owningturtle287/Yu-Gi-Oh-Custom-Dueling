@@ -34,7 +34,6 @@ const solo = createSoloController({ main, modal, getCards: () => state.cards, ge
   })
 });
 const sectionName = section => ({ main: 'Main', extra: 'Extra', side: 'Side' })[section];
-const cardLabel = card => card.humanReadableCardType || card.type;
 const imageURL = (card, small = false) => {
   const value = card.card_images?.[0]?.[small ? 'image_url_small' : 'image_url'];
   return /^https:\/\/images\.ygoprodeck\.com\/images\/cards(?:_small)?\/\d+\.jpg$/.test(value || '') ? value : '';
@@ -234,7 +233,7 @@ function showFilters() {
   const races = MONSTER_TYPES;
   const years = Array.from({ length: currentYear() - MIN_RELEASE_YEAR }, (_, index) => currentYear() - index - 1);
   const selectedYear = state.draft.releaseYear,selectedStart=state.draft.releaseStartYear??null;
-  const yearOptions = `<option value="current" ${selectedYear === null ? 'selected' : ''}>Current year (${currentYear()}) · through today</option>${years.map(year => `<option value="${year}" ${selectedYear === year ? 'selected' : ''}>${year} · through December 31</option>`).join('')}`;
+  const yearOptions = `<option value="current" ${selectedYear === null ? 'selected' : ''}>Today (${currentYear()})</option>${years.map(year => `<option value="${year}" ${selectedYear === year ? 'selected' : ''}>${year}</option>`).join('')}`;
   showDialog(`${dialogHeader('Card filters')}<form id="filters-form">
     <div class="filter-tabs" role="tablist" aria-label="Filter panels"><button type="button" id="card-filter-tab" role="tab" aria-selected="true" aria-controls="card-filter-panel" data-filter-panel="cards">Card filters</button><button type="button" id="year-filter-tab" role="tab" aria-selected="false" aria-controls="year-filter-panel" data-filter-panel="year">Release dates · ${selectedStart?selectedStart+'–':''}${selectedYear ?? currentYear()}</button></div>
     <div id="card-filter-panel" class="field-grid filter-panel" role="tabpanel" aria-labelledby="card-filter-tab">
@@ -246,7 +245,7 @@ function showFilters() {
       <label>Spell / Trap type<select name="spellTrapType">${options(SPELL_TRAP_TYPES, state.filters.spellTrapType, 'All')}</select></label>
       <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([value, label]) => `<option value="${value}" ${state.filters.sort === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
     </div>
-    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-start-year">Beginning year<select id="release-start-year" name="startYear"><option value="">Any year</option>${[currentYear(),...years].map(year=>`<option value="${year}">${year}</option>`).join('')}</select></label><label for="release-year">End year<select id="release-year" name="year">${yearOptions}</select></label><label>Release region<select name="releaseBasis">${[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']].map(([v,l])=>`<option value="${v}" ${(state.draft.releaseBasis||'tcg')===v?'selected':''}>${l}</option>`).join('')}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Choose the same beginning and end year for one year only. Ranges use the first playable release in this region. Any year through today includes undated cards. Collector promos, anime dates, past card text and banlists are excluded.</p></div>
+    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-start-year">Beginning year<select id="release-start-year" name="startYear"><option value="">Any year</option>${[currentYear(),...years].map(year=>`<option value="${year}">${year}</option>`).join('')}</select></label><label for="release-year">End year<select id="release-year" name="year">${yearOptions}</select></label><label>Release region<select name="releaseBasis">${[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']].map(([v,l])=>`<option value="${v}" ${(state.draft.releaseBasis||'tcg')===v?'selected':''}>${l}</option>`).join('')}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Choose the same year twice for one year only. Uses the first release in your selected region. Undated cards appear only with Any year → Today.</p></div>
     <div class="dialog-actions"><button type="button" data-action="reset-filters">Reset filters</button><button class="primary" type="submit">Show cards</button></div>
   </form>`, 'filter-body');
   const activatePanel = panel => {

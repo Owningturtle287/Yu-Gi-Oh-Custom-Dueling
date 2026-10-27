@@ -844,32 +844,6 @@ dialog::backdrop {
   color:var(--danger)
 }
 
-.card-stats {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px
-}
-.card-stats span {
-  font-size:10px;
-  color:var(--muted);
-  padding:7px 9px;
-  background:#1b2e3a;
-  border-radius:7px
-}
-.card-stats b {
-  display:block;
-  font-size:14px;
-  color:var(--text);
-  font-weight:600;
-  margin-top:3px
-}
-.effect-label {
-  font-size:9px;
-  text-transform:uppercase;
-  color:var(--muted);
-  letter-spacing:1.5px;
-  flex-shrink:0
-}
 .effect-text {
   white-space:pre-wrap;
   font-size:12px;
@@ -1152,12 +1126,6 @@ dialog::backdrop {
     max-width:46%
   }
 
-  .card-stats {
-    gap:5px
-  }
-  .card-stats span {
-    padding:6px
-  }
   .dialog-header h2 {
     font-size:18px
   }
@@ -1265,11 +1233,6 @@ dialog::backdrop {
     grid-column:1
   }
 
-
-
-  .effect-label {
-    display:none
-  }
   .effect-text {
     grid-column:2;
     grid-row:2
