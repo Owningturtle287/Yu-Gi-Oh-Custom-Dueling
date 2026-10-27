@@ -10,7 +10,8 @@ export function effectExplanation(card,{phase,description=0,stage='activate'}={}
   return String(card?.desc||'Follow the effect’s instructions.').replace(/\s+/g,' ').trim();
 }
 export function automaticEffectAction(state,actions){
-  return state.window?.forced?actions.find(a=>a.type==='ACTIVATE'||a.type==='EFFECT')||null:null;
+  const required=state.window?.forced?actions.filter(a=>a.type==='ACTIVATE'||a.type==='EFFECT'):[];
+  return required.length===1?required[0]:null;
 }
 export function effectNotices(previous,next){
   const events=next.log.filter(e=>e.id>(previous?.serial||0)&&e.effectNotice).map(e=>({...e.effectNotice,eventId:e.id}));

@@ -1,12 +1,12 @@
 // Reproducible offline integration audit. Synthetic card probes exercise the
-// adapter; complete games separately use ordinary legal 40-card decks.
+// adapter; complete games separately use ordinary legal player decks and 30–60-card AI decks.
 import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {normalizeCard,cardCopyName} from '../src/core.js';
 import {supportedPool,ERA_END} from '../src/duel/catalog.js';
-import {defaultSide,eligibleSets,generateDeck,expandDeck,seededRandom,validateDuelDeck} from '../src/duel/decks.js';
+import {defaultSide,eligibleSets,generateDeck,expandDeck,prepareAIDeck,seededRandom,validateDuelDeck} from '../src/duel/decks.js';
 import {loadNativeRules} from '../src/duel/native-loader.js';
 import {createNativeBackend} from '../src/duel/native-engine.js';
 
@@ -16,11 +16,13 @@ const pool=supportedPool(cards),byName=new Map(pool.map(c=>[c.name,c])),get=name
 const sets=process.env.DUEL_SET_SNAPSHOT?JSON.parse(await readFile(process.env.DUEL_SET_SNAPSHOT,'utf8')).filter(s=>s.tcg_date&&s.tcg_date<=ERA_END).map(s=>({name:s.set_name,date:s.tcg_date})):[];
 const output=resolve(process.env.AUDIT_OUT||'audit-output');await mkdir(output,{recursive:true});
 const games=Number(process.env.AUDIT_GAMES??300),gameStart=Number(process.env.AUDIT_GAME_START||0),limit=Number(process.env.AUDIT_LIMIT||pool.length),start=Number(process.env.AUDIT_SEED||1001);
+const probeSide=Number(process.env.AUDIT_SIDE||0),aiSizes=(process.env.AUDIT_AI_SIZES||'30,40,60').split(',').map(Number);
+assert.ok([0,1].includes(probeSide));assert.ok(aiSizes.length&&aiSizes.every(n=>Number.isInteger(n)&&n>=30&&n<=60));
 const report={eraEnd:ERA_END,archive:cards.length,eligible:pool.length,started:new Date().toISOString(),probes:0,games:0,completedGames:0,actions:0,replays:0,failures:[],timeouts:[],messages:{},prompts:{},types:{},effects:[],cards:[]};
 const coverage=new Map(pool.map(c=>[c.id,{id:c.id,name:c.name,contexts:[],drawn:false,played:false,activated:false,resolved:false}])),effects=new Set();
 let currentEvents=[];
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
-report.configuration={games,gameStart,seed:start,limit,randomVersion:Number(process.env.AUDIT_RANDOM_VERSION||2),sweep:process.env.AUDIT_SWEEP!=='0',actionLimit:Number(process.env.AUDIT_MAX_ACTIONS||2500)};
+report.configuration={games,gameStart,seed:start,limit,randomVersion:Number(process.env.AUDIT_RANDOM_VERSION||3),promptVersion:2,probeSide,aiSizes,sweep:process.env.AUDIT_SWEEP!=='0',battleFlips:process.env.AUDIT_FLIPS==='1',actionLimit:Number(process.env.AUDIT_MAX_ACTIONS||2500)};
 report.rulesRevision=pack.manifest.scriptsRevision;
 report.poolHash=createHash('sha256').update(JSON.stringify(pool.map(c=>[c.id,c.name,c.type,c.desc,c.level,c.atk,c.def,c.race,c.attribute,c.tcgDate]))).digest('hex');
 report.cardsSnapshotHash=createHash('sha256').update(await readFile(process.env.DUEL_CARD_SNAPSHOT)).digest('hex');
@@ -49,17 +51,23 @@ function inspect(s){
   if(s.winner===null)assert.ok(s.actions[0].length||s.actions[1].length,'No legal continuation');
 }
 async function replay(s){const saved=engine.exportMatch(s),restored=await engine.restoreMatch(saved,{cards});try{assert.equal(engine.exportMatch(restored).checkpoint,saved.checkpoint);report.replays++;}finally{engine.destroyMatch(restored);currentEvents=[];}}
-async function run(label,decks,options,{probe=null,cap=180,full=false,replayAt=0}={}){
-  let s,steps=0,replayed=false,lastPrompt='',staging=new Map();const recent=[];
+async function run(label,decks,options,{probe=null,battleProbe=false,cap=180,full=false,replayAt=0,replayEnd=false}={}){
+  let s,steps=0,replayed=false,battleCommitted=false,lastPrompt='',staging=new Map();const recent=[];
   try{
-    if(full)for(const deck of decks)assert.deepEqual(validateDuelDeck({sections:{main:deck.main.map(card=>({card,quantity:1})),extra:deck.extra.map(card=>({card,quantity:1})),side:[]}},cards),[],'Full-game decks must pass the app’s actual deck validator');
-    currentEvents=[];s=await engine.createMatch(decks,{cards,randomVersion:process.env.AUDIT_RANDOM_VERSION?Number(process.env.AUDIT_RANDOM_VERSION):2,...options});inspect(s);
+    if(full)for(const [side,deck] of decks.entries())assert.deepEqual(validateDuelDeck({sections:{main:deck.main.map(card=>({card,quantity:1})),extra:deck.extra.map(card=>({card,quantity:1})),side:[]}},cards,defaultSide(),{min:side===1?30:40,max:60}),[],'Full-game decks must pass the app’s actual deck validator');
+    currentEvents=[];s=await engine.createMatch(decks,{cards,randomVersion:process.env.AUDIT_RANDOM_VERSION?Number(process.env.AUDIT_RANDOM_VERSION):3,...options});inspect(s);
     while(s.winner===null&&steps<cap&&(full||s.turn<3||s.choice||s.window)){
       const side=s.actions[0].length?0:1,actions=s.actions[side];let action;
+      if(battleProbe&&!battleCommitted){
+        if(s.choice?.attackUid)action=actions.find(a=>a.finish)||actions.find(a=>!a.selected&&engine.findCard(s,a.target)?.card.id===probe.id);
+        if(!s.choice&&!s.window&&s.active===probeSide&&s.turn===1)action=actions.find(a=>a.type==='END');
+        if(!s.choice&&!s.window&&s.active!==probeSide&&s.phase==='main1')action=actions.find(a=>a.type==='NEXT');
+        action??=actions.find(a=>a.type==='ATTACK');
+      }
       if(probe){
-        action=actions.find(a=>a.yes===true&&(a.effectCard?.id===probe.id||engine.findCard(s,s.choice?.trigger?.uid)?.card.id===probe.id));
+        action??=actions.find(a=>a.yes===true&&(a.effectCard?.id===probe.id||engine.findCard(s,s.choice?.trigger?.uid)?.card.id===probe.id));
         action??=actions.find(a=>engine.findCard(s,a.uid)?.card.id===probe.id&&['ACTIVATE','EFFECT'].includes(a.type));
-        action??=actions.find(a=>engine.findCard(s,a.uid)?.card.id===probe.id&&['SUMMON','POSITION'].includes(a.type)&&!a.set);
+        if(!battleProbe)action??=actions.find(a=>engine.findCard(s,a.uid)?.card.id===probe.id&&['SUMMON','POSITION'].includes(a.type)&&!a.set);
       }
       action??=engine.chooseAIAction(s,side);assert.ok(action,'AI returned no continuation');
       recent.push({turn:s.turn,phase:s.phase,side,type:action.type,label:action.label,card:engine.findCard(s,action.uid)?.card.name,target:engine.findCard(s,action.target)?.card.name,choice:s.choice?.title});if(recent.length>15)recent.shift();
@@ -67,11 +75,12 @@ async function run(label,decks,options,{probe=null,cap=180,full=false,replayAt=0
         if(lastPrompt!==s.choice.promptId){lastPrompt=s.choice.promptId;staging=new Map();}
         const signature=JSON.stringify(actions.map(a=>[a.label,a.selected,a.finish]));const n=(staging.get(signature)||0)+1;staging.set(signature,n);assert.ok(n<=3,'Selection repeatedly cycles without confirming');
       }
+      if(battleProbe&&s.choice?.attackUid&&action.finish&&s.choice.selected.length)battleCommitted=true;
       s=engine.applyAction(s,action,side);steps++;report.actions++;report.types[action.type]=(report.types[action.type]||0)+1;inspect(s);
       if(!replayed&&replayAt&&steps>=replayAt){await replay(s);replayed=true;}
     }
     if(full){report.games++;if(s.winner!==null)report.completedGames++;else {const timeout={label,turn:s.turn,steps,recent};report.timeouts.push(timeout);await writeFile(resolve(output,`timeout-${report.timeouts.length}.json`),JSON.stringify({timeout,replay:engine.exportMatch(s),players:s.players},null,2));console.log('LIMIT',JSON.stringify(timeout));}}
-    else {report.probes++;if(probe)coverage.get(probe.id).contexts.push(label.split(':')[0]);assert.ok(s.winner!==null||s.turn>=3,'Card probe did not reach its next turn');}
+    else {assert.ok(s.winner!==null||s.turn>=3,'Card probe did not reach its next turn');if(replayEnd)await replay(s);report.probes++;if(probe)coverage.get(probe.id).contexts.push(label.split(':')[0]+':controller'+probeSide);}
   }catch(error){
     const failure={label,message:error.message,turn:s?.turn,phase:s?.phase,choice:s?.choice?.title,recent};report.failures.push(failure);
     if(s)await writeFile(resolve(output,`failure-${report.failures.length}.json`),JSON.stringify({failure,replay:engine.exportMatch(s)},null,2));
@@ -83,15 +92,22 @@ const body=name=>({card:get(name)}),own=()=>({monsters:['Mystical Elf','Summoned
 if(process.env.AUDIT_SWEEP!=='0')for(const [index,card] of pool.slice(0,limit).entries()){
   for(const context of card.type==='Normal Monster'?['field']:['hand','field']){
     const fields=[own(),own()],hands=[['Dark Magician','Mystical Elf','Pot of Greed'].map(get),['Mystical Elf'].map(get)];
-    if(context==='hand'&&card.type!=='Trap Card'&&!card.type.includes('Fusion'))hands[0].unshift(card);
-    else if(card.type.includes('Monster'))fields[0].monsters[0]={card,faceUp:!/FLIP:/.test(card.desc),defense:/FLIP:/.test(card.desc)};
-    else if(card.race==='Field')fields[0].field=[{card,faceUp:context==='field'}];
+    if(context==='hand'&&card.type!=='Trap Card'&&!card.type.includes('Fusion'))hands[probeSide].unshift(card);
+    else if(card.type.includes('Monster'))fields[probeSide].monsters[0]={card,faceUp:!/FLIP:/.test(card.desc),defense:/FLIP:/.test(card.desc)};
+    else if(card.race==='Field')fields[probeSide].field=[{card,faceUp:context==='field'}];
     // Equip cards must be activated and assigned a real equip target. Normal
     // Spells/Traps likewise cannot start as an idle face-up field card.
-    else fields[0].spells[0]={card,faceUp:context==='field'&&card.race==='Continuous'};
-    await run(`${context}:${card.name}`,[normalDeck(),normalDeck()],{seed:start+index,openingHands:hands,initialFields:fields},{probe:card,replayAt:index%80===0?3:0});
+    else fields[probeSide].spells[0]={card,faceUp:context==='field'&&card.race==='Continuous'};
+    await run(`${context}:${card.name}`,[normalDeck(),normalDeck()],{seed:start+index,first:probeSide,openingHands:hands,initialFields:fields},{probe:card,replayAt:index%80===0?3:0});
   }
   if((index+1)%100===0)console.log(JSON.stringify({stage:'probes',cards:index+1,probes:report.probes,failures:report.failures.length,actions:report.actions}));
+}
+if(process.env.AUDIT_FLIPS==='1')for(const [index,card] of pool.filter(c=>/FLIP:/.test(c.desc)).entries()){
+  const fields=[{},{}],hands=[[],[]],decks=[normalDeck(),normalDeck()];
+  fields[probeSide]={monsters:[{card,faceUp:false,defense:true},body('Mystical Elf')],grave:['Giant Soldier of Stone','Dark Hole','Mirror Force'].map(body)};
+  fields[1-probeSide]={monsters:[body('Blue-Eyes White Dragon')],spells:[{...body('Pot of Greed'),faceUp:false}]};
+  hands[probeSide]=['Mystical Elf','Gemini Elf','Dark Magician'].map(get);decks[probeSide].main[0]=card;
+  await run(`battleFlip:${card.name}`,decks,{seed:start+index,first:probeSide,openingHands:hands,initialFields:fields},{probe:card,battleProbe:true,cap:300,replayAt:3,replayEnd:true});
 }
 const available=eligibleSets(cards,sets,defaultSide()).filter(s=>!s.problem),sources=[defaultSide(),...available.map(s=>({...defaultSide(),source:'set',set:s.name}))];
 const shuffle=(values,seed)=>{const a=[...values],random=seededRandom(seed);for(let i=a.length-1;i;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
@@ -105,7 +121,9 @@ function coverageDeck(index){
 }
 for(let n=gameStart;n<gameStart+games;n++){
   const seed=start+n,coverageGame=n%3===0,decks=coverageGame?[coverageDeck(n*2),coverageDeck(n*2+1)]:[0,1].map(side=>expandDeck(generateDeck(cards,sources[(n+side*7)%sources.length],sets,seed*97+side),cards));
-  await run(`game:${n}:${coverageGame?'coverage':sources[n%sources.length].set||'random'}`,decks,{seed,first:n%2,lp:n%4===0?4000:8000},{full:true,cap:Number(process.env.AUDIT_MAX_ACTIONS||2500),replayAt:n%10===0?25:0});
+  const aiSize=aiSizes[n%aiSizes.length],saved={sections:{main:decks[1].main.map(card=>({card,quantity:1})),extra:decks[1].extra.map(card=>({card,quantity:1})),side:[]}};decks[1]=expandDeck(prepareAIDeck(saved,cards,{...defaultSide(),size:aiSize},seed*37),cards);
+  report.aiDeckSizes??={};report.aiDeckSizes[aiSize]=(report.aiDeckSizes[aiSize]||0)+1;
+  await run(`game:${n}:ai${aiSize}:${coverageGame?'coverage':sources[n%sources.length].set||'random'}`,decks,{seed,first:n%2,lp:n%4===0?4000:8000},{full:true,cap:Number(process.env.AUDIT_MAX_ACTIONS||2500),replayAt:n%10===0?25:0});
   if((n+1)%20===0)console.log(JSON.stringify({stage:'games',games:report.games,finished:report.completedGames,failures:report.failures.length,timeouts:report.timeouts.length,actions:report.actions,effects:effects.size}));
 }
 report.finished=new Date().toISOString();report.effects=[...effects].sort();report.cards=[...coverage.values()];
