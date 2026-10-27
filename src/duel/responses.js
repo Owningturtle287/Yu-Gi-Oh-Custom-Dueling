@@ -24,7 +24,7 @@ export function responseOffer(state, actions) {
   if (!cards.length) return null;
   const pass = actions.find(a => a.type === 'PASS' || optionalTrigger && a.yes === false);
   const link = state.chain.at(-1), attacker = state.pending?.kind === 'attack' ? findCard(state, state.pending.uid) : null;
-  const context = state.window?.forced&&cards.length>1 ? 'Choose the next required effect to process. Required effects cannot be skipped. Effects that form a chain resolve from the last link to the first.'
+  const context = state.window?.forced&&cards.length>1 ? 'Choose the next required effect. Chains resolve last link first.'
     : optionalTrigger ? 'This card has an optional triggered effect. You can activate it now or decline.'
     : link ? `${link.card.name} was activated. Your response is added to the chain and resolves before earlier links.`
     : state.window?.timing || (attacker ? `${attacker.card.name} declared an attack. You can respond before the attack continues.`

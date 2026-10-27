@@ -16,7 +16,7 @@ try{
   const clipped=await page.locator(selector).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden').flatMap(node=>{
    const rect=node.getBoundingClientRect(),pad=1.5;
    if(rect.width<1||rect.height<1)return ['Zero size: '+node.outerHTML.slice(0,100)];
-   if(rect.left < -pad||rect.top < -pad||rect.right>innerWidth+pad||rect.bottom>innerHeight+pad)return ['Outside viewport: '+node.textContent.trim()];
+   if(rect.left < -pad||rect.top < -pad||rect.right>innerWidth+pad||rect.bottom>innerHeight+pad)return ['Outside viewport: '+node.textContent.trim()+' '+JSON.stringify({x:rect.x,y:rect.y,width:rect.width,height:rect.height,viewport:[innerWidth,innerHeight]})];
    for(let parent=node.parentElement;parent;parent=parent.parentElement){
     const css=getComputedStyle(parent);if(!/(hidden|clip|auto|scroll)/.test(css.overflowX+' '+css.overflowY))continue;
     const bounds=parent.getBoundingClientRect();
@@ -168,7 +168,7 @@ try{
    let match=await engine.createMatch([0,1].map(()=>({name:'Trigger order',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards:catalog,seed:27,openingHands:[[get('Dark Hole')],[]],initialFields:[{monsters:['Sangan','Witch of the Black Forest'].map(name=>({card:get(name)}))},{}]});match=engine.applyAction(match,match.actions[0].find(a=>a.type==='ACTIVATE'),0);
    const main=document.querySelector('#main'),modal=document.querySelector('#modal');const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:title=>`<div class="dialog-header"><h2>${title}</h2><button data-action="close">×</button></div>`,toast:message=>{throw Error(message);},onDesign(){},engine:{...engine,createMatch:async()=>match}});controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
   });
-  await page.locator('.duel-response-body').waitFor();assert.match(await page.locator('.duel-response-context').textContent(),/Choose the next required effect/);assert.equal(await page.locator('[data-duel="response-pass"],[data-duel="response-turn"]').count(),0);await visibleControls('.duel-response-body button');
+  await page.locator('.duel-response-body').waitFor();assert.match(await page.locator('.duel-response-context').textContent(),/Choose the next required effect/);assert.equal(await page.locator('[data-duel="response-pass"],[data-duel="response-turn"]').count(),0);await capture(`required-order-before-${width}x${height}`);await visibleControls('.duel-response-body button');
   await page.locator('[data-response-index][aria-label^="Witch"]').click();await capture(`required-trigger-order-${width}x${height}`);await page.locator('[data-duel="response-activate"]').click();await page.waitForFunction(()=>window.layoutRig.getMatch().choice&&document.querySelector('.duel-arena')?.dataset.moving==='false');assert.deepEqual(await page.evaluate(()=>window.layoutRig.getMatch().chain.map(c=>c.card.name)),['Witch of the Black Forest','Sangan']);await page.evaluate(()=>window.layoutRig.destroy());
   // Win a real battle, inspect the MP2 timing note, then resolve the native
   // End Phase trigger, target and battle-position choice through production UI.

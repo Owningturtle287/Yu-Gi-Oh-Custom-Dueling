@@ -51,7 +51,7 @@ function inspect(s){
   if(s.winner===null)assert.ok(s.actions[0].length||s.actions[1].length,'No legal continuation');
 }
 async function replay(s){const saved=engine.exportMatch(s),restored=await engine.restoreMatch(saved,{cards});try{assert.equal(engine.exportMatch(restored).checkpoint,saved.checkpoint);report.replays++;}finally{engine.destroyMatch(restored);currentEvents=[];}}
-async function run(label,decks,options,{probe=null,battleProbe=false,cap=180,full=false,replayAt=0}={}){
+async function run(label,decks,options,{probe=null,battleProbe=false,cap=180,full=false,replayAt=0,replayEnd=false}={}){
   let s,steps=0,replayed=false,battleCommitted=false,lastPrompt='',staging=new Map();const recent=[];
   try{
     if(full)for(const [side,deck] of decks.entries())assert.deepEqual(validateDuelDeck({sections:{main:deck.main.map(card=>({card,quantity:1})),extra:deck.extra.map(card=>({card,quantity:1})),side:[]}},cards,defaultSide(),{min:side===1?30:40,max:60}),[],'Full-game decks must pass the app’s actual deck validator');
@@ -80,7 +80,7 @@ async function run(label,decks,options,{probe=null,battleProbe=false,cap=180,ful
       if(!replayed&&replayAt&&steps>=replayAt){await replay(s);replayed=true;}
     }
     if(full){report.games++;if(s.winner!==null)report.completedGames++;else {const timeout={label,turn:s.turn,steps,recent};report.timeouts.push(timeout);await writeFile(resolve(output,`timeout-${report.timeouts.length}.json`),JSON.stringify({timeout,replay:engine.exportMatch(s),players:s.players},null,2));console.log('LIMIT',JSON.stringify(timeout));}}
-    else {assert.ok(s.winner!==null||s.turn>=3,'Card probe did not reach its next turn');report.probes++;if(probe)coverage.get(probe.id).contexts.push(label.split(':')[0]+':controller'+probeSide);}
+    else {assert.ok(s.winner!==null||s.turn>=3,'Card probe did not reach its next turn');if(replayEnd)await replay(s);report.probes++;if(probe)coverage.get(probe.id).contexts.push(label.split(':')[0]+':controller'+probeSide);}
   }catch(error){
     const failure={label,message:error.message,turn:s?.turn,phase:s?.phase,choice:s?.choice?.title,recent};report.failures.push(failure);
     if(s)await writeFile(resolve(output,`failure-${report.failures.length}.json`),JSON.stringify({failure,replay:engine.exportMatch(s)},null,2));
@@ -107,7 +107,7 @@ if(process.env.AUDIT_FLIPS==='1')for(const [index,card] of pool.filter(c=>/FLIP:
   fields[probeSide]={monsters:[{card,faceUp:false,defense:true},body('Mystical Elf')],grave:['Giant Soldier of Stone','Dark Hole','Mirror Force'].map(body)};
   fields[1-probeSide]={monsters:[body('Blue-Eyes White Dragon')],spells:[{...body('Pot of Greed'),faceUp:false}]};
   hands[probeSide]=['Mystical Elf','Gemini Elf','Dark Magician'].map(get);decks[probeSide].main[0]=card;
-  await run(`battleFlip:${card.name}`,decks,{seed:start+index,first:probeSide,openingHands:hands,initialFields:fields},{probe:card,battleProbe:true,cap:300,replayAt:3});
+  await run(`battleFlip:${card.name}`,decks,{seed:start+index,first:probeSide,openingHands:hands,initialFields:fields},{probe:card,battleProbe:true,cap:300,replayAt:3,replayEnd:true});
 }
 const available=eligibleSets(cards,sets,defaultSide()).filter(s=>!s.problem),sources=[defaultSide(),...available.map(s=>({...defaultSide(),source:'set',set:s.name}))];
 const shuffle=(values,seed)=>{const a=[...values],random=seededRandom(seed);for(let i=a.length-1;i;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
