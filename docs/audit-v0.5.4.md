@@ -5,7 +5,7 @@ This audit covers the current **2,170 playable TCG cards through December 31, 20
 ## Confirmed fixes
 
 - Multiple required effects no longer silently use the adapter's first-listed order. Their controller chooses the next effect; the core still decides eligibility, priority, costs, chain formation and resolution. A single required effect proceeds automatically. Dark Hole destroying Sangan and Witch of the Black Forest is checked in both orders and for both controllers, including reverse chain resolution and separate search choices.
-- Required upkeep ordering also matters: at 1,000 LP, Shadowknight Archfiend and Terrorking Archfiend cannot both stay. The selected payment goes first, leaving the selected monster alive when the other payment cannot be made. Payment notices retain their actual source. The response reader identifies the source's field zone so identical copies can be distinguished.
+- Required upkeep ordering also matters: at 1,000 LP, Shadowknight Archfiend and Terrorking Archfiend cannot both stay. The selected payment goes first, leaving the selected monster alive when the other payment cannot be made. Payment notices retain their actual source. The response reader identifies the source's field zone so identical copies can be distinguished. Card art and the bounded, scrollable effect caption sit alongside each other in landscape; ordering controls stay on-screen, including short/rotated phones.
 - Battle Phase activation commands now retain their native effect labels, matching Main Phase and response commands. Strike Ninja's label, two-card banish cost, temporary banishment and End Phase return have a directed test.
 - Saved matches record prompt version 2. Saves without that field replay with version 1's original automatic ordering, preserving their recorded response history and checkpoint.
 
@@ -21,23 +21,26 @@ The separate battle sweep attacks all **80 printed Flip-effect monsters** in bot
 
 ## Validation
 
-The final controller sweeps and browser checks are in progress on the review branch. Results and the machine-readable coverage report are filled before merge.
+The [machine-readable report](audit-v0.5.4.json) records the final runs, exact configurations, hashes, per-card contexts and observed coverage. Regression/build checks and eight viewport cases also run in pull-request CI before deployment.
 
 | Check | Result |
 | --- | --- |
-| Local regression suite | 454 cases including final source-location UI test; rerun pending |
+| Local regression suite | 454 passed |
 | Baseline whole-pool sweep | 3,959 probes; all 2,170 cards; zero failures |
 | Baseline complete duels | 600/600; zero failures or stalls |
-| Final whole-pool sweep | In progress, both controllers |
+| Final whole-pool sweep | 7,918 probes; all 2,170 cards from both sides; zero failures |
 | Final complete duels | 600/600; 200 each with AI sizes 30, 40 and 60; zero failures or stalls |
 | Battle Flip sweep | 160 probes, 80 cards on each side; zero failures |
+| Accepted actions, final runs | 445,610 |
+| Verified replay checkpoints, final runs | 477 |
+| Distinct effect card names observed | 986 |
 | Runtime lifetime | 120 created/destroyed; zero retained callbacks |
 | Static build | Passed |
 | Browser checks | CI verifies eight landscape/rotated viewport sizes |
 
 The sweep uses artificial fields/hands to reach prompts. Complete matches separately validate every player and AI deck against the app's actual validator, including copy caps and 30–60-card AI bounds. Invariants check legal continuation, finite signed stats, nonnegative LP, zone sizes, controller ownership and unique instance identities. Replay checkpoints must match. The runner rejects repeated staged-selection cycles, invalid core responses, script errors, action-limit stalls and unfinished card probes.
 
-A probe passing means the card was initialized in the stated context and the duel continued; it does not imply every branch of that card's text resolved. The final JSON retains per-card hand/field/controller contexts and observed draw/play/activation/resolution flags, distinguishing those levels of coverage. Continuous effects may not create activation messages. Unobserved interactions remain possible.
+A probe passing means the card was initialized in the stated context and the duel continued; it does not imply every branch of that card's text resolved. The final JSON retains per-card hand/field/controller contexts and observed draw/play/activation/effect-notice flags, distinguishing those levels of coverage. The inherited `resolved` flag includes automatic/ready notices and is not an assertion that every branch succeeded. Continuous effects may not create activation messages. Unobserved interactions remain possible.
 
 ## Reproduce
 

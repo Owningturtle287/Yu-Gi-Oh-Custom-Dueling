@@ -42,9 +42,8 @@ test('a response uses the native source descriptor rather than a mismatched bani
   const state={players:[player,player],turn:1,phase:'standby',chain:[],window:{priority:0,promptId:'p'}};
   const offer=responseOffer(state,[{type:'ACTIVATE',uid:'wrong',effectCard:card}]);assert.equal(offer.cards[0].card.card.name,'Shadowknight Archfiend');assert.equal(offer.cards[0].card.uid,null);
 });
-test('effect prompts use a single bounded caption below the art, with no layered text reader',async()=>{
+test('effect prompts use a single bounded caption, with no layered text reader',async()=>{
   const css=await readFile(new URL('../effects.css',import.meta.url),'utf8');
-  assert.match(css,/grid-template-rows:28px minmax\(60px,1fr\) auto/);
   assert.match(css,/duel-response-description\s*\{[^}]*overflow:auto/);
   assert.match(css,/duel-effect-host\s*\{[^}]*pointer-events:none[^}]*overflow:hidden/);
   assert.match(css,/duel-response-options\s*\{[^}]*position:static/);
