@@ -41,7 +41,7 @@ dialog:has(.duel-effect-choice-body)::backdrop { background:#06121c44; backdrop-
 .duel-effect-caption p { margin:0; font-size:13px; line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
 [data-effect-stage=resolve] .duel-effect-caption small,[data-effect-stage=ready] .duel-effect-caption small { color:#237457; }
 [data-effect-stage=negated] .duel-effect-caption small { color:#a73f5b; }
-@media (max-height:360px) {
+@media (max-height:360px), (orientation:portrait) and (max-width:360px) {
   .duel-effect-choice-body .duel-response-description { height:44px; font-size:12px; }
   .duel-response-caption { padding:8px 10px; gap:4px; }
   .duel-effect-choice-body .duel-response-note { display:none; }
