@@ -206,3 +206,48 @@ dialog:has(.duel-order-picker) { width:min(860px,calc(var(--duel-vw) * 100 - 28p
 .duel-order-list li>strong { font-size:10px; }
 }
 .order-source .image-fallback svg, .order-card-read .image-fallback svg { width:80%; height:80%; }
+
+/* Card readers share a large art column and one compact information column. */
+#modal:has(.detail-body,.duel-card-viewer,.duel-selection-info) { width:min(980px,calc(var(--duel-vw,1dvw) * 100 - 20px)); max-height:calc(var(--duel-vh,1dvh) * 100 - 16px); }
+#modal .detail-body,#modal .duel-card-viewer,#modal .duel-selection-info { display:grid; grid-template-columns:minmax(0,53fr) minmax(0,47fr); grid-template-rows:auto minmax(0,1fr); height:min(740px,calc(var(--duel-vh,1dvh) * 100 - 20px)); max-height:none; min-height:0; padding:10px; gap:8px 14px; overflow:hidden; }
+#modal :is(.detail-body,.duel-card-viewer,.duel-selection-info)>.dialog-header { grid-column:1/-1; grid-row:1; min-width:0; min-height:30px; margin:0; }
+#modal :is(.detail-body,.duel-card-viewer,.duel-selection-info)>.dialog-header h2 { font-size:17px; line-height:1.2; }
+.card-reader-visual { display:grid; grid-template-rows:minmax(0,1fr) auto; gap:5px; min-width:0; min-height:0; overflow:hidden; }
+#modal :is(.detail-body,.duel-card-viewer,.duel-selection-info)>.card-reader-visual { grid-column:1; grid-row:2; height:100%; max-height:none; }
+.card-art-frame,.card-reader-visual .duel-inspect-art,.card-reader-visual .selection-info-art { grid-column:auto; grid-row:auto; position:relative; display:grid; place-items:center; min-width:0; min-height:0; width:100%; height:100%; overflow:hidden; }
+.card-art-frame>img,.card-art-frame>.image-fallback,.card-reader-visual .duel-inspect-art>img,.card-reader-visual .selection-info-art>img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-width:100%; object-fit:contain; }
+.card-battle-stats { display:flex; justify-content:center; align-items:center; flex:none; gap:16px; min-height:24px; font-size:10px; color:#527060; }
+.card-battle-stats span { display:flex; align-items:baseline; gap:6px; }
+.card-battle-stats b { color:#214c39; font-size:16px; font-variant-numeric:tabular-nums; }
+.detail-right { grid-column:2; grid-row:2; display:flex; flex-direction:column; gap:7px; min-width:0; min-height:0; }
+#modal .detail-meta { display:flex; flex-direction:column; flex:none; min-width:0; gap:5px; }
+.card-facts { display:flex; flex-direction:column; flex:none; gap:3px; min-width:0; font-size:10px; line-height:1.35; color:#57705e; overflow-wrap:anywhere; }
+.card-facts strong { font-size:12px; color:#31563c; }
+.card-publication { flex:none; min-width:0; font-size:9px; line-height:1.4; color:#5e7365; }
+.card-publication p { margin:0; font-size:inherit; }
+.card-release-date>span { color:#7c856d; }
+.card-publication time { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.card-set-details { min-width:0; }
+.card-set-details summary { cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#386c5b; }
+.card-set-details ul { margin:3px 0; padding:4px 4px 4px 18px; max-height:70px; overflow:auto; overscroll-behavior:contain; touch-action:pan-y; border:1px solid #cfdbca; border-radius:5px; background:#f1f5ed; }
+#modal :is(.detail-right,.duel-inspect-options,.selection-info-copy,.reveal-effect-copy)>.effect-text { flex:1; min-height:35px; height:auto; max-height:none; grid-column:auto; grid-row:auto; margin:0; padding:8px; font-size:12px; line-height:1.5; overflow:auto; }
+.detail-right .detail-deck { flex:none; margin:0; padding:3px 0; font-size:9px; }
+.detail-right .detail-add { flex:none; gap:6px; }
+.detail-right .detail-add button,.detail-right .detail-add select { min-height:36px; padding:5px 7px; }
+.detail-right #detail-error:empty { display:none; }
+#modal .duel-inspect-options,#modal .selection-info-copy { gap:6px; }
+#modal .duel-inspect-options .duel-summon-note { font-size:9px; padding:4px 6px; }
+#modal .duel-inspect-description { font-size:12px; }
+#modal .reveal-effect-copy { gap:6px; }
+#modal .duel-response-caption .card-publication { font-size:8px; line-height:1.25; }
+@media(max-height:360px), (orientation:portrait) and (max-width:360px) {
+ #modal .detail-body,#modal .duel-card-viewer,#modal .duel-selection-info { padding:8px; gap:5px 10px; }
+ #modal :is(.detail-body,.duel-card-viewer,.duel-selection-info)>.dialog-header h2 { font-size:15px; }
+ .detail-right { gap:4px; }
+ .card-facts { font-size:9px; gap:2px; }
+ .card-facts strong { font-size:11px; }
+ .card-publication { font-size:8px; }
+ #modal :is(.detail-right,.duel-inspect-options,.selection-info-copy,.reveal-effect-copy)>.effect-text { font-size:11px; padding:6px; }
+ .card-battle-stats { min-height:21px; font-size:9px; }
+ .card-battle-stats b { font-size:14px; }
+}

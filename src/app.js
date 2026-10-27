@@ -1,3 +1,4 @@
+import {publicationHTML,cardFactsHTML,battleStatsHTML} from './card-details.js';
 import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, saveDeck, deleteSavedDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
 import { loadCards, browserCardCache } from './cards.js';
 import { icon } from './icons.js';
@@ -117,7 +118,7 @@ function renderArchive() {
   updateArchive();
 }
 function searchControls() {
-  const filtered = Boolean(state.filters.attribute || state.filters.race || state.filters.subtype || state.filters.mechanic || state.filters.spellTrapType || state.draft.releaseYear !== null || state.filters.sort !== 'az' || state.filters.category !== 'All');
+  const filtered = Boolean(state.filters.attribute || state.filters.race || state.filters.subtype || state.filters.mechanic || state.filters.spellTrapType || (state.draft.releaseYear !== null || state.draft.releaseStartYear!=null) || state.filters.sort !== 'az' || state.filters.category !== 'All');
   return `<div class="search-row"><div class="search-wrap">${icon('search')}<label class="sr-only" for="card-search">Search card name, archetype, or effect text</label><input id="card-search" type="search" placeholder="Search archive…" value="${escape(state.filters.query)}" autocomplete="off"><button class="search-clear" data-action="clear-search" aria-label="Clear search">×</button></div><button class="filter-toggle" data-action="filters" data-active="${filtered}" aria-haspopup="dialog" aria-label="Filter and sort cards">${icon('filter')}</button></div>`;
 }
 function defaultCardSection(card) {
@@ -152,7 +153,7 @@ function updateArchive() {
   state.filtered = filterCardsForUI();
   const activeFilters = [state.filters.attribute, state.filters.race, state.filters.subtype, state.filters.mechanic, state.filters.spellTrapType].filter(Boolean).join(' · ');
   const source = state.source === 'offline' ? 'Offline cache' : state.source === 'cache' ? 'Saved archive' : 'Live archive';
-  $('#result-meta').innerHTML = `<span><strong>${state.filtered.length.toLocaleString()}</strong> cards · ${escape((state.draft.releaseBasis||'tcg').toUpperCase())} ${state.draft.releaseYear ?? currentYear()}${activeFilters ? ` · ${escape(activeFilters)}` : ''}</span><button data-action="retry" aria-label="Refresh archive from the card API">${source} ↻</button>`;
+  $('#result-meta').innerHTML = `<span><strong>${state.filtered.length.toLocaleString()}</strong> cards · ${escape((state.draft.releaseBasis||'tcg').toUpperCase())} ${state.draft.releaseStartYear?state.draft.releaseStartYear+'–':''}${state.draft.releaseYear ?? currentYear()}${activeFilters ? ` · ${escape(activeFilters)}` : ''}</span><button data-action="retry" aria-label="Refresh archive from the card API">${source} ↻</button>`;
   if (!state.filtered.length) { panel.innerHTML = `<div class="empty-state">${icon('search')}<h3>No cards found</h3><p>Try another name or clear your filters. Historical years use the first playable edition in your selected region. ${/slifer|obelisk|winged dragon of ra|god card/i.test(state.filters.query)?'The God Cards’ playable TCG editions arrived after 2002.':''}</p><button data-action="all-years">Search all years</button><button data-action="reset-filters">Clear search & filters</button></div>`; return; }
   panel.scrollTop = 0;
   panel.innerHTML = '<div class="virtual-grid" id="virtual-grid"></div>';
@@ -162,7 +163,7 @@ function updateArchive() {
 }
 // All results remain in one continuous scroll range; no next-page controls.
 function filterCardsForUI() {
-  const filtered = filterCards(state.cards, { ...state.filters, year: state.draft.releaseYear, releaseBasis:state.draft.releaseBasis });
+  const filtered = filterCards(state.cards, { ...state.filters, year: state.draft.releaseYear, startYear:state.draft.releaseStartYear, releaseBasis:state.draft.releaseBasis });
   if (state.route !== 'decks') return filtered;
   return filtered.filter(card => (!Number.isInteger(duelDesign) || support(card).ok) && !/Token|Skill Card/.test(card.type) && (state.section === 'side' || isExtra(card) === (state.section === 'extra')));
 }
@@ -232,10 +233,10 @@ function showFilters() {
   const options = (values, selected, title) => `<option value="">${title}</option>${values.map(value => `<option ${selected === value ? 'selected' : ''} value="${escape(value)}">${escape(value)}</option>`).join('')}`;
   const races = MONSTER_TYPES;
   const years = Array.from({ length: currentYear() - MIN_RELEASE_YEAR }, (_, index) => currentYear() - index - 1);
-  const selectedYear = state.draft.releaseYear;
+  const selectedYear = state.draft.releaseYear,selectedStart=state.draft.releaseStartYear??null;
   const yearOptions = `<option value="current" ${selectedYear === null ? 'selected' : ''}>Current year (${currentYear()}) · through today</option>${years.map(year => `<option value="${year}" ${selectedYear === year ? 'selected' : ''}>${year} · through December 31</option>`).join('')}`;
   showDialog(`${dialogHeader('Card filters')}<form id="filters-form">
-    <div class="filter-tabs" role="tablist" aria-label="Filter panels"><button type="button" id="card-filter-tab" role="tab" aria-selected="true" aria-controls="card-filter-panel" data-filter-panel="cards">Card filters</button><button type="button" id="year-filter-tab" role="tab" aria-selected="false" aria-controls="year-filter-panel" data-filter-panel="year">Release year · ${selectedYear ?? currentYear()}</button></div>
+    <div class="filter-tabs" role="tablist" aria-label="Filter panels"><button type="button" id="card-filter-tab" role="tab" aria-selected="true" aria-controls="card-filter-panel" data-filter-panel="cards">Card filters</button><button type="button" id="year-filter-tab" role="tab" aria-selected="false" aria-controls="year-filter-panel" data-filter-panel="year">Release dates · ${selectedStart?selectedStart+'–':''}${selectedYear ?? currentYear()}</button></div>
     <div id="card-filter-panel" class="field-grid filter-panel" role="tabpanel" aria-labelledby="card-filter-tab">
       <label>Category<select name="category">${['All', 'Monster', 'Spell', 'Trap', 'Extra'].map(category => `<option value="${category}" ${state.filters.category === category ? 'selected' : ''}>${category === 'Extra' ? 'Extra Deck' : category === 'All' ? 'All cards' : category}</option>`).join('')}</select></label>
       <label>Monster attribute<select name="attribute">${options(ATTRIBUTES, state.filters.attribute, 'All')}</select></label>
@@ -245,7 +246,7 @@ function showFilters() {
       <label>Spell / Trap type<select name="spellTrapType">${options(SPELL_TRAP_TYPES, state.filters.spellTrapType, 'All')}</select></label>
       <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([value, label]) => `<option value="${value}" ${state.filters.sort === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
     </div>
-    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-year">Playable through year<select id="release-year" name="year">${yearOptions}</select></label><label>Release region<select name="releaseBasis">${[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']].map(([v,l])=>`<option value="${v}" ${(state.draft.releaseBasis||'tcg')===v?'selected':''}>${l}</option>`).join('')}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Historical years require a verified playable release date in this region. Current includes undated cards. Collector promos, anime dates, past card text and banlists are excluded.</p></div>
+    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-start-year">Beginning year<select id="release-start-year" name="startYear"><option value="">Any year</option>${[currentYear(),...years].map(year=>`<option value="${year}">${year}</option>`).join('')}</select></label><label for="release-year">End year<select id="release-year" name="year">${yearOptions}</select></label><label>Release region<select name="releaseBasis">${[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']].map(([v,l])=>`<option value="${v}" ${(state.draft.releaseBasis||'tcg')===v?'selected':''}>${l}</option>`).join('')}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Choose the same beginning and end year for one year only. Ranges use the first playable release in this region. Any year through today includes undated cards. Collector promos, anime dates, past card text and banlists are excluded.</p></div>
     <div class="dialog-actions"><button type="button" data-action="reset-filters">Reset filters</button><button class="primary" type="submit">Show cards</button></div>
   </form>`, 'filter-body');
   const activatePanel = panel => {
@@ -262,11 +263,16 @@ function showFilters() {
     };
   });
   $('#release-year').value = selectedYear === null ? 'current' : String(selectedYear);
+  $('#release-start-year').value=selectedStart===null?'':String(selectedStart);
   const updateYearContext=()=>{ $('#year-context').innerHTML=yearContextHTML($('#release-year').value,modal.querySelector('[name=releaseBasis]').value); };
-  $('#release-year').onchange=updateYearContext;modal.querySelector('[name=releaseBasis]').onchange=updateYearContext;
+  $('#release-start-year').onchange=()=>{const start=Number($('#release-start-year').value),end=normalizeReleaseYear($('#release-year').value)??currentYear();$('#release-start-year').setCustomValidity(start>end?'Beginning year cannot be after the end year.':'');updateYearContext();};
+  $('#release-year').onchange=()=>$('#release-start-year').onchange();modal.querySelector('[name=releaseBasis]').onchange=updateYearContext;
   $('#filters-form').addEventListener('submit', event => {
     event.preventDefault();
-    const data = Object.fromEntries(new FormData(event.target)), year = normalizeReleaseYear(data.year);
+    const data = Object.fromEntries(new FormData(event.target)), year = normalizeReleaseYear(data.year), startYear=normalizeReleaseYear(data.startYear);
+    if(startYear!==null&&startYear>(year??currentYear())){toast('Beginning year cannot be after the end year.',true);return;}
+    if(state.draft.releaseStartYear!==startYear){state.draft.releaseStartYear=startYear;state.dirty=true;}
+    delete data.startYear;
     const releaseBasis=data.releaseBasis; delete data.releaseBasis;
     delete data.year; Object.assign(state.filters, data);
     if(state.draft.releaseBasis!==releaseBasis){state.draft.releaseBasis=releaseBasis;state.dirty=true;}
@@ -276,19 +282,12 @@ function showFilters() {
 }
 function inspectCard(card) {
   detailCard = card;
-  const stats = [];
-  if (card.atk !== undefined) stats.push(['ATK', card.atk < 0 ? '?' : card.atk]);
-  if (card.def !== undefined) stats.push(['DEF', card.def < 0 ? '?' : card.def]);
-  if (card.linkval !== undefined) stats.push(['LINK', card.linkval]);
-  if (card.level !== undefined) stats.push([/xyz/i.test(card.type) ? 'RANK' : 'LEVEL', card.level]);
-  if (card.scale !== undefined) stats.push(['SCALE', card.scale]);
   const defaultSection = defaultCardSection(card);
   const supported = !/Token|Skill Card/.test(card.type);
-  showDialog(`${dialogHeader(escape(card.name))}<div class="detail-top">${imageTag(card)}<div class="detail-meta"><p class="type">${escape(cardLabel(card))}</p><div class="attribute">${escape([card.attribute, card.race, card.archetype].filter(Boolean).join(' · '))}</div><div class="card-stats">${stats.map(([label, value]) => `<span>${label}<b>${escape(value)}</b></span>`).join('')}</div>${card.linkmarkers?.length ? `<div class="attribute">Arrows: ${escape(card.linkmarkers.join(', '))}</div>` : ''}</div></div>
-    <div class="effect-label">CARD TEXT</div><div class="effect-text" tabindex="0" aria-label="Scrollable card effect text">${escape(card.desc || 'No effect text available.')}</div>
+  showDialog(`${dialogHeader(escape(card.name))}<div class="detail-top card-reader-visual"><div class="card-art-frame">${imageTag(card)}</div>${battleStatsHTML(card)}</div><section class="detail-right"><div class="detail-meta">${cardFactsHTML(card)}${publicationHTML(card)}</div><div class="effect-text" tabindex="0" aria-label="Scrollable card effect text">${escape(card.desc || 'No effect text available.')}</div>
     <p id="detail-error" class="inline-error" role="alert"></p>
     <div class="detail-deck">Adding to: <strong>${escape(state.draft.name)}</strong>${state.dirty ? ' · unsaved changes' : ''}</div>
-    <div class="detail-add"><label class="sr-only" for="add-section">Deck section</label><select id="add-section">${SECTIONS.map(s => `<option value="${s}" ${s === defaultSection ? 'selected' : ''} ${s === 'main' && isExtra(card) || s === 'extra' && !isExtra(card) ? 'disabled' : ''}>${sectionName(s)} Deck</option>`).join('')}</select><button class="primary" data-action="add-card" ${!supported ? 'disabled' : ''}>${supported ? 'Add to Deck' : 'Not supported'}</button></div>`, 'detail-body');
+    <div class="detail-add"><label class="sr-only" for="add-section">Deck section</label><select id="add-section">${SECTIONS.map(s => `<option value="${s}" ${s === defaultSection ? 'selected' : ''} ${s === 'main' && isExtra(card) || s === 'extra' && !isExtra(card) ? 'disabled' : ''}>${sectionName(s)} Deck</option>`).join('')}</select><button class="primary" data-action="add-card" ${!supported ? 'disabled' : ''}>${supported ? 'Add to Deck' : 'Not supported'}</button></div></section>`, 'detail-body');
 }
 function deckPickerOptions() {
   const decks = [state.draft, ...state.decks.filter(deck => deck.id !== state.draft.id)];
@@ -493,8 +492,8 @@ const actions = {
  'return-solo': () => { if (persistDeck()) { solo.setDesignedDeck(duelDesign, state.draft.id); duelDesign = null; navigate('solo'); } },
  close: closeDialog, filters: showFilters, retry: () => requestArchive(true),
  'clear-search': () => { state.filters.query = ''; $('#card-search').value = ''; updateArchive(); $('#card-search').focus(); },
- 'all-years': () => { state.draft.releaseYear=null; state.dirty=true; closeDialog(); if(state.route==='decks')renderDeck();else renderArchive(); },
- 'reset-filters': () => { state.draft.releaseBasis='tcg';Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', spellTrapType: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
+ 'all-years': () => { state.draft.releaseStartYear=null; state.draft.releaseYear=null; state.dirty=true; closeDialog(); if(state.route==='decks')renderDeck();else renderArchive(); },
+ 'reset-filters': () => { if(state.draft.releaseStartYear!=null)state.dirty=true;state.draft.releaseStartYear=null;state.draft.releaseBasis='tcg';Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', spellTrapType: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
  'add-card': () => {
     try {
       const section = $('#add-section').value;

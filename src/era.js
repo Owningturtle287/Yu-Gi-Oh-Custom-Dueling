@@ -27,10 +27,17 @@ export function availableBy(card, cutoff, {basis='tcg',allowUnknown=false}={}) {
   const date = dateForBasis(card,basis);
   return date ? date <= cutoff : allowUnknown;
 }
+export function releaseRangeFilter(startYear,endYear,{basis='tcg'}={}){
+  const start=normalizeReleaseYear(startYear),end=normalizeReleaseYear(endYear);
+  if(start!==null&&start>(end??currentYear()))throw new Error('Beginning year cannot be after the end year.');
+  const cutoff=releaseCutoff(end),lower=start===null?null:`${start}-01-01`;
+  return card=>{const date=dateForBasis(card,basis);return date?date<=cutoff&&(!lower||date>=lower):start===null&&end===null;};
+}
+export const availableInRange=(card,startYear,endYear,options)=>releaseRangeFilter(startYear,endYear,options)(card);
 export function hydrateDeckDates(deck, index) {
   return { ...deck, sections: Object.fromEntries(Object.entries(deck.sections).map(([section, entries]) => [section, entries.map(entry => {
     const current = index.get(entry.card.id);
-    return current ? { ...entry, card: { ...entry.card, tcgDate: current.tcgDate, ocgDate: current.ocgDate } } : entry;
+    return current ? { ...entry, card: { ...entry.card, tcgDate: current.tcgDate, ocgDate: current.ocgDate, setNames:current.setNames||entry.card.setNames||[] } } : entry;
   })])) };
 }
 // Context comes from the same dated archive as the filter, not a speculative timeline.
