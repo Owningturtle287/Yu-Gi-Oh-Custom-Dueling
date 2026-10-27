@@ -34,9 +34,10 @@ export function nativeSeed(seed,version=2){
 // public events and field queries into the existing arena's presentation model.
 export function createNativeBackend({rules=defaultNativeRules}={}) {
   const matches=new Map();let nextMatch=0;
-  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,promptVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
     if(![1,2,3].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
     if(![1,2].includes(rulesVersion))throw new Error('Unsupported saved duel rules version.');
+    if(![1,2].includes(promptVersion))throw new Error('Unsupported saved duel prompt version.');
     const pack=await rules(),{module:m,lib,records}=pack;
     const scripts=rulesVersion===1?{...pack.scripts,'c16768387.lua':pack.scripts['c16768387.lua'].replace('Duel.SortDecktop(tp,tp,ac)','Duel.SortDecktop(tp,tp,ct)')}:pack.scripts;
     const api=new Map([...cards,...(openingHands||[]).flat(),...(initialFields||[]).flatMap(p=>Object.values(p).flat().filter(Boolean).map(c=>c.card)),...decks.flatMap(d=>[...d.main,...d.extra])].map(c=>[c.id,c]));
@@ -55,7 +56,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:nativeSeed(seed,randomVersion),team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
     if(!handle)throw new Error('The duel rules engine could not start.');
     const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,revealSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
-    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
+    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,promptVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
     r.reason=Object.fromEntries([...scripts['constant.lua'].matchAll(/^REASON_(\w+)\s*=\s*(0x[\da-f]+|\d+)/gmi)].map(([,key,value])=>[key,Number(value)]));
     r.side=team=>team===0?first:1-first;r.team=side=>side===first?0:1;
     r.state={aiMemory:createAIMemory(cards,eligibility),version:2,runtimeId:id,players:decks.map(d=>({...emptyPlayer(d.name),lp})),turn:0,normalSummons:[0,0],active:first,phase:'draw',seed:seed>>>0,serial:0,log:[],lastEvent:null,winner:null,chain:[],window:null,pending:null,choice:null,actions:[[],[]],visualAction:null};
@@ -290,7 +291,10 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       if(r.state.winner!==null||status===m.OcgProcessResult.END){sync(r);r.prompt=null;actions(r);return;}
       if(status!==m.OcgProcessResult.WAITING)continue;
       if(!prompt)throw new Error('The engine requested an unknown response.');
-      if(prompt.type===T.SELECT_CHAIN&&prompt.forced&&prompt.selects.length){
+      // A single required trigger needs no activation click. Multiple triggers
+      // of equal priority belong to their controller's chosen chain order.
+      // Old saves retain their recorded automatic ordering.
+      if(prompt.type===T.SELECT_CHAIN&&prompt.forced&&prompt.selects.length&&(r.bootstrap.options.promptVersion===1||prompt.selects.length===1)){
         sync(r);const selected=prompt.selects[0],card=sourceAt(r,selected),source={uid:card?.uid,card:descriptor(r,selected.code),side:r.side(prompt.player)};
         r.sourceUid=card?.uid||null;r.automaticSource=source;
         notice(r,source,'automatic',effectExplanation(source.card,{phase:r.state.phase,description:Number(selected.description)}));
@@ -360,7 +364,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       r.attackSelectionUid=null;
       s.pending=null;s.battleStep=null;r.lastAttack=null;r.battleStrike=null;
       if(!s.chain.length)r.sourceUid=null;
-      p.chains.forEach((item,index)=>located(item,'ACTIVATE','Activate effect',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_CHAIN,index}));
+      p.chains.forEach((item,index)=>located(item,'ACTIVATE','Activate effect',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_CHAIN,index},{effectText:describe(r,item.description)}));
       const battleExitBlocked=!p.to_m2&&!p.to_ep;
       s.battleOptions=p.attacks.map(item=>({uid:sourceAt(r,item)?.uid,canDirect:!!item.can_direct,battleExitBlocked})).filter(item=>item.uid);
       p.attacks.forEach((item,index)=>located(item,'ATTACK','Attack',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_BATTLE,index},{canDirect:!!item.can_direct,battleExitBlocked,...(!s.players[1-side].monsters.some(Boolean)&&item.can_direct?{target:null}:{})}));
@@ -462,6 +466,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     r.history.push({side,index:legalActions(state,side).indexOf(legal),type:legal.type});if(legal.coinCall)r.coinCall=legal.coinCall;
     if(reply.stage){const {kind,index}=reply.stage;if(kind==='toggle')r.selected=r.selected.includes(index)?r.selected.filter(i=>i!==index):r.prompt.type===r.module.OcgMessageType.SELECT_CARD&&r.prompt.max===1?[index]:[...r.selected,index];else if(kind==='reset')r.selected=[];else r.selected.push(index);actions(r);return r.state;}
     if(legal.uid&&['ACTIVATE','EFFECT','SUMMON'].includes(legal.type))r.sourceUid=legal.uid;
+    if(r.prompt.type===r.module.OcgMessageType.SELECT_CHAIN&&r.prompt.forced&&legal.type==='ACTIVATE'){const item=r.prompt.selects[reply.response.index],card=sourceAt(r,item);r.automaticSource={uid:card?.uid,card:descriptor(r,item.code),side};}
     if(legal.type==='ATTACK'){r.attackSelectionUid=legal.uid;r.battleExitBlocked=legal.battleExitBlocked;}
     if(r.prompt.type===r.module.OcgMessageType.SELECT_EFFECTYN&&legal.yes)r.sourceUid=state.choice?.trigger?.uid||r.sourceUid;
     if(legal.type==='PASS'||r.prompt.type===r.module.OcgMessageType.SELECT_EFFECTYN&&legal.yes===false){const trigger=state.choice?.optionalResponse?findCard(state,state.choice.trigger.uid):null;const label=trigger&&(trigger.controller===0||trigger.faceUp||trigger.public||state.revealedUIDs?.includes(trigger.uid))?trigger.card.name:null;log(r,`${who(side)} ${side===0?'pass':'passes'}${label?' on '+label+'’s optional effect':state.chain.length?' on responding to '+state.chain.at(-1).card.name:' this response opportunity'}; play continues.`,'response',[],side);}
@@ -472,7 +477,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
-    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,cards});
+    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,promptVersion:save.options?.promptVersion??1,cards});
     const legacy=![2,3].includes(save.presentationRevision);
     const acknowledgeLegacyLists=()=>{
       while((legacy&&state.reveals?.[0]?.presentationOnly)||(save.presentationRevision!==3&&state.reveals?.[0]?.deckTop)){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}

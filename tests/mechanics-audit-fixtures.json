@@ -1,0 +1,608 @@
+{
+  "data": [
+    {
+      "id": 52624755,
+      "name": "Peten the Dark Clown",
+      "type": "Effect Monster",
+      "desc": "When this card is sent to your Graveyard: You can banish this card from your Graveyard; Special Summon 1 \"Peten the Dark Clown\" from your hand or Deck.",
+      "race": "Spellcaster",
+      "attribute": "DARK",
+      "atk": 500,
+      "def": 1200,
+      "level": 3,
+      "misc_info": [
+        {
+          "tcg_date": "2004-07-25"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/52624755.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/52624755.jpg"
+        }
+      ]
+    },
+    {
+      "id": 11384280,
+      "name": "Cannon Soldier",
+      "type": "Effect Monster",
+      "desc": "You can Tribute 1 monster; inflict 500 damage to your opponent.",
+      "race": "Machine",
+      "attribute": "DARK",
+      "atk": 1400,
+      "def": 1300,
+      "level": 4,
+      "misc_info": [
+        {
+          "tcg_date": "2002-06-26"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/11384280.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/11384280.jpg"
+        }
+      ]
+    },
+    {
+      "id": 26202165,
+      "name": "Sangan",
+      "type": "Effect Monster",
+      "desc": "If this card is sent from the field to the GY: Add 1 monster with 1500 or less ATK from your Deck to your hand, but you cannot activate cards, or the effects of cards, with that name for the rest of this turn. You can only use this effect of \"Sangan\" once per turn.",
+      "race": "Fiend",
+      "attribute": "DARK",
+      "atk": 1000,
+      "def": 600,
+      "level": 3,
+      "misc_info": [
+        {
+          "tcg_date": "2002-06-26"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/26202165.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/26202165.jpg"
+        }
+      ]
+    },
+    {
+      "id": 78010363,
+      "name": "Witch of the Black Forest",
+      "type": "Effect Monster",
+      "desc": "If this card is sent from the field to the GY: Add 1 monster with 1500 or less DEF from your Deck to your hand, but you cannot activate cards, or the effects of cards, with that name for the rest of this turn. You can only use this effect of \"Witch of the Black Forest\" once per turn.",
+      "race": "Spellcaster",
+      "attribute": "DARK",
+      "atk": 1100,
+      "def": 1200,
+      "level": 4,
+      "misc_info": [
+        {
+          "tcg_date": "2002-06-26"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/78010363.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/78010363.jpg"
+        }
+      ]
+    },
+    {
+      "id": 15025844,
+      "name": "Mystical Elf",
+      "type": "Normal Monster",
+      "desc": "A delicate elf that lacks offense, but has a terrific defense backed by mystical power.",
+      "race": "Spellcaster",
+      "attribute": "LIGHT",
+      "atk": 800,
+      "def": 2000,
+      "level": 4,
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg"
+        }
+      ]
+    },
+    {
+      "id": 89631139,
+      "name": "Blue-Eyes White Dragon",
+      "type": "Normal Monster",
+      "desc": "This legendary dragon is a powerful engine of destruction. Virtually invincible, very few have faced this awesome creature and lived to tell the tale.",
+      "race": "Dragon",
+      "attribute": "LIGHT",
+      "atk": 3000,
+      "def": 2500,
+      "level": 8,
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631139.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631139.jpg"
+        }
+      ]
+    },
+    {
+      "id": 69140098,
+      "name": "Gemini Elf",
+      "type": "Normal Monster",
+      "desc": "Elf twins that alternate their attacks.",
+      "race": "Spellcaster",
+      "attribute": "EARTH",
+      "atk": 1900,
+      "def": 900,
+      "level": 4,
+      "misc_info": [
+        {
+          "tcg_date": "2003-03-01"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/69140098.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/69140098.jpg"
+        }
+      ]
+    },
+    {
+      "id": 53129443,
+      "name": "Dark Hole",
+      "type": "Spell Card",
+      "desc": "Destroy all monsters on the field.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/53129443.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53129443.jpg"
+        }
+      ]
+    },
+    {
+      "id": 83764719,
+      "name": "Monster Reborn",
+      "type": "Spell Card",
+      "desc": "Target 1 monster in either GY; Special Summon it.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/83764719.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/83764719.jpg"
+        }
+      ]
+    },
+    {
+      "id": 24623598,
+      "name": "Disappear",
+      "type": "Trap Card",
+      "desc": "Remove from play 1 card from your opponent's Graveyard.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2003-06-06"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/24623598.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/24623598.jpg"
+        }
+      ]
+    },
+    {
+      "id": 55144522,
+      "name": "Pot of Greed",
+      "type": "Spell Card",
+      "desc": "Draw 2 cards.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/55144522.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/55144522.jpg"
+        }
+      ]
+    },
+    {
+      "id": 5318639,
+      "name": "Mystical Space Typhoon",
+      "type": "Spell Card",
+      "desc": "Target 1 Spell/Trap on the field; destroy that target.",
+      "race": "Quick-Play",
+      "misc_info": [
+        {
+          "tcg_date": "2002-09-16"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/5318639.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/5318639.jpg"
+        }
+      ]
+    },
+    {
+      "id": 77414722,
+      "name": "Magic Jammer",
+      "type": "Trap Card",
+      "desc": "When a Spell Card is activated: Discard 1 card; negate the activation, and if you do, destroy it.",
+      "race": "Counter",
+      "misc_info": [
+        {
+          "tcg_date": "2002-06-26"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/77414722.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/77414722.jpg"
+        }
+      ]
+    },
+    {
+      "id": 41420027,
+      "name": "Solemn Judgment",
+      "type": "Trap Card",
+      "desc": "When a monster(s) would be Summoned, OR a Spell/Trap Card is activated: Pay half your LP; negate the Summon or activation, and if you do, destroy that card.",
+      "race": "Counter",
+      "misc_info": [
+        {
+          "tcg_date": "2002-06-26"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/41420027.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/41420027.jpg"
+        }
+      ]
+    },
+    {
+      "id": 51452091,
+      "name": "Royal Decree",
+      "type": "Trap Card",
+      "desc": "Negate all other Trap effects on the field.",
+      "race": "Continuous",
+      "misc_info": [
+        {
+          "tcg_date": "2003-10-01"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/51452091.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/51452091.jpg"
+        }
+      ]
+    },
+    {
+      "id": 44095762,
+      "name": "Mirror Force",
+      "type": "Trap Card",
+      "desc": "When an opponent's monster declares an attack: Destroy all your opponent's Attack Position monsters.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2002-06-26"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/44095762.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/44095762.jpg"
+        }
+      ]
+    },
+    {
+      "id": 97077563,
+      "name": "Call of the Haunted",
+      "type": "Trap Card",
+      "desc": "Activate this card by targeting 1 monster in your GY; Special Summon that target in Attack Position. When this card leaves the field, destroy that monster. When that monster is destroyed, destroy this card.",
+      "race": "Continuous",
+      "misc_info": [
+        {
+          "tcg_date": "2004-10-12"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/97077563.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/97077563.jpg"
+        }
+      ]
+    },
+    {
+      "id": 77585513,
+      "name": "Jinzo",
+      "type": "Effect Monster",
+      "desc": "Trap Cards, and their effects on the field, cannot be activated. Negate all Trap effects on the field.",
+      "race": "Machine",
+      "attribute": "DARK",
+      "atk": 2400,
+      "def": 1500,
+      "level": 6,
+      "misc_info": [
+        {
+          "tcg_date": "2002-10-20"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/77585513.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/77585513.jpg"
+        }
+      ]
+    },
+    {
+      "id": 70095154,
+      "name": "Cyber Dragon",
+      "type": "Effect Monster",
+      "desc": "If only your opponent controls a monster, you can Special Summon this card (from your hand).",
+      "race": "Machine",
+      "attribute": "LIGHT",
+      "atk": 2100,
+      "def": 1600,
+      "level": 5,
+      "misc_info": [
+        {
+          "tcg_date": "2005-08-06"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/70095154.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70095154.jpg"
+        }
+      ]
+    },
+    {
+      "id": 4206964,
+      "name": "Trap Hole",
+      "type": "Trap Card",
+      "desc": "When your opponent Normal or Flip Summons 1 monster with 1000 or more ATK: Target that monster; destroy that target.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/4206964.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/4206964.jpg"
+        }
+      ]
+    },
+    {
+      "id": 29401950,
+      "name": "Bottomless Trap Hole",
+      "type": "Trap Card",
+      "desc": "When your opponent Summons a monster(s) with 1500 or more ATK: Destroy that monster(s) with 1500 or more ATK, and if you do, banish it.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2003-06-06"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/29401950.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/29401950.jpg"
+        }
+      ]
+    },
+    {
+      "id": 78636495,
+      "name": "Slate Warrior",
+      "type": "Flip Effect Monster",
+      "desc": "FLIP: This card gains 500 ATK and DEF.\nIf this card is destroyed by battle: The monster that destroyed it loses 500 ATK and DEF.",
+      "race": "Fiend",
+      "attribute": "WIND",
+      "atk": 1900,
+      "def": 400,
+      "level": 4,
+      "misc_info": [
+        {
+          "tcg_date": "2004-02-10"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/78636495.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/78636495.jpg"
+        }
+      ]
+    },
+    {
+      "id": 16226786,
+      "name": "Night Assailant",
+      "type": "Flip Effect Monster",
+      "desc": "FLIP: Target 1 monster your opponent controls; destroy that target.\nWhen this card is sent from the hand to the Graveyard: Target 1 Flip Effect Monster in your Graveyard, except this card; return that target to the hand.",
+      "race": "Fiend",
+      "attribute": "DARK",
+      "atk": 200,
+      "def": 500,
+      "level": 3,
+      "misc_info": [
+        {
+          "tcg_date": "2004-06-01"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/16226786.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/16226786.jpg"
+        }
+      ]
+    },
+    {
+      "id": 53982768,
+      "name": "Dark Ruler Ha Des",
+      "type": "Effect Monster",
+      "desc": "Cannot be Special Summoned from the GY. Negate the effects of monsters destroyed by battle with Fiend monsters you control.",
+      "race": "Fiend",
+      "attribute": "DARK",
+      "atk": 2450,
+      "def": 1600,
+      "level": 6,
+      "misc_info": [
+        {
+          "tcg_date": "2003-06-06"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/53982768.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53982768.jpg"
+        }
+      ]
+    },
+    {
+      "id": 54652250,
+      "name": "Man-Eater Bug",
+      "type": "Flip Effect Monster",
+      "desc": "FLIP: Target 1 monster on the field; destroy it.",
+      "race": "Insect",
+      "attribute": "EARTH",
+      "atk": 450,
+      "def": 600,
+      "level": 2,
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/54652250.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/54652250.jpg"
+        }
+      ]
+    },
+    {
+      "id": 67957315,
+      "name": "Spirit Ryu",
+      "type": "Effect Monster",
+      "desc": "During your Battle Step, if this card battles (Quick Effect): You can discard 1 Dragon monster to the GY; this card gains 1000 ATK/DEF until the end of the Battle Phase.",
+      "race": "Dragon",
+      "attribute": "WIND",
+      "atk": 1000,
+      "def": 1000,
+      "level": 4,
+      "misc_info": [
+        {
+          "tcg_date": "2003-06-06"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/67957315.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/67957315.jpg"
+        }
+      ]
+    },
+    {
+      "id": 41006930,
+      "name": "Strike Ninja",
+      "type": "Effect Monster",
+      "desc": "(Quick Effect): You can banish 2 DARK monsters from your GY; banish this face-up card until the End Phase. You can only use this effect of \"Strike Ninja\" once per turn.",
+      "race": "Warrior",
+      "attribute": "DARK",
+      "atk": 1700,
+      "def": 1200,
+      "level": 4,
+      "misc_info": [
+        {
+          "tcg_date": "2004-03-01"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/41006930.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/41006930.jpg"
+        }
+      ]
+    },
+    {
+      "id": 46986420,
+      "name": "Dark Magician",
+      "type": "Normal Monster",
+      "desc": "''The ultimate wizard in terms of attack and defense.''",
+      "race": "Spellcaster",
+      "attribute": "DARK",
+      "atk": 2500,
+      "def": 2100,
+      "level": 7,
+      "misc_info": [
+        {
+          "tcg_date": "2002-03-08"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986420.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986420.jpg"
+        }
+      ]
+    },
+    {
+      "id": 73915051,
+      "name": "Scapegoat",
+      "type": "Spell Card",
+      "desc": "Special Summon 4 \"Sheep Tokens\" (Beast/EARTH/Level 1/ATK 0/DEF 0) in Defense Position. They cannot be Tributed for a Tribute Summon. You cannot Summon other monsters the turn you activate this card (but you can Normal Set).",
+      "race": "Quick-Play",
+      "misc_info": [
+        {
+          "tcg_date": "2003-03-30"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/73915051.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/73915051.jpg"
+        }
+      ]
+    },
+    {
+      "id": 41142615,
+      "name": "The Cheerful Coffin",
+      "type": "Spell Card",
+      "desc": "Discard up to 3 Monster Cards from your hand to the Graveyard.",
+      "race": "Normal",
+      "misc_info": [
+        {
+          "tcg_date": "2002-06-26"
+        }
+      ],
+      "card_images": [
+        {
+          "image_url": "https://images.ygoprodeck.com/images/cards/41142615.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/41142615.jpg"
+        }
+      ]
+    }
+  ]
+}

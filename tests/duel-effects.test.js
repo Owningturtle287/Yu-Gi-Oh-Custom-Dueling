@@ -10,11 +10,13 @@ const get=name=>{const card=cards.find(c=>c.name===name);assert.ok(card,name);re
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
 const engine=createNativeBackend({rules:()=>pack});
 const game=(initialFields,{hands=[[],[]],first=0,lp=8000}={})=>engine.createMatch([0,1].map(()=>({name:'Effects regression',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards,seed:33,first,lp,openingHands:hands.map(h=>h.map(get)),initialFields});
-const resolve=state=>advanceBattle(engine,state,s=>!s.window&&!s.choice);
+const resolve=state=>{for(let n=0;n<120;n++){if(!state.window&&!state.choice)return state;const side=state.actions[0].length?0:1,action=state.actions[side].find(a=>a.type==='PASS')||engine.chooseAIAction(state,side);assert.ok(action);state=engine.applyAction(state,action,side);}assert.fail('Effects did not settle');};
 
-test('multiple mandatory Archfiend upkeeps pay automatically once each, without an Activate menu',async()=>{
+test('multiple mandatory Archfiend upkeeps allow ordering, then pay once each',async()=>{
   let state=await game([{monsters:[body('Shadowknight Archfiend'),body('Shadowknight Archfiend')],banished:[body('Perfect Machine King')]},{}]);
   try{
+    assert.equal(state.phase,'standby');assert.equal(state.window.forced,true);assert.equal(state.actions[0].filter(a=>a.type==='ACTIVATE').length,2);
+    state=command(engine,state,'ACTIVATE',0,'Shadowknight Archfiend');state=resolve(state);
     assert.equal(state.phase,'main1');assert.equal(state.window,null);assert.equal(state.choice,null);assert.equal(state.players[0].lp,6200);
     const paid=state.log.filter(e=>e.kind==='cost'&&/required upkeep/.test(e.message));assert.equal(paid.length,2);assert.ok(paid.every(e=>/Shadowknight Archfiend/.test(e.message)));
     assert.ok(state.log.some(e=>e.effectNotice?.card.name==='Shadowknight Archfiend'));
@@ -98,5 +100,14 @@ test('resolution receipts include actual draws rather than reporting no visible 
   try{
     state=resolve(command(engine,state,'ACTIVATE',0,'Pot of Greed'));
     assert.ok(state.log.some(e=>e.effectNotice?.stage==='resolve'&&/drew 2 cards from Pot of Greed/.test(e.effectNotice.text)));
+  }finally{engine.destroyMatch(state);}
+});
+
+for(const first of ['Shadowknight Archfiend','Terrorking Archfiend'])test(`required upkeep order decides which Archfiend survives when only one cost can be paid: ${first}`,async()=>{
+  let state=await game([{monsters:[body('Shadowknight Archfiend'),body('Terrorking Archfiend')]},{}],{lp:1000});
+  try{
+    assert.equal(state.window.forced,true);state=resolve(command(engine,state,'ACTIVATE',0,first));
+    assert.deepEqual(state.players[0].monsters.filter(Boolean).map(c=>c.card.name),[first]);assert.equal(state.players[0].lp,first==='Shadowknight Archfiend'?100:200);
+    assert.ok(state.log.some(l=>/required upkeep/.test(l.message)&&new RegExp(first).test(l.message)));
   }finally{engine.destroyMatch(state);}
 });

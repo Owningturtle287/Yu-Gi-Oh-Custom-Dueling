@@ -8,13 +8,16 @@ import {createNativeBackend} from '../src/duel/native-engine.js';
 import {createSoloController} from '../src/duel/ui.js';
 import {responseOffer,createResponsePolicy,effectBrief} from '../src/duel/responses.js';
 import {damageDuel,advanceBattle} from './battle-fixtures.js';
-const cards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.meta.url))).data.map(normalizeCard),get=name=>cards.find(c=>c.name===name);
+const cards=[...new Map([...JSON.parse(await readFile(new URL('./rules-fixtures.json',import.meta.url))).data,...JSON.parse(await readFile(new URL('./mechanics-audit-fixtures.json',import.meta.url))).data].map(c=>[c.id,normalizeCard(c)])).values()],get=name=>cards.find(c=>c.name===name);
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
 const waitFor=async predicate=>{const end=Date.now()+2500;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,5));assert.ok(predicate(),'Response UI ready');};
-async function rig({multiple=false,trigger=false,damage=false}={}){
+async function rig({multiple=false,trigger=false,damage=false,required=false}={}){
   const engine=createNativeBackend({rules:()=>pack});
   let state;
-  if(damage){
+  if(required){
+    state=await engine.createMatch([0,1].map(()=>({name:'Trigger ordering',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,cards,openingHands:[required==='upkeep'?[]:[get('Dark Hole')],[]],initialFields:[{monsters:(required==='upkeep'?['Shadowknight Archfiend','Shadowknight Archfiend']:['Sangan','Witch of the Black Forest']).map(name=>({card:get(name)}))},{}]});
+    if(required!=='upkeep')state=engine.applyAction(state,state.actions[0].find(a=>a.type==='ACTIVATE'),0);
+  }else if(damage){
     state=await damageDuel(engine,cards,{traps:['Castle Walls']});
     state=advanceBattle(engine,state,s=>s.battleStep==='beforeCalculation'&&s.actions[0].some(a=>a.type==='ACTIVATE'));
   }else state=await engine.createMatch([0,1].map(()=>({name:'Response test',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{seed:27,cards,openingHands:[[],[]],initialFields:[trigger?{grave:[{card:get('Sinister Serpent')}]}:{spells:[{card:get('Scapegoat'),faceUp:false},...(multiple?[{card:get('Mystical Space Typhoon'),faceUp:false}]:[])],...(multiple?{monsters:[{card:get('Summoned Skull')}]}:{})},{}]});
@@ -116,5 +119,23 @@ test('Auto-pass declines an optional Damage Step response and lets the native ba
     r.$('[data-duel="response-turn"]').click();await waitFor(()=>r.state.players[0].grave.some(c=>c.card.name==='Mystical Elf')&&!r.state.pending);
     assert.equal(r.modal.hasAttribute('open'),false);assert.ok(r.state.players[0].spells.some(c=>c?.card.name==='Castle Walls'&&!c.faceUp));
     assert.ok(r.state.log.some(e=>e.kind==='battle'&&/2500 ATK/.test(e.message)));assert.deepEqual(r.errors,[]);
+  }finally{r.close();}
+});
+
+test('the required trigger UI waits for the chosen order and never offers Pass or Auto-pass',async()=>{
+  const r=await rig({required:true});try{
+    assert.equal(r.state.window.forced,true);assert.equal(r.$('[data-duel="response-pass"]'),null);assert.equal(r.$('[data-duel="response-turn"]'),null);
+    assert.match(r.$('.duel-response-context').textContent,/Choose the next required effect/);
+    r.$('[data-response-index][aria-label^="Witch"]').click();assert.match(r.$('.duel-response-copy').textContent,/Witch of the Black Forest/);
+    r.$('[data-duel="response-activate"]').click();await waitFor(()=>r.state.choice&&r.$('.duel-arena').dataset.moving==='false');
+    assert.deepEqual(r.state.chain.map(c=>c.card.name),['Witch of the Black Forest','Sangan']);
+    assert.equal(r.state.players[0].hand.length,0,'Search targets remain the player’s choice');assert.deepEqual(r.errors,[]);
+  }finally{r.close();}
+});
+
+test('identical required sources can be distinguished by their field zone',async()=>{
+  const r=await rig({required:'upkeep'});try{
+    assert.match(r.$('.duel-response-copy small').textContent,/Your Monster Zone 1/);r.$('[data-response-index="1"]').click();
+    assert.match(r.$('.duel-response-copy small').textContent,/Your Monster Zone 2/);assert.deepEqual(r.errors,[]);
   }finally{r.close();}
 });
