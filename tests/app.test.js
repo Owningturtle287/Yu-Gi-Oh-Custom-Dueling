@@ -457,3 +457,14 @@ test('legacy over-limit name variants stay editable and show a copy warning on t
   assert.equal(app.state.decks[0].sections.main.length,1);
  }finally{window.close();}
 });
+test('single-year ranges persist and card readers show publication data and ATK/DEF below the art',async()=>{
+ const dated=[{...cards[0],id:700001,name:'Early card',tcgDate:'2005-12-31'},{...cards[0],id:700002,name:'Only 2006',tcgDate:'2006-12-31',ocgDate:'2006-01-01',card_sets:[{set_name:'Original set'},{set_name:'Later set'}]},{...cards[0],id:700003,name:'Later card',tcgDate:'2007-01-01'}];
+ const {window,app,$}=await boot('year-range-reader',null,false,dated);
+ try{
+  app.navigate('decks');$('[data-action="filters"]').click();$('#release-start-year').value='2006';$('#release-year').value='2006';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.deepEqual(app.state.filtered.map(c=>c.id),[700002]);assert.match($('#result-meta').textContent,/TCG 2006–2006/);
+  $('.card-inspect').click();assert.ok($('.card-art-frame'));assert.ok($('.detail-top .card-battle-stats'));assert.equal($('.detail-meta .card-battle-stats'),null);assert.match($('.card-publication').textContent,/2006-12-31/);assert.match($('.card-publication').textContent,/2006-01-01/);assert.deepEqual([...document.querySelectorAll('.card-set-details li')].map(n=>n.textContent),['Original set','Later set']);
+  $('[data-action="add-card"]').click();$('[data-action="close"]').click();$('[data-action="save-deck"]').click();const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)).decks[0];assert.equal(saved.releaseStartYear,2006);assert.equal(saved.releaseYear,2006);
+  $('[data-action="filters"]').click();assert.equal($('#release-start-year').value,'2006');assert.equal($('#release-year').value,'2006');$('#release-start-year').value='2007';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(app.state.draft.releaseStartYear,2006);assert.ok($('#modal').open);
+  $('[data-action="reset-filters"]').click();assert.equal(app.state.draft.releaseStartYear,null);assert.equal(app.state.filtered.length,3);
+ }finally{window.close();}
+});

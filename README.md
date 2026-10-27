@@ -1,10 +1,12 @@
-# Duel Atlas · v0.5.2
+# Duel Atlas · v0.5.3
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2006 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.5.3 enlarges card readers across Archive, Deck Builder and Solo. ATK/DEF sit below the artwork, with other properties above compact effect text. Readers show first TCG/OCG dates and expandable set memberships; missing metadata is explicit. Filters now offer beginning/end years, including exact single-year selections, using the selected region’s first playable release. Both bounds persist in saved decks and backups; older end-year-only decks remain compatible. Reset and Search all years clear both bounds.
 
 - v0.5.2 fixes the early LP value flash, replaces decoded card art instead of stacking it, contains the effect reader, and gives the number sign its own readable font fallback on iOS. Public top-deck reveal events (including Cyber Jar) now open the shared viewer before continuing; position prompts display the actual summoned monster and allow reading it. Effect actions have a preview and distinct native effect labels. A staged activation can be canceled by verified replay only while no cost, reveal, response or result has committed; paid costs cannot be undone. Auto-pass no longer declines End/Standby Phase triggers such as Armed Dragon level-ups. AI Main Deck size is selectable from 30 to 60; undersized sets/custom lists receive random eligible cards while saved lists and three-copy limits remain intact. Fresh seeds, mixed independent deck streams, rejection-sampled Fisher–Yates shuffles and versioned replay compatibility replace correlated initial LCG ordering. Flip timing remains the official rule: after battle damage calculation; battle-destroyed monsters cannot be targets. Directed regressions verify Slate Warrior, Nobleman-Eater Bug, Cyber Jar, activation cancellation, LP monotonicity, AI sizes and shuffle distribution. See the [official Damage Step rules](https://www.yugioh-card.com/eu/play/damage-step-rules/) and [rulebook](https://www.yugioh-card.com/eu/wp-content/uploads/2022/07/Rulebook_v9_en.pdf).
 

@@ -96,8 +96,6 @@ dialog::backdrop { background:#16334366; backdrop-filter:blur(3px); }
 .year-context { background:#f3efe4; border-color:#ddcfad; }
 .year-context strong { color:#795a21; }
 .year-context ul { color:#546a78; }
-.card-stats span,.detail-meta .attribute { background:#e8f0f3; border-color:#d2e0e3; color:#38556a; }
-.detail-meta .type { color:#486778; }
 .effect-text { background:#edf3f5; color:#304f61; border-color:#cedde2; }
 .detail-deck { background:#e5efea; color:#42695d; border-color:#cedcd4; }
 .settings-body { gap:12px; }

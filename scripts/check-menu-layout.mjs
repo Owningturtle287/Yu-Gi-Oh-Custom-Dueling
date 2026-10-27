@@ -66,7 +66,13 @@ try{
   await page.locator('[data-category="Spell"]').click();
   assert.equal(await page.locator('.card-tile:not([data-kind="spell"])').count(),0);
   await page.locator('[data-category="All"]').click();
+  await page.route('**/images.ygoprodeck.com/images/cards/*.jpg',async route=>route.fulfill({body:await readFile('assets/card-back.jpg'),contentType:'image/jpeg'}));
   await page.locator('#card-search').fill('Mystical Elf');await page.locator('.card-inspect').click();
+  await visibleControls('.detail-body button,.detail-body select,.detail-body summary,.detail-body .card-battle-stats');
+  assert.ok(await page.locator('.detail-top .card-art-frame').evaluate(n=>n.clientHeight/n.closest('.detail-body').clientHeight>.65),'Card art uses most of the reader height');
+  assert.ok(await page.locator('.card-art-frame').evaluate(n=>{const stats=n.nextElementSibling;return !!stats?.classList.contains('card-battle-stats')&&n.parentElement.querySelectorAll('.card-battle-stats').length===1;}),'ATK and DEF sit below the art');
+  assert.match(await page.locator('.card-publication').textContent(),/TCG.*\d{4}-\d{2}-\d{2}/);assert.match(await page.locator('.card-set-details').textContent(),/Layout test set/);
+  await page.locator('.card-set-details summary').click();await visibleControls('.card-set-details ul');await capture(`archive-card-reader-${width}x${height}`);
   await page.locator('.effect-text').waitFor();await page.locator('.dialog-header [data-action="close"]').click();await page.locator('[data-action="clear-search"]').click();
   await page.evaluate(async()=>{
    const {navigate,state}=await import('/src/app.js'),{createDeck,addCard}=await import('/src/core.js');
@@ -92,7 +98,9 @@ try{
   const taxonomy=await page.locator('#filters-form').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);
   assert.ok(taxonomy.subtype.some(o=>o.value==='Effect'));assert.ok(taxonomy.attribute.some(o=>o.value==='DIVINE'));
   await visibleControls('#filters-form select,#filters-form button');await capture(`builder-filters-${width}x${height}`);
-  await page.locator('[data-filter-panel="year"]').click();await visibleControls('#filters-form select,#filters-form button');await capture(`builder-year-filters-${width}x${height}`);await page.locator('[data-filter-panel="cards"]').click();
+  await page.locator('[data-filter-panel="year"]').click();await visibleControls('#filters-form select,#filters-form button');await capture(`builder-year-filters-${width}x${height}`);await page.locator('#release-start-year').selectOption('2006');await page.locator('#release-year').selectOption('2006');await capture(`exact-year-filters-${width}x${height}`);await page.locator('#filters-form button[type="submit"]').click();
+  assert.ok(await page.evaluate(async()=>{const {state}=await import('/src/app.js');return state.filtered.length>0&&state.filtered.every(c=>c.tcgDate?.startsWith('2006'));}));
+  await page.locator('[data-action="filters"]').click();await page.locator('[data-filter-panel="year"]').click();assert.equal(await page.locator('#release-start-year').inputValue(),'2006');assert.equal(await page.locator('#release-year').inputValue(),'2006');await page.locator('[data-action="reset-filters"]').click();await page.locator('[data-action="filters"]').click();
   await page.locator('#filters-form [name="subtype"]').selectOption('Effect');await page.locator('#filters-form button[type="submit"]').click();
   assert.ok(await page.locator('.builder-archive-panel .card-tile').count());
   assert.ok(await page.evaluate(async()=>{const {state}=await import('/src/app.js');const {isEffectMonster}=await import('/src/card-filters.js');return state.filtered.every(isEffectMonster);}));
@@ -215,7 +223,7 @@ try{
   });
   await page.locator('.duel-counter-badge').waitFor();await page.locator('.duel-arena[data-moving="false"]').waitFor();assert.equal(await page.locator('.duel-counter-badge').getAttribute('title'),'1 A-Counter');
   await visibleControls('.duel-counter-badge,.duel-controls button');await capture(`alien-counter-${width}x${height}`);
-  await page.locator('.duel-zone:has(.duel-counter-badge)').click();assert.equal(await page.locator('.duel-counter-description').textContent(),'1 A-Counter');await visibleControls('.duel-card-viewer button');await capture(`counter-inspection-${width}x${height}`);
+  await page.locator('.duel-zone:has(.duel-counter-badge)').click();assert.equal(await page.locator('.duel-counter-description').textContent(),'1 A-Counter');await visibleControls('.duel-card-viewer button');assert.ok(await page.locator('.duel-inspect-visual .card-battle-stats').count());await visibleControls('.duel-card-viewer .card-publication');await capture(`counter-inspection-${width}x${height}`);
   await page.locator('.dialog-header [data-action="close"]').click();await page.evaluate(()=>window.layoutRig.destroy());
   // A real Big Eye prompt: five visible rows, stable reads, actual native order.
   await page.evaluate(async()=>{
@@ -242,6 +250,7 @@ try{
    await page.waitForFunction(()=>document.querySelector('.selection-info-art img.duel-inspect-full')?.complete);
    assert.equal(await page.locator('.selection-info-art img').count(),1,'Decoded art replaces the thumbnail');
    assert.ok(await page.locator('.duel-selection-info').evaluate(panel=>{const art=panel.querySelector('.selection-info-art').getBoundingClientRect(),copy=panel.querySelector('.selection-info-copy').getBoundingClientRect();return innerWidth>innerHeight?art.right<=copy.left+1:art.bottom<=copy.top+1;}),'Art and effect text occupy separate columns even on a rotated phone');
+   assert.ok(await page.locator('.duel-selection-info .card-battle-stats').count());assert.ok(await page.locator('.duel-selection-info .card-publication').count());
    if(selector.includes('source'))await capture(`effect-reader-${width}x${height}`);
    await page.locator('[data-duel="selection-back"]').click();
    assert.deepEqual(await page.locator('[data-order-index]').evaluateAll(nodes=>nodes.map(n=>Number(n.dataset.orderIndex))),order);

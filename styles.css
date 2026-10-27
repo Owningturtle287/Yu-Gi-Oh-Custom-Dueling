@@ -843,68 +843,7 @@ dialog::backdrop {
 .saved-row .icon-button {
   color:var(--danger)
 }
-.detail-body {
-  height:min(700px,calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 34px));
-  gap:12px;
-  padding:17px
-}
-.detail-top {
-  display:flex;
-  gap:17px;
-  flex-shrink:0;
-  min-height:0;
-  height:210px
-}
-.detail-top>img,.detail-top>.image-fallback {
-  height:100%;
-  max-width:46%;
-  object-fit:contain;
-  border-radius:7px
-}
-.detail-meta {
-  flex:1;
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:10px
-}
-.detail-meta .type {
-  font-size:11px;
-  line-height:1.5;
-  color:var(--gold)
-}
-.detail-meta .attribute {
-  font-size:10px;
-  color:var(--muted);
-  line-height:1.5
-}
-.card-stats {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px
-}
-.card-stats span {
-  font-size:10px;
-  color:var(--muted);
-  padding:7px 9px;
-  background:#1b2e3a;
-  border-radius:7px
-}
-.card-stats b {
-  display:block;
-  font-size:14px;
-  color:var(--text);
-  font-weight:600;
-  margin-top:3px
-}
-.effect-label {
-  font-size:9px;
-  text-transform:uppercase;
-  color:var(--muted);
-  letter-spacing:1.5px;
-  flex-shrink:0
-}
+
 .effect-text {
   white-space:pre-wrap;
   font-size:12px;
@@ -1129,12 +1068,8 @@ dialog::backdrop {
   .page-heading p {
     margin-top:4px
   }
-  .detail-top {
-    height:170px
-  }
-  .detail-body {
-    gap:9px
-  }
+
+
   .dialog-body {
     gap:12px;
     padding:16px
@@ -1186,21 +1121,11 @@ dialog::backdrop {
   .launch-card .soon-label {
     font-size:7px
   }
-  .detail-top {
-    gap:10px
-  }
+
   .detail-add select {
     max-width:46%
   }
-  .detail-meta {
-    gap:7px
-  }
-  .card-stats {
-    gap:5px
-  }
-  .card-stats span {
-    padding:6px
-  }
+
   .dialog-header h2 {
     font-size:18px
   }
@@ -1307,28 +1232,7 @@ dialog::backdrop {
   .placeholder-screen>small {
     grid-column:1
   }
-  .detail-body {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    grid-template-rows:auto 1fr auto auto;
-    gap:8px 16px;
-    height:calc(100dvh - 24px)
-  }
-  dialog:has(.detail-body) {
-    width:min(760px,calc(100vw - 24px))
-  }
-  .detail-body>.dialog-header {
-    grid-column:1/-1
-  }
-  .detail-top {
-    grid-column:1;
-    grid-row:2/5;
-    height:100%;
-    max-height:230px
-  }
-  .effect-label {
-    display:none
-  }
+
   .effect-text {
     grid-column:2;
     grid-row:2
@@ -1724,11 +1628,11 @@ dialog:has(.filter-body) { width:min(760px,calc(var(--duel-vw,1dvw) * 100 - 24px
 .filter-body .filter-tabs button,.filter-body .dialog-actions button,.filter-body .dialog-header .icon-button { min-height:34px; padding:5px 8px; }
 .filter-tabs button[aria-selected=true] { background:#35304d; border-color:var(--violet); color:#e5d9ff; }
 .filter-panel[hidden],#year-filter-panel[hidden] { display:none; }
-#year-filter-panel { display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:8px; min-height:0; }
+#year-filter-panel { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; min-height:0; }
 #year-filter-panel>label:first-child { grid-column:1; grid-row:1; }
 #year-filter-panel>label:nth-child(2) { grid-column:2; grid-row:1; }
-#year-filter-panel .year-help { grid-column:1/-1; grid-row:2; }
-.year-context { grid-column:3; grid-row:1; padding:9px; border:1px solid #5d5274; border-radius:11px; background:#25263d; max-height:112px; overflow:auto; }
+#year-filter-panel .year-help { grid-column:2/-1; grid-row:2; margin:0; }
+.year-context { grid-column:1; grid-row:2; padding:6px; border:1px solid #5d5274; border-radius:11px; background:#25263d; max-height:60px; overflow:auto; }
 .year-context strong { display:block; margin-bottom:7px; font-size:11px; color:var(--gold); }
 .year-context ul { margin:0; padding-left:15px; font-size:9px; line-height:1.6; color:#d3cfdf; }
 .filter-body .year-help { font-size:9px; line-height:1.5; }
