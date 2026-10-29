@@ -235,3 +235,12 @@ dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100
 .duel-learning-body .dialog-actions { flex:none; }
 .duel-learning-link { min-height:30px; padding:4px 8px; font-size:11px; }
 .solo-panel-title button.solo-ai-badge { display:block; min-height:28px; border:1px solid #c2d3c2; }
+@media(orientation:landscape) and (max-width:700px), (orientation:portrait) and (max-height:700px) {
+ .solo-ai-badge .solo-ai-name,.solo-panel-title:has(.solo-ai-badge) .solo-sigil { display:none; }
+}
+@media(max-height:360px), (orientation:portrait) and (max-width:360px) {
+ .duel-learning-body { gap:8px; }
+ .duel-learning-body>p { font-size:12px; }
+ .duel-learning-stats span { padding:6px; font-size:10px; }
+ .duel-learning-stats b { font-size:20px; }
+}

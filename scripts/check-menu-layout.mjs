@@ -120,7 +120,7 @@ try{
    if(source==='set')await capture(`ai-deck-size-${width}x${height}`);
   }
   await page.locator('#solo-size').selectOption('30');await page.locator('[data-duel-tab="0"]').click();await page.locator('[data-duel-tab="1"]').click();assert.equal(await page.locator('#solo-size').inputValue(),'30');
-  for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
+  for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();if(tab===2)await capture(`match-settings-${width}x${height}`);await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
   assert.match(await page.locator('.duel-era').textContent(),/2006 LAB/);
   await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2006-12-31');
   const duelTaxonomy=await page.locator('#duel-filters').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);assert.deepEqual(duelTaxonomy,taxonomy);
