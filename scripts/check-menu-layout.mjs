@@ -10,7 +10,7 @@ await mkdir(output,{recursive:true});
 let browser,page;
 try{
  browser=await chromium.launch({headless:true});
- const raw=[...JSON.parse(await readFile('tests/mechanics-audit-fixtures.json')).data,...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data,...JSON.parse(await readFile('tests/level-up-fixtures.json')).data,...JSON.parse(await readFile('tests/era2006-fixtures.json')).data.filter(c=>['Alien Grey','Clock Tower Prison','Cyber Dragon','Elemental HERO Neos'].includes(c.name))];
+ const raw=[...JSON.parse(await readFile('tests/chain-feedback-fixtures.json')).data,...JSON.parse(await readFile('tests/mechanics-audit-fixtures.json')).data,...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data,...JSON.parse(await readFile('tests/level-up-fixtures.json')).data,...JSON.parse(await readFile('tests/era2006-fixtures.json')).data.filter(c=>['Alien Grey','Clock Tower Prison','Cyber Dragon','Elemental HERO Neos'].includes(c.name))];
  const cards=[...new Map(raw.map(c=>[c.id,{...c,card_sets:[{set_name:'Layout test set'}]}])).values()];
  async function visibleControls(selector){
   const clipped=await page.locator(selector).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden').flatMap(node=>{
@@ -302,6 +302,28 @@ try{
   }
   await page.evaluate(()=>document.documentElement.style.removeProperty('--duel-safe-bottom'));
   await page.evaluate(()=>window.layoutRig.destroy());
+  // Real core chain response, followed by presentation-only geometry fixtures.
+  await page.evaluate(async()=>{
+   const {state,navigate}=await import('/src/app.js');navigate('home');const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js');const catalog=state.cards,get=n=>catalog.find(c=>c.name===n),engine=createNativeBackend();
+   let match=await engine.createMatch([0,1].map(()=>({name:'Chain feedback',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards:catalog,seed:93,first:0,openingHands:[[get('Dian Keto the Cure Master'),get('Chain Strike')],[]]});
+   match=engine.applyAction(match,match.actions[0].find(a=>a.type==='ACTIVATE'&&engine.findCard(match,a.uid)?.card.name==='Dian Keto the Cure Master'),0);
+   const main=document.querySelector('#main'),modal=document.querySelector('#modal');const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:title=>`<div class="dialog-header"><h2>${title}</h2><button data-action="close">×</button></div>`,toast:message=>{throw Error(message);},onDesign(){},engine:{...engine,createMatch:async()=>match}});controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
+  });
+  await page.locator('.duel-response-chain').waitFor();await visibleControls('.duel-response-body button');assert.match(await page.locator('[data-duel="response-activate"]').textContent(),/Link 2/);await capture(`chain-response-${width}x${height}`);
+  await page.locator('.duel-response-chain').click();await visibleControls('.duel-chain-body button');assert.equal(await page.locator('.duel-chain-list li').count(),1);await page.locator('[data-duel="chain-back"]').click();
+  await page.locator('[data-duel="response-activate"]').click();await page.waitForFunction(()=>window.layoutRig.getMatch().players[1].lp===7200&&document.querySelector('.duel-arena').dataset.moving==='false');
+  assert.match(await page.locator('.duel-feedback-host').textContent(),/AI −800/);await capture(`chain-receipt-${width}x${height}`);
+  await visibleControls('.duel-chain-open');await page.locator('.duel-chain-open').click();await visibleControls('.duel-chain-body button');assert.equal(await page.locator('.duel-chain-list li').count(),2);await capture(`chain-history-${width}x${height}`);await page.locator('[data-duel="chain-back"]').click();
+  for(const kind of ['damage','gain','chain']){
+   await page.evaluate(async kind=>{
+    window.feedbackRig?.cancel();const {createFeedbackPlayer}=await import('/src/duel/feedback.js');window.feedbackRig=createFeedbackPlayer({getRoot:()=>document.querySelector('.duel-feedback-host'),getArena:()=>document.querySelector('#main'),hold:10000});
+    const {state}=await import('/src/app.js');const event=kind==='chain'?{type:'chain',stage:'resolving',link:4,total:4,side:0,card:state.cards.find(c=>c.name==='Accumulated Fortune')}:{type:'life',side:kind==='gain'?1:0,before:8000,after:kind==='gain'?9000:6800,delta:kind==='gain'?1000:-1200,amount:kind==='gain'?1000:1200,kind,source:kind==='gain'?'Chain Healing':'Chain Strike',chainLink:2};window.feedbackWork=window.feedbackRig.play([event]);
+   },kind);
+   await page.locator('.duel-feedback-panel').waitFor();await page.locator('.duel-feedback-panel').evaluate(p=>Promise.all(p.getAnimations().map(a=>a.finished)));
+   const geometry=await page.locator('.duel-feedback-panel').evaluate(async p=>{const {localRect}=await import('/src/duel/viewport.js'),host=p.parentElement,r=localRect(p,host);return {x:r.left+r.width/2,y:r.top+r.height/2,w:host.clientWidth,h:host.clientHeight,overflow:p.scrollHeight-p.clientHeight};});
+   assert.ok(Math.abs(geometry.x-geometry.w/2)<2&&Math.abs(geometry.y-geometry.h/2)<2,JSON.stringify(geometry));assert.ok(geometry.overflow<=1,JSON.stringify(geometry));await capture(`feedback-${kind}-${width}x${height}`);
+  }
+  await page.evaluate(()=>{window.feedbackRig.cancel();window.layoutRig.destroy();});
   await context.close();page=null;
   console.log(`Menu controls fit ${width} × ${height}`);
  }

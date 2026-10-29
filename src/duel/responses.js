@@ -26,7 +26,7 @@ export function responseOffer(state, actions) {
   const link = state.chain.at(-1), attacker = state.pending?.kind === 'attack' ? findCard(state, state.pending.uid) : null;
   const context = state.window?.forced&&cards.length>1 ? 'Choose the next required effect. Chains resolve last link first.'
     : optionalTrigger ? 'This card has an optional triggered effect. You can activate it now or decline.'
-    : link ? `${link.card.name} was activated. Your response is added to the chain and resolves before earlier links.`
+    : link ? `Chain Link ${state.chain.length}: ${link.card.name}. Activate as Link ${state.chain.length+1}; newest links resolve first.`
     : state.window?.timing || (attacker ? `${attacker.card.name} declared an attack. You can respond before the attack continues.`
     : `You have a legal response during ${PHASE_LABELS[state.phase] || state.phase}.`);
   return {id: state.choice?.promptId || state.window?.promptId || `${state.turn}:${state.phase}:${actions.map(a => a.id).join(',')}`,
