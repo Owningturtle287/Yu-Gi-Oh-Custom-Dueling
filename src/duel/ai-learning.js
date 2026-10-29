@@ -50,7 +50,7 @@ const sanitizeRecord=r=>r&&safeKey(r.context)&&Number.isFinite(r.reward)&&Number
 export function trainLearningModel(value,episode,{winner,side=1,forfeit=false}={}){
   const model=sanitizeLearningModel(value),records=Array.isArray(episode?.records)?episode.records.map(sanitizeRecord).filter(Boolean).slice(-MAX_TRACE):[];
   if(forfeit||![0,1,'draw'].includes(winner)||!safeKey(episode?.id)||model.finished.includes(episode.id)||episode.generation!==model.generation||!records.length)return {model,trained:false};
-  const outcome=winner==='draw'?0:winner===side?1:-1,lastTurn=records.at(-1).turn;
+  const outcome=winner==='draw'?0:winner===side?1:-1,lastTurn=Math.max(records.at(-1).turn,Number.isInteger(episode.finalTurn)?clamp(episode.finalTurn,0,10000):0);
   // Local resolution feedback plus discounted final outcome. Repeated prompts
   // with the same context count once per duel, preventing click/loop farming.
   const groups=new Map();
@@ -72,7 +72,7 @@ export function trainLearningModel(value,episode,{winner,side=1,forfeit=false}={
   return {model,trained:true};
 }
 export function createLearningSession({storage,locks=globalThis.navigator?.locks,side=1}={}){
-  const read=()=>{try{const raw=storage?.getItem(LEARNING_KEY);return raw?sanitizeLearningModel(JSON.parse(raw)):null;}catch{return null;}};
+  const read=()=>{try{const raw=storage?.getItem(LEARNING_KEY);if(!raw)return null;const value=JSON.parse(raw);return value?.version===1&&safeKey(value.generation)?sanitizeLearningModel(value):null;}catch{return null;}};
   let model=read()||emptyLearningModel(),episode=null,pending=[],startPotential=0,lastPotential=0,persisted=!!storage,epoch=0;
   const write=()=>{try{storage?.setItem(LEARNING_KEY,JSON.stringify(model));persisted=!!storage;}catch{persisted=false;}};
   const gap=potential=>{if(episode?.records.length)episode.records.at(-1).reward=clamp(episode.records.at(-1).reward+(potential-lastPotential)*2,-1,1);lastPotential=potential;};
@@ -103,7 +103,7 @@ export function createLearningSession({storage,locks=globalThis.navigator?.locks
     },
     finish(state,{forfeit=false}={}){
       if(!episode||state.winner===null)return Promise.resolve(false);
-      flush(state);gap(learningPotential(state,side));const completed=episode,winner=state.winner;episode=null;const token=epoch;
+      flush(state);gap(learningPotential(state,side));const completed={...episode,finalTurn:state.turn},winner=state.winner;episode=null;const token=epoch;
       const commit=()=>{
         if(token!==epoch)return false;
         const latest=read();if(latest&&latest.generation!==completed.generation){model=latest;return false;}

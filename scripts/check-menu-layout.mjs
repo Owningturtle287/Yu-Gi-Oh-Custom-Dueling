@@ -162,7 +162,7 @@ try{
     await visibleControls('.duel-choice-footer button');await capture(`${card.replaceAll(' ','-')}-${width}x${height}`);
     await page.locator('.duel-choice-footer button[data-choice-tone="teal"]').click();await page.waitForFunction(()=>!window.layoutRig.getMatch().choice);
     await page.locator('[data-duel="duel-menu"]').click();await page.locator('.duel-menu-body').waitFor();
-    await visibleControls('.duel-menu-body button,.duel-menu-body select');await capture(`pause-${width}x${height}`);
+    await capture(`pause-${width}x${height}`);await visibleControls('.duel-menu-body button,.duel-menu-body select');
     await page.locator('.duel-menu-body .primary[data-action="close"]').click();
     await page.evaluate(()=>window.layoutRig.destroy());
    }

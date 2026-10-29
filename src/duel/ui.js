@@ -610,9 +610,9 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   function duelMenu(){
     motion.cancel();
     showDialog(`${header('Duel settings')}
-      <div class="duel-menu-preferences">${speedControl()}<button class="duel-motion-toggle" data-duel="toggle-motion" aria-pressed="${config.animations}"><span>Card motion</span><b>${config.animations?'On':'Off'}</b></button></div>
+      <div class="duel-menu-preferences">${speedControl()}<div class="duel-menu-toggles"><button class="duel-motion-toggle" data-duel="toggle-motion" aria-pressed="${config.animations}"><span>Card motion</span><b>${config.animations?'On':'Off'}</b></button><button data-duel="learning" class="duel-learning-link"><span>AI learning</span><b>${config.learning?'On':'Off'}</b></button></div></div>
       ${responsePolicy.isPassing(match)?'<button class="duel-response-policy" data-duel="ask-again">Auto-pass is on <b>Ask again</b></button>':''}
-      <button data-duel="learning" class="duel-learning-link">AI learning · ${config.learning?'On':'Off'} · ${learner.model.games} duels reviewed</button><p class="duel-menu-note">Save to resume later. Exit ends the current unsaved duel.</p>
+      <p class="duel-menu-note">Save to resume later. Exit ends the current unsaved duel.</p>
       <div class="duel-menu-footer"><button class="primary" data-action="close">${icon('play')}<span>Resume duel</span></button><button data-duel="save-exit" ${match.winner!==null?'disabled':''}>${icon('save')}<span>Save & exit</span></button><button data-duel="exit-duel">${icon('exit')}<span>Exit duel</span></button><button class="danger" data-duel="surrender" ${match.winner!==null?'disabled':''}>${icon('flag')}<span>Surrender</span></button></div>`,'duel-menu-body');
     const select=modal.querySelector('#duel-ai-speed');select.value=config.aiSpeed;
     select.onchange=event=>{config.aiSpeed=event.target.value;persist();schedule();};

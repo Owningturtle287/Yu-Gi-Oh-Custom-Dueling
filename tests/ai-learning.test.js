@@ -13,6 +13,8 @@ test('wins/losses and local decision outcomes change preferences on held-out see
  for(let n=0;n<24;n++)model=trainLearningModel(model,experience(model,s,s.actions[1][0],'bad'+n,-1),{winner:0}).model;
  for(let n=0;n<24;n++)model=trainLearningModel(model,experience(model,s,s.actions[1][1],'good'+n,1),{winner:1}).model;
  assert.equal(model.games,48);assert.equal(model.wins,24);assert.equal(model.losses,24);
+ const delayed=experience(model,s,s.actions[1][0],'delayed',0);delayed.finalTurn=s.turn+10;const delayedModel=trainLearningModel({...emptyLearningModel(),generation:model.generation},delayed,{winner:1}).model;
+ assert.ok(Math.abs(delayedModel.contexts[delayed.records[0].context].mean-.45*Math.pow(.97,10))<1e-12,'Final-result credit is discounted through the actual finishing turn');
  for(const seed of [101,102,98765]){s.seed=seed;assert.equal(chooseAIAction(s,1,{learning:model,variety:false}).uid,'card-102');}
  assert.ok(learningAdjustment(model,s,1,s.actions[1][1])>learningAdjustment(model,s,1,s.actions[1][0]));
 });
@@ -53,6 +55,7 @@ test('learned adjustments are bounded and cannot replace lethal or hard rejected
 test('corrupt/oversized models are sanitized and unavailable storage preserves session learning',async()=>{
  const bad=sanitizeLearningModel({version:1,games:Infinity,weights:JSON.parse('{"__proto__":2,"ok":9999,"nan":null}'),contexts:{ok:{n:Infinity,mean:0}},finished:[null,'valid']});assert.equal(bad.games,0);assert.equal(Object.hasOwn(bad.weights,'__proto__'),false);assert.equal(bad.weights.ok,2);assert.deepEqual(bad.finished,['valid']);assert.doesNotThrow(()=>trainLearningModel(bad,{records:{}},{winner:1}));
  const learner=createLearningSession({storage:{getItem(){throw Error('blocked');},setItem(){throw Error('blocked');}},locks:{request(){throw Error('blocked');}}}),s=position();learner.begin(s);const end={...s,winner:1};learner.observe(s,s.actions[1][0],1,end);assert.equal(await learner.finish(end),true);assert.equal(learner.model.games,1);assert.equal(learner.persisted,false);
+ for(const broken of [{version:1,generation:null},{version:999}]){const storage=store();storage.setItem(LEARNING_KEY,JSON.stringify(broken));const repaired=createLearningSession({storage,locks:null});repaired.begin(s);repaired.observe(s,s.actions[1][0],1,end);assert.equal(await repaired.finish(end),true,'Invalid profile identity is repaired once rather than changing on each read');assert.equal(createLearningSession({storage,locks:null}).model.games,1);}
 });
 test('cross-tab commits rebase and a reset invalidates old queued episodes',async()=>{
  const storage=store(),s=position(),a=createLearningSession({storage,locks:null}),b=createLearningSession({storage,locks:null});a.begin(s);b.begin(s);const end={...s,winner:1};a.observe(s,s.actions[1][0],1,end);b.observe(s,s.actions[1][1],1,end);await a.finish(end);await b.finish(end);assert.equal(JSON.parse(storage.getItem(LEARNING_KEY)).games,2);
