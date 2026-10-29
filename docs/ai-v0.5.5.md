@@ -4,7 +4,7 @@ The production strategy retains the native rules core as the only authority on l
 
 ## Corrected decisions
 
-- Public combat forecasts account for Amazoness Swords Woman's damage redirection, Amazoness Fighter, Spirit Barrier and Waboku prevention, and Des Wombat's effect-damage prevention. Reflect Bounder's effect damage is separate from battle damage. Visible negation is respected.
+- Public combat forecasts account for Amazoness Swords Woman's damage redirection, Amazoness Fighter, Spirit Barrier and Waboku prevention, and Des Wombat's effect-damage prevention. Reflect Bounder's effect damage is separate from battle damage. Magic Cylinder distinguishes actual reflection damage from prevention while still valuing the stopped attack. Visible negation is respected.
 - Attack forecasts account for Gravity Bind, Level Limit – Area B, Swords of Revealing Light, Messenger of Peace, and The Dark Door. Spell/Trap immunity is checked before treating an attacker as restricted. A blocked Cyber-Stein/Fusion/Megamorph sequence no longer receives a winning bonus or spends 5,000 LP for the predicted attack.
 - Armed Dragon LV5/LV7 removal forecasts pay the sent monster's actual strategic cost and respect its ATK threshold. The higher LV is reserved when its lower LV is present. Normal Tribute selection remains distinct from this hand-monster cost.
 - Replacement LV upgrades recognize the higher named body and no longer use a generic crowded-field penalty. The core still determines whether the timing and prerequisites are met. This applies by phase/printed higher-LV relation across the families, rather than duplicating their effect scripts.
@@ -46,14 +46,27 @@ The total adjustment is capped at ±180 score points. It applies after at least 
 - **Use fixed strategy** disables learning and learned adjustments without erasing experience. **Enable learning** reuses the saved model. **Reset** requires confirmation and clears the device model.
 - The versioned profile uses localStorage. It retains at most 512 contexts, 256 feature weights and 512 completed episode IDs. Pending experience is capped at 256 records and saved alongside a native duel save.
 - A saved episode retains its identity across resume. Repeated finishes within retained history are deduplicated. Reset changes the profile generation, preventing stale queued work from restoring the old model.
-- Storage reads validate schema, keys, sizes and finite numerical values. Blocked/full storage preserves session learning without blocking play. Web Locks serialize and rebase cross-tab updates where available.
+- Storage reads validate schema, keys, sizes and finite numerical values. Invalid profile identities are repaired once, preventing repeated generation changes from disabling training. Blocked/full storage preserves session learning without blocking play. Web Locks serialize and rebase cross-tab updates where available; new duels honor resets from another tab even when its new game count is lower.
 - The decision worker receives only inference parameters, not raw training episodes or completed-match IDs. Its fallback receives the same learned preferences. Leaving/rotation/stale-response checks continue to cancel invalid pending decisions.
 
 Learning remains local to this browser/device. Clearing site data removes it. Changing incompatible feature semantics should bump the learning schema/key; numerical updates must retain the hard bounds and privacy tests.
 
 ## Validation
 
-The full regression suite, native decision cases, real-controller post-duel training, and eight-viewport browser checks run before merge. The soak/paired-match results are finalized in the accompanying report before release.
+The regression suite passes all 487 tests, including 21 native decision cases, 10 learning tests, and two production-controller learning tests. The static PWA builds successfully. Runtime lifecycle checks create/destroy 120 matches with no retained callbacks.
+
+The 600-duel native soak completed all games: 77,165 actions, 59 replay checks, and no failures or timeouts. It rotated AI deck sizes 30/40/60 and encountered 670 distinct effect names. It ran after the Tribute-cost/immunity corrections and before the final Magic Cylinder forecast refinement; both native regressions and the final paired matches cover that refinement. This release does not repeat the preceding all-card script sweep.
+
+The browser suite checks eight viewport sizes, including 568×320 and rotated 320×568. It exercises learning controls, reset confirmation and visible menu actions alongside the existing shell/arena checks. Its final run is recorded in [the machine-readable report](ai-v0.5.5.json).
+
+The final paired benchmark uses the exact v0.5.4 policy as opponent. It tests both seats with constructed and random decks. Training uses seeds 1–10 (40 matches); evaluation freezes that profile and uses disjoint seeds 101–120 (80 matches per policy).
+
+| Policy | Held-out wins | Losses | Draws |
+| --- | ---: | ---: | ---: |
+| Corrected fixed strategy | 40 | 40 | 0 |
+| Same strategy with 40 reviewed training duels | 44 | 36 | 0 |
+
+Learning changed eight paired outcomes: six added wins and two lost wins. The observed five-percentage-point increase is encouraging but small; it does not establish statistical significance, a human rating, or improvement after every duel. Training itself finished 19–21 and did not use held-out outcomes for updates. No benchmark profile is shipped in the app.
 
 Functional learning checks verify changed decisions on held-out seeds, positive/negative credit independent of the overall result, terminal-only updates, save/resume, duplicate finishes, corrupt/blocked storage, cross-tab rebasing/reset, bounded growth, inference payload privacy, and preservation of hard winning/rejected choices.
 
