@@ -1,10 +1,12 @@
-# Duel Atlas · v0.5.5
+# Duel Atlas · v0.5.6
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2006 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.5.6 adds centred LP damage/recovery/cost cues, individual before/after accounting, and explicit chain build/resolution/negation/completion feedback. Inspect the current or last completed chain from the arena and response sheet; response buttons identify the next link. Reduced-motion and Card motion-off modes retain readable feedback. See the [LP and chain presentation notes](docs/lp-chain-v0.5.6.md).
 
 - v0.5.5 fixes the reproduced AI mistakes in public battle/damage predictions, cost and LV-upgrade evaluation, opening-turn Quick-Play setting, and Big Eye inspection/draw ordering. General replacement-upgrade and exact-material Fusion forecasts extend planning beyond the older named-card guides. Standalone local reinforcement learning now reviews played duels, combining resolved LP/card changes with the final result. Learned preferences persist on the device, respect hidden information and bounded scoring, and can be disabled/reset from Match settings or the duel menu. Saves preserve pending experience and repeated finishes are deduplicated. See the [AI learning implementation and validation](docs/ai-v0.5.5.md).
 
