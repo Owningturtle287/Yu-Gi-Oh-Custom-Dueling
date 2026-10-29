@@ -225,3 +225,25 @@ dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100
  .solo-setup .solo-launch { padding-inline:10px; }
  .solo-ai-badge { display:none; }
 }
+
+/* Local AI experience controls remain inside the existing settings sheets. */
+.duel-learning-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.duel-learning-stats span { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px; border-radius:8px; background:#e6efeb; font-size:11px; }
+.duel-learning-stats b { font-size:22px; color:#20594c; }
+.duel-learning-body { display:flex; flex-direction:column; gap:12px; max-height:100%; overflow:auto; }
+.duel-learning-body>p { margin:0; font-size:13px; line-height:1.4; }
+.duel-learning-body .dialog-actions { flex:none; }
+.duel-learning-link { min-height:30px; padding:4px 8px; font-size:11px; }
+.duel-menu-toggles { display:grid; gap:6px; }
+.duel-menu-body .duel-menu-toggles button { display:flex; align-items:center; justify-content:space-between; gap:6px; min-height:30px; height:30px; padding:4px 8px; }
+.duel-learning-link b { font-size:10px; }
+.solo-panel-title button.solo-ai-badge { display:block; min-height:28px; border:1px solid #c2d3c2; }
+@media(orientation:landscape) and (max-width:700px), (orientation:portrait) and (max-height:700px) {
+ .solo-ai-badge .solo-ai-name,.solo-panel-title:has(.solo-ai-badge) .solo-sigil { display:none; }
+}
+@media(max-height:360px), (orientation:portrait) and (max-width:360px) {
+ .duel-learning-body { gap:8px; }
+ .duel-learning-body>p { font-size:12px; }
+ .duel-learning-stats span { padding:6px; font-size:10px; }
+ .duel-learning-stats b { font-size:20px; }
+}

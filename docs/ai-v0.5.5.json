@@ -1,0 +1,1804 @@
+{
+  "version": "0.5.5",
+  "date": "2026-10-29",
+  "baselineCommit": "8f9ea9dfb445ba56024ed0b0aa4a8934e41ff030",
+  "policyHashes": {
+    "src/duel/ai-learning.js": "4b7452a8f2378817f26749be8b3224f17cb236e12bab49b5e6df090fcf732ee8",
+    "src/duel/ai-physics.js": "158a6d4690493ef0f45499e3f3089f9b5af98d450888a353bdf4d38da280f857",
+    "src/duel/native-ai.js": "8f3f0a09d470a719cbbac9a7da052f2f4fd75c42b2a97a2d49a8363da1fd03f0",
+    "src/duel/ai-combat.js": "15541c1c51b5656e93eb279cf7c43cfd1a226922d8dfb410d19282fa74d819aa",
+    "src/duel/ai-guidance.js": "191114c7f4d54b81a64c5f7d0b60148a7a08663f1e076c6e9436229a69272330",
+    "src/duel/ai-knowledge.js": "ab9d56b8279790986866cd395dacd2cfadaf8ca71eddc053d7673629751a68e6",
+    "src/duel/ai-turn.js": "84cec38690a4d935154d98b07c42ded0f16fb11466fe8b5870c8d8bd215aeed9",
+    "src/duel/ai-client.js": "82d515d599b6905cd1cd842ed439ca62227b3375dc2d2823da35c8f61e58e7f5",
+    "src/duel/ai-worker.js": "51de3f82addf20ff164e11d43c34f8b52ba15fabbf0f41f8da9e8323838675e7",
+    "src/duel/ui.js": "7f473eda85c9e35cf68803c1281dabade61c7f758d642223520181962cfe07a7",
+    "menus.css": "087e96bb25e5cf6d941e749b0f2fb0e4cff6578dd44c7b3431412d73e3007679",
+    "scripts/bench-ai.mjs": "84ce9dbeaa5c2f90d483a91cf0a94cc6526368c8a46cfbc286c2f286541ed6d0",
+    "scripts/check-menu-layout.mjs": "71b09538426b80d0f5778156ce80b70d83578eaef29f05fad76bb1af9814e1ff"
+  },
+  "rulesRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+  "cardsSnapshotHash": "83d706a3ecf6180d5a7d98c01f55d9a015582f8d3c75c984f6d6ee294f060375",
+  "setsSnapshotHash": "ff52eb763bfc9c2b33eabd9ff0f118fefc6ace39cf19ce2de33aceea2a4d0394",
+  "validation": {
+    "regressions": {
+      "tests": 487,
+      "passed": 487,
+      "failed": 0,
+      "nativeDecisionCases": 21,
+      "learningCases": 10,
+      "productionLearningUICases": 2
+    },
+    "memory": {
+      "createdAndDestroyed": 120,
+      "retainedCallbacks": 0
+    },
+    "build": "passed",
+    "browser": {
+      "status": "passed",
+      "runId": "40923309451",
+      "viewports": [
+        [
+          844,
+          390
+        ],
+        [
+          667,
+          375
+        ],
+        [
+          568,
+          320
+        ],
+        [
+          740,
+          360
+        ],
+        [
+          390,
+          844
+        ],
+        [
+          320,
+          568
+        ],
+        [
+          1280,
+          720
+        ],
+        [
+          1024,
+          768
+        ]
+      ],
+      "assertions": "Chromium: shell fit, visible controls, learning toggle/reset, menus, native prompts and existing arena checks. Card art API mocked for layout."
+    }
+  },
+  "soak": {
+    "games": 600,
+    "completed": 600,
+    "actions": 77165,
+    "replayed": 59,
+    "failures": [],
+    "timeouts": [],
+    "uniqueEffectNames": 670,
+    "coverage": {
+      "probed": 0,
+      "drawn": 2002,
+      "played": 1320,
+      "activated": 664,
+      "resolved": 668
+    },
+    "aiDeckSizes": {
+      "30": 200,
+      "40": 200,
+      "60": 200
+    },
+    "configuration": {
+      "games": 600,
+      "gameStart": 0,
+      "seed": 1001,
+      "limit": 2170,
+      "randomVersion": 3,
+      "promptVersion": 2,
+      "probeSide": 0,
+      "aiSizes": [
+        30,
+        40,
+        60
+      ],
+      "sweep": false,
+      "battleFlips": false,
+      "actionLimit": 2500
+    },
+    "note": "Random native games after the Tribute-cost/immunity corrections, before the final Magic Cylinder forecast refinement. The final refinement is covered by both native cases and the final paired matches; no new card-script sweep was run."
+  },
+  "benchmark": {
+    "opponent": "Exact prior v0.5.4 policy imported from the baseline commit worktree",
+    "method": "Identical constructed decks and deterministic random decks; both policy seats per seed. Training seeds 1–10, held-out seeds 101–120. Frozen profile during held-out evaluation; no training or parameter tuning on held-out results.",
+    "training": {
+      "baseline": ".tmp/ai-v054/src/duel/native-ai.js",
+      "learning": {
+        "training": true,
+        "games": 40
+      },
+      "matches": 40,
+      "wins": 19,
+      "losses": 21,
+      "draws": 0,
+      "winRate": 0.475,
+      "actions": 4227,
+      "maxDecisionMs": 726.82,
+      "results": [
+        {
+          "pool": "constructed",
+          "seed": 1,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 10,
+          "actions": 64
+        },
+        {
+          "pool": "constructed",
+          "seed": 1,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 10,
+          "actions": 64
+        },
+        {
+          "pool": "constructed",
+          "seed": 2,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 8,
+          "actions": 73
+        },
+        {
+          "pool": "constructed",
+          "seed": 2,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 8,
+          "actions": 73
+        },
+        {
+          "pool": "constructed",
+          "seed": 3,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 8,
+          "actions": 58
+        },
+        {
+          "pool": "constructed",
+          "seed": 3,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 7,
+          "actions": 47
+        },
+        {
+          "pool": "constructed",
+          "seed": 4,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 12,
+          "actions": 93
+        },
+        {
+          "pool": "constructed",
+          "seed": 4,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 7,
+          "actions": 49
+        },
+        {
+          "pool": "constructed",
+          "seed": 5,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 8,
+          "actions": 67
+        },
+        {
+          "pool": "constructed",
+          "seed": 5,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 8,
+          "actions": 64
+        },
+        {
+          "pool": "constructed",
+          "seed": 6,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 10,
+          "actions": 78
+        },
+        {
+          "pool": "constructed",
+          "seed": 6,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 10,
+          "actions": 76
+        },
+        {
+          "pool": "constructed",
+          "seed": 7,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 92
+        },
+        {
+          "pool": "constructed",
+          "seed": 7,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 92
+        },
+        {
+          "pool": "constructed",
+          "seed": 8,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 10,
+          "actions": 76
+        },
+        {
+          "pool": "constructed",
+          "seed": 8,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 9,
+          "actions": 68
+        },
+        {
+          "pool": "constructed",
+          "seed": 9,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 14,
+          "actions": 125
+        },
+        {
+          "pool": "constructed",
+          "seed": 9,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 16,
+          "actions": 131
+        },
+        {
+          "pool": "constructed",
+          "seed": 10,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 9,
+          "actions": 86
+        },
+        {
+          "pool": "constructed",
+          "seed": 10,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 9,
+          "actions": 72
+        },
+        {
+          "pool": "random",
+          "seed": 1,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 25,
+          "actions": 196
+        },
+        {
+          "pool": "random",
+          "seed": 1,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 15,
+          "actions": 110
+        },
+        {
+          "pool": "random",
+          "seed": 2,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 8,
+          "actions": 136
+        },
+        {
+          "pool": "random",
+          "seed": 2,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 8,
+          "actions": 136
+        },
+        {
+          "pool": "random",
+          "seed": 3,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 7,
+          "actions": 42
+        },
+        {
+          "pool": "random",
+          "seed": 3,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 7,
+          "actions": 42
+        },
+        {
+          "pool": "random",
+          "seed": 4,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 25,
+          "actions": 279
+        },
+        {
+          "pool": "random",
+          "seed": 4,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 25,
+          "actions": 279
+        },
+        {
+          "pool": "random",
+          "seed": 5,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 5,
+          "actions": 28
+        },
+        {
+          "pool": "random",
+          "seed": 5,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 5,
+          "actions": 28
+        },
+        {
+          "pool": "random",
+          "seed": 6,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 26,
+          "actions": 205
+        },
+        {
+          "pool": "random",
+          "seed": 6,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 26,
+          "actions": 182
+        },
+        {
+          "pool": "random",
+          "seed": 7,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 13,
+          "actions": 83
+        },
+        {
+          "pool": "random",
+          "seed": 7,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 13,
+          "actions": 83
+        },
+        {
+          "pool": "random",
+          "seed": 8,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 12,
+          "actions": 92
+        },
+        {
+          "pool": "random",
+          "seed": 8,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 12,
+          "actions": 92
+        },
+        {
+          "pool": "random",
+          "seed": 9,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 94
+        },
+        {
+          "pool": "random",
+          "seed": 9,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 94
+        },
+        {
+          "pool": "random",
+          "seed": 10,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 15,
+          "actions": 239
+        },
+        {
+          "pool": "random",
+          "seed": 10,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 15,
+          "actions": 239
+        }
+      ]
+    },
+    "trainingProfileHash": "709387a5d202a7acc0b174953c86580e002fd56046a6cc99a3bf7c816ecc781a",
+    "fixed": {
+      "baseline": ".tmp/ai-v054/src/duel/native-ai.js",
+      "learning": null,
+      "matches": 80,
+      "wins": 40,
+      "losses": 40,
+      "draws": 0,
+      "winRate": 0.5,
+      "actions": 10933,
+      "maxDecisionMs": 40.24,
+      "results": [
+        {
+          "pool": "constructed",
+          "seed": 101,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 7,
+          "actions": 88
+        },
+        {
+          "pool": "constructed",
+          "seed": 101,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 7,
+          "actions": 88
+        },
+        {
+          "pool": "constructed",
+          "seed": 102,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 16,
+          "actions": 134
+        },
+        {
+          "pool": "constructed",
+          "seed": 102,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 16,
+          "actions": 134
+        },
+        {
+          "pool": "constructed",
+          "seed": 103,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 8,
+          "actions": 87
+        },
+        {
+          "pool": "constructed",
+          "seed": 103,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 8,
+          "actions": 87
+        },
+        {
+          "pool": "constructed",
+          "seed": 104,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 87
+        },
+        {
+          "pool": "constructed",
+          "seed": 104,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 87
+        },
+        {
+          "pool": "constructed",
+          "seed": 105,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 18,
+          "actions": 123
+        },
+        {
+          "pool": "constructed",
+          "seed": 105,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 16,
+          "actions": 107
+        },
+        {
+          "pool": "constructed",
+          "seed": 106,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 9,
+          "actions": 74
+        },
+        {
+          "pool": "constructed",
+          "seed": 106,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 98
+        },
+        {
+          "pool": "constructed",
+          "seed": 107,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 18,
+          "actions": 154
+        },
+        {
+          "pool": "constructed",
+          "seed": 107,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 18,
+          "actions": 154
+        },
+        {
+          "pool": "constructed",
+          "seed": 108,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 9,
+          "actions": 93
+        },
+        {
+          "pool": "constructed",
+          "seed": 108,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 9,
+          "actions": 93
+        },
+        {
+          "pool": "constructed",
+          "seed": 109,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 9,
+          "actions": 70
+        },
+        {
+          "pool": "constructed",
+          "seed": 109,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 91
+        },
+        {
+          "pool": "constructed",
+          "seed": 110,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 7,
+          "actions": 65
+        },
+        {
+          "pool": "constructed",
+          "seed": 110,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 7,
+          "actions": 65
+        },
+        {
+          "pool": "constructed",
+          "seed": 111,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 96
+        },
+        {
+          "pool": "constructed",
+          "seed": 111,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 94
+        },
+        {
+          "pool": "constructed",
+          "seed": 112,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 6,
+          "actions": 79
+        },
+        {
+          "pool": "constructed",
+          "seed": 112,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 6,
+          "actions": 63
+        },
+        {
+          "pool": "constructed",
+          "seed": 113,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 4,
+          "actions": 46
+        },
+        {
+          "pool": "constructed",
+          "seed": 113,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 6,
+          "actions": 63
+        },
+        {
+          "pool": "constructed",
+          "seed": 114,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 6,
+          "actions": 54
+        },
+        {
+          "pool": "constructed",
+          "seed": 114,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 6,
+          "actions": 54
+        },
+        {
+          "pool": "constructed",
+          "seed": 115,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 99
+        },
+        {
+          "pool": "constructed",
+          "seed": 115,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 99
+        },
+        {
+          "pool": "constructed",
+          "seed": 116,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 17,
+          "actions": 146
+        },
+        {
+          "pool": "constructed",
+          "seed": 116,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 17,
+          "actions": 146
+        },
+        {
+          "pool": "constructed",
+          "seed": 117,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 114
+        },
+        {
+          "pool": "constructed",
+          "seed": 117,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 114
+        },
+        {
+          "pool": "constructed",
+          "seed": 118,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 9,
+          "actions": 93
+        },
+        {
+          "pool": "constructed",
+          "seed": 118,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 9,
+          "actions": 93
+        },
+        {
+          "pool": "constructed",
+          "seed": 119,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 118
+        },
+        {
+          "pool": "constructed",
+          "seed": 119,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 118
+        },
+        {
+          "pool": "constructed",
+          "seed": 120,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 7,
+          "actions": 77
+        },
+        {
+          "pool": "constructed",
+          "seed": 120,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 7,
+          "actions": 77
+        },
+        {
+          "pool": "random",
+          "seed": 101,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 8,
+          "actions": 109
+        },
+        {
+          "pool": "random",
+          "seed": 101,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 8,
+          "actions": 109
+        },
+        {
+          "pool": "random",
+          "seed": 102,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 19,
+          "actions": 325
+        },
+        {
+          "pool": "random",
+          "seed": 102,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 19,
+          "actions": 325
+        },
+        {
+          "pool": "random",
+          "seed": 103,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 11,
+          "actions": 79
+        },
+        {
+          "pool": "random",
+          "seed": 103,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 11,
+          "actions": 79
+        },
+        {
+          "pool": "random",
+          "seed": 104,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 8,
+          "actions": 50
+        },
+        {
+          "pool": "random",
+          "seed": 104,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 8,
+          "actions": 50
+        },
+        {
+          "pool": "random",
+          "seed": 105,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 10,
+          "actions": 67
+        },
+        {
+          "pool": "random",
+          "seed": 105,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 10,
+          "actions": 67
+        },
+        {
+          "pool": "random",
+          "seed": 106,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 72,
+          "actions": 954
+        },
+        {
+          "pool": "random",
+          "seed": 106,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 72,
+          "actions": 954
+        },
+        {
+          "pool": "random",
+          "seed": 107,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 15,
+          "actions": 104
+        },
+        {
+          "pool": "random",
+          "seed": 107,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 15,
+          "actions": 104
+        },
+        {
+          "pool": "random",
+          "seed": 108,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 77
+        },
+        {
+          "pool": "random",
+          "seed": 108,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 77
+        },
+        {
+          "pool": "random",
+          "seed": 109,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 9,
+          "actions": 66
+        },
+        {
+          "pool": "random",
+          "seed": 109,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 66
+        },
+        {
+          "pool": "random",
+          "seed": 110,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 13,
+          "actions": 91
+        },
+        {
+          "pool": "random",
+          "seed": 110,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 13,
+          "actions": 91
+        },
+        {
+          "pool": "random",
+          "seed": 111,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 9,
+          "actions": 58
+        },
+        {
+          "pool": "random",
+          "seed": 111,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 58
+        },
+        {
+          "pool": "random",
+          "seed": 112,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 28,
+          "actions": 214
+        },
+        {
+          "pool": "random",
+          "seed": 112,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 28,
+          "actions": 214
+        },
+        {
+          "pool": "random",
+          "seed": 113,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 11,
+          "actions": 76
+        },
+        {
+          "pool": "random",
+          "seed": 113,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 11,
+          "actions": 76
+        },
+        {
+          "pool": "random",
+          "seed": 114,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 72,
+          "actions": 653
+        },
+        {
+          "pool": "random",
+          "seed": 114,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 72,
+          "actions": 538
+        },
+        {
+          "pool": "random",
+          "seed": 115,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 9,
+          "actions": 62
+        },
+        {
+          "pool": "random",
+          "seed": 115,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 62
+        },
+        {
+          "pool": "random",
+          "seed": 116,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 26,
+          "actions": 170
+        },
+        {
+          "pool": "random",
+          "seed": 116,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 26,
+          "actions": 170
+        },
+        {
+          "pool": "random",
+          "seed": 117,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 16,
+          "actions": 115
+        },
+        {
+          "pool": "random",
+          "seed": 117,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 16,
+          "actions": 115
+        },
+        {
+          "pool": "random",
+          "seed": 118,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 91
+        },
+        {
+          "pool": "random",
+          "seed": 118,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 91
+        },
+        {
+          "pool": "random",
+          "seed": 119,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 19,
+          "actions": 121
+        },
+        {
+          "pool": "random",
+          "seed": 119,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 19,
+          "actions": 121
+        },
+        {
+          "pool": "random",
+          "seed": 120,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 131
+        },
+        {
+          "pool": "random",
+          "seed": 120,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 131
+        }
+      ]
+    },
+    "learned": {
+      "baseline": ".tmp/ai-v054/src/duel/native-ai.js",
+      "learning": {
+        "training": false,
+        "games": 40
+      },
+      "matches": 80,
+      "wins": 44,
+      "losses": 36,
+      "draws": 0,
+      "winRate": 0.55,
+      "actions": 10842,
+      "maxDecisionMs": 104.05,
+      "results": [
+        {
+          "pool": "constructed",
+          "seed": 101,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 7,
+          "actions": 86
+        },
+        {
+          "pool": "constructed",
+          "seed": 101,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 20,
+          "actions": 156
+        },
+        {
+          "pool": "constructed",
+          "seed": 102,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 13,
+          "actions": 113
+        },
+        {
+          "pool": "constructed",
+          "seed": 102,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 14,
+          "actions": 120
+        },
+        {
+          "pool": "constructed",
+          "seed": 103,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 8,
+          "actions": 87
+        },
+        {
+          "pool": "constructed",
+          "seed": 103,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 8,
+          "actions": 86
+        },
+        {
+          "pool": "constructed",
+          "seed": 104,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 85
+        },
+        {
+          "pool": "constructed",
+          "seed": 104,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 85
+        },
+        {
+          "pool": "constructed",
+          "seed": 105,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 18,
+          "actions": 119
+        },
+        {
+          "pool": "constructed",
+          "seed": 105,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 16,
+          "actions": 103
+        },
+        {
+          "pool": "constructed",
+          "seed": 106,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 9,
+          "actions": 74
+        },
+        {
+          "pool": "constructed",
+          "seed": 106,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 91
+        },
+        {
+          "pool": "constructed",
+          "seed": 107,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 18,
+          "actions": 142
+        },
+        {
+          "pool": "constructed",
+          "seed": 107,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 19,
+          "actions": 168
+        },
+        {
+          "pool": "constructed",
+          "seed": 108,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 6,
+          "actions": 51
+        },
+        {
+          "pool": "constructed",
+          "seed": 108,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 9,
+          "actions": 92
+        },
+        {
+          "pool": "constructed",
+          "seed": 109,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 9,
+          "actions": 68
+        },
+        {
+          "pool": "constructed",
+          "seed": 109,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 90
+        },
+        {
+          "pool": "constructed",
+          "seed": 110,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 5,
+          "actions": 48
+        },
+        {
+          "pool": "constructed",
+          "seed": 110,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 5,
+          "actions": 50
+        },
+        {
+          "pool": "constructed",
+          "seed": 111,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 96
+        },
+        {
+          "pool": "constructed",
+          "seed": 111,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 94
+        },
+        {
+          "pool": "constructed",
+          "seed": 112,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 6,
+          "actions": 77
+        },
+        {
+          "pool": "constructed",
+          "seed": 112,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 6,
+          "actions": 65
+        },
+        {
+          "pool": "constructed",
+          "seed": 113,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 4,
+          "actions": 46
+        },
+        {
+          "pool": "constructed",
+          "seed": 113,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 6,
+          "actions": 61
+        },
+        {
+          "pool": "constructed",
+          "seed": 114,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 6,
+          "actions": 52
+        },
+        {
+          "pool": "constructed",
+          "seed": 114,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 6,
+          "actions": 54
+        },
+        {
+          "pool": "constructed",
+          "seed": 115,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 8,
+          "actions": 67
+        },
+        {
+          "pool": "constructed",
+          "seed": 115,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 96
+        },
+        {
+          "pool": "constructed",
+          "seed": 116,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 100
+        },
+        {
+          "pool": "constructed",
+          "seed": 116,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 5,
+          "actions": 56
+        },
+        {
+          "pool": "constructed",
+          "seed": 117,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 113
+        },
+        {
+          "pool": "constructed",
+          "seed": 117,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 113
+        },
+        {
+          "pool": "constructed",
+          "seed": 118,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 9,
+          "actions": 91
+        },
+        {
+          "pool": "constructed",
+          "seed": 118,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 8,
+          "actions": 85
+        },
+        {
+          "pool": "constructed",
+          "seed": 119,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 12,
+          "actions": 112
+        },
+        {
+          "pool": "constructed",
+          "seed": 119,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 12,
+          "actions": 115
+        },
+        {
+          "pool": "constructed",
+          "seed": 120,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 7,
+          "actions": 77
+        },
+        {
+          "pool": "constructed",
+          "seed": 120,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 7,
+          "actions": 77
+        },
+        {
+          "pool": "random",
+          "seed": 101,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 8,
+          "actions": 109
+        },
+        {
+          "pool": "random",
+          "seed": 101,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 8,
+          "actions": 101
+        },
+        {
+          "pool": "random",
+          "seed": 102,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 23,
+          "actions": 419
+        },
+        {
+          "pool": "random",
+          "seed": 102,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 21,
+          "actions": 367
+        },
+        {
+          "pool": "random",
+          "seed": 103,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 11,
+          "actions": 79
+        },
+        {
+          "pool": "random",
+          "seed": 103,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 11,
+          "actions": 79
+        },
+        {
+          "pool": "random",
+          "seed": 104,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 8,
+          "actions": 47
+        },
+        {
+          "pool": "random",
+          "seed": 104,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 8,
+          "actions": 50
+        },
+        {
+          "pool": "random",
+          "seed": 105,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 10,
+          "actions": 67
+        },
+        {
+          "pool": "random",
+          "seed": 105,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 10,
+          "actions": 62
+        },
+        {
+          "pool": "random",
+          "seed": 106,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 72,
+          "actions": 920
+        },
+        {
+          "pool": "random",
+          "seed": 106,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 72,
+          "actions": 971
+        },
+        {
+          "pool": "random",
+          "seed": 107,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 15,
+          "actions": 96
+        },
+        {
+          "pool": "random",
+          "seed": 107,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 15,
+          "actions": 104
+        },
+        {
+          "pool": "random",
+          "seed": 108,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 77
+        },
+        {
+          "pool": "random",
+          "seed": 108,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 70
+        },
+        {
+          "pool": "random",
+          "seed": 109,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 9,
+          "actions": 62
+        },
+        {
+          "pool": "random",
+          "seed": 109,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 66
+        },
+        {
+          "pool": "random",
+          "seed": 110,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 13,
+          "actions": 91
+        },
+        {
+          "pool": "random",
+          "seed": 110,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 13,
+          "actions": 85
+        },
+        {
+          "pool": "random",
+          "seed": 111,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 11,
+          "actions": 68
+        },
+        {
+          "pool": "random",
+          "seed": 111,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 58
+        },
+        {
+          "pool": "random",
+          "seed": 112,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 20,
+          "actions": 151
+        },
+        {
+          "pool": "random",
+          "seed": 112,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 24,
+          "actions": 184
+        },
+        {
+          "pool": "random",
+          "seed": 113,
+          "newSide": 0,
+          "winner": 1,
+          "turn": 11,
+          "actions": 72
+        },
+        {
+          "pool": "random",
+          "seed": 113,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 13,
+          "actions": 101
+        },
+        {
+          "pool": "random",
+          "seed": 114,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 72,
+          "actions": 652
+        },
+        {
+          "pool": "random",
+          "seed": 114,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 72,
+          "actions": 517
+        },
+        {
+          "pool": "random",
+          "seed": 115,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 20,
+          "actions": 153
+        },
+        {
+          "pool": "random",
+          "seed": 115,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 9,
+          "actions": 62
+        },
+        {
+          "pool": "random",
+          "seed": 116,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 27,
+          "actions": 169
+        },
+        {
+          "pool": "random",
+          "seed": 116,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 26,
+          "actions": 168
+        },
+        {
+          "pool": "random",
+          "seed": 117,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 16,
+          "actions": 115
+        },
+        {
+          "pool": "random",
+          "seed": 117,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 16,
+          "actions": 111
+        },
+        {
+          "pool": "random",
+          "seed": 118,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 91
+        },
+        {
+          "pool": "random",
+          "seed": 118,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 90
+        },
+        {
+          "pool": "random",
+          "seed": 119,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 34,
+          "actions": 220
+        },
+        {
+          "pool": "random",
+          "seed": 119,
+          "newSide": 1,
+          "winner": 1,
+          "turn": 19,
+          "actions": 121
+        },
+        {
+          "pool": "random",
+          "seed": 120,
+          "newSide": 0,
+          "winner": 0,
+          "turn": 11,
+          "actions": 131
+        },
+        {
+          "pool": "random",
+          "seed": 120,
+          "newSide": 1,
+          "winner": 0,
+          "turn": 11,
+          "actions": 125
+        }
+      ]
+    },
+    "pairedOutcomeChanges": {
+      "gainedWins": 6,
+      "lostWins": 2,
+      "unchanged": 72
+    },
+    "limitations": [
+      "Only 80 held-out matches against the previous bot; this is not statistical proof or a human Elo estimate.",
+      "Decision timings are observations from different CPU conditions, not a speed comparison or mobile performance guarantee.",
+      "No pretrained profile is included in the app; every device starts with no learned preferences.",
+      "Forecast coverage is conservative for variable Fusion materials and many rare effects. Native scripts remain the rules authority."
+    ]
+  },
+  "learning": {
+    "version": 1,
+    "minimumReviewedDuels": 2,
+    "maxContexts": 512,
+    "maxWeights": 256,
+    "maxEpisodeRecords": 256,
+    "maxFinishedIds": 512,
+    "maxScoreAdjustment": 180,
+    "candidateBand": 180,
+    "localRewardWeight": 0.55,
+    "outcomeWeight": 0.45,
+    "turnDiscount": 0.97,
+    "externalServices": false,
+    "defaultEnabled": true,
+    "completedPlayedDuelsOnly": true,
+    "hiddenOpponentIdentities": false
+  },
+  "commands": {
+    "test": "npm test",
+    "memory": "npm run test:memory",
+    "build": "npm run build",
+    "browser": "npm run test:ui",
+    "soak": "DUEL_CARD_SNAPSHOT=<cards.json> DUEL_SET_SNAPSHOT=<sets.json> AUDIT_SWEEP=0 AUDIT_GAMES=600 AUDIT_OUT=<output> node scripts/audit-duels.mjs",
+    "training": "DUEL_CARD_SNAPSHOT=<cards.json> AI_BENCH_BASELINE_PATH=<v0.5.4 worktree>/src/duel/native-ai.js AI_BENCH_SEEDS=10 AI_LEARNING_TRAIN=1 AI_LEARNING_OUT=<profile.json> node scripts/bench-ai.mjs",
+    "fixed": "DUEL_CARD_SNAPSHOT=<cards.json> AI_BENCH_BASELINE_PATH=<v0.5.4 worktree>/src/duel/native-ai.js AI_BENCH_SEEDS=20 AI_BENCH_SEED_START=101 node scripts/bench-ai.mjs",
+    "learned": "DUEL_CARD_SNAPSHOT=<cards.json> AI_BENCH_BASELINE_PATH=<v0.5.4 worktree>/src/duel/native-ai.js AI_BENCH_SEEDS=20 AI_BENCH_SEED_START=101 AI_LEARNING_PROFILE=<profile.json> node scripts/bench-ai.mjs"
+  }
+}

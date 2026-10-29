@@ -19,18 +19,44 @@ add('Enemy Controller','controller',{intent:'position'});
 add('Mask of Weakness','debuff',{atk:-700,temporary:true,intent:'debuff'});add('Shrink','halve',{intent:'debuff'});
 add('Tribe-Infecting Virus','tribe',{discard:1,intent:'tribe'});
 add('Pot of Greed','draw',{amount:2});add('Graceful Charity','draw',{amount:3,discardAfter:2});
+add('Polymerization','fusion',{intent:'fusion'});add('Power Bond','fusion',{intent:'fusion',machine:true,doubleATK:true,endDamage:true});
 add('Cannon Soldier','burn',{amount:500,tribute:1});add('Amazon Archer','burn',{amount:1200,tribute:2});add('Catapult Turtle','burn',{halfTributeATK:true,tribute:1,once:true});
 add('Zaborg the Thunder Monarch','body',{summonRemove:true,mandatory:true});add('Mobius the Frost Monarch','body',{summonBackrow:2});
 add('Goblin Attack Force|Spear Dragon|Giant Orc','body',{afterAttack:'defense'});
 export function decisionGuidance(card,detail=''){
+  if(/^Armed Dragon LV[57]$/.test(card?.name||'')&&!/Special Summon/i.test(detail))return {model:card.name.endsWith('5')?'remove':'armedWipe',intent:card.name.endsWith('5')?'removal':'armedWipe',sendMonster:true,faceUp:true};
   const guide=guides.get(card?.name)||{};
   if(guide.attackLock&&/attack again|second attack/i.test(detail))return {};
   if(guide.model==='controller')return /control/i.test(detail)?{model:'control',tribute:1,borrowed:true}:{model:'position',intent:'position'};
   return guide;
 }
+// The core decides when an upgrade is legal; this identifies its replacement
+// body and preserves the higher LV in hand before that activation window.
+export function levelUpgrade(card,phase){
+  const name=card?.name||'',level=Number(name.match(/ LV(\d+)$/)?.[1]);if(!level)return null;
+  const target=[...String(card.desc||'').matchAll(/Special Summon (?:1 )?"([^"]+ LV(\d+))"/g)].find(m=>m[1].replace(/ LV\d+$/,'')===name.replace(/ LV\d+$/,'')&&Number(m[2])>level);
+  if(!target)return null;
+  const timing=/During|At/i.test(card.desc)&&/Standby Phase/.test(card.desc)?'standby':'end';
+  return !phase||phase===timing?{name:target[1],phase:timing}:null;
+}
+export function fusionOptions(state,side,source){
+  const p=state.players[side],guide=decisionGuidance(source),pool=[...p.hand,...p.monsters.filter(Boolean)],options=[];
+  for(const fusion of p.extra){
+    if(guide.machine&&fusion.card.race!=='Machine')continue;
+    const names=[...(fusion.card.desc||'').split(/\r?\n/)[0].matchAll(/"([^"]+)"/g)].map(m=>m[1]);
+    // Variable, alternative and substitute materials remain native-only; do not
+    // invent a cheap Fusion from an incomplete quoted material list.
+    if(names.length<2||/\bor\b|\d\+|or more|Fusion Material substitute/i.test((fusion.card.desc||'').split(/\r?\n/)[0]))continue;
+    const used=new Set(),materials=[];
+    for(const name of names){const c=pool.find(c=>c.card.name===name&&!used.has(c.uid));if(!c)break;used.add(c.uid);materials.push(c);}
+    if(materials.length===names.length)options.push({fusion,materials});
+  }
+  return options;
+}
 export function retentionBonus(state,side,instance){
   if(!instance?.card||instance.hidden)return 0;
   const p=state.players[side],name=instance.card.name,available=[...p.hand,...p.monsters.filter(Boolean)];
+  if(p.monsters.some(c=>c?.faceUp&&levelUpgrade(c.card)?.name===name))return 850;
   const fusionReady=available.some(c=>c.card.name==='Polymerization')||p.field?.card.name==='Fusion Gate';
   if(fusionReady)for(const fusion of p.extra){
     const parts=[...(fusion.card.desc||'').split(/\r?\n/)[0].matchAll(/"([^"]+)"/g)].map(m=>m[1]);

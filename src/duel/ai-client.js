@@ -14,7 +14,7 @@ export function createAIClient({WorkerClass=globalThis.Worker,timeout=1400,choos
   let worker=null,pending=null,serial=0;
   const stop=()=>{worker?.terminate();worker=null;};
   const finish=(action)=>{if(!pending)return;const p=pending;pending=null;clearTimeout(p.timer);p.resolve(action);};
-  const fallback=()=>{if(!pending)return;const {state,side}=pending;stop();let action=null;try{action=choose(state,side,{planning:false});}catch{/* The caller can retry the current legal prompt. */}finish(action);};
+  const fallback=()=>{if(!pending)return;const {state,side,learning}=pending;stop();let action=null;try{action=choose(state,side,{planning:false,learning});}catch{/* The caller can retry the current legal prompt. */}finish(action);};
   const start=()=>{
     if(!WorkerClass)return false;
     try{worker=new WorkerClass(new URL('./ai-worker.js',import.meta.url),{type:'module'});
@@ -24,13 +24,14 @@ export function createAIClient({WorkerClass=globalThis.Worker,timeout=1400,choos
   };
   const cancel=()=>{if(pending){stop();finish(null);}};
   return {
-    decide(state,side=1){
+    decide(state,side=1,{learning=null}={}){
       cancel();const view=decisionPayload(state,side);
+      if(learning)learning={version:learning.version,games:learning.games,weights:learning.weights,contexts:learning.contexts};
       return new Promise(resolve=>{
-        pending={request:++serial,state:view,side,resolve,timer:null};
+        pending={request:++serial,state:view,side,learning,resolve,timer:null};
         if(!worker&&!start()){fallback();return;}
         pending.timer=setTimeout(fallback,timeout);
-        try{worker.postMessage({request:pending.request,state:view,side});}catch{fallback();}
+        try{worker.postMessage({request:pending.request,state:view,side,learning});}catch{fallback();}
       });
     },
     cancel,

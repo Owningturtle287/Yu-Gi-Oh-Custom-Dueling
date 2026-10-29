@@ -344,7 +344,7 @@ test('Solo setup has one AI policy and saves independent eligibility, speed, sav
     $('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
     let config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
     assert.equal(config.sides[1].race,'Warrior');assert.equal(config.sides[1].traps,false);assert.equal(config.sides[0].race,'');
-    $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-badge').textContent,/Strategic AI/);assert.equal($('.solo-ai-badge').title,'Always full strength');change('#solo-ai-speed','relaxed');change('#solo-first','you');
+    $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-badge').textContent,/Strategic AI/);assert.equal($('.solo-ai-badge').title,'AI learning on this device');change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
     assert.equal(app.state.route,'decks');assert.match($('[data-action="return-solo"]').textContent,/Save & return/);
     assert.equal(app.state.draft.releaseYear,2006);assert.equal(app.state.filtered.length,24);

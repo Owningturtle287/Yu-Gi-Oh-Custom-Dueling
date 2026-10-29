@@ -120,7 +120,7 @@ try{
    if(source==='set')await capture(`ai-deck-size-${width}x${height}`);
   }
   await page.locator('#solo-size').selectOption('30');await page.locator('[data-duel-tab="0"]').click();await page.locator('[data-duel-tab="1"]').click();assert.equal(await page.locator('#solo-size').inputValue(),'30');
-  for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
+  for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();if(tab===2)await capture(`match-settings-${width}x${height}`);await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
   assert.match(await page.locator('.duel-era').textContent(),/2006 LAB/);
   await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2006-12-31');
   const duelTaxonomy=await page.locator('#duel-filters').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);assert.deepEqual(duelTaxonomy,taxonomy);
@@ -132,6 +132,11 @@ try{
   await page.locator('[name="cutoff"]').selectOption('2005-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();
   assert.match(await page.locator('.solo-filter-summary').textContent(),/2005 & earlier/);
   await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption('2006-12-31');await page.locator('#duel-filters button[type="submit"]').click();
+  await page.locator('[data-duel-tab="2"]').click();await page.locator('.solo-ai-badge[data-duel="learning"]').click();
+  await visibleControls('.duel-learning-body button');await capture(`learning-settings-${width}x${height}`);
+  await page.locator('[data-duel="learning-toggle"]').click();assert.match(await page.locator('.solo-ai-badge').textContent(),/Fixed/);
+  await page.locator('[data-duel="learning-toggle"]').click();await page.locator('[data-duel="learning-reset-confirm"]').click();await visibleControls('.duel-learning-body button');await page.locator('[data-duel="learning-reset"]').click();
+  await visibleControls('.duel-learning-body button');await page.locator('.duel-learning-body .primary[data-action="close"]').click();
   await capture(`setup-${width}x${height}`);
   if([844,390,568,320].includes(width)){
    // Mount the production controller at a genuine native Type/Attribute prompt.
@@ -157,7 +162,7 @@ try{
     await visibleControls('.duel-choice-footer button');await capture(`${card.replaceAll(' ','-')}-${width}x${height}`);
     await page.locator('.duel-choice-footer button[data-choice-tone="teal"]').click();await page.waitForFunction(()=>!window.layoutRig.getMatch().choice);
     await page.locator('[data-duel="duel-menu"]').click();await page.locator('.duel-menu-body').waitFor();
-    await visibleControls('.duel-menu-body button,.duel-menu-body select');await capture(`pause-${width}x${height}`);
+    await capture(`pause-${width}x${height}`);await visibleControls('.duel-menu-body button,.duel-menu-body select');
     await page.locator('.duel-menu-body .primary[data-action="close"]').click();
     await page.evaluate(()=>window.layoutRig.destroy());
    }

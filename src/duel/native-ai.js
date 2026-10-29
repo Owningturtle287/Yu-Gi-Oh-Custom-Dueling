@@ -1,6 +1,9 @@
-import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,combatTraits,resourceValue,costValue} from './ai-knowledge.js';
+import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,combatTraits,resourceValue,costValue,drawValue,handRemovalOptions} from './ai-knowledge.js';
 import {battleOutcome,battlePlan,incomingDamage} from './ai-combat.js';
 import {planTurn} from './ai-turn.js';
+import {attackAllowed,effectDamage} from './ai-physics.js';
+import {decisionGuidance,levelUpgrade,fusionOptions} from './ai-guidance.js';
+import {learningAdjustment} from './ai-learning.js';
 
 const harmful=new Set(['removal','backrowRemoval','bounce','harmfulEquip','graveRemoval']);
 const valuable=new Set(['draw','search','recover','revive','control','wipe','mirror','negate']);
@@ -50,6 +53,9 @@ function targetScore(ctx,a,intent,source){
   const c=locate(ctx.s,a.target);if(!c)return -1000;
   const where=zoneOf(ctx.s,c.uid),own=where?.side===ctx.side;
   if(intent==='cost'||intent==='material'){
+    if(decisionGuidance(source?.card).sendMonster&&where?.zone==='hand'&&ctx.s.choice?.selectionType!=='select_tribute'){
+      return handRemovalOptions(ctx.s,ctx.side,source).find(row=>row.cost.uid===c.uid)?.score??-100000;
+    }
     if(source?.card.name==='Catapult Turtle'&&attack(c)/2>=ctx.foe.lp)return 10000-costValue(ctx.s,ctx.side,c);
     return -costValue(ctx.s,ctx.side,c);
   }
@@ -112,7 +118,7 @@ function targetScore(ctx,a,intent,source){
 }
 function choiceIntent(ctx){
   const c=ctx.s.choice,hint=(c?.purpose||c?.title||'').toLowerCase(),source=sourceFor(ctx.s),profile=effectProfile(source?.card,c?.effectText);
-  if(c?.selectionType==='select_tribute'||/discard|release|tribute|fusion material|ritual|remove counter|cost/.test(hint))return {intent:'cost',source,profile};
+  if(c?.selectionType==='select_tribute'||/discard|release|tribute|fusion material|ritual|remove counter|cost/.test(hint)||decisionGuidance(source?.card).sendMonster&&/tograve|to grave/.test(hint))return {intent:'cost',source,profile};
   if(c?.selectionType==='select_sum')return {intent:'material',source,profile};
   if(/spsummon|special summon/.test(hint))return {intent:'revive',source,profile};
   if(/atohand|add to hand/.test(hint))return {intent:'search',source,profile};
@@ -121,24 +127,25 @@ function choiceIntent(ctx){
   if(/remove|banish/.test(hint)&&profile.intent==='graveBoost')return {intent:'cost',source,profile};
   return {intent:profile.intent,source,profile};
 }
-function fusionUtility(ctx){
-  const pool=[...ctx.p.hand,...monsters(ctx.p)],scores=[];
-  for(const fusion of ctx.p.extra){
-    const names=[...(fusion.card.desc||'').split(/\r?\n/)[0].matchAll(/"([^"]+)"/g)].map(m=>m[1]);if(names.length<2)continue;
-    const used=new Set(),materials=[];
-    for(const name of names){const found=pool.filter(c=>c.card.name===name&&!used.has(c.uid)).sort((a,b)=>costValue(ctx.s,ctx.side,a)-costValue(ctx.s,ctx.side,b))[0];if(!found)break;used.add(found.uid);materials.push(found);}
-    if(materials.length!==names.length)continue;
-    const remaining=ctx.p.monsters.map(c=>used.has(c?.uid)?null:c),slot=remaining.indexOf(null);if(slot<0)continue;
-    remaining[slot]={...fusion,faceUp:true,position:'attack',controller:ctx.side};
-    const next=withPlayers(ctx.s,ctx.side,{monsters:remaining});
-    const gain=canBattle(ctx.s)?Math.min(16000,battlePlan(next,ctx.side).score-ctx.plan.score):0;
-    scores.push(valueOf(ctx,fusion)+gain*.6-materials.reduce((n,c)=>n+costValue(ctx.s,ctx.side,c)*.8,0)-350);
-  }
-  return scores.length?Math.max(...scores):-200;
+function fusionUtility(ctx,sourceCard){
+  const guide=decisionGuidance(sourceCard);
+  const scores=fusionOptions(ctx.s,ctx.side,sourceCard).map(({fusion,materials})=>{
+    const used=new Set(materials.map(c=>c.uid)),remaining=ctx.p.monsters.map(c=>used.has(c?.uid)?null:c),slot=remaining.indexOf(null);if(slot<0)return -10000;
+    const placed={...fusion,faceUp:true,position:'attack',controller:ctx.side,currentStats:{atk:attack(fusion)*(guide.doubleATK?2:1),def:defense(fusion)}};remaining[slot]=placed;
+    const next=withPlayers(ctx.s,ctx.side,{monsters:remaining}),battle=canBattle(ctx.s)?battlePlan(next,ctx.side):{score:0};
+    const debt=guide.endDamage?effectDamage(next,ctx.side,Math.max(0,fusion.card.atk||0)):0,winning=battle.score>=100000&&!backrow(ctx.foe).some(c=>c.hidden);
+    if(debt>=ctx.p.lp&&!winning)return -100000;
+    return valueOf(ctx,placed)+Math.min(16000,battle.score-ctx.plan.score)*.6-materials.reduce((n,c)=>n+costValue(ctx.s,ctx.side,c)*.8,0)-debt*.35-350;
+  });
+  return scores.length?Math.max(...scores):-1000;
 }
+
 function scoreEffect(ctx,a){
   const {s,side,p,foe}=ctx,source=locate(s,a.uid)||{uid:a.uid,card:a.effectCard},card=source.card;if(!card)return -200;
   const profile=effectProfile(card,a.effectText),intent=profile.intent,opp=monsters(foe),ours=monsters(p);
+  const upgrade=levelUpgrade(card,s.phase);
+  if(upgrade&&(s.choice?.phaseTrigger||s.window?.phaseTrigger)&&/Special Summon/i.test(a.effectText||s.choice?.effectText||''))return 900;
+  if(decisionGuidance(card,a.effectText).sendMonster)return (handRemovalOptions(s,side,source)[0]?.score??-100000)-180;
   const cost=Number(text(card).match(/pay (\d+) (?:LP|Life Points)/i)?.[1]||0);
   if(cost>=p.lp&&cost||profile.self>=p.lp)return -100000;
   let utility;
@@ -153,7 +160,8 @@ function scoreEffect(ctx,a){
     }
     case 'archfiendSupport':utility=monsters(p).some(c=>/Archfiend/.test(c.card.name))?900:-100;break;
     case 'draw':utility=p.deck.length>2?1500:-2000;break;
-    case 'fusionCheat':utility=p.lp>5000&&p.extra.length&&canBattle(s)?150:-800;break;
+    case 'fusionCheat':utility=p.lp>5000&&p.extra.some(c=>attackAllowed(s,side,c))&&canBattle(s)?150:-2500;break;
+    case 'fusion':utility=fusionUtility(ctx,card);break;
     case 'tribe':{
       const races=[...new Set(opp.filter(c=>c.faceUp&&!c.hidden).map(c=>c.card.race))];
       utility=Math.max(-1000,...races.map(r=>opp.filter(c=>c.faceUp&&c.card.race===r).reduce((n,c)=>n+valueOf(ctx,c),0)-ours.filter(c=>c.faceUp&&c.card.race===r).reduce((n,c)=>n+valueOf(ctx,c),0)))-150;break;
@@ -205,13 +213,15 @@ function scoreEffect(ctx,a){
     case 'chaosWipe':utility=aliveCards(foe).length+foe.hand.length>aliveCards(p).length+p.hand.length?1000:-1000;break;
     case 'tributeBurn':{
       const catapult=card.name==='Catapult Turtle',amazon=['Amazon Archer','Amazoness Archer'].includes(card.name),amount=catapult?Math.max(0,...ours.map(attack))/2:amazon?1200:profile.amount||500,weak=Math.min(Infinity,...ours.map(c=>costValue(s,side,c)));
+      if(!effectDamage(s,1-side,amount)){utility=-100000;break;}
       const total=catapult?amount:Math.floor(ours.length/(amazon?2:1))*amount;
       utility=foe.lp<=total&&ours.length?100000:amount*.35-weak-100;break;
     }
     case 'tributeBoost':utility=-500;break;
     case 'graveBoost':utility=canBattle(s)&&opp.length&&attack(source)<Math.max(...opp.map(body))?450:-300;break;
     case 'burn':{
-      const amount=profile.amount||(card.name==='Just Desserts'?opp.length*500:500);
+      const amount=effectDamage(s,1-side,profile.amount||(card.name==='Just Desserts'?opp.length*500:500));
+      if(!amount){utility=-100000;break;}
       utility=foe.lp<=amount?100000:amount*.35-80;break;
     }
     case 'heal':utility=p.lp<2000?600:p.lp<4000?180:-120;break;
@@ -234,9 +244,10 @@ function scoreEffect(ctx,a){
       const attackEvent=s.pending,attacker=locate(s,attackEvent?.uid),defender=locate(s,attackEvent?.target);
       if(attackEvent?.kind!=='attack'||attacker?.controller===side){utility=-1000;break;}
       const o=battleOutcome(s,1-side,attacker,defender),damage=o.enemyDamage;
-      utility=intent==='cylinder'?attack(attacker)*.5+200:intent==='battleHeal'?attack(attacker)*.25-50:damage*.6+(o.enemyLost?valueOf(ctx,defender):0)-180;
+      const reflected=intent==='cylinder'?effectDamage(s,1-side,attack(attacker)):0;
+      utility=intent==='cylinder'?reflected*.5+damage*.6+(o.enemyLost?valueOf(ctx,defender):0)-180:intent==='battleHeal'?attack(attacker)*.25-50:damage*.6+(o.enemyLost?valueOf(ctx,defender):0)-180;
       if(damage>=p.lp)utility+=100000;
-      if(intent==='cylinder'&&attack(attacker)>=foe.lp)utility+=100000;
+      if(intent==='cylinder'&&reflected>=foe.lp)utility+=100000;
       break;
     }
     case 'tokens':utility=incomingDamage(s,side)>=p.lp?100000:!ours.length&&s.active!==side?700:canBattle(s)?-400:!ours.length?100:-400;break;
@@ -251,7 +262,7 @@ function scoreEffect(ctx,a){
       const match=c=>profile.races?.includes(c.card.race)||profile.attribute===c.card.attribute||profile.defenseOnly;
       utility=(ours.filter(match).length-opp.filter(match).length)*260-(p.field?300:0)-80;break;
     }
-    case 'summon':utility=['Polymerization','Fusion Gate'].includes(card.name)?fusionUtility(ctx):ours.length>=4?-200:monsters(foe).length||ours.length<2?650:100;break;
+    case 'summon':utility=['Polymerization','Fusion Gate'].includes(card.name)?fusionUtility(ctx,card):ours.length>=4?-200:monsters(foe).length||ours.length<2?650:100;break;
     case 'graveRemoval':utility=foe.grave.some(monster)?300:-400;break;
     case 'continuous':utility=zoneOf(s,source.uid)?.zone==='spells'&&source.faceUp?-100:300;break;
     default:{
@@ -318,6 +329,12 @@ function makeContext(state,side,actions){
 function scoreChoice(ctx,a){
   const c=ctx.s.choice||{};const {source,intent}=ctx.selection??=choiceIntent(ctx);
   if(a.reset)return -100000;
+  if(c.ordering&&a.target){
+    let target=locate(ctx.s,a.target);const revealed=c.ordering.cards?.find(x=>x.uid===a.target)?.card;
+    if(target?.hidden&&revealed)target={...target,hidden:false,card:revealed};
+    const own=target?.controller===ctx.side,top=c.ordering.kind==='deck-top',bottom=c.ordering.kind==='deck-bottom';
+    if(top||bottom)return drawValue(ctx.s,ctx.side,target)*(top===own?1:-1);
+  }
   if(c.attackUid){
     if(a.cancel)return c.attackRequired?-Infinity:0;
     if(a.finish)return Infinity;
@@ -368,6 +385,7 @@ function scoreChoice(ctx,a){
   }
   if(a.number!==undefined){
     const number=Number(a.number);
+    if(source?.card.name==='Big Eye')return number;
     if(/Reasoning/.test(source?.card.name||''))return number===4?100:0;
     if(/Wall of Revealing Light/.test(source?.card.name||'')){const threat=Math.max(0,...monsters(ctx.foe).map(attack)),amount=number;return amount>=threat&&amount<ctx.p.lp?500-amount*.01:-amount;}
     return -number*.001;
@@ -377,7 +395,7 @@ function scoreChoice(ctx,a){
   }
   return 0;
 }
-export function rankAIActions(state,side=1,{planning=true,weights}={}){
+export function rankAIActions(state,side=1,{planning=true,weights,learning}={}){
   const actions=state.actions?.[side]||[];if(!actions.length)return [];
   const ctx=makeContext(state,side,actions);
   const score=a=>{
@@ -398,7 +416,7 @@ export function rankAIActions(state,side=1,{planning=true,weights}={}){
       // second copy of a persistent card for no reason.
       if(backrow(ctx.p).length>=4)return -40;
       if(c.card.type==='Trap Card')return 170+(valuable.has(effectProfile(c.card).intent)?60:0);
-      return c.card.race==='Quick-Play'&&ctx.s.phase!=='main1'?90:-30;
+      return c.card.race==='Quick-Play'&&(ctx.s.phase!=='main1'||ctx.s.turn===1)?90:-30;
     }
     if(a.type==='POSITION'||a.type==='FLIP')return positionScore(ctx,a);
     if(a.type==='DISCARD')return -costValue(ctx.s,side,locate(ctx.s,a.uid));
@@ -410,6 +428,13 @@ export function rankAIActions(state,side=1,{planning=true,weights}={}){
     for(const row of ranked){const projection=plan.roots.get(row.action.id);if(!projection)continue;
       row.projection=projection;row.score=projection.lethal?200000+Math.min(5000,row.score)-projection.steps*20:row.score+Math.max(-1800,Math.min(5000,projection.delta))*.45;
     }
+    ranked.sort((a,b)=>b.score-a.score||a.index-b.index);
+  }
+  // Learned preferences resolve comparable choices. They cannot revive a hard
+  // rejection, override a forced completion, or replace an emergency/lethal.
+  const top=ranked[0]?.score;
+  if(Number.isFinite(top)&&top<10000&&learning?.games>=2){
+    for(const row of ranked)if(Number.isFinite(row.score)&&row.score>-5000&&top-row.score<=180){row.baseScore=row.score;row.learnedAdjustment=learningAdjustment(learning,ctx.s,side,row.action);row.score+=row.learnedAdjustment;}
     ranked.sort((a,b)=>b.score-a.score||a.index-b.index);
   }
   return ranked;
