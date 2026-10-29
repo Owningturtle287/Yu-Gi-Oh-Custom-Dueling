@@ -314,6 +314,8 @@ try{
   await page.locator('[data-duel="response-activate"]').click();await page.waitForFunction(()=>window.layoutRig.getMatch().players[1].lp===7200&&document.querySelector('.duel-arena').dataset.moving==='false');
   assert.match(await page.locator('.duel-feedback-host').textContent(),/AI −800/);await capture(`chain-receipt-${width}x${height}`);
   await visibleControls('.duel-chain-open');await page.locator('.duel-chain-open').click();await visibleControls('.duel-chain-body button');assert.equal(await page.locator('.duel-chain-list li').count(),2);await capture(`chain-history-${width}x${height}`);await page.locator('[data-duel="chain-back"]').click();
+  // Cancel the production receipt before the standalone animation fixtures.
+  await page.evaluate(()=>window.dispatchEvent(new Event('resize')));
   for(const kind of ['damage','gain','chain']){
    await page.evaluate(async kind=>{
     window.feedbackRig?.cancel();const {createFeedbackPlayer}=await import('/src/duel/feedback.js');window.feedbackRig=createFeedbackPlayer({getRoot:()=>document.querySelector('.duel-feedback-host'),getArena:()=>document.querySelector('#main'),hold:10000});

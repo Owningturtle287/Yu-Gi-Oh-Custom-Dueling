@@ -22,3 +22,7 @@ Twenty regression cases exercise native rules, replay checkpoints, presentation 
 - A native loss followed by recovery at zero net change preserves both intermediate totals. Counter direction, cancellation, static receipts, response inspection and completed-chain history are checked.
 
 The Chromium layout suite additionally checks the response/chain viewer, central loss/recovery/resolving panels and their geometry in all eight supported viewport fixtures, including rotated phones. Its card-image responses are mocked for layout QA; native regression outcomes use the real pinned rules pack.
+
+The full local regression suite passes 507 tests. The static PWA builds, and 120 runtime create/destroy cycles retain zero callbacks. A 200-duel native soak completed 25,471 actions and 20 saved-replay checks with no failures or timeouts. It used AI deck sizes 30/40/60 and encountered 429 effect names. No new all-card script sweep was necessary because this release changes event accounting and presentation, leaving the pinned card scripts intact.
+
+Reproduce with `npm test`, `npm run build`, `npm run test:memory`, and `npm run test:ui`. The soak uses `DUEL_CARD_SNAPSHOT=<cards.json> DUEL_SET_SNAPSHOT=<sets.json> AUDIT_SWEEP=0 AUDIT_GAMES=200 AUDIT_OUT=<output> node scripts/audit-duels.mjs` with the same frozen snapshots as the v0.5.5 audit.
