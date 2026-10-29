@@ -1,0 +1,2002 @@
+{
+  "data": [
+    {
+      "id": 94004268,
+      "name": "Amazoness Swords Woman",
+      "type": "Effect Monster",
+      "desc": "Your opponent takes any battle damage you would have taken from battles involving this card instead.",
+      "race": "Warrior",
+      "attribute": "EARTH",
+      "atk": 1500,
+      "def": 1600,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 94004268,
+          "image_url": "https://images.ygoprodeck.com/images/cards/94004268.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/94004268.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/94004268.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 221047,
+          "viewsweek": 829,
+          "upvotes": 15,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-10-10",
+          "ocg_date": "2002-09-19",
+          "konami_id": 5284,
+          "has_effect": 1,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 55821894,
+      "name": "Amazoness Fighter",
+      "type": "Effect Monster",
+      "desc": "You take no battle damage from attacks involving this card.",
+      "race": "Warrior",
+      "attribute": "EARTH",
+      "atk": 1500,
+      "def": 1300,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 55821894,
+          "image_url": "https://images.ygoprodeck.com/images/cards/55821894.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/55821894.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/55821894.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 152932,
+          "viewsweek": 484,
+          "upvotes": 7,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-10-10",
+          "ocg_date": "2002-09-19",
+          "konami_id": 5295,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 9637706,
+      "name": "Des Wombat",
+      "type": "Effect Monster",
+      "desc": "Any damage to you from a card effect becomes 0.",
+      "race": "Beast",
+      "attribute": "EARTH",
+      "atk": 1600,
+      "def": 300,
+      "level": 3,
+      "card_images": [
+        {
+          "id": 9637706,
+          "image_url": "https://images.ygoprodeck.com/images/cards/9637706.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/9637706.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/9637706.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 130050,
+          "viewsweek": 483,
+          "upvotes": 5,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2005-05-28",
+          "ocg_date": "2005-02-24",
+          "konami_id": 6340,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 85742772,
+      "name": "Gravity Bind",
+      "type": "Trap Card",
+      "desc": "Level 4 or higher monsters cannot attack.",
+      "race": "Continuous",
+      "card_images": [
+        {
+          "id": 85742772,
+          "image_url": "https://images.ygoprodeck.com/images/cards/85742772.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/85742772.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/85742772.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 707767,
+          "viewsweek": 2396,
+          "upvotes": 8,
+          "downvotes": 7,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-10-20",
+          "ocg_date": "2000-12-14",
+          "konami_id": 5134,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 44656491,
+      "name": "Messenger of Peace",
+      "type": "Spell Card",
+      "desc": "Monsters with 1500 or more ATK cannot declare an attack. Once per turn, during your Standby Phase, pay 100 LP or destroy this card.",
+      "race": "Continuous",
+      "card_images": [
+        {
+          "id": 44656491,
+          "image_url": "https://images.ygoprodeck.com/images/cards/44656491.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/44656491.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/44656491.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 586285,
+          "viewsweek": 2125,
+          "upvotes": 7,
+          "downvotes": 4,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-09-16",
+          "ocg_date": "2000-07-13",
+          "konami_id": 4938,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 53239672,
+      "name": "Spirit Barrier",
+      "type": "Trap Card",
+      "desc": "While you control a monster, you take no battle damage.",
+      "race": "Continuous",
+      "card_images": [
+        {
+          "id": 53239672,
+          "image_url": "https://images.ygoprodeck.com/images/cards/53239672.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53239672.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/53239672.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 235866,
+          "viewsweek": 822,
+          "upvotes": 7,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6142,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 2851070,
+      "name": "Reflect Bounder",
+      "type": "Effect Monster",
+      "desc": "Before damage calculation, if this card is being attacked by an opponent's monster, and was in face-up Attack Position at the start of the Damage Step: Inflict damage to your opponent equal to the attacking monster's ATK. If you do, after damage calculation: Destroy this card.",
+      "race": "Machine",
+      "attribute": "LIGHT",
+      "atk": 1700,
+      "def": 1000,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 2851070,
+          "image_url": "https://images.ygoprodeck.com/images/cards/2851070.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/2851070.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/2851070.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 332712,
+          "viewsweek": 1393,
+          "upvotes": 6,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-12-01",
+          "ocg_date": "2002-11-21",
+          "konami_id": 4762,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 30606547,
+      "name": "The Dark Door",
+      "type": "Spell Card",
+      "desc": "Only 1 monster can attack during each Battle Phase.",
+      "race": "Continuous",
+      "card_images": [
+        {
+          "id": 30606547,
+          "image_url": "https://images.ygoprodeck.com/images/cards/30606547.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/30606547.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/30606547.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 325134,
+          "viewsweek": 946,
+          "upvotes": 6,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-03-01",
+          "ocg_date": "2001-07-21",
+          "konami_id": 5225,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 82732705,
+      "name": "Skill Drain",
+      "type": "Trap Card",
+      "desc": "Activate by paying 1000 LP. Negate the effects of all face-up monsters while they are face-up on the field (but their effects can still be activated).",
+      "race": "Continuous",
+      "card_images": [
+        {
+          "id": 82732705,
+          "image_url": "https://images.ygoprodeck.com/images/cards/82732705.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/82732705.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/82732705.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 2125243,
+          "viewsweek": 2701,
+          "upvotes": 73,
+          "downvotes": 26,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-12-01",
+          "ocg_date": "2002-11-21",
+          "konami_id": 5740,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 76103675,
+      "name": "Sparks",
+      "type": "Spell Card",
+      "desc": "Inflict 200 points of damage to your opponent's Life Points.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 76103675,
+          "image_url": "https://images.ygoprodeck.com/images/cards/76103675.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/76103675.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/76103675.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 316862,
+          "viewsweek": 756,
+          "upvotes": 8,
+          "downvotes": 4,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-02-04",
+          "konami_id": 4349,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 16768387,
+      "name": "Big Eye",
+      "type": "Flip Effect Monster",
+      "desc": "FLIP: Look at up to 5 cards from the top of your Deck, then place them on the top of the Deck in any order.",
+      "race": "Fiend",
+      "attribute": "DARK",
+      "atk": 1200,
+      "def": 1000,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 16768387,
+          "image_url": "https://images.ygoprodeck.com/images/cards/16768387.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/16768387.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/16768387.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 307029,
+          "viewsweek": 758,
+          "upvotes": 5,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "1999-09-23",
+          "konami_id": 4177,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 980973,
+      "name": "Armed Dragon LV3",
+      "type": "Effect Monster",
+      "desc": "During your Standby Phase: You can send this card to the GY; Special Summon 1 \"Armed Dragon LV5\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "WIND",
+      "atk": 1200,
+      "def": 900,
+      "level": 3,
+      "card_images": [
+        {
+          "id": 980973,
+          "image_url": "https://images.ygoprodeck.com/images/cards/980973.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/980973.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/980973.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 329398,
+          "viewsweek": 926,
+          "upvotes": 11,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6105,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 46384672,
+      "name": "Armed Dragon LV5",
+      "type": "Effect Monster",
+      "desc": "You can send 1 monster from your hand to the GY, then target 1 monster your opponent controls with ATK less than or equal to the sent monster's ATK; destroy that target. During the End Phase, if this card destroyed a monster by battle this turn: You can send this card to the GY; Special Summon 1 \"Armed Dragon LV7\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "WIND",
+      "atk": 2400,
+      "def": 1700,
+      "level": 5,
+      "card_images": [
+        {
+          "id": 46384672,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46384672.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46384672.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46384672.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 352613,
+          "viewsweek": 968,
+          "upvotes": 11,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6106,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 73879377,
+      "name": "Armed Dragon LV7",
+      "type": "Effect Monster",
+      "desc": "Cannot be Normal Summoned/Set. Must be Special Summoned by \"Armed Dragon LV5\". You can send 1 monster from your hand to the GY; destroy all monsters your opponent controls with ATK less than or equal to that sent monster's ATK.",
+      "race": "Dragon",
+      "attribute": "WIND",
+      "atk": 2800,
+      "def": 1000,
+      "level": 7,
+      "card_images": [
+        {
+          "id": 73879377,
+          "image_url": "https://images.ygoprodeck.com/images/cards/73879377.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/73879377.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/73879377.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 233524,
+          "viewsweek": 651,
+          "upvotes": 13,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6107,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 75830094,
+      "name": "Horus the Black Flame Dragon LV4",
+      "type": "Effect Monster",
+      "desc": "Control of this face-up card cannot switch. During the End Phase, if this card destroyed a monster by battle this turn: You can send this face-up card to the Graveyard; Special Summon 1 \"Horus the Black Flame Dragon LV6\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "FIRE",
+      "atk": 1600,
+      "def": 1000,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 75830094,
+          "image_url": "https://images.ygoprodeck.com/images/cards/75830094.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/75830094.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/75830094.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 185519,
+          "viewsweek": 693,
+          "upvotes": 4,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6098,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 11224103,
+      "name": "Horus the Black Flame Dragon LV6",
+      "type": "Effect Monster",
+      "desc": "This card is unaffected by Spell effects. During the End Phase, if this card destroyed a monster by battle this turn: You can send this face-up card to the Graveyard; Special Summon 1 \"Horus the Black Flame Dragon LV8\" from your hand or Deck.",
+      "race": "Dragon",
+      "attribute": "FIRE",
+      "atk": 2300,
+      "def": 1600,
+      "level": 6,
+      "card_images": [
+        {
+          "id": 11224103,
+          "image_url": "https://images.ygoprodeck.com/images/cards/11224103.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/11224103.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/11224103.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 347339,
+          "viewsweek": 1328,
+          "upvotes": 5,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6099,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 48229808,
+      "name": "Horus the Black Flame Dragon LV8",
+      "type": "Effect Monster",
+      "desc": "Cannot be Normal Summoned/Set. Must be Special Summoned by \"Horus the Black Flame Dragon LV6\", and cannot be Special Summoned by other ways. During either player's turn, when a Spell Card is activated: You can negate the activation, and if you do, destroy it. You must control this face-up card to activate and to resolve this effect.",
+      "race": "Dragon",
+      "attribute": "FIRE",
+      "atk": 3000,
+      "def": 1800,
+      "level": 8,
+      "card_images": [
+        {
+          "id": 48229808,
+          "image_url": "https://images.ygoprodeck.com/images/cards/48229808.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/48229808.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/48229808.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 206062,
+          "viewsweek": 567,
+          "upvotes": 8,
+          "downvotes": 4,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6100,
+          "has_effect": 1,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 89631139,
+      "name": "Blue-Eyes White Dragon",
+      "type": "Normal Monster",
+      "desc": "This legendary dragon is a powerful engine of destruction. Virtually invincible, very few have faced this awesome creature and lived to tell the tale.",
+      "race": "Dragon",
+      "attribute": "LIGHT",
+      "atk": 3000,
+      "def": 2500,
+      "level": 8,
+      "card_images": [
+        {
+          "id": 89631139,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631139.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631139.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631139.jpg"
+        },
+        {
+          "id": 89631140,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631140.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631140.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631140.jpg"
+        },
+        {
+          "id": 89631141,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631141.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631141.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631141.jpg"
+        },
+        {
+          "id": 89631142,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631142.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631142.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631142.jpg"
+        },
+        {
+          "id": 89631143,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631143.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631143.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631143.jpg"
+        },
+        {
+          "id": 89631144,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631144.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631144.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631144.jpg"
+        },
+        {
+          "id": 89631145,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631145.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631145.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631145.jpg"
+        },
+        {
+          "id": 89631146,
+          "image_url": "https://images.ygoprodeck.com/images/cards/89631146.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/89631146.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/89631146.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 4062657,
+          "viewsweek": 7865,
+          "upvotes": 423,
+          "downvotes": 154,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Blue-Eyes White Dragon",
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-06",
+          "konami_id": 4007,
+          "has_effect": 0,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 23995348,
+      "name": "Blue-Eyes Ultimate Dragon",
+      "type": "Fusion Monster",
+      "desc": "\"Blue-Eyes White Dragon\" + \"Blue-Eyes White Dragon\" + \"Blue-Eyes White Dragon\"",
+      "race": "Dragon",
+      "attribute": "LIGHT",
+      "atk": 4500,
+      "def": 3800,
+      "level": 12,
+      "card_images": [
+        {
+          "id": 23995348,
+          "image_url": "https://images.ygoprodeck.com/images/cards/23995348.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/23995348.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/23995348.jpg"
+        },
+        {
+          "id": 23995346,
+          "image_url": "https://images.ygoprodeck.com/images/cards/23995346.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/23995346.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/23995346.jpg"
+        },
+        {
+          "id": 23995347,
+          "image_url": "https://images.ygoprodeck.com/images/cards/23995347.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/23995347.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/23995347.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 1437032,
+          "viewsweek": 6742,
+          "upvotes": 3,
+          "downvotes": 0,
+          "formats": [
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Blue-Eyes Ultimate Dragon",
+          "tcg_date": "2006-01-01",
+          "ocg_date": "1999-08-26",
+          "konami_id": 4386,
+          "has_effect": 0,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 69015963,
+      "name": "Cyber-Stein",
+      "type": "Effect Monster",
+      "desc": "You can pay 5000 LP; Special Summon 1 Fusion Monster from your Extra Deck in Attack Position.",
+      "race": "Machine",
+      "attribute": "DARK",
+      "atk": 700,
+      "def": 500,
+      "level": 2,
+      "card_images": [
+        {
+          "id": 69015963,
+          "image_url": "https://images.ygoprodeck.com/images/cards/69015963.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/69015963.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/69015963.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 469994,
+          "viewsweek": 1454,
+          "upvotes": 13,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-12-04",
+          "ocg_date": "1999-12-01",
+          "konami_id": 4426,
+          "has_effect": 1,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 22046459,
+      "name": "Megamorph",
+      "type": "Spell Card",
+      "desc": "While your LP is lower than your opponent's, the equipped monster's ATK becomes double its original ATK. While your LP is higher, the equipped monster's ATK becomes half its original ATK.",
+      "race": "Equip",
+      "card_images": [
+        {
+          "id": 22046459,
+          "image_url": "https://images.ygoprodeck.com/images/cards/22046459.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/22046459.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/22046459.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 420641,
+          "viewsweek": 1387,
+          "upvotes": 8,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-09-16",
+          "ocg_date": "2000-07-13",
+          "konami_id": 4663,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 11384280,
+      "name": "Cannon Soldier",
+      "type": "Effect Monster",
+      "desc": "You can Tribute 1 monster; inflict 500 damage to your opponent.",
+      "race": "Machine",
+      "attribute": "DARK",
+      "atk": 1400,
+      "def": 1300,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 11384280,
+          "image_url": "https://images.ygoprodeck.com/images/cards/11384280.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/11384280.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/11384280.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 403997,
+          "viewsweek": 1495,
+          "upvotes": 8,
+          "downvotes": 144,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "1999-11-18",
+          "konami_id": 4518,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 15025844,
+      "name": "Mystical Elf",
+      "type": "Normal Monster",
+      "desc": "A delicate elf that lacks offense, but has a terrific defense backed by mystical power.",
+      "race": "Spellcaster",
+      "attribute": "LIGHT",
+      "atk": 800,
+      "def": 2000,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 15025844,
+          "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/15025844.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 379704,
+          "viewsweek": 1367,
+          "upvotes": 19,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-27",
+          "konami_id": 4008,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 69140098,
+      "name": "Gemini Elf",
+      "type": "Normal Monster",
+      "desc": "Elf twins that alternate their attacks.",
+      "race": "Spellcaster",
+      "attribute": "EARTH",
+      "atk": 1900,
+      "def": 900,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 69140098,
+          "image_url": "https://images.ygoprodeck.com/images/cards/69140098.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/69140098.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/69140098.jpg"
+        },
+        {
+          "id": 69140099,
+          "image_url": "https://images.ygoprodeck.com/images/cards/69140099.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/69140099.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/69140099.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 337738,
+          "viewsweek": 1220,
+          "upvotes": 16,
+          "downvotes": 6,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Gemini Elf",
+          "tcg_date": "2003-03-01",
+          "ocg_date": "1999-08-26",
+          "konami_id": 4538,
+          "has_effect": 0,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 13179332,
+      "name": "Charcoal Inpachi",
+      "type": "Normal Monster",
+      "desc": "A wicked wooden spirit that has burned out. The barbecue grilled with this charcoal is so awesome that everybody thinks it's priceless.",
+      "race": "Pyro",
+      "attribute": "FIRE",
+      "atk": 100,
+      "def": 2100,
+      "level": 1,
+      "card_images": [
+        {
+          "id": 13179332,
+          "image_url": "https://images.ygoprodeck.com/images/cards/13179332.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/13179332.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/13179332.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 116989,
+          "viewsweek": 357,
+          "upvotes": 3,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2004-10-01",
+          "ocg_date": "2004-05-27",
+          "konami_id": 6093,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 14087893,
+      "name": "Book of Moon",
+      "type": "Spell Card",
+      "desc": "Target 1 face-up monster on the field; change that target to face-down Defense Position.",
+      "race": "Quick-Play",
+      "card_images": [
+        {
+          "id": 14087893,
+          "image_url": "https://images.ygoprodeck.com/images/cards/14087893.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/14087893.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/14087893.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 1923624,
+          "viewsweek": 7837,
+          "upvotes": 32,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-07-18",
+          "ocg_date": "2002-03-21",
+          "konami_id": 5432,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 5318639,
+      "name": "Mystical Space Typhoon",
+      "type": "Spell Card",
+      "desc": "Target 1 Spell/Trap on the field; destroy that target.",
+      "race": "Quick-Play",
+      "card_images": [
+        {
+          "id": 5318639,
+          "image_url": "https://images.ygoprodeck.com/images/cards/5318639.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/5318639.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/5318639.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 3179648,
+          "viewsweek": 20027,
+          "upvotes": 41,
+          "downvotes": 12,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-09-16",
+          "ocg_date": "2000-04-20",
+          "konami_id": 4909,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 55144522,
+      "name": "Pot of Greed",
+      "type": "Spell Card",
+      "desc": "Draw 2 cards.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 55144522,
+          "image_url": "https://images.ygoprodeck.com/images/cards/55144522.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/55144522.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/55144522.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 2274165,
+          "viewsweek": 8968,
+          "upvotes": 134,
+          "downvotes": 28,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-05-27",
+          "konami_id": 4844,
+          "has_effect": 1,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 44095762,
+      "name": "Mirror Force",
+      "type": "Trap Card",
+      "desc": "When an opponent's monster declares an attack: Destroy all your opponent's Attack Position monsters.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 44095762,
+          "image_url": "https://images.ygoprodeck.com/images/cards/44095762.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/44095762.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/44095762.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 2834385,
+          "viewsweek": 10081,
+          "upvotes": 63,
+          "downvotes": 16,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-06-26",
+          "ocg_date": "2000-01-27",
+          "konami_id": 4887,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 83764719,
+      "name": "Monster Reborn",
+      "type": "Spell Card",
+      "desc": "Target 1 monster in either GY; Special Summon it.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 83764719,
+          "image_url": "https://images.ygoprodeck.com/images/cards/83764719.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/83764719.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/83764719.jpg"
+        },
+        {
+          "id": 83764718,
+          "image_url": "https://images.ygoprodeck.com/images/cards/83764718.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/83764718.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/83764718.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "staple": "Yes",
+          "views": 5831456,
+          "viewsweek": 8526,
+          "upvotes": 254,
+          "downvotes": 41,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "Speed Duel",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Monster Reborn",
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-27",
+          "konami_id": 4842,
+          "has_effect": 1,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 70781052,
+      "name": "Summoned Skull",
+      "type": "Normal Monster",
+      "desc": "A fiend with dark powers for confusing the enemy. Among the Fiend-Type monsters, this monster boasts considerable force.\n\n(This card is always treated as an \"Archfiend\" card.)",
+      "race": "Fiend",
+      "attribute": "DARK",
+      "atk": 2500,
+      "def": 1200,
+      "level": 6,
+      "card_images": [
+        {
+          "id": 70781052,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70781052.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70781052.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70781052.jpg"
+        },
+        {
+          "id": 70781053,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70781053.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70781053.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70781053.jpg"
+        },
+        {
+          "id": 70781054,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70781054.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70781054.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70781054.jpg"
+        },
+        {
+          "id": 70781055,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70781055.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70781055.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70781055.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 877293,
+          "viewsweek": 3652,
+          "upvotes": 72,
+          "downvotes": 11,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Speed Duel",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Summoned Skull",
+          "tcg_date": "2001-01-01",
+          "ocg_date": "1999-07-22",
+          "konami_id": 4028,
+          "has_effect": 0,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 46986420,
+      "name": "Dark Magician",
+      "type": "Normal Monster",
+      "desc": "''The ultimate wizard in terms of attack and defense.''",
+      "race": "Spellcaster",
+      "attribute": "DARK",
+      "atk": 2500,
+      "def": 2100,
+      "level": 7,
+      "card_images": [
+        {
+          "id": 46986420,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986420.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986420.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986420.jpg"
+        },
+        {
+          "id": 46986421,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986421.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986421.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986421.jpg"
+        },
+        {
+          "id": 46986414,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986414.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986414.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986414.jpg"
+        },
+        {
+          "id": 46986415,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986415.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986415.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986415.jpg"
+        },
+        {
+          "id": 46986416,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986416.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986416.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986416.jpg"
+        },
+        {
+          "id": 46986417,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986417.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986417.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986417.jpg"
+        },
+        {
+          "id": 46986418,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986418.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986418.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986418.jpg"
+        },
+        {
+          "id": 46986419,
+          "image_url": "https://images.ygoprodeck.com/images/cards/46986419.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986419.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/46986419.jpg"
+        },
+        {
+          "id": 36996508,
+          "image_url": "https://images.ygoprodeck.com/images/cards/36996508.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/36996508.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/36996508.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 4666738,
+          "viewsweek": 9292,
+          "upvotes": 1,
+          "downvotes": 0,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Dark Magician",
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-02-04",
+          "konami_id": 4041,
+          "has_effect": 0,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 72302403,
+      "name": "Swords of Revealing Light",
+      "type": "Spell Card",
+      "desc": "After this card's activation, it remains on the field, but you must destroy it during the End Phase of your opponent's 3rd turn. When this card is activated: If your opponent controls a face-down monster, flip all monsters they control face-up. While this card is face-up on the field, your opponent's monsters cannot declare an attack.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 72302403,
+          "image_url": "https://images.ygoprodeck.com/images/cards/72302403.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/72302403.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/72302403.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 1825201,
+          "viewsweek": 5665,
+          "upvotes": 30,
+          "downvotes": 7,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-27",
+          "konami_id": 4354,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 12607053,
+      "name": "Waboku",
+      "type": "Trap Card",
+      "desc": "You take no battle damage from your opponent's monsters this turn. Your monsters cannot be destroyed by battle this turn.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 12607053,
+          "image_url": "https://images.ygoprodeck.com/images/cards/12607053.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/12607053.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/12607053.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 763494,
+          "viewsweek": 3255,
+          "upvotes": 14,
+          "downvotes": 2,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-29",
+          "ocg_date": "1999-12-16",
+          "konami_id": 4886,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 12580477,
+      "name": "Raigeki",
+      "type": "Spell Card",
+      "desc": "Destroy all monsters your opponent controls.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 12580477,
+          "image_url": "https://images.ygoprodeck.com/images/cards/12580477.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/12580477.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/12580477.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "staple": "Yes",
+          "views": 3344684,
+          "viewsweek": 8659,
+          "upvotes": 558,
+          "downvotes": 10,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Edison",
+            "Common Charity",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-06",
+          "konami_id": 4343,
+          "has_effect": 1,
+          "md_rarity": "Ultra Rare"
+        }
+      ]
+    },
+    {
+      "id": 37630732,
+      "name": "Power Bond",
+      "type": "Spell Card",
+      "desc": "Fusion Summon 1 Machine Fusion Monster from your Extra Deck, using monsters from your hand or field as Fusion Material, and it gains ATK equal to its original ATK. During the End Phase of the turn this card is activated, you take damage equal to the amount of ATK gained from this effect at the time of the Summon.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 37630732,
+          "image_url": "https://images.ygoprodeck.com/images/cards/37630732.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/37630732.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/37630732.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 792338,
+          "viewsweek": 1701,
+          "upvotes": 12,
+          "downvotes": 3,
+          "formats": [
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2005-08-06",
+          "ocg_date": "2005-05-26",
+          "konami_id": 6398,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 24094653,
+      "name": "Polymerization",
+      "type": "Spell Card",
+      "desc": "Fusion Summon 1 Fusion Monster from your Extra Deck, using monsters from your hand or field as Fusion Material.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 24094653,
+          "image_url": "https://images.ygoprodeck.com/images/cards/24094653.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/24094653.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/24094653.jpg"
+        },
+        {
+          "id": 27847700,
+          "image_url": "https://images.ygoprodeck.com/images/cards/27847700.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/27847700.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/27847700.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 4143235,
+          "viewsweek": 13991,
+          "upvotes": 69,
+          "downvotes": 16,
+          "formats": [
+            "GOAT",
+            "Speed Duel",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "beta_id": 24094654,
+          "treated_as": "Polymerization",
+          "tcg_date": "2002-03-08",
+          "ocg_date": "1999-03-06",
+          "konami_id": 4837,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 35809262,
+      "name": "Elemental HERO Flame Wingman",
+      "type": "Fusion Monster",
+      "desc": "\"Elemental HERO Avian\" + \"Elemental HERO Burstinatrix\"\nMust be Fusion Summoned and cannot be Special Summoned by other ways. When this card destroys a monster by battle and sends it to the Graveyard: Inflict damage to your opponent equal to the ATK of the destroyed monster in the Graveyard.",
+      "race": "Warrior",
+      "attribute": "WIND",
+      "atk": 2100,
+      "def": 1200,
+      "level": 6,
+      "card_images": [
+        {
+          "id": 35809262,
+          "image_url": "https://images.ygoprodeck.com/images/cards/35809262.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/35809262.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/35809262.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 352395,
+          "viewsweek": 885,
+          "upvotes": 63,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Edison",
+            "Common Charity",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2005-05-28",
+          "ocg_date": "2004-12-18",
+          "konami_id": 6344,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 21844576,
+      "name": "Elemental HERO Avian",
+      "type": "Normal Monster",
+      "desc": "A winged Elemental HERO who wheels through the sky and manipulates the wind. His signature move, Featherbreak, gives villainy a blow from sky-high.",
+      "race": "Warrior",
+      "attribute": "WIND",
+      "atk": 1000,
+      "def": 1000,
+      "level": 3,
+      "card_images": [
+        {
+          "id": 21844576,
+          "image_url": "https://images.ygoprodeck.com/images/cards/21844576.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/21844576.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/21844576.jpg"
+        },
+        {
+          "id": 21844577,
+          "image_url": "https://images.ygoprodeck.com/images/cards/21844577.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/21844577.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/21844577.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 393004,
+          "viewsweek": 989,
+          "upvotes": 20,
+          "downvotes": 17,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Elemental HERO Avian",
+          "tcg_date": "2005-05-28",
+          "ocg_date": "2004-12-18",
+          "konami_id": 6310,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 58932615,
+      "name": "Elemental HERO Burstinatrix",
+      "type": "Normal Monster",
+      "desc": "A flame manipulator who was the first Elemental HERO woman. Her Burstfire burns away villainy.",
+      "race": "Warrior",
+      "attribute": "FIRE",
+      "atk": 1200,
+      "def": 800,
+      "level": 3,
+      "card_images": [
+        {
+          "id": 58932615,
+          "image_url": "https://images.ygoprodeck.com/images/cards/58932615.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/58932615.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/58932615.jpg"
+        },
+        {
+          "id": 58932616,
+          "image_url": "https://images.ygoprodeck.com/images/cards/58932616.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/58932616.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/58932616.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 396557,
+          "viewsweek": 1094,
+          "upvotes": 279,
+          "downvotes": 3,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Elemental HERO Burstinatrix",
+          "tcg_date": "2005-05-28",
+          "ocg_date": "2004-12-18",
+          "konami_id": 6311,
+          "has_effect": 0,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 74157028,
+      "name": "Cyber Twin Dragon",
+      "type": "Fusion Monster",
+      "desc": "\"Cyber Dragon\" + \"Cyber Dragon\"\r\nA Fusion Summon of this card can only be done with the above Fusion Materials. This card can make a second attack during each Battle Phase.",
+      "race": "Machine",
+      "attribute": "LIGHT",
+      "atk": 2800,
+      "def": 2100,
+      "level": 8,
+      "card_images": [
+        {
+          "id": 74157028,
+          "image_url": "https://images.ygoprodeck.com/images/cards/74157028.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/74157028.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/74157028.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 511163,
+          "viewsweek": 1303,
+          "upvotes": 26,
+          "downvotes": 2,
+          "formats": [
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2005-08-06",
+          "ocg_date": "2005-05-26",
+          "konami_id": 6396,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    },
+    {
+      "id": 70095154,
+      "name": "Cyber Dragon",
+      "type": "Effect Monster",
+      "desc": "If only your opponent controls a monster, you can Special Summon this card (from your hand).",
+      "race": "Machine",
+      "attribute": "LIGHT",
+      "atk": 2100,
+      "def": 1600,
+      "level": 5,
+      "card_images": [
+        {
+          "id": 70095154,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70095154.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70095154.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70095154.jpg"
+        },
+        {
+          "id": 70095155,
+          "image_url": "https://images.ygoprodeck.com/images/cards/70095155.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/70095155.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/70095155.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 1703239,
+          "viewsweek": 5419,
+          "upvotes": 102,
+          "downvotes": 34,
+          "formats": [
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "treated_as": "Cyber Dragon",
+          "tcg_date": "2005-08-06",
+          "ocg_date": "2005-05-26",
+          "konami_id": 6390,
+          "has_effect": 1,
+          "md_rarity": "Rare"
+        }
+      ]
+    },
+    {
+      "id": 86188410,
+      "name": "Elemental HERO Wildheart",
+      "type": "Effect Monster",
+      "desc": "This card is unaffected by Trap effects.",
+      "race": "Warrior",
+      "attribute": "EARTH",
+      "atk": 1500,
+      "def": 1600,
+      "level": 4,
+      "card_images": [
+        {
+          "id": 86188410,
+          "image_url": "https://images.ygoprodeck.com/images/cards/86188410.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/86188410.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/86188410.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 324892,
+          "viewsweek": 882,
+          "upvotes": 9,
+          "downvotes": 3,
+          "formats": [
+            "Duel Links",
+            "Speed Duel",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2005-11-05",
+          "ocg_date": "2005-08-11",
+          "konami_id": 6478,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 74388798,
+      "name": "Silent Swordsman LV5",
+      "type": "Effect Monster",
+      "desc": "Unaffected by your opponent's Spell effects. During your next Standby Phase after this card inflicts battle damage to your opponent by a direct attack: You can send this face-up card to the Graveyard; Special Summon 1 \"Silent Swordsman LV7\" from your hand or Deck.",
+      "race": "Warrior",
+      "attribute": "LIGHT",
+      "atk": 2300,
+      "def": 1000,
+      "level": 5,
+      "card_images": [
+        {
+          "id": 74388798,
+          "image_url": "https://images.ygoprodeck.com/images/cards/74388798.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/74388798.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/74388798.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 190138,
+          "viewsweek": 567,
+          "upvotes": 3,
+          "downvotes": 1,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2005-02-26",
+          "ocg_date": "2004-11-25",
+          "konami_id": 6164,
+          "has_effect": 1,
+          "md_rarity": "Common"
+        }
+      ]
+    },
+    {
+      "id": 62279055,
+      "name": "Magic Cylinder",
+      "type": "Trap Card",
+      "desc": "When an opponent's monster declares an attack: Target the attacking monster; negate the attack, and if you do, inflict damage to your opponent equal to its ATK.",
+      "race": "Normal",
+      "card_images": [
+        {
+          "id": 62279055,
+          "image_url": "https://images.ygoprodeck.com/images/cards/62279055.jpg",
+          "image_url_small": "https://images.ygoprodeck.com/images/cards_small/62279055.jpg",
+          "image_url_cropped": "https://images.ygoprodeck.com/images/cards_cropped/62279055.jpg"
+        }
+      ],
+      "misc_info": [
+        {
+          "views": 1316151,
+          "viewsweek": 4042,
+          "upvotes": 23,
+          "downvotes": 9,
+          "formats": [
+            "GOAT",
+            "OCG GOAT",
+            "Duel Links",
+            "Common Charity",
+            "Edison",
+            "TCG",
+            "OCG",
+            "Master Duel"
+          ],
+          "tcg_date": "2003-03-01",
+          "ocg_date": "2001-01-18",
+          "konami_id": 5124,
+          "has_effect": 1,
+          "md_rarity": "Super Rare"
+        }
+      ]
+    }
+  ]
+}

@@ -132,6 +132,11 @@ try{
   await page.locator('[name="cutoff"]').selectOption('2005-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();
   assert.match(await page.locator('.solo-filter-summary').textContent(),/2005 & earlier/);
   await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption('2006-12-31');await page.locator('#duel-filters button[type="submit"]').click();
+  await page.locator('[data-duel-tab="2"]').click();await page.locator('.solo-ai-badge[data-duel="learning"]').click();
+  await visibleControls('.duel-learning-body button');await capture(`learning-settings-${width}x${height}`);
+  await page.locator('[data-duel="learning-toggle"]').click();assert.match(await page.locator('.solo-ai-badge').textContent(),/Fixed/);
+  await page.locator('[data-duel="learning-toggle"]').click();await page.locator('[data-duel="learning-reset-confirm"]').click();await visibleControls('.duel-learning-body button');await page.locator('[data-duel="learning-reset"]').click();
+  await visibleControls('.duel-learning-body button');await page.locator('.duel-learning-body .primary[data-action="close"]').click();
   await capture(`setup-${width}x${height}`);
   if([844,390,568,320].includes(width)){
    // Mount the production controller at a genuine native Type/Attribute prompt.

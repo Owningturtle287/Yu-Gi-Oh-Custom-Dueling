@@ -1,7 +1,7 @@
 // Decision hints, never rulings. The native core alone supplies legal actions
 // and resolves effects. Unknown text receives a conservative, typed fallback.
 import {memoryFor,knownCard} from './ai-memory.js';
-import {decisionGuidance,retentionBonus} from './ai-guidance.js';
+import {decisionGuidance,retentionBonus,levelUpgrade} from './ai-guidance.js';
 import {effects} from './catalog.js';
 import {currentCardData} from './card-view.js';
 export const AI_NAME='Strategic AI';
@@ -126,4 +126,27 @@ export function costValue(state,side,card){
   value+=retentionBonus(state,side,card);
   const copies=state.players[side].hand.filter(c=>c.card.id===card.card.id).length;if(copies>1)value*=.8;
   return value;
+}
+export function drawValue(state,side,card){
+  if(!card||card.hidden)return 0;
+  const p=state.players[side],foe=state.players[1-side],profile=effectProfile(card.card);
+  let value=resourceValue(state,side,card);
+  if(monster(card)){
+    const tributes=(card.card.level||4)>6?2:(card.card.level||4)>4?1:0;
+    if(tributes>monsters(p).length)value-=800;
+    if(!tributes&&!monsters(p).length)value+=300;
+    if(/Ritual|Fusion/.test(card.card.type)||/Cannot be Normal Summoned|Must (?:first )?be Special Summoned/.test(text(card)))value-=450;
+    if(p.monsters.some(c=>c?.faceUp&&levelUpgrade(c.card)?.name===card.card.name))value+=500;
+  }
+  if(profile.intent==='draw'&&p.deck.length>3)value+=450;
+  if(['removal','wipe','control'].includes(profile.intent)&&!monsters(foe).length)value-=400;
+  if(profile.intent==='revive'&&!state.players.some(q=>q.grave.some(monster)))value-=550;
+  return value;
+}
+export function handRemovalOptions(state,side,source){
+  const targets=monsters(state.players[1-side]).filter(c=>c.faceUp&&!c.hidden),all=source?.card?.name==='Armed Dragon LV7';
+  return state.players[side].hand.filter(monster).map(cost=>{
+    const victims=targets.filter(c=>attack(c)<=attack(cost)),values=victims.map(c=>resourceValue(state,side,c));
+    return {cost,victims,score:!victims.length?-100000:(all?values.reduce((n,v)=>n+v,0):Math.max(...values))-costValue(state,side,cost)*.95};
+  }).sort((a,b)=>b.score-a.score);
 }

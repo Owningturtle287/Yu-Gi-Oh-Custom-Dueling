@@ -1,12 +1,14 @@
 import {hiddenBeliefs} from './ai-memory.js';
 import {locate,attack,defense,monsters,backrow,combatTraits,resourceValue} from './ai-knowledge.js';
+import {attackAllowed,attackLimit,effectDamage,battleDamage} from './ai-physics.js';
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 
 // A bounded combat search, not a second rules engine. Candidate declarations
 // still come from the core. Replan after every response/stat change/attack.
 export function battleOutcome(state,side,attacker,target){
   const at=combatTraits(attacker),dt=combatTraits(target),foe=state.players[1-side];
-  let atk=attack(attacker),ownDamage=0,enemyDamage=0,ownLost=false,enemyLost=false;
+  let atk=attack(attacker),ownDamage=0,enemyDamage=0,ownLost=false,enemyLost=false,effectOwnDamage=0;
+  if(!attackAllowed(state,side,attacker))return {ownDamage:0,enemyDamage:0,ownLost:false,enemyLost:false,uncertainty:0,value:-100000,legal:false};
   if(backrow(foe).some(c=>c.faceUp&&!c.disabled&&c.card.name==='Mirror Wall'))atk=Math.floor(atk/2);
   let uncertainty=0;
   if(!target)enemyDamage=atk;
@@ -21,7 +23,7 @@ export function battleOutcome(state,side,attacker,target){
     if(!defending&&delta===0)enemyLost=!dt.indestructible;
     if(delta>0&&(!defending||at.pierce))enemyDamage=delta;
     if(delta<0)ownDamage=-delta;
-    if(dt.reflect)ownDamage+=atk;
+    if(dt.reflect)effectOwnDamage=effectDamage(state,side,atk);
     if(dt.revenge&&enemyLost)ownLost=true;
     if(at.revenge&&ownLost)enemyLost=true;
     if(dt.bounce)ownLost=true; // lost tempo, conservatively valued as losing field material
@@ -36,9 +38,11 @@ export function battleOutcome(state,side,attacker,target){
     }
   }
   if(at.halfDamage)enemyDamage=Math.floor(enemyDamage/2);
+  ({own:ownDamage,enemy:enemyDamage}=battleDamage(state,side,attacker,target,ownDamage,enemyDamage));
   const protectedSide=who=>(state.turnEffects||[]).some(e=>e.side===who&&e.name==='Waboku');
   if(protectedSide(1-side)){enemyDamage=0;enemyLost=false;hiddenGain=0;}
   if(protectedSide(side)){ownDamage=0;ownLost=false;}
+  ownDamage+=effectOwnDamage;
   let value=(target?.hidden?hiddenGain:enemyLost?resourceValue(state,side,target):0)-(ownLost?resourceValue(state,side,attacker):0);
   value+=enemyDamage*.38-ownDamage*.6-uncertainty;
   if(target&&!enemyLost&&!ownLost&&!enemyDamage&&!ownDamage)value-=35;
@@ -47,9 +51,9 @@ export function battleOutcome(state,side,attacker,target){
 export function battlePlan(state,side,{first=null,targets=null,available=null,width=36,maxNodes=6000}={}){
   const p=state.players[side],foe=state.players[1-side];
   const options=available||state.battleOptions?.length&&state.battleOptions||monsters(p).filter(c=>c.faceUp&&c.position==='attack').map(c=>({uid:c.uid,canDirect:combatTraits(c).direct}));
-  const fighters=options.map(o=>({card:locate(state,o.uid),direct:o.canDirect})).filter(o=>o.card&&o.card.position==='attack');
+  const fighters=options.map(o=>({card:locate(state,o.uid),direct:o.canDirect})).filter(o=>o.card&&o.card.position==='attack'&&attackAllowed(state,side,o.card));
   const enemies=monsters(foe),enemyByUID=new Map(enemies.map(c=>[c.uid,c]));
-  const maxDepth=Math.min(7,fighters.reduce((n,f)=>n+Math.min(2,combatTraits(f.card).attacks),0));
+  const maxDepth=Math.min(7,attackLimit(state),fighters.reduce((n,f)=>n+Math.min(2,combatTraits(f.card).attacks),0));
   const start={remaining:fighters.map(f=>({uid:f.card.uid,count:Math.max(1,Math.min(2,combatTraits(f.card).attacks)-(state.attacksUsed?.[f.card.uid]||0))})),enemies:enemies.map(c=>c.uid),lp:p.lp,enemyLP:foe.lp,score:0,uncertain:false,moves:[]};
   let frontier=[start],best=start,nodes=0;const roots=new Map(),outcomes=new Map();
   search:for(let depth=0;depth<maxDepth&&frontier.length;depth++){
@@ -85,7 +89,7 @@ export function battlePlan(state,side,{first=null,targets=null,available=null,wi
   return {score:best.score,moves:best.moves,first:best.moves[0]||null,roots,nodes};
 }
 export function incomingDamage(state,side){
-  const p=state.players[side],foe=state.players[1-side],ours=monsters(p),theirs=monsters(foe).filter(c=>c.faceUp);
+  const p=state.players[side],foe=state.players[1-side],ours=monsters(p),theirs=monsters(foe).filter(c=>c.faceUp&&attackAllowed(state,1-side,c));
   if(!ours.length)return theirs.reduce((n,c)=>n+attack(c),0);
   return theirs.reduce((n,c)=>n+Math.max(0,...ours.map(target=>{
     const o=battleOutcome(state,1-side,c,target);return o.enemyDamage;
