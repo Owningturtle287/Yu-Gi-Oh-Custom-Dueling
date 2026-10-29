@@ -313,7 +313,7 @@ try{
   await page.locator('.duel-response-chain').click();await visibleControls('.duel-chain-body button');assert.equal(await page.locator('.duel-chain-list li').count(),1);await page.locator('[data-duel="chain-back"]').click();
   await page.locator('[data-duel="response-activate"]').click();await page.waitForFunction(()=>window.layoutRig.getMatch().players[1].lp===7200&&document.querySelector('.duel-arena').dataset.moving==='false');
   assert.match(await page.locator('.duel-feedback-host').textContent(),/AI −800/);await capture(`chain-receipt-${width}x${height}`);
-  await visibleControls('.duel-chain-open');await page.locator('.duel-chain-open').click();await visibleControls('.duel-chain-body button');assert.equal(await page.locator('.duel-chain-list li').count(),2);await capture(`chain-history-${width}x${height}`);await page.locator('[data-duel="chain-back"]').click();
+  await visibleControls('.duel-chain-open');await page.locator('.duel-chain-open').click();await visibleControls('.duel-chain-body button');assert.equal(await page.locator('.duel-chain-list li').count(),2);await capture(`chain-history-${width}x${height}`);await page.locator('[data-duel="chain-back"]').click();assert.equal(await page.locator('#modal').evaluate(m=>m.open),false);
   // Cancel the production receipt before the standalone animation fixtures.
   await page.evaluate(()=>window.dispatchEvent(new Event('resize')));
   for(const kind of ['damage','gain','chain']){
@@ -321,7 +321,7 @@ try{
     window.feedbackRig?.cancel();const {createFeedbackPlayer}=await import('/src/duel/feedback.js');window.feedbackRig=createFeedbackPlayer({getRoot:()=>document.querySelector('.duel-feedback-host'),getArena:()=>document.querySelector('#main'),hold:10000});
     const {state}=await import('/src/app.js');const event=kind==='chain'?{type:'chain',stage:'resolving',link:4,total:4,side:0,card:state.cards.find(c=>c.name==='Accumulated Fortune')}:{type:'life',side:kind==='gain'?1:0,before:8000,after:kind==='gain'?9000:6800,delta:kind==='gain'?1000:-1200,amount:kind==='gain'?1000:1200,kind,source:kind==='gain'?'Chain Healing':'Chain Strike',chainLink:2};window.feedbackWork=window.feedbackRig.play([event]);
    },kind);
-   await page.locator('.duel-feedback-panel').waitFor();await page.locator('.duel-feedback-panel').evaluate(p=>Promise.all(p.getAnimations().map(a=>a.finished)));
+   assert.equal(await page.locator('#modal').evaluate(m=>m.open),false,'Feedback is unobscured by a dialog');await page.locator('.duel-feedback-panel').waitFor();await page.locator('.duel-feedback-panel').evaluate(p=>Promise.all(p.getAnimations().map(a=>a.finished)));
    const geometry=await page.locator('.duel-feedback-panel').evaluate(async p=>{const {localRect}=await import('/src/duel/viewport.js'),host=p.parentElement,r=localRect(p,host);return {x:r.left+r.width/2,y:r.top+r.height/2,w:host.clientWidth,h:host.clientHeight,overflow:p.scrollHeight-p.clientHeight};});
    assert.ok(Math.abs(geometry.x-geometry.w/2)<2&&Math.abs(geometry.y-geometry.h/2)<2,JSON.stringify(geometry));assert.ok(geometry.overflow<=1,JSON.stringify(geometry));await capture(`feedback-${kind}-${width}x${height}`);
   }

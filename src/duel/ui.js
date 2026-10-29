@@ -623,7 +623,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     select.onchange=event=>{config.aiSpeed=event.target.value;persist();schedule();};
   }
   function showChain(){
-    const summary=chainSummary(match);if(!summary)return;chainReturnResponse=!!modal.querySelector('.duel-response-body');
+    const summary=chainSummary(match);if(!summary)return;chainReturnResponse=modal.open&&!!modal.querySelector('.duel-response-body')&&!!responseOffer(match,legalActions(match,0));
     showDialog(`${header(`Chain · ${summary.total} link${summary.total===1?'':'s'}`)}<p>${summary.completed?'Finished chain. The newest link resolved first.':`Newest link resolves first. Your next activation would be Link ${summary.next}.`}</p><ol class="duel-chain-list">${summary.links.map(link=>`<li><strong>${link.link}</strong><div><b>${escape(link.name)}</b><small>${link.side===0?'You':'AI'} · ${escape(link.status)}${link.link===1?' · resolves last':''}</small></div></li>`).join('')}</ol><div class="dialog-actions"><button class="primary" data-duel="chain-back">${chainReturnResponse?'Return to response':'Return to duel'}</button></div>`,'duel-chain-body');
   }
   function learningMenu(confirmReset=false){
