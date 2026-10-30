@@ -263,3 +263,5 @@ dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100
 .duel-excavation-cards button>span { position:absolute; top:6px; left:6px; background:#174e40; color:white; padding:2px 5px; border-radius:5px; font-size:10px; }
 .duel-excavation-cards b { font-size:10px; line-height:1.15; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .duel-excavation-cards small { font-size:10px; color:#225c4a; }
+.duel-excavation-cards { container-type:size; }
+.duel-excavation-cards img { max-height:min(170px,calc(100cqh - 54px)); }
