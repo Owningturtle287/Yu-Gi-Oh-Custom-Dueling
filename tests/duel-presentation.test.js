@@ -71,7 +71,7 @@ test('movement plans include graveyard, returns, control changes and public LP c
   let motion=planMotion(s,next).find(m=>m.uid===card.uid);assert.equal(motion.from,'0:hand');assert.equal(motion.to,'1:monsters');
   const grave=structuredClone(next);grave.players[1].monsters[0]=null;grave.players[0].grave.push(card);grave.players[1].lp-=500;
   const motions=planMotion(next,grave);motion=motions.find(m=>m.uid===card.uid);assert.equal(motion.to,'0:grave');assert.equal(motion.end.back,false);
-  assert.deepEqual(motions.find(m=>m.type==='life'),{type:'life',to:'1:lp',delta:-500,before:8000,after:7500});
+  assert.ok(!motions.some(m=>m.type==='life'),'LP figures are owned only by the feedback player');
   const returned=structuredClone(grave);returned.players[0].grave=[];returned.players[0].hand.push(card);assert.equal(planMotion(grave,returned).find(m=>m.uid===card.uid).to,'0:hand');
 });
 test('effect damage hits the actual recipient, including recoil, and targeting gets a source-to-target cue',()=>{

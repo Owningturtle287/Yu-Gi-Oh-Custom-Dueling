@@ -62,10 +62,6 @@ export function planMotion(previous, next, action = null) {
   }
   const strike=motions.find(m=>m.type==='attack');
   if(strike&&!motions.some(m=>m.type==='impact'&&m.target===strike.target&&m.to===strike.to))motions.push({type:'impact',target:strike.target,to:strike.to});
-  if (previous) next.players.forEach((player, side) => {
-    const delta = player.lp - previous.players[side].lp;
-    if (delta) motions.push({ type: 'life', to: `${side}:lp`, delta, before: previous.players[side].lp, after: player.lp });
-  });
   return motions;
 }
 
@@ -92,14 +88,12 @@ const transform = (point, rotation = 0, scale = 1) => `translate(${point.x}px,${
 // Only presentation waits on Web Animations. Rules have already committed once.
 // Cancelling (navigation, resize, reduced motion) restores all actual card nodes.
 export function createMotionPlayer(root) {
-  const animations = new Set(), hidden = new Set(), counters = new Set();
+  const animations = new Set(), hidden = new Set();
   let layer = null, generation = 0;
   function cancel() {
     generation++;
     for (const animation of animations) { try { animation.cancel(); } catch { /* already finished */ } }
     animations.clear();
-    for (const stop of counters) stop();
-    counters.clear();
     for (const element of hidden) element.style.visibility = '';
     hidden.clear(); layer?.remove(); layer = null;
   }
@@ -137,32 +131,6 @@ export function createMotionPlayer(root) {
         const target=before.cards.get(motion.target)||after.cards.get(motion.target)||after.zones.get(motion.to);if(!target)continue;
         const impact=document.createElement('span');impact.className='duel-impact';layer.append(impact);
         run(impact,[{transform:transform(target,0,.2),opacity:0},{transform:transform(target,0,1),opacity:.95,offset:.25},{transform:transform(target,0,1.65),opacity:0}],{duration:500,delay:motions.some(m=>m.type==='attack')?420:0,easing:ease,fill:'both'});
-        continue;
-      }
-      if (motion.type === 'life') {
-        const target = after.zones.get(motion.to); if (!target) continue;
-        const badge = document.createElement('span'); badge.className = `duel-lp-change ${motion.delta < 0 ? 'loss' : 'gain'}`;
-        badge.textContent = `${motion.delta > 0 ? '+' : '−'}${Math.abs(motion.delta).toLocaleString()}`; layer.append(badge);
-        run(badge, [{ transform: transform(target, 0, .7), opacity: 0 }, { transform: transform({ ...target, y: target.y - 9 }, 0, 1.1), opacity: 1, offset: .25 }, { transform: transform({ ...target, y: target.y - 28 }), opacity: 0 }], { duration: 850, delay:motions.some(m=>m.type==='attack')?420:0, easing: ease, fill: 'both' });
-        const counter = root.querySelector(`[data-lp-value="${motion.to[0]}"]`);
-        if (counter) {
-          const hold=motions.some(m=>m.type==='attack')?420:0;
-          paintLife(root,motion.to[0],motion.before);
-          run(counter, [{ color: motion.delta < 0 ? '#ff9eaf' : '#b1ffdc', transform: 'scale(1.08)' }, { color: 'inherit', transform: 'scale(1)' }], { duration: 650, delay:hold, easing: ease });
-          const view=document.defaultView;
-          if(view?.requestAnimationFrame)jobs.push(new Promise(resolve=>{
-            let frame, start;
-            const stop=()=>{view.cancelAnimationFrame(frame);paintLife(root,motion.to[0],motion.after);counters.delete(stop);resolve();};
-            counters.add(stop);
-            const tick=time=>{
-              if(current!==generation){stop();return;}
-              start??=time;const progress=Math.max(0,Math.min(1,(time-start-hold)/600)),amount=Math.round(motion.before+(motion.after-motion.before)*(1-(1-progress)**3));
-              paintLife(root,motion.to[0],amount);
-              if(progress<1)frame=view.requestAnimationFrame(tick);else stop();
-            };
-            frame=view.requestAnimationFrame(tick);
-          }));
-        }
         continue;
       }
       const from = before.cards.get(motion.uid) || zonePoint(before,motion.from) || zonePoint(after,motion.from);

@@ -1,0 +1,761 @@
+{
+  "version": 1,
+  "presentationRevision": 3,
+  "queryRevision": 2,
+  "revision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+  "decks": [
+    {
+      "name": "Jar probe",
+      "main": [
+        {
+          "id": 53129443,
+          "name": "Dark Hole",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Destroy all monsters on the field.",
+          "race": "Normal",
+          "archetype": "Hole",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-02-04",
+          "setNames": [
+            "2-Player Starter Deck: Yuya & Declan",
+            "2-Player Starter Set",
+            "2025 Mega-Pack Tin",
+            "Battles of Legend: Monstrous Revenge",
+            "Dark Beginning 1",
+            "Dark Legion Starter Deck",
+            "Demo Deck 2016",
+            "Destiny Soldiers",
+            "Gold Series: Haunted Mine",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Legendary Hero Decks",
+            "Noble Knights of the Round Table Box Set",
+            "OTS Tournament Pack 12",
+            "OTS Tournament Pack 12 (POR)",
+            "OTS Tournament Pack 23",
+            "Premium Gold: Return of the Bling",
+            "Realm of the Sea Emperor Structure Deck",
+            "Saber Force Starter Deck",
+            "Samurai Warlords Structure Deck",
+            "Space-Time Showdown Power-Up Pack",
+            "Starter Deck: Codebreaker",
+            "Starter Deck: Joey",
+            "Starter Deck: Kaiba",
+            "Starter Deck: Kaiba Reloaded",
+            "Starter Deck: Link Strike",
+            "Starter Deck: Pegasus",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Structure Deck: Fire Kings",
+            "Turbo Pack: Booster Five",
+            "Turbo Pack: Booster Four"
+          ],
+          "card_images": [
+            {
+              "id": 53129443,
+              "image_url": "https://images.ygoprodeck.com/images/cards/53129443.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53129443.jpg"
+            }
+          ]
+        },
+        {
+          "id": 55144522,
+          "name": "Pot of Greed",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Draw 2 cards.",
+          "race": "Normal",
+          "archetype": "Greed",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-05-27",
+          "setNames": [
+            "2025 Mega-Pack Tin",
+            "Battle Pack 2: War of the Giants",
+            "Battle Pack: Epic Dawn",
+            "Dark Beginning 1",
+            "Duelist Pack: Kaiba",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Magic Ruler",
+            "Starter Deck: Yugi Evolution",
+            "Structure Deck: Blaze of Destruction",
+            "Structure Deck: Dragon's Roar",
+            "Structure Deck: Fury from the Deep",
+            "Structure Deck: Zombie Madness",
+            "The Pot Collection",
+            "Tournament Pack: 3rd Season",
+            "Yugi's Legendary Decks"
+          ],
+          "card_images": [
+            {
+              "id": 55144522,
+              "image_url": "https://images.ygoprodeck.com/images/cards/55144522.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/55144522.jpg"
+            }
+          ]
+        },
+        {
+          "id": 46986420,
+          "name": "Dark Magician",
+          "type": "Normal Monster",
+          "humanReadableCardType": "Normal Monster",
+          "frameType": "normal",
+          "desc": "''The ultimate wizard in terms of attack and defense.''",
+          "race": "Spellcaster",
+          "attribute": "DARK",
+          "archetype": "Dark Magician",
+          "atk": 2500,
+          "def": 2100,
+          "level": 7,
+          "hasEffect": false,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-02-04",
+          "setNames": [
+            "2016 Mega-Tins",
+            "2017 Mega-Tins",
+            "Booster Pack Collectors Tins 2002",
+            "Collectible Tins 2003",
+            "Dark Beginning 1",
+            "Dark Legends",
+            "Duel Power",
+            "Duel Terminal - Preview Wave 1",
+            "Duel Terminal - Preview Wave 2",
+            "Duel Terminal 1",
+            "Duelist League 2 participation cards",
+            "Duelist Pack: Battle City",
+            "Duelist Pack: Yugi",
+            "Duelist Saga",
+            "Forbidden Legacy",
+            "Ghosts From the Past",
+            "KC Grand Tournament 2021 prize card",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Decks II",
+            "Legendary Dragon Decks",
+            "Maximum Gold",
+            "Retro Pack",
+            "Shonen Jump Vol. 9, Issue 4 promotional card",
+            "Speed Duel Starter Decks: Destiny Masters",
+            "Speed Duel Starter Decks: Match of the Millennium",
+            "Speed Duel Tournament Pack 1",
+            "Speed Duel: Battle City Box",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Structure Deck: Spellcaster's Judgment",
+            "Structure Deck: Yugi Muto",
+            "WSJ Jump Pack Fall 2016 promotional card",
+            "Yu-Gi-Oh! Dark Duel Stories promotional cards",
+            "Yu-Gi-Oh! Power of Chaos: Yugi the Destiny Limited Collector's Edition",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack Secret Edition",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack Special Edition",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack: Gold Edition"
+          ],
+          "card_images": [
+            {
+              "id": 46986420,
+              "image_url": "https://images.ygoprodeck.com/images/cards/46986420.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986420.jpg"
+            }
+          ]
+        },
+        {
+          "id": 15025844,
+          "name": "Mystical Elf",
+          "type": "Normal Monster",
+          "humanReadableCardType": "Normal Monster",
+          "frameType": "normal",
+          "desc": "A delicate elf that lacks offense, but has a terrific defense backed by mystical power.",
+          "race": "Spellcaster",
+          "attribute": "LIGHT",
+          "atk": 800,
+          "def": 2000,
+          "level": 4,
+          "hasEffect": false,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-03-27",
+          "setNames": [
+            "2-Player Starter Deck: Yuya & Declan",
+            "Dark Beginning 1",
+            "Demo Deck 2016",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Saber Force Starter Deck",
+            "Speed Duel: Attack from the Deep",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Super Starter: Space-Time Showdown",
+            "Super Starter: V for Victory",
+            "Yugi's Legendary Decks"
+          ],
+          "card_images": [
+            {
+              "id": 15025844,
+              "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg"
+            }
+          ]
+        },
+        {
+          "id": 53129443,
+          "name": "Dark Hole",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Destroy all monsters on the field.",
+          "race": "Normal",
+          "archetype": "Hole",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-02-04",
+          "setNames": [
+            "2-Player Starter Deck: Yuya & Declan",
+            "2-Player Starter Set",
+            "2025 Mega-Pack Tin",
+            "Battles of Legend: Monstrous Revenge",
+            "Dark Beginning 1",
+            "Dark Legion Starter Deck",
+            "Demo Deck 2016",
+            "Destiny Soldiers",
+            "Gold Series: Haunted Mine",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Legendary Hero Decks",
+            "Noble Knights of the Round Table Box Set",
+            "OTS Tournament Pack 12",
+            "OTS Tournament Pack 12 (POR)",
+            "OTS Tournament Pack 23",
+            "Premium Gold: Return of the Bling",
+            "Realm of the Sea Emperor Structure Deck",
+            "Saber Force Starter Deck",
+            "Samurai Warlords Structure Deck",
+            "Space-Time Showdown Power-Up Pack",
+            "Starter Deck: Codebreaker",
+            "Starter Deck: Joey",
+            "Starter Deck: Kaiba",
+            "Starter Deck: Kaiba Reloaded",
+            "Starter Deck: Link Strike",
+            "Starter Deck: Pegasus",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Structure Deck: Fire Kings",
+            "Turbo Pack: Booster Five",
+            "Turbo Pack: Booster Four"
+          ],
+          "card_images": [
+            {
+              "id": 53129443,
+              "image_url": "https://images.ygoprodeck.com/images/cards/53129443.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53129443.jpg"
+            }
+          ]
+        },
+        {
+          "id": 55144522,
+          "name": "Pot of Greed",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Draw 2 cards.",
+          "race": "Normal",
+          "archetype": "Greed",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-05-27",
+          "setNames": [
+            "2025 Mega-Pack Tin",
+            "Battle Pack 2: War of the Giants",
+            "Battle Pack: Epic Dawn",
+            "Dark Beginning 1",
+            "Duelist Pack: Kaiba",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Magic Ruler",
+            "Starter Deck: Yugi Evolution",
+            "Structure Deck: Blaze of Destruction",
+            "Structure Deck: Dragon's Roar",
+            "Structure Deck: Fury from the Deep",
+            "Structure Deck: Zombie Madness",
+            "The Pot Collection",
+            "Tournament Pack: 3rd Season",
+            "Yugi's Legendary Decks"
+          ],
+          "card_images": [
+            {
+              "id": 55144522,
+              "image_url": "https://images.ygoprodeck.com/images/cards/55144522.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/55144522.jpg"
+            }
+          ]
+        }
+      ],
+      "extra": []
+    },
+    {
+      "name": "Jar probe",
+      "main": [
+        {
+          "id": 53129443,
+          "name": "Dark Hole",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Destroy all monsters on the field.",
+          "race": "Normal",
+          "archetype": "Hole",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-02-04",
+          "setNames": [
+            "2-Player Starter Deck: Yuya & Declan",
+            "2-Player Starter Set",
+            "2025 Mega-Pack Tin",
+            "Battles of Legend: Monstrous Revenge",
+            "Dark Beginning 1",
+            "Dark Legion Starter Deck",
+            "Demo Deck 2016",
+            "Destiny Soldiers",
+            "Gold Series: Haunted Mine",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Legendary Hero Decks",
+            "Noble Knights of the Round Table Box Set",
+            "OTS Tournament Pack 12",
+            "OTS Tournament Pack 12 (POR)",
+            "OTS Tournament Pack 23",
+            "Premium Gold: Return of the Bling",
+            "Realm of the Sea Emperor Structure Deck",
+            "Saber Force Starter Deck",
+            "Samurai Warlords Structure Deck",
+            "Space-Time Showdown Power-Up Pack",
+            "Starter Deck: Codebreaker",
+            "Starter Deck: Joey",
+            "Starter Deck: Kaiba",
+            "Starter Deck: Kaiba Reloaded",
+            "Starter Deck: Link Strike",
+            "Starter Deck: Pegasus",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Structure Deck: Fire Kings",
+            "Turbo Pack: Booster Five",
+            "Turbo Pack: Booster Four"
+          ],
+          "card_images": [
+            {
+              "id": 53129443,
+              "image_url": "https://images.ygoprodeck.com/images/cards/53129443.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53129443.jpg"
+            }
+          ]
+        },
+        {
+          "id": 55144522,
+          "name": "Pot of Greed",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Draw 2 cards.",
+          "race": "Normal",
+          "archetype": "Greed",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-05-27",
+          "setNames": [
+            "2025 Mega-Pack Tin",
+            "Battle Pack 2: War of the Giants",
+            "Battle Pack: Epic Dawn",
+            "Dark Beginning 1",
+            "Duelist Pack: Kaiba",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Magic Ruler",
+            "Starter Deck: Yugi Evolution",
+            "Structure Deck: Blaze of Destruction",
+            "Structure Deck: Dragon's Roar",
+            "Structure Deck: Fury from the Deep",
+            "Structure Deck: Zombie Madness",
+            "The Pot Collection",
+            "Tournament Pack: 3rd Season",
+            "Yugi's Legendary Decks"
+          ],
+          "card_images": [
+            {
+              "id": 55144522,
+              "image_url": "https://images.ygoprodeck.com/images/cards/55144522.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/55144522.jpg"
+            }
+          ]
+        },
+        {
+          "id": 46986420,
+          "name": "Dark Magician",
+          "type": "Normal Monster",
+          "humanReadableCardType": "Normal Monster",
+          "frameType": "normal",
+          "desc": "''The ultimate wizard in terms of attack and defense.''",
+          "race": "Spellcaster",
+          "attribute": "DARK",
+          "archetype": "Dark Magician",
+          "atk": 2500,
+          "def": 2100,
+          "level": 7,
+          "hasEffect": false,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-02-04",
+          "setNames": [
+            "2016 Mega-Tins",
+            "2017 Mega-Tins",
+            "Booster Pack Collectors Tins 2002",
+            "Collectible Tins 2003",
+            "Dark Beginning 1",
+            "Dark Legends",
+            "Duel Power",
+            "Duel Terminal - Preview Wave 1",
+            "Duel Terminal - Preview Wave 2",
+            "Duel Terminal 1",
+            "Duelist League 2 participation cards",
+            "Duelist Pack: Battle City",
+            "Duelist Pack: Yugi",
+            "Duelist Saga",
+            "Forbidden Legacy",
+            "Ghosts From the Past",
+            "KC Grand Tournament 2021 prize card",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Decks II",
+            "Legendary Dragon Decks",
+            "Maximum Gold",
+            "Retro Pack",
+            "Shonen Jump Vol. 9, Issue 4 promotional card",
+            "Speed Duel Starter Decks: Destiny Masters",
+            "Speed Duel Starter Decks: Match of the Millennium",
+            "Speed Duel Tournament Pack 1",
+            "Speed Duel: Battle City Box",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Structure Deck: Spellcaster's Judgment",
+            "Structure Deck: Yugi Muto",
+            "WSJ Jump Pack Fall 2016 promotional card",
+            "Yu-Gi-Oh! Dark Duel Stories promotional cards",
+            "Yu-Gi-Oh! Power of Chaos: Yugi the Destiny Limited Collector's Edition",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack Secret Edition",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack Special Edition",
+            "Yu-Gi-Oh! The Dark Side of Dimensions Movie Pack: Gold Edition"
+          ],
+          "card_images": [
+            {
+              "id": 46986420,
+              "image_url": "https://images.ygoprodeck.com/images/cards/46986420.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/46986420.jpg"
+            }
+          ]
+        },
+        {
+          "id": 15025844,
+          "name": "Mystical Elf",
+          "type": "Normal Monster",
+          "humanReadableCardType": "Normal Monster",
+          "frameType": "normal",
+          "desc": "A delicate elf that lacks offense, but has a terrific defense backed by mystical power.",
+          "race": "Spellcaster",
+          "attribute": "LIGHT",
+          "atk": 800,
+          "def": 2000,
+          "level": 4,
+          "hasEffect": false,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-03-27",
+          "setNames": [
+            "2-Player Starter Deck: Yuya & Declan",
+            "Dark Beginning 1",
+            "Demo Deck 2016",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Saber Force Starter Deck",
+            "Speed Duel: Attack from the Deep",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Super Starter: Space-Time Showdown",
+            "Super Starter: V for Victory",
+            "Yugi's Legendary Decks"
+          ],
+          "card_images": [
+            {
+              "id": 15025844,
+              "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg"
+            }
+          ]
+        },
+        {
+          "id": 53129443,
+          "name": "Dark Hole",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Destroy all monsters on the field.",
+          "race": "Normal",
+          "archetype": "Hole",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-02-04",
+          "setNames": [
+            "2-Player Starter Deck: Yuya & Declan",
+            "2-Player Starter Set",
+            "2025 Mega-Pack Tin",
+            "Battles of Legend: Monstrous Revenge",
+            "Dark Beginning 1",
+            "Dark Legion Starter Deck",
+            "Demo Deck 2016",
+            "Destiny Soldiers",
+            "Gold Series: Haunted Mine",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Legendary Hero Decks",
+            "Noble Knights of the Round Table Box Set",
+            "OTS Tournament Pack 12",
+            "OTS Tournament Pack 12 (POR)",
+            "OTS Tournament Pack 23",
+            "Premium Gold: Return of the Bling",
+            "Realm of the Sea Emperor Structure Deck",
+            "Saber Force Starter Deck",
+            "Samurai Warlords Structure Deck",
+            "Space-Time Showdown Power-Up Pack",
+            "Starter Deck: Codebreaker",
+            "Starter Deck: Joey",
+            "Starter Deck: Kaiba",
+            "Starter Deck: Kaiba Reloaded",
+            "Starter Deck: Link Strike",
+            "Starter Deck: Pegasus",
+            "Starter Deck: Yugi",
+            "Starter Deck: Yugi Evolution",
+            "Starter Deck: Yugi Reloaded",
+            "Structure Deck: Fire Kings",
+            "Turbo Pack: Booster Five",
+            "Turbo Pack: Booster Four"
+          ],
+          "card_images": [
+            {
+              "id": 53129443,
+              "image_url": "https://images.ygoprodeck.com/images/cards/53129443.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/53129443.jpg"
+            }
+          ]
+        },
+        {
+          "id": 55144522,
+          "name": "Pot of Greed",
+          "type": "Spell Card",
+          "humanReadableCardType": "Normal Spell",
+          "frameType": "spell",
+          "desc": "Draw 2 cards.",
+          "race": "Normal",
+          "archetype": "Greed",
+          "hasEffect": true,
+          "tcgDate": "2002-03-08",
+          "ocgDate": "1999-05-27",
+          "setNames": [
+            "2025 Mega-Pack Tin",
+            "Battle Pack 2: War of the Giants",
+            "Battle Pack: Epic Dawn",
+            "Dark Beginning 1",
+            "Duelist Pack: Kaiba",
+            "Legend of Blue Eyes White Dragon",
+            "Legendary Collection 3: Yugi's World Mega Pack",
+            "Legendary Collection 4: Joey's World Mega Pack",
+            "Magic Ruler",
+            "Starter Deck: Yugi Evolution",
+            "Structure Deck: Blaze of Destruction",
+            "Structure Deck: Dragon's Roar",
+            "Structure Deck: Fury from the Deep",
+            "Structure Deck: Zombie Madness",
+            "The Pot Collection",
+            "Tournament Pack: 3rd Season",
+            "Yugi's Legendary Decks"
+          ],
+          "card_images": [
+            {
+              "id": 55144522,
+              "image_url": "https://images.ygoprodeck.com/images/cards/55144522.jpg",
+              "image_url_small": "https://images.ygoprodeck.com/images/cards_small/55144522.jpg"
+            }
+          ]
+        }
+      ],
+      "extra": []
+    }
+  ],
+  "options": {
+    "seed": 3,
+    "randomVersion": 3,
+    "rulesVersion": 2,
+    "promptVersion": 2,
+    "first": 0,
+    "lp": 8000,
+    "eligibility": [],
+    "openingHands": [
+      [],
+      []
+    ],
+    "initialFields": [
+      {
+        "monsters": [
+          {
+            "card": {
+              "id": 79106360,
+              "name": "Morphing Jar #2",
+              "type": "Flip Effect Monster",
+              "humanReadableCardType": "Flip Effect Monster",
+              "frameType": "effect",
+              "desc": "FLIP: Shuffle all monsters on the field into the Deck. Then, each player excavates cards from the top of their Deck, until they excavate the same number of monsters they shuffled into their Main Deck. Special Summon all excavated Level 4 or lower monsters in face-down Defense Position, also send the remaining cards to the Graveyard.",
+              "race": "Rock",
+              "attribute": "EARTH",
+              "atk": 800,
+              "def": 700,
+              "level": 3,
+              "hasEffect": true,
+              "tcgDate": "2002-10-20",
+              "ocgDate": "2000-09-28",
+              "setNames": [
+                "Astral Pack Four",
+                "Dark Beginning 1",
+                "Legendary Collection 3: Yugi's World Mega Pack",
+                "Pharaoh's Servant",
+                "Quarter Century Bonanza",
+                "Star Pack 2014"
+              ],
+              "card_images": [
+                {
+                  "id": 79106360,
+                  "image_url": "https://images.ygoprodeck.com/images/cards/79106360.jpg",
+                  "image_url_small": "https://images.ygoprodeck.com/images/cards_small/79106360.jpg"
+                }
+              ]
+            },
+            "faceUp": false,
+            "defense": true
+          },
+          {
+            "card": {
+              "id": 15025844,
+              "name": "Mystical Elf",
+              "type": "Normal Monster",
+              "humanReadableCardType": "Normal Monster",
+              "frameType": "normal",
+              "desc": "A delicate elf that lacks offense, but has a terrific defense backed by mystical power.",
+              "race": "Spellcaster",
+              "attribute": "LIGHT",
+              "atk": 800,
+              "def": 2000,
+              "level": 4,
+              "hasEffect": false,
+              "tcgDate": "2002-03-08",
+              "ocgDate": "1999-03-27",
+              "setNames": [
+                "2-Player Starter Deck: Yuya & Declan",
+                "Dark Beginning 1",
+                "Demo Deck 2016",
+                "Legend of Blue Eyes White Dragon",
+                "Legendary Collection 3: Yugi's World Mega Pack",
+                "Saber Force Starter Deck",
+                "Speed Duel: Attack from the Deep",
+                "Starter Deck: Yugi",
+                "Starter Deck: Yugi Evolution",
+                "Starter Deck: Yugi Reloaded",
+                "Super Starter: Space-Time Showdown",
+                "Super Starter: V for Victory",
+                "Yugi's Legendary Decks"
+              ],
+              "card_images": [
+                {
+                  "id": 15025844,
+                  "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+                  "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "monsters": [
+          {
+            "card": {
+              "id": 15025844,
+              "name": "Mystical Elf",
+              "type": "Normal Monster",
+              "humanReadableCardType": "Normal Monster",
+              "frameType": "normal",
+              "desc": "A delicate elf that lacks offense, but has a terrific defense backed by mystical power.",
+              "race": "Spellcaster",
+              "attribute": "LIGHT",
+              "atk": 800,
+              "def": 2000,
+              "level": 4,
+              "hasEffect": false,
+              "tcgDate": "2002-03-08",
+              "ocgDate": "1999-03-27",
+              "setNames": [
+                "2-Player Starter Deck: Yuya & Declan",
+                "Dark Beginning 1",
+                "Demo Deck 2016",
+                "Legend of Blue Eyes White Dragon",
+                "Legendary Collection 3: Yugi's World Mega Pack",
+                "Saber Force Starter Deck",
+                "Speed Duel: Attack from the Deep",
+                "Starter Deck: Yugi",
+                "Starter Deck: Yugi Evolution",
+                "Starter Deck: Yugi Reloaded",
+                "Super Starter: Space-Time Showdown",
+                "Super Starter: V for Victory",
+                "Yugi's Legendary Decks"
+              ],
+              "card_images": [
+                {
+                  "id": 15025844,
+                  "image_url": "https://images.ygoprodeck.com/images/cards/15025844.jpg",
+                  "image_url_small": "https://images.ygoprodeck.com/images/cards_small/15025844.jpg"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "history": [
+    {
+      "side": 0,
+      "index": 0,
+      "type": "POSITION"
+    },
+    {
+      "side": 0,
+      "index": 0,
+      "type": "ACK_REVEAL"
+    }
+  ],
+  "checkpoint": "{\"turn\":1,\"active\":0,\"phase\":\"main1\",\"winner\":null,\"players\":[{\"lp\":8000,\"zones\":[[{\"id\":15025844,\"face\":false,\"position\":\"defense\",\"stats\":{\"atk\":800,\"def\":2000}},{\"id\":79106360,\"face\":false,\"position\":\"defense\",\"stats\":{\"atk\":800,\"def\":700}}],[],[null,null,{\"id\":15025844,\"face\":false,\"position\":\"defense\",\"stats\":{\"atk\":800,\"def\":2000}},null,null],[null,null,null,null,null],[{\"id\":55144522,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}},{\"id\":55144522,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}},{\"id\":46986420,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":2500,\"def\":2100}},{\"id\":53129443,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}},{\"id\":53129443,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}}],[],[],[null]]},{\"lp\":8000,\"zones\":[[{\"id\":15025844,\"face\":false,\"position\":\"defense\",\"stats\":{\"atk\":800,\"def\":2000}},{\"id\":15025844,\"face\":false,\"position\":\"defense\",\"stats\":{\"atk\":800,\"def\":2000}},{\"id\":53129443,\"face\":false,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}}],[],[null,null,null,null,null],[null,null,null,null,null],[{\"id\":55144522,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}},{\"id\":53129443,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}},{\"id\":55144522,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":0,\"def\":0}},{\"id\":46986420,\"face\":true,\"position\":\"defense\",\"stats\":{\"atk\":2500,\"def\":2100}}],[],[],[null]]}],\"actions\":[[[\"NEXT\",\"End\",null,null,null],[\"END\",null,null,null,null]],[]]}"
+}
