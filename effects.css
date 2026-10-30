@@ -86,3 +86,5 @@ dialog:has(.duel-effect-choice-body)::backdrop { background:#06121c44; backdrop-
 @media(prefers-reduced-motion:reduce) { .duel-chain-flight,.duel-chain-break { filter:none; } }
 
 .duel-chain-token .duel-chain-art text { font-size:56px; stroke-width:5px; }
+
+.duel-arena[data-moving=true] .duel-chain-open { visibility:hidden; }

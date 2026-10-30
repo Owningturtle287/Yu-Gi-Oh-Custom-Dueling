@@ -328,6 +328,9 @@ try{
   await page.evaluate(()=>window.feedbackWork);await visibleControls('.duel-chain-rack button');await capture(`chain-docked-${width}x${height}`);
   await page.evaluate(()=>{const {card}=window.layoutRig.getMatch().lastChain.links[0];window.feedbackWork=window.feedbackRig.play([{type:'chain',stage:'resolved',link:4,card,side:0}],{chain:[{chainLink:4,card}]});});
   await page.locator('.duel-chain-break').waitFor();await page.locator('.duel-chain-break').evaluate(p=>p.querySelectorAll('g').forEach(g=>g.getAnimations().forEach(a=>{a.pause();a.currentTime=a.effect.getTiming().duration*.5;})));await capture(`chain-breaking-${width}x${height}`);
+  await page.evaluate(()=>{window.feedbackRig.cancel();document.querySelector('.duel-arena').dataset.moving='true';window.feedbackWork=window.feedbackRig.play([1,2,3,4].map(link=>({type:'chain',stage:'add',link,side:link%2,card:window.layoutRig.getMatch().lastChain.links[0].card})),{enabled:false});});
+  await visibleControls('.duel-chain-rack button');
+  const linkCollisions=await page.locator('.duel-chain-rack button').evaluateAll(links=>{const obstacles=[...document.querySelectorAll('.duel-controls button,.duel-utility-actions button,.duel-phase-rail li,.duel-card-visual')].filter(n=>n.getClientRects().length).map(n=>n.getBoundingClientRect());return links.filter(n=>{const r=n.getBoundingClientRect();return obstacles.some(b=>Math.min(r.right,b.right)-Math.max(r.left,b.left)>1&&Math.min(r.bottom,b.bottom)-Math.max(r.top,b.top)>1);}).map(n=>n.getAttribute('aria-label'));});assert.deepEqual(linkCollisions,[],'Four links stay clear of phase/card/duel controls');await capture(`chain-four-link-rail-${width}x${height}`);
   await page.evaluate(()=>{window.feedbackRig.cancel();window.layoutRig.destroy();});
   // Native Morphing Jar #2: review both public excavations and actual results.
   await page.evaluate(async()=>{
