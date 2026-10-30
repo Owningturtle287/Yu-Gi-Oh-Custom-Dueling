@@ -253,7 +253,7 @@ dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100
 /* Excavations show actual core destinations, with a permanent footer. */
 .excavation-result { display:block; padding:2px 1px; border-radius:3px; color:#204e40; font-size:9px; font-weight:750; line-height:12px; }
 #modal:has(.duel-excavation-body) { width:min(760px,calc(var(--duel-vw) * 100 - var(--duel-safe-left,0px) - var(--duel-safe-right,0px) - 24px)); }
-#modal .dialog-body.duel-excavation-body { height:min(480px,calc(var(--duel-vh) * 100 - var(--duel-safe-top,0px) - var(--duel-safe-bottom,0px) - 24px)); display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; gap:6px; padding:12px; overflow:hidden; }
+#modal .dialog-body.duel-excavation-body { height:min(480px,calc(var(--duel-vh) * 100 - var(--duel-safe-top,0px) - var(--duel-safe-bottom,0px) - 24px)); max-height:calc(var(--duel-vh) * 100 - var(--duel-safe-top,0px) - var(--duel-safe-bottom,0px) - 24px); display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; gap:6px; padding:12px; overflow:hidden; }
 .duel-excavation-body .dialog-header { margin:0; }
 .duel-excavation-body .dialog-header h2 { font-size:16px; }
 .duel-excavation-body .dialog-header button { width:36px; height:36px; min-width:36px; min-height:36px; padding:6px; }
