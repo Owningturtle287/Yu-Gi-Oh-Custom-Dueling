@@ -1,0 +1,12 @@
+// Original vector artwork. Gradients and split halves remain sharp at rail and
+// centre sizes; each instance has private paint IDs, including in dialogs.
+let serial=0;
+export function chainArtwork(link,{broken=false}={}){
+ const id='duel-link-'+(++serial);
+ const metal=`<rect x="33" y="14" width="94" height="84" rx="37" fill="none" stroke="#102330" stroke-width="19"/><rect x="33" y="14" width="94" height="84" rx="37" fill="none" stroke="url(#${id}-steel)" stroke-width="14"/><rect x="33" y="14" width="94" height="84" rx="37" fill="none" stroke="#eafaff" stroke-opacity=".7" stroke-width="1.5"/><path d="M47 28c9-10 25-10 36-10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
+ return `<svg class="duel-chain-art${broken?' is-broken':''}" viewBox="0 0 160 112" aria-hidden="true"><defs><linearGradient id="${id}-steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#405769"/><stop offset=".19" stop-color="#d8edf5"/><stop offset=".35" stop-color="#7e9aaa"/><stop offset=".48" stop-color="#f7fdff"/><stop offset=".63" stop-color="#486777"/><stop offset=".81" stop-color="#aecbd7"/><stop offset="1" stop-color="#253e50"/></linearGradient><clipPath id="${id}-left"><path d="M0 0H83l-8 16 9 12-10 16 10 14-9 14 9 16-8 24H0Z"/></clipPath><clipPath id="${id}-right"><path d="M160 0H83l-8 16 9 12-10 16 10 14-9 14 9 16-8 24h84Z"/></clipPath></defs><g transform="rotate(-28 80 56)"><g class="chain-half-left" clip-path="url(#${id}-left)">${metal}</g><g class="chain-half-right" clip-path="url(#${id}-right)">${metal}</g></g><text x="80" y="69" text-anchor="middle">${Number(link)||1}</text>${broken?'<g class="chain-sparks"><path d="m78 13 4-10m-7 96-4 10m27-65 13-7M57 65l-14 7m55 16 8 7M60 31l-9-8"/></g>':''}</svg>`;
+}
+export function chainRackHTML(links,{disabled=false}={}){
+ return links.filter(c=>!['resolved','negated'].includes(c.status)).map((c,i)=>{const n=c.chainLink||c.link||i+1,name=c.card?.name||c.name||'Card effect';return `<button class="duel-chain-token" data-chain-link="${n}" data-chain-status="${c.status||'waiting'}" aria-label="Chain Link ${n}: ${String(name).replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[x])}" ${disabled?'disabled':''}>${chainArtwork(n)}</button>`;}).join('');
+}
+export function paintChainRack(arena,links){const rack=arena.querySelector('.duel-chain-rack');if(rack)rack.innerHTML=chainRackHTML(links,{disabled:arena.querySelector('.duel-arena')?.dataset.moving==='true'});}

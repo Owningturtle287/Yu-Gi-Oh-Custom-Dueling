@@ -34,10 +34,11 @@ export function nativeSeed(seed,version=2){
 // public events and field queries into the existing arena's presentation model.
 export function createNativeBackend({rules=defaultNativeRules}={}) {
   const matches=new Map();let nextMatch=0;
-  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,promptVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,promptVersion=2,revealVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
     if(![1,2,3].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
     if(![1,2].includes(rulesVersion))throw new Error('Unsupported saved duel rules version.');
     if(![1,2].includes(promptVersion))throw new Error('Unsupported saved duel prompt version.');
+    if(![1,2].includes(revealVersion))throw new Error('Unsupported saved duel reveal version.');
     const pack=await rules(),{module:m,lib,records}=pack;
     const scripts=rulesVersion===1?{...pack.scripts,'c16768387.lua':pack.scripts['c16768387.lua'].replace('Duel.SortDecktop(tp,tp,ac)','Duel.SortDecktop(tp,tp,ct)')}:pack.scripts;
     const api=new Map([...cards,...(openingHands||[]).flat(),...(initialFields||[]).flatMap(p=>Object.values(p).flat().filter(Boolean).map(c=>c.card)),...decks.flatMap(d=>[...d.main,...d.extra])].map(c=>[c.id,c]));
@@ -56,7 +57,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:nativeSeed(seed,randomVersion),team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
     if(!handle)throw new Error('The duel rules engine could not start.');
     const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,revealSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
-    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,promptVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
+    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,promptVersion,revealVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
     r.life=[lp,lp];
     r.reason=Object.fromEntries([...scripts['constant.lua'].matchAll(/^REASON_(\w+)\s*=\s*(0x[\da-f]+|\d+)/gmi)].map(([,key,value])=>[key,Number(value)]));
     r.side=team=>team===0?first:1-first;r.team=side=>side===first?0:1;
@@ -111,7 +112,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const s=r.state,L=r.module.OcgLocation,viewer=r.side(msg.player),source=effectSource(r);
     const deck=msg.cards.length>0&&msg.cards.every(c=>c.location===L.DECK&&c.controller===msg.cards[0].controller);
     const sequences=msg.cards.map(c=>c.sequence),deckSize=deck?s.players[r.side(msg.cards[0].controller)].deck.length:0;
-    const topFirst=deck&&(source?.card.id===17092736||Math.max(...sequences)===deckSize-1&&new Set(sequences).size===msg.cards.length&&Math.max(...sequences)-Math.min(...sequences)+1===msg.cards.length);
+    const topFirst=deck&&(r.bootstrap.options.revealVersion===2&&msg.publicReveal||source?.card.id===17092736||Math.max(...sequences)===deckSize-1&&new Set(sequences).size===msg.cards.length&&Math.max(...sequences)-Math.min(...sequences)+1===msg.cards.length);
     const ordered=topFirst?[...msg.cards].sort((a,b)=>b.sequence-a.sequence):msg.cards;
     const cards=ordered.map(item=>{
       const zone=({[L.DECK]:'deck',[L.HAND]:'hand',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'})[item.location]||'field';
@@ -119,13 +120,21 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       if(instance.uid){rememberCard(s,viewer,instance,zone==='field'?item.location===L.MZONE?'monsters':'spells':zone,{hand:item.location===L.HAND});if(viewer===0){s.revealedUIDs??=[];s.revealedUIDs.push(instance.uid);}}
       return {...instance,sequence:item.sequence,zone};
     });
+    const excavation=!!(r.bootstrap.options.revealVersion===2&&msg.publicReveal&&source?.card.id===79106360);
     const zoneList=cards.length&&cards.every(c=>c.zone!=='field');
     if(zoneList){
       s.reveals??=[];
       const id=`${r.id}:reveal:${++r.revealSequence}`;
-      const batch=s.reveals.find(reveal=>reveal.batch===r.promptSequence&&reveal.viewer===viewer&&reveal.source?.id===source?.card.id&&reveal.presentationOnly===!deck&&!reveal.ordered&&!topFirst);
+      const batch=s.reveals.find(reveal=>reveal.batch===r.promptSequence&&reveal.viewer===viewer&&(r.bootstrap.options.revealVersion===1||reveal.cards[0]?.controller===cards[0]?.controller)&&reveal.source?.id===source?.card.id&&reveal.presentationOnly===!deck&&!reveal.ordered&&!topFirst);
       if(batch)batch.cards.push(...cards.filter(card=>!batch.cards.some(c=>c.uid&&c.uid===card.uid)));
-      else s.reveals.push({id,viewer,batch:r.promptSequence,presentationOnly:!deck,deckTop:!!msg.publicReveal,ordered:topFirst,source:source?.card||null,cards});
+      else {
+        const reveal={id,viewer,batch:r.promptSequence,presentationOnly:!deck,deckTop:!!msg.publicReveal,ordered:topFirst,excavation,source:source?.card||null,cards};s.reveals.push(reveal);
+
+      }
+      if(msg.publicReveal&&source?.card.id===79106360){
+        if(s.excavationReport?.chainId!==s.chainId)s.excavationReport={chainId:s.chainId,source:source.card,groups:[]};
+        s.excavationReport.groups.push({id,viewer,source:source.card,excavation:true,ordered:true,cards:[...cards].sort((a,b)=>b.sequence-a.sequence)});
+      }
       log(r,`${source?.card.name||'The effect'}: ${who(viewer)} ${viewer===0?'view':'views'} ${topFirst?'the top ':''}${cards.length} ${topFirst?'':'revealed '}card${cards.length===1?'':'s'} from ${cards[0].controller===0?'your':'AI’s'} ${deck?'Deck':cards[0].zone}${topFirst?', in order. The Deck order is unchanged.':'.'}`,'reveal',[],viewer);
     }else for(const c of cards){
       log(r,'Revealed '+c.card.name+'.','reveal',[c.uid].filter(Boolean),c.controller);
@@ -182,6 +191,11 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const zone=location=>({[L.DECK]:'deck',[L.HAND]:'hand',[L.MZONE]:'monsters',[L.SZONE]:'spells',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'})[location];
     const visible=msg.from.location===L.GRAVE||!!(msg.from.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.from.location)||msg.to.location===L.GRAVE||!!(msg.to.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.to.location);
     rememberMove(s,{uid:from?.uid,card:descriptor(r,msg.card),fromSide:r.side(msg.from.controller),fromZone:zone(msg.from.location),toSide:side,toZone:zone(msg.to.location),visible});
+    if(s.excavationReport?.chainId===s.chainId&&msg.from.location===L.DECK&&[L.MZONE,L.GRAVE].includes(msg.to.location)){
+      const group=s.excavationReport.groups.find(g=>g.cards[0]?.controller===r.side(msg.from.controller));
+      const revealed=group?.cards.find(c=>!c.result&&(r.canonical.get(c.card.id)||c.card.id)===msg.card);
+      if(revealed)revealed.result=msg.to.location===L.MZONE?'Set in Defense':'Sent to GY';
+    }
     const destination={[L.GRAVE]:'Graveyard',[L.REMOVED]:'banished cards',[L.HAND]:'hand',[L.DECK]:'Deck',[L.EXTRA]:'Extra Deck'}[msg.to.location];
     if(msg.from.location===L.HAND&&msg.to.location===L.HAND&&msg.from.controller!==msg.to.controller){
       const known=r.side(msg.from.controller)===0||side===0||from?.public||s.revealedUIDs?.includes(from?.uid);
@@ -223,12 +237,13 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         const text=effectExplanation(entry.card,{phase:s.phase,description:entry.description});
         log(r,`${who(entry.side)} activated ${entry.card.name} · chain link ${msg.chain_size}. ${effectBrief(entry.card,entry.effectText)}`,'activate',[card?.uid].filter(Boolean),entry.side,{chainNotice:{stage:'add',chainId:s.chainId,link:msg.chain_size,total:s.chain.length,side:entry.side,card:entry.card,text},effectNotice:{uid:entry.uid,card:entry.card,stage:'activate',text,chainLink:msg.chain_size}});break;
       }
-      case T.CHAIN_END:if(s.chain.length)s.lastChain={total:s.chain.length,links:s.chain.map((c,i)=>({link:c.chainLink||i+1,side:c.side,name:c.card.name,status:c.status||'resolved'})).reverse()};if(s.chain.length)log(r,'Chain complete. All links have finished.','chain',[],s.active,{chainNotice:{stage:'complete',chainId:s.chainId,total:s.chain.length}});s.chainId=null;s.declinedAttacks=[[],[]];s.chain=[];r.sourceUid=null;r.resolving=null;r.automaticSource=null;r.subeffectSource=null;break;
+      case T.CHAIN_END:if(s.chain.length)s.lastChain={total:s.chain.length,links:s.chain.map((c,i)=>({link:c.chainLink||i+1,side:c.side,name:c.card.name,card:c.card,status:c.status||'resolved'})).reverse()};if(s.chain.length)log(r,'Chain complete. All links have finished.','chain',[],s.active,{chainNotice:{stage:'complete',chainId:s.chainId,total:s.chain.length}});s.chainId=null;s.declinedAttacks=[[],[]];s.chain=[];r.sourceUid=null;r.resolving=null;r.automaticSource=null;r.subeffectSource=null;break;
       case T.CHAIN_SOLVING:{const link=s.chain[msg.chain_size-1];r.resolving=link||null;r.subeffectSource=null;if(link){link.solveStart=s.serial;link.status='resolving';}log(r,`Resolving ${link?.card.name||'effect'} · chain link ${msg.chain_size}${s.chain.length>1?' (newest links resolve first)':''}.`,'effect',link?.uid?[link.uid]:[],link?.side,{chainNotice:{stage:'resolving',chainId:s.chainId,link:msg.chain_size,total:s.chain.length,side:link?.side,card:link?.card}});break;}
       case T.CHAIN_SOLVED:{
         const link=r.resolving;resolvedStats(r,link);
         if(link&&!link.negated&&link.card.name==='Waboku'){s.turnEffects??=[];s.turnEffects.push({name:link.card.name,side:link.side});}
         if(link){
+          if(link.card.id===79106360&&s.excavationReport?.chainId===s.chainId){for(const group of s.excavationReport.groups){const side=group.cards[0]?.controller;group.remaining=s.players[side].deck.length;group.completed=true;}}
           const outcomes=s.log.filter(e=>e.id>(link.solveStart||s.serial)&&(['leave','stats','damage','heal','cost','discard','draw','position','reveal'].includes(e.kind)||e.resolutionOutcome)).map(e=>e.message);
           const ready=!link.description&&['Continuous','Field','Equip'].includes(link.card.race)&&link.card.type!=='Effect Monster';
           const required=link.card.desc?.match(/FLIP:\s*(?:Target|Destroy) (\d+) monsters?/i)?.[1];
@@ -477,14 +492,14 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     r.lib.duelSetResponse(r.handle,reply.response);pump(r);return r.state;
   }
   function destroyMatch(state){const r=matches.get(state?.runtimeId);if(r){r.lib.destroyDuel(r.handle);matches.delete(r.id);}}
-  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:3,queryRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
+  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:4,queryRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
-    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,promptVersion:save.options?.promptVersion??1,cards});
-    const legacy=![2,3].includes(save.presentationRevision);
+    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,promptVersion:save.options?.promptVersion??1,revealVersion:save.options?.revealVersion??1,cards});
+    const legacy=![2,3,4].includes(save.presentationRevision);
     const acknowledgeLegacyLists=()=>{
-      while((legacy&&state.reveals?.[0]?.presentationOnly)||(save.presentationRevision!==3&&state.reveals?.[0]?.deckTop)){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}
+      while((legacy&&state.reveals?.[0]?.presentationOnly)||(![3,4].includes(save.presentationRevision)&&state.reveals?.[0]?.deckTop)){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}
     };
     try{
       for(let i=0;i<save.history.length;i++){

@@ -49,41 +49,38 @@ dialog:has(.duel-effect-choice-body)::backdrop { background:#06121c44; backdrop-
   .duel-effect-art { position:relative; height:calc(var(--duel-vh,1dvh) * 43); }
 }
 
-/* LP and chain protocol events share one clear, centred presentation lane. */
+/* Pure signed LP figures and original steel chain artwork share a flight lane. */
 .duel-feedback-host { position:absolute; inset:0; z-index:25; pointer-events:none; overflow:hidden; border-radius:inherit; }
 .duel-feedback-host:empty { display:none; }
-.duel-feedback-panel { --feedback-accent:#e2bb68; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(320px,70%); max-height:85%; padding:16px 22px; display:flex; flex-direction:column; align-items:center; gap:7px; text-align:center; border:1px solid var(--feedback-accent); border-radius:22px; background:radial-gradient(ellipse at 50% 0,#39575f,#102d38 70%); color:#f9faf4; box-shadow:0 10px 36px #092c4566,0 0 0 5px #edf5f01c,inset 0 1px #ffffff55; }
-.duel-feedback-panel small { font-size:11px; font-weight:800; letter-spacing:.12em; color:var(--feedback-accent); }
-.duel-feedback-panel.loss { --feedback-accent:#ff9ca7; background:radial-gradient(ellipse at 50% 0,#673a4a,#322839 70%); }
-.duel-feedback-panel.gain { --feedback-accent:#9ff4d2; background:radial-gradient(ellipse at 50% 0,#276d60,#123e3b 70%); }
-.duel-feedback-amount { font-size:clamp(38px,9vh,70px); line-height:1; font-variant-numeric:tabular-nums; letter-spacing:-.03em; text-shadow:0 3px 20px #ffffff33; }
-.duel-feedback-totals { font-size:14px; font-variant-numeric:tabular-nums; color:#d3e0e4; }
-.duel-feedback-totals span { margin-inline:7px; color:var(--feedback-accent); }
-.duel-feedback-panel p { margin:0; font-size:12px; line-height:1.35; max-width:100%; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.duel-feedback-link { font-size:54px; line-height:1; color:#ffe7b0; display:flex; align-items:center; gap:12px; }
-.duel-feedback-link span { font-size:12px; letter-spacing:.08em; color:#d3e0e4; }
-.duel-feedback-complete { font-size:42px; color:#a9f1ce; line-height:1; }
-.duel-feedback-card { display:flex; align-items:center; justify-content:center; gap:10px; font-size:16px; line-height:1.2; }
-.duel-feedback-card img { width:30px; height:44px; object-fit:contain; border-radius:2px; }
-.duel-feedback-panel[data-stage=negated] { --feedback-accent:#ff9ca7; }
-.duel-feedback-panel[data-stage=resolved],.duel-feedback-panel[data-stage=complete] { --feedback-accent:#a9f1ce; }
-.duel-feedback-receipt { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-wrap:wrap; justify-content:center; gap:5px; width:min(400px,80%); }
-.duel-feedback-receipt span { padding:7px 11px; border-radius:10px; background:#153f47f2; border:1px solid #add7c7; color:#fffaf0; font-size:13px; font-weight:750; font-variant-numeric:tabular-nums; box-shadow:0 3px 12px #1234; }
+.duel-life-flight,.duel-life-static { position:absolute; left:0; top:0; margin:0; font-size:clamp(48px,calc(var(--duel-vh,1dvh) * 17),88px); font-weight:900; line-height:1.1; font-variant-numeric:tabular-nums; letter-spacing:-.045em; white-space:nowrap; background:none; border:0; padding:0; text-shadow:0 1px 0 #fff,0 -1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 4px 18px #ffffffb3; }
+.duel-life-flight.gain,.duel-life-static.gain { color:#08854c; }
+.duel-life-flight.loss,.duel-life-static.loss { color:#d42345; }
+.duel-life-static { left:50%; top:50%; transform:translate(-50%,-50%); font-size:clamp(32px,calc(var(--duel-vh,1dvh) * 12),64px); }
+.duel-life-static:nth-child(n+2) { margin-top:1.1em; }
+.duel-chain-flight,.duel-chain-break { position:absolute; left:0; top:0; width:210px; height:147px; filter:drop-shadow(0 8px 9px #16394b55); }
+.duel-chain-break { width:40px; height:32px; overflow:visible; }
+.duel-chain-art { width:100%; height:100%; overflow:visible; }
+.duel-chain-art text { fill:#fff8dd; stroke:#132d40; stroke-width:3px; paint-order:stroke; font:bold 39px system-ui,sans-serif; }
+.duel-chain-art .chain-sparks { fill:none; stroke:#e5ae49; stroke-width:3; stroke-linecap:round; }
+.duel-chain-rack { position:absolute; z-index:16; right:calc(var(--phase-width,32px) + var(--phase-gap,4px) + 4px); top:48px; bottom:58px; width:36px; display:flex; flex-direction:column; align-items:center; gap:1px; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; pointer-events:auto; }
+.duel-chain-rack:empty { display:none; }
+.duel-chain-rack .duel-chain-token { position:relative; flex:0 0 34px; width:34px; height:34px; min-height:34px; padding:0; border:0; border-radius:7px; box-shadow:none; background:transparent; overflow:visible; }
+.duel-chain-rack .duel-chain-token:disabled { opacity:1; filter:none; }
+.duel-chain-token+ .duel-chain-token::before { content:''; position:absolute; width:6px; height:9px; border:2px solid #849fae; border-radius:50%; top:-7px; left:12px; z-index:-1; }
+.duel-chain-token[data-chain-status=resolving] { filter:drop-shadow(0 0 4px #deae4d); }
+.duel-chain-token:focus-visible { outline:2px solid #16735b; outline-offset:1px; }
 .duel-midline .duel-chain-open { flex:none; pointer-events:auto; min-height:20px; height:20px; padding:1px 8px; font-size:10px; border-radius:12px; color:#224b47; background:#e2f0e9; border:1px solid #85b3a4; }
-.duel-chain-list { display:flex; flex-direction:column; gap:7px; margin:0; padding:0; list-style:none; overflow:auto; min-height:0; }
-.duel-chain-list li { display:flex; align-items:center; gap:12px; padding:9px; border:1px solid #c4d5d1; border-radius:10px; background:#eff5f1; }
-.duel-chain-list li>strong { font-size:25px; color:#1f6a5a; }
-.duel-chain-list li>div { display:flex; flex-direction:column; gap:3px; }
-.duel-chain-list small { font-size:11px; color:#5c736e; }
-@media(max-height:360px),(orientation:portrait) and (max-width:360px) {
- .duel-feedback-panel { padding:11px 16px; gap:5px; border-radius:17px; }
- .duel-feedback-panel small { font-size:10px; }
- .duel-feedback-amount { font-size:44px; }
- .duel-feedback-link { font-size:42px; }
-}
 .duel-midline:has(.duel-chain-open)::before,.duel-midline:has(.duel-chain-open)::after { display:none; }
 .duel-midline:has(.duel-chain-open) .duel-prompt { flex:1; max-width:calc(100% - 100px); }
-.duel-chain-body { display:flex; flex-direction:column; gap:12px; max-height:100%; overflow:hidden; }
-.duel-chain-body>.dialog-actions,.duel-chain-body>.dialog-header { flex:none; }
+#modal .dialog-body.duel-chain-body { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; gap:10px; height:min(370px,calc(var(--duel-vh,1dvh) * 100 - var(--duel-safe-top,0px) - var(--duel-safe-bottom,0px) - 32px)); max-height:none; overflow:hidden; padding:14px; }
+.duel-chain-body>.dialog-header,.duel-chain-body>.dialog-actions,.duel-chain-body>p { margin:0; }
+.duel-chain-body>p { font-size:12px; }
+.duel-chain-list { display:flex; flex-direction:column; gap:7px; margin:0; padding:0; list-style:none; overflow:auto; min-height:0; }
+.duel-chain-list li { flex:none; display:flex; align-items:center; gap:8px; padding:0; }
+.duel-chain-list button { display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:5px 10px; text-align:left; border:1px solid #b8d0c7; border-radius:10px; background:#eff5f1; }
+.duel-chain-list button>.duel-chain-art { width:42px; height:35px; flex:none; }
+.duel-chain-list button>div { display:flex; flex-direction:column; gap:3px; }
+.duel-chain-list small { font-size:11px; color:#5c736e; }
 .duel-effect-choice-body .dialog-header h2 { flex:1; }
 .duel-effect-choice-body .dialog-header .duel-response-chain { flex:none; width:auto; min-width:0; padding:3px 8px; font-size:10px; border:1px solid #a7c9be; border-radius:10px; }
+@media(prefers-reduced-motion:reduce) { .duel-chain-flight,.duel-chain-break { filter:none; } }
