@@ -523,7 +523,7 @@ dialog:has(.duel-response-body) { width:min(540px,calc(calc(var(--duel-vw,1dvw) 
 .duel-reveal-list img { display:block; width:100%; aspect-ratio:59/86; object-fit:contain; }
 .duel-reveal-thumb { display:block; position:relative; width:100%; aspect-ratio:59/86; }
 .duel-reveal-thumb>img,.duel-reveal-thumb>.duel-no-image { position:absolute; inset:0; width:100%; height:100%; }
-.duel-excavation-strip li { width:min(110px,calc((100cqw - 32px) / 5),calc((100cqh - 42px) * .686)); }
+.duel-excavation-strip li { width:min(110px,calc((100cqw - 32px) / 5),calc((100cqh - 52px) * .686)); }
 .duel-reveal-card-name { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; height:24px; font-size:10px; line-height:12px; margin-top:3px; }
 .duel-reveal-number { position:absolute; z-index:1; top:0; left:0; display:grid; place-items:center; width:20px; height:20px; border-radius:7px; background:#1b675c; color:#fff; font-size:10px; font-weight:750; box-shadow:0 1px 4px #173c3633; }
 .duel-reveal-footer { flex:none; display:flex; justify-content:flex-end; }
