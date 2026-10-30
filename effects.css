@@ -52,7 +52,7 @@ dialog:has(.duel-effect-choice-body)::backdrop { background:#06121c44; backdrop-
 /* Pure signed LP figures and original steel chain artwork share a flight lane. */
 .duel-feedback-host { position:absolute; inset:0; z-index:25; pointer-events:none; overflow:hidden; border-radius:inherit; }
 .duel-feedback-host:empty { display:none; }
-.duel-life-flight,.duel-life-static { position:absolute; left:0; top:0; margin:0; font-size:clamp(48px,calc(var(--duel-vh,1dvh) * 17),88px); font-weight:900; line-height:1.1; font-variant-numeric:tabular-nums; letter-spacing:-.045em; white-space:nowrap; background:none; border:0; padding:0; text-shadow:0 1px 0 #fff,0 -1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 4px 18px #ffffffb3; }
+.duel-life-flight,.duel-life-static { position:absolute; left:0; top:0; margin:0; font-size:clamp(48px,calc(var(--duel-vh,1dvh) * 17),88px); font-weight:900; line-height:1.25; font-variant-numeric:tabular-nums; letter-spacing:-.045em; white-space:nowrap; background:none; border:0; padding:0; text-shadow:0 1px 0 #fff,0 -1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 4px 18px #ffffffb3; }
 .duel-life-flight.gain,.duel-life-static.gain { color:#08854c; }
 .duel-life-flight.loss,.duel-life-static.loss { color:#d42345; }
 .duel-life-static { left:50%; top:50%; transform:translate(-50%,-50%); font-size:clamp(32px,calc(var(--duel-vh,1dvh) * 12),64px); }
@@ -84,3 +84,5 @@ dialog:has(.duel-effect-choice-body)::backdrop { background:#06121c44; backdrop-
 .duel-effect-choice-body .dialog-header h2 { flex:1; }
 .duel-effect-choice-body .dialog-header .duel-response-chain { flex:none; width:auto; min-width:0; padding:3px 8px; font-size:10px; border:1px solid #a7c9be; border-radius:10px; }
 @media(prefers-reduced-motion:reduce) { .duel-chain-flight,.duel-chain-break { filter:none; } }
+
+.duel-chain-token .duel-chain-art text { font-size:56px; stroke-width:5px; }

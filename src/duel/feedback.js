@@ -61,7 +61,7 @@ export function createFeedbackPlayer({getRoot,getArena,hold=1000}={}){
      root.innerHTML=`<strong class="duel-life-flight ${e.delta>0?'gain':'loss'}" data-feedback="life" data-side="${e.side}" role="status" aria-label="${who(e.side)} ${e.delta>0?'gained':'lost'} ${number(e.amount??e.delta)} Life Points">${e.delta>0?'+':'−'}${number(e.amount??e.delta)}</strong>`;
      const node=root.firstElementChild,badge=arena.querySelector(`[data-field-lp="${e.side}"]`),g=flightGeometry(root,badge);node.style.transform=at(g.from.x,g.from.y);
      paintLife(arena,e.side,e.before);
-     animate(node,[{transform:at(g.from.x,g.from.y,.85),opacity:0},{transform:at(g.from.x,g.from.y),opacity:1,offset:.12},{transform:at(g.from.x,g.from.y),opacity:1,offset:.56},{transform:at(g.mid.x,g.mid.y,.7),opacity:1,offset:.8},{transform:at(g.to.x,g.to.y,.2),opacity:0}],{duration:hold*1.7,easing:'cubic-bezier(.3,.05,.35,1)',fill:'both'});
+     animate(node,[{transform:at(g.from.x,g.from.y,.85),opacity:0},{transform:at(g.from.x,g.from.y),opacity:1,offset:.12},{transform:at(g.from.x,g.from.y),opacity:1,offset:.56,easing:'cubic-bezier(.3,.05,.35,1)'},{transform:at(g.mid.x,g.mid.y,.7),opacity:1,offset:.8},{transform:at(g.to.x,g.to.y,.2),opacity:0}],{duration:hold*1.7,easing:'linear',fill:'both'});
      await wait(reduced?hold*.25:hold*1.7);if(current!==run)return false;
      animate(badge,[{filter:'brightness(1.35)'},{filter:'brightness(1)'}],{duration:300});
      for(let i=1;i<=5;i++){paintLife(arena,e.side,Math.round(e.before+(e.after-e.before)*i/5));await wait(reduced?0:hold*.06);if(current!==run)return false;}
@@ -69,7 +69,7 @@ export function createFeedbackPlayer({getRoot,getArena,hold=1000}={}){
      links.set(e.link,e);rack();const token=arena.querySelector(`[data-chain-link="${e.link}"]`);if(token)token.style.opacity='0';
      root.innerHTML=`<div class="duel-chain-flight" data-feedback="chain" data-stage="add" role="status" aria-label="Chain Link ${e.link}: ${escape(e.card?.name||'effect')}">${chainArtwork(e.link)}</div>`;
      const node=root.firstElementChild,g=flightGeometry(root,token);node.style.transform=at(g.from.x,g.from.y);
-     animate(node,[{transform:at(g.from.x,g.from.y,.65),opacity:0},{transform:at(g.from.x,g.from.y),opacity:1,offset:.15},{transform:at(g.from.x,g.from.y),opacity:1,offset:.6},{transform:at(g.mid.x,g.mid.y,.6),opacity:1,offset:.82},{transform:at(g.to.x,g.to.y,.16),opacity:1}],{duration:hold*2,easing:'cubic-bezier(.3,.05,.35,1)',fill:'both'});
+     animate(node,[{transform:at(g.from.x,g.from.y,.65),opacity:0},{transform:at(g.from.x,g.from.y),opacity:1,offset:.15},{transform:at(g.from.x,g.from.y),opacity:1,offset:.6,easing:'cubic-bezier(.3,.05,.35,1)'},{transform:at(g.mid.x,g.mid.y,.6),opacity:1,offset:.82},{transform:at(g.to.x,g.to.y,.16),opacity:1}],{duration:hold*2,easing:'linear',fill:'both'});
      await wait(reduced?hold*.25:hold*2);if(current!==run)return false;if(token)token.style.opacity='';
     }else if(e.stage==='resolving'){
      if(!broken.has(e.link)){links.set(e.link,{...e,status:'resolving'});rack();}

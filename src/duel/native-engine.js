@@ -135,7 +135,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         if(s.excavationReport?.chainId!==s.chainId)s.excavationReport={chainId:s.chainId,source:source.card,groups:[]};
         s.excavationReport.groups.push({id,viewer,source:source.card,excavation:true,ordered:true,cards:[...cards].sort((a,b)=>b.sequence-a.sequence)});
       }
-      log(r,`${source?.card.name||'The effect'}: ${who(viewer)} ${viewer===0?'view':'views'} ${topFirst?'the top ':''}${cards.length} ${topFirst?'':'revealed '}card${cards.length===1?'':'s'} from ${cards[0].controller===0?'your':'AI’s'} ${deck?'Deck':cards[0].zone}${topFirst?', in order. The Deck order is unchanged.':'.'}`,'reveal',[],viewer);
+      log(r,`${source?.card.name||'The effect'}: ${who(viewer)} ${viewer===0?'view':'views'} ${topFirst?'the top ':''}${cards.length} ${topFirst?'':'revealed '}card${cards.length===1?'':'s'} from ${cards[0].controller===0?'your':'AI’s'} ${deck?'Deck':cards[0].zone}${topFirst?source?.card.id===79106360?', in excavation order; see the Set / GY results.':', in order. The Deck order is unchanged.':'.'}`,'reveal',[],viewer);
     }else for(const c of cards){
       log(r,'Revealed '+c.card.name+'.','reveal',[c.uid].filter(Boolean),c.controller);
       if(viewer===0||c.controller===0)notice(r,{uid:c.uid,card:c.card,side:c.controller},'reveal',`${source?.card.name||'The effect'} reveals this card.${c.card.type==='Trap Card'&&[19159413,9076207].includes(source?.card.id)?' It is a Trap, so it is not destroyed and stays Set.':''}`);
@@ -191,10 +191,10 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const zone=location=>({[L.DECK]:'deck',[L.HAND]:'hand',[L.MZONE]:'monsters',[L.SZONE]:'spells',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'})[location];
     const visible=msg.from.location===L.GRAVE||!!(msg.from.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.from.location)||msg.to.location===L.GRAVE||!!(msg.to.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.to.location);
     rememberMove(s,{uid:from?.uid,card:descriptor(r,msg.card),fromSide:r.side(msg.from.controller),fromZone:zone(msg.from.location),toSide:side,toZone:zone(msg.to.location),visible});
-    if(s.excavationReport?.chainId===s.chainId&&msg.from.location===L.DECK&&[L.MZONE,L.GRAVE].includes(msg.to.location)){
+    if(s.excavationReport?.chainId===s.chainId&&msg.from.location===L.DECK&&[L.MZONE,L.GRAVE,L.REMOVED].includes(msg.to.location)){
       const group=s.excavationReport.groups.find(g=>g.cards[0]?.controller===r.side(msg.from.controller));
       const revealed=group?.cards.find(c=>!c.result&&(r.canonical.get(c.card.id)||c.card.id)===msg.card);
-      if(revealed)revealed.result=msg.to.location===L.MZONE?'Set in Defense':'Sent to GY';
+      if(revealed)revealed.result=msg.to.location===L.REMOVED?'Banished':msg.to.location===L.GRAVE?'Sent to GY':msg.to.position&P.FACEUP?`Summoned in ${msg.to.position&P.DEFENSE?'Defense':'Attack'}`:'Set in Defense';
     }
     const destination={[L.GRAVE]:'Graveyard',[L.REMOVED]:'banished cards',[L.HAND]:'hand',[L.DECK]:'Deck',[L.EXTRA]:'Extra Deck'}[msg.to.location];
     if(msg.from.location===L.HAND&&msg.to.location===L.HAND&&msg.from.controller!==msg.to.controller){
