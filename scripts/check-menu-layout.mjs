@@ -11,7 +11,7 @@ let browser,page;
 try{
  browser=await chromium.launch({headless:true});
  const raw=[...JSON.parse(await readFile('tests/jar-graphics-fixtures.json')).data,...JSON.parse(await readFile('tests/chain-feedback-fixtures.json')).data,...JSON.parse(await readFile('tests/mechanics-audit-fixtures.json')).data,...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data,...JSON.parse(await readFile('tests/level-up-fixtures.json')).data,...JSON.parse(await readFile('tests/era2006-fixtures.json')).data.filter(c=>['Alien Grey','Clock Tower Prison','Cyber Dragon','Elemental HERO Neos'].includes(c.name))];
- const cards=[...new Map(raw.map(c=>[c.id,{...c,card_sets:[{set_name:'Layout test set'}]}])).values()];
+ const cards=[...new Map(raw.map(c=>[c.id,{...c,card_sets:[{set_name:'Layout test set'}]}])).values()].map(c=>({...c,card_images:raw.find(source=>source.id===c.id&&source.card_images?.[0]?.image_url)?.card_images||c.card_images}));
  async function visibleControls(selector){
   const clipped=await page.locator(selector).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden').flatMap(node=>{
    const rect=node.getBoundingClientRect(),pad=1.5;
@@ -30,7 +30,7 @@ try{
   const fit=await page.locator('.app-shell').evaluate(shell=>{const r=shell.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height,logicalWidth:shell.clientWidth,logicalHeight:shell.clientHeight,viewportWidth:innerWidth,viewportHeight:innerHeight};});
   for(const [actual,expected] of [[fit.left,0],[fit.top,0],[fit.width,fit.viewportWidth],[fit.height,fit.viewportHeight],[fit.logicalWidth,Math.max(fit.viewportWidth,fit.viewportHeight)],[fit.logicalHeight,Math.min(fit.viewportWidth,fit.viewportHeight)]])assert.ok(Math.abs(actual-expected)<2,JSON.stringify(fit));
  }
- async function capture(name){await page.screenshot({path:`${output}/${name}.png`});}
+ async function capture(name){await page.locator('#modal img').evaluateAll(nodes=>Promise.all(nodes.map(img=>img.decode().catch(()=>{}))));await page.screenshot({path:`${output}/${name}.png`});}
  for(const [width,height] of [[844,390],[667,375],[568,320],[740,360],[390,844],[320,568],[1280,720],[1024,768]]){
   const context=await browser.newContext({viewport:{width,height},serviceWorkers:'block'});page=await context.newPage();
   await page.route('**/db.ygoprodeck.com/api/**',route=>route.fulfill({json:route.request().url().includes('cardsets.php')?[{set_name:'Layout test set',tcg_date:'2003-01-01'}]:{data:cards}}));
@@ -66,7 +66,7 @@ try{
   await page.locator('[data-category="Spell"]').click();
   assert.equal(await page.locator('.card-tile:not([data-kind="spell"])').count(),0);
   await page.locator('[data-category="All"]').click();
-  await page.route('**/images.ygoprodeck.com/images/cards/*.jpg',async route=>route.fulfill({body:await readFile('assets/card-back.jpg'),contentType:'image/jpeg'}));
+  await page.route('**/images.ygoprodeck.com/images/{cards,cards_small}/*.jpg',async route=>route.fulfill({body:await readFile('assets/card-back.jpg'),contentType:'image/jpeg'}));
   await page.locator('#card-search').fill('Mystical Elf');await page.locator('.card-inspect').click();
   await visibleControls('.detail-body button,.detail-body select,.detail-body summary,.detail-body .card-battle-stats');
   assert.ok(await page.locator('.detail-top .card-art-frame').evaluate(n=>n.clientHeight/n.closest('.detail-body').clientHeight>.65),'Card art uses most of the reader height');
@@ -338,9 +338,9 @@ try{
    let match=await engine.createMatch([0,1].map(()=>({name:'Jar excavation',main:['Dark Hole','Pot of Greed','Dark Magician','Mystical Elf','Dark Hole','Pot of Greed'].map(get),extra:[]})),{cards:catalog,seed:3,first:0,openingHands:[[],[]],initialFields:[{monsters:[{card:get('Morphing Jar #2'),faceUp:false,defense:true},{card:get('Mystical Elf')}]},{monsters:[{card:get('Mystical Elf')}]}]});match=engine.applyAction(match,match.actions[0].find(a=>a.type==='POSITION'&&a.flip),0);
    const main=document.querySelector('#main'),modal=document.querySelector('#modal');const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>modal.close(),dialogHeader:t=>`<div class="dialog-header"><h2>${t}</h2><button data-action="close">×</button></div>`,toast:e=>{throw Error(e);},onDesign(){},engine:{...engine,createMatch:async()=>match}});controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
   });
-  await page.locator('.duel-reveal-body').waitFor();assert.match(await page.locator('.duel-reveal-caption').textContent(),/Your excavation/);await visibleControls('.duel-reveal-footer button');await capture(`jar-your-excavation-${width}x${height}`);
+  await page.locator('.duel-reveal-body').waitFor();assert.match(await page.locator('.duel-reveal-caption').textContent(),/Your excavation/);await visibleControls('.duel-reveal-footer button');assert.equal(await page.locator('.duel-excavation-strip .duel-reveal-thumb img').count(),6);await capture(`jar-your-excavation-${width}x${height}`);
   await page.locator('[data-duel="reveal-done"]').click();await page.waitForFunction(()=>document.querySelector('.duel-reveal-caption')?.textContent.includes('AI'));await capture(`jar-ai-excavation-${width}x${height}`);await page.locator('[data-duel="reveal-done"]').click();await page.waitForFunction(()=>!window.layoutRig.getMatch().reveals.length&&document.querySelector('.duel-arena').dataset.moving==='false');
-  await page.locator('[data-duel="excavation"]').click();await visibleControls('.excavation-tabs button,.duel-excavation-body>.dialog-actions button');assert.match(await page.locator('.excavation-tabs').textContent(),/left in Deck/);await capture(`jar-results-${width}x${height}`);
+  await page.locator('[data-duel="excavation"]').click();await visibleControls('.excavation-tabs button,.duel-excavation-body>.dialog-actions button');assert.match(await page.locator('.excavation-tabs').textContent(),/left in Deck/);assert.ok(await page.locator('.excavation-card-art').first().evaluate(n=>n.clientHeight>=80&&n.clientWidth>=50),'Excavation thumbnails remain readable on short phones');await capture(`jar-results-${width}x${height}`);
   await page.locator('[data-excavation-side="1"]').click();await page.locator('[data-excavation-read]').last().scrollIntoViewIfNeeded();await page.locator('[data-excavation-read]').last().click();await page.locator('.duel-selection-info').waitFor();await visibleControls('.duel-selection-info button');await page.locator('[data-duel="selection-back"]').click();assert.equal(await page.locator('[data-excavation-side="1"]').getAttribute('aria-pressed'),'true');
   await page.evaluate(()=>window.layoutRig.destroy());
   await context.close();page=null;

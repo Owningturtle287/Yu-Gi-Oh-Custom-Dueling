@@ -251,17 +251,22 @@ dialog:has(.duel-declaration-picker) { width:min(760px,calc(var(--duel-vw) * 100
 .declaration-icon svg.declaration-emblem { width:30px; height:30px; filter:drop-shadow(0 1px 1px #183c382b); }
 .duel-declaration[aria-pressed=true] .declaration-icon:has(.declaration-emblem) { background:#edf5e6; }
 /* Excavations show actual core destinations, with a permanent footer. */
-.excavation-result { position:absolute; left:2px; right:2px; bottom:2px; padding:3px 1px; border-radius:3px; background:#f2f8eeeF; color:#204e40; font-size:9px; font-weight:750; }
-#modal .dialog-body.duel-excavation-body { height:min(600px,calc(var(--duel-vh) * 100 - var(--duel-safe-top,0px) - var(--duel-safe-bottom,0px) - 32px)); display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; gap:8px; overflow:hidden; }
+.excavation-result { display:block; padding:2px 1px; border-radius:3px; color:#204e40; font-size:9px; font-weight:750; line-height:12px; }
+#modal:has(.duel-excavation-body) { width:min(760px,calc(var(--duel-vw) * 100 - var(--duel-safe-left,0px) - var(--duel-safe-right,0px) - 24px)); }
+#modal .dialog-body.duel-excavation-body { height:min(480px,calc(var(--duel-vh) * 100 - var(--duel-safe-top,0px) - var(--duel-safe-bottom,0px) - 24px)); display:grid; grid-template-rows:auto auto minmax(0,1fr) auto; gap:6px; padding:12px; overflow:hidden; }
+.duel-excavation-body .dialog-header { margin:0; }
+.duel-excavation-body .dialog-header h2 { font-size:16px; }
+.duel-excavation-body .dialog-header button { width:36px; height:36px; min-width:36px; min-height:36px; padding:6px; }
+.duel-excavation-body>.dialog-actions button { min-height:36px; padding:6px 10px; font-size:12px; }
 .excavation-tabs { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .excavation-tabs button { min-height:30px; padding:4px 10px; font-size:12px; }
 .excavation-tabs [aria-pressed=true] { background:#d8ece1; border-color:#498e77; }
 .excavation-tabs small { font-size:11px; color:#466b61; }
-.duel-excavation-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:8px; list-style:none; margin:0; padding:3px; min-height:0; overflow:auto; align-content:start; }
+.duel-excavation-cards { display:flex; gap:8px; list-style:none; margin:0; padding:3px; min-height:0; overflow:auto; align-items:start; container-type:size; }
+.duel-excavation-cards li { flex:none; width:min(110px,calc((100cqw - 32px) / 5)); }
 .duel-excavation-cards button { position:relative; padding:4px; display:flex; flex-direction:column; align-items:center; width:100%; gap:3px; min-width:0; }
-.duel-excavation-cards img { width:100%; max-height:170px; aspect-ratio:421/614; object-fit:contain; }
+.excavation-card-art { width:100%; height:clamp(80px,calc(100cqh - 48px),170px); position:relative; }
+.excavation-card-art>img,.excavation-card-art>.duel-no-image { width:100%; height:100%; object-fit:contain; }
 .duel-excavation-cards button>span { position:absolute; top:6px; left:6px; background:#174e40; color:white; padding:2px 5px; border-radius:5px; font-size:10px; }
-.duel-excavation-cards b { font-size:10px; line-height:1.15; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.duel-excavation-cards b { font-size:10px; line-height:12px; height:24px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .duel-excavation-cards small { font-size:10px; color:#225c4a; }
-.duel-excavation-cards { container-type:size; }
-.duel-excavation-cards img { max-height:min(170px,calc(100cqh - 54px)); }
