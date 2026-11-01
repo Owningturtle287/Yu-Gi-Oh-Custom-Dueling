@@ -52,9 +52,9 @@ dialog:has(.duel-effect-choice-body)::backdrop { background:#06121c44; backdrop-
 /* Pure signed LP figures and original steel chain artwork share a flight lane. */
 .duel-feedback-host { position:absolute; inset:0; z-index:25; pointer-events:none; overflow:hidden; border-radius:inherit; }
 .duel-feedback-host:empty { display:none; }
-.duel-life-flight,.duel-life-static { position:absolute; left:0; top:0; margin:0; font-size:clamp(48px,calc(var(--duel-vh,1dvh) * 17),88px); font-weight:900; line-height:1.25; font-variant-numeric:tabular-nums; letter-spacing:-.045em; white-space:nowrap; background:none; border:0; padding:0; text-shadow:0 1px 0 #fff,0 -1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 4px 18px #ffffffb3; }
-.duel-life-flight.gain,.duel-life-static.gain { color:#08854c; }
-.duel-life-flight.loss,.duel-life-static.loss { color:#d42345; }
+.duel-life-flight,.duel-life-static { position:absolute; left:0; top:0; margin:0; font-family:'Arial Black','Avenir Next',system-ui,sans-serif; font-size:clamp(48px,calc(var(--duel-vh,1dvh) * 17),88px); font-weight:900; font-style:italic; line-height:1.25; font-variant-numeric:lining-nums tabular-nums; letter-spacing:-.04em; white-space:nowrap; background:none; border:0; padding:0; color:var(--lp-ink); -webkit-text-stroke:1px #f5fff9; paint-order:stroke fill; text-shadow:0 2px 0 var(--lp-depth),0 3px 0 var(--lp-depth),0 5px 12px #15343740,0 0 18px var(--lp-glow); }
+.duel-life-flight.gain,.duel-life-static.gain { --lp-ink:#12a966; --lp-depth:#08613d; --lp-glow:#48d69355; }
+.duel-life-flight.loss,.duel-life-static.loss { --lp-ink:#e82e50; --lp-depth:#891833; --lp-glow:#ee547455; }
 .duel-life-static { left:50%; top:50%; transform:translate(-50%,-50%); font-size:clamp(32px,calc(var(--duel-vh,1dvh) * 12),64px); }
 .duel-life-static:nth-child(n+2) { margin-top:1.1em; }
 .duel-chain-flight,.duel-chain-break { position:absolute; left:0; top:0; width:210px; height:147px; filter:drop-shadow(0 8px 9px #16394b55); }
