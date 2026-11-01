@@ -61,8 +61,11 @@ export function createFeedbackPlayer({getRoot,getArena,hold=1000}={}){
      root.innerHTML=`<strong class="duel-life-flight ${e.delta>0?'gain':'loss'}" data-feedback="life" data-side="${e.side}" role="status" aria-label="${who(e.side)} ${e.delta>0?'gained':'lost'} ${number(e.amount??e.delta)} Life Points">${e.delta>0?'+':'−'}${number(e.amount??e.delta)}</strong>`;
      const node=root.firstElementChild,badge=arena.querySelector(`[data-field-lp="${e.side}"]`),g=flightGeometry(root,badge);node.style.transform=at(g.from.x,g.from.y);
      paintLife(arena,e.side,e.before);
-     animate(node,[{transform:at(g.from.x,g.from.y,.85),opacity:0},{transform:at(g.from.x,g.from.y),opacity:1,offset:.12},{transform:at(g.from.x,g.from.y),opacity:1,offset:.56,easing:'cubic-bezier(.3,.05,.35,1)'},{transform:at(g.mid.x,g.mid.y,.7),opacity:1,offset:.8},{transform:at(g.to.x,g.to.y,.2),opacity:0}],{duration:hold*1.7,easing:'linear',fill:'both'});
-     await wait(reduced?hold*.25:hold*1.7);if(current!==run)return false;
+     // Hold for one second, then ease across the entire trip. Splitting that
+     // easing at a waypoint made the number brake and restart halfway there.
+     const duration=hold*1.7;
+     animate(node,[{transform:at(g.from.x,g.from.y,.9),opacity:0},{transform:at(g.from.x,g.from.y),opacity:1,offset:.18/1.7},{transform:at(g.from.x,g.from.y),opacity:1,offset:hold/duration,easing:'cubic-bezier(.4,0,.2,1)'},{opacity:1,offset:.9},{transform:at(g.to.x,g.to.y,.2),opacity:0}],{duration,easing:'linear',fill:'both'});
+     await wait(reduced?hold*.25:duration);if(current!==run)return false;
      animate(badge,[{filter:'brightness(1.35)'},{filter:'brightness(1)'}],{duration:300});
      for(let i=1;i<=5;i++){paintLife(arena,e.side,Math.round(e.before+(e.after-e.before)*i/5));await wait(reduced?0:hold*.06);if(current!==run)return false;}
     }else if(e.stage==='add'){

@@ -324,6 +324,24 @@ try{
    assert.equal(await page.locator('#modal').evaluate(m=>m.open),false,'Feedback is unobscured by a dialog');await page.locator('[data-feedback]').waitFor();await page.locator('[data-feedback]').evaluate(p=>p.getAnimations().forEach(a=>{a.pause();a.currentTime=a.effect.getTiming().duration*.45;}));
    const geometry=await page.locator('[data-feedback]').evaluate(async p=>{const {localRect}=await import('/src/duel/viewport.js'),host=p.parentElement,r=localRect(p,host);return {x:r.left+r.width/2,y:r.top+r.height/2,w:host.clientWidth,h:host.clientHeight,contentFits:[p,...p.querySelectorAll('svg>g')].every(n=>{const b=localRect(n,host);return b.left>=0&&b.top>=0&&b.left+b.width<=host.clientWidth&&b.top+b.height<=host.clientHeight;})};});
    assert.ok(Math.abs(geometry.x-geometry.w/2)<2&&Math.abs(geometry.y-geometry.h/2)<2,JSON.stringify(geometry));assert.ok(geometry.contentFits,JSON.stringify(geometry));await capture(`feedback-${kind}-${width}x${height}`);
+   if(kind!=='chain'){
+    // Sample actual browser interpolation around the former braking waypoint.
+    const motion=await page.locator('[data-feedback="life"]').evaluate(async p=>{
+     const {localRect}=await import('/src/duel/viewport.js'),host=p.parentElement,animation=p.getAnimations()[0];
+     const center=node=>{const r=localRect(node,host);return {x:r.left+r.width/2,y:r.top+r.height/2};};
+     const origin={x:host.clientWidth/2,y:host.clientHeight/2},target=center(document.querySelector(`[data-field-lp="${p.dataset.side}"]`));
+     const samples=[180,500,999,1100,1200,1300,1320,1340,1360,1400,1500,1600,1699].map(ms=>{animation.currentTime=ms;return {ms,...center(p)};});
+     animation.currentTime=1350;return {origin,target,samples,duration:animation.effect.getTiming().duration};
+    });
+    assert.equal(motion.duration,1700);const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),total=distance(motion.origin,motion.target);
+    assert.ok(motion.samples.filter(p=>p.ms<1000).every(p=>distance(p,motion.origin)<1),'LP amount holds in the centre for exactly one second');
+    const travel=motion.samples.filter(p=>p.ms>=1000);assert.ok(distance(travel[0],motion.origin)>total*.01,'LP amount starts travelling immediately after the hold');
+    assert.ok(travel.every((p,i)=>!i||distance(p,motion.target)<distance(travel[i-1],motion.target)),'LP amount keeps approaching its recipient');
+    for(const ms of [1320,1340,1360]){const i=travel.findIndex(p=>p.ms===ms);assert.ok(distance(travel[i],travel[i-1])>total*.01,'No braking pause at the old midpoint');}
+    assert.ok(distance(travel.at(-1),motion.target)<1,'LP amount arrives at the correct total');
+    await capture(`feedback-${kind}-travel-${width}x${height}`);
+   }
+
   }
   await page.evaluate(()=>window.feedbackWork);await visibleControls('.duel-chain-rack button');await capture(`chain-docked-${width}x${height}`);
   await page.evaluate(()=>{const {card}=window.layoutRig.getMatch().lastChain.links[0];window.feedbackWork=window.feedbackRig.play([{type:'chain',stage:'resolved',link:4,card,side:0}],{chain:[{chainLink:4,card}]});});

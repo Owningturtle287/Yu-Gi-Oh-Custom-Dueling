@@ -1,4 +1,4 @@
-# Duel Atlas · v0.5.7
+# Duel Atlas · v0.5.8
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2006 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
@@ -6,6 +6,7 @@ Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
 
+- v0.5.8 gives LP changes an exact one-second centre hold followed by a single continuous glide to the recipient. Bold italic red/green figures have a light outline and beveled shadow; the old halfway braking point is removed. Browser checks sample the flight before departure, through the former midpoint and at arrival in all eight layouts.
 - v0.5.7 clarifies Morphing Jar #2 with separate ordered excavations, actual Set/GY outcomes and a persistent results viewer. LP feedback becomes plain signed green/red numbers that travel to the recipient. Original metallic chain links dock beside the phase rail and break on resolution, with individually readable effects. Coloured Type/Attribute emblems replace the line icons. Older saves retain their original reveal protocol. See the [visuals and excavation notes](docs/duel-visuals-v0.5.7.md).
 
 - v0.5.6 adds centred LP damage/recovery/cost cues, individual before/after accounting, and explicit chain build/resolution/negation/completion feedback. Inspect the current or last completed chain from the arena and response sheet; response buttons identify the next link. Reduced-motion and Card motion-off modes retain readable feedback. See the [LP and chain presentation notes](docs/lp-chain-v0.5.6.md).
