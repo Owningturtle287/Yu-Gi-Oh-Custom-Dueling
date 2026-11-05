@@ -25,4 +25,15 @@ Recovery uses separate per-match keys so active tabs do not overwrite one anothe
 
 Regression coverage includes full controller reload with a staged Tribute choice, same-code summon/draw/control moves, the Spirit Barrier lethal sequence, repeated Ultimate Offering activations, damaged data preservation, cross-tab imports, archive-cache retry, bounded AI failures and injected post-response native failures. Existing hand-return tests now check the returned cards and counts across hidden hand shuffles, where old slot identities are intentionally retired.
 
-Validation results will be recorded after the full card sweeps and pull-request browser checks complete.
+## Validation
+
+- **537/537 automated tests passed.** The production build passes.
+- **8,078 synthetic native probes:** all 2,170 supported cards exercised from both controller sides, including battle Flip probes. No failures or action-limit stops.
+- **180/180 complete game runs**, covering 120 distinct seeds and AI Main Deck sizes of 30, 40 and 60. Each sweep repeats the first 60 game scenarios; the separate batch adds 60 new scenarios.
+- **392,534 actions and 436 verified replays** across those runs. No stalls or replay mismatches.
+- **120 native create/destroy cycles:** zero retained callbacks.
+- **12 additional Ultimate Offering checks:** repeated activations for both controllers, multiple effects in a chain, Dark Hole recovery, LP limits, Tribute requirements, full zones, phase/Damage Step restrictions and removal before resolution.
+- **Zero npm audit advisories**, including development dependencies.
+- **Eight Chromium viewport layouts passed** in [GitHub Actions](https://github.com/Owningturtle287/Yu-Gi-Oh-Custom-Dueling/actions/runs/42112286305), from 568×320 to 1280×720, including rotated portrait layouts. That run validates the production code; the follow-up adds only test assertions and this validation record.
+
+The [machine-readable record](audit-fixes-v0.5.9.json) includes source hashes, snapshot hashes, run configuration and coverage. Synthetic probes and complete games are reported separately; these results do not certify every card combination.

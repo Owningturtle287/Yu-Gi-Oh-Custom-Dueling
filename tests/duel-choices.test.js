@@ -146,10 +146,12 @@ test('Big Eye honors the chosen amount and its confirmed permutation changes onl
     const e=createNativeBackend({rules:()=>pack});let s=await bigEye(e,{count});
     try{
       assert.equal(s.choice.ordering.kind,'deck-top');assert.equal(s.choice.ordering.cards.length,count);
+      const identities=new Map(s.players[0].deck.map(c=>[c.uid,c.card.id]));
       const before=s.players[0].deck.map(c=>c.card.id),order=[...s.choice.ordering.cards].reverse();
       for(const card of order)s=e.applyAction(s,s.actions[0].find(a=>a.orderIndex===card.index),0);
       s=e.applyAction(s,s.actions[0].find(a=>a.finish),0);
       assert.deepEqual(s.players[0].deck.slice(-count).reverse().map(c=>c.card.id),order.map(c=>c.card.id));
+      for(const card of s.players[0].deck)if(identities.has(card.uid))assert.equal(card.card.id,identities.get(card.uid),'Reordering cannot attach an identity to a different card');
       assert.deepEqual(s.players[0].deck.slice(0,-count).map(c=>c.card.id),before.slice(0,-count));
       const restored=await e.restoreMatch(e.exportMatch(s),{cards});assert.deepEqual(restored.players[0].deck.map(c=>c.card.id),s.players[0].deck.map(c=>c.card.id));e.destroyMatch(restored);
     }finally{e.destroyMatch(s);}

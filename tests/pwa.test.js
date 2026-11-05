@@ -99,3 +99,11 @@ test('updates wait for open sessions, and the artwork cache evicts oldest entrie
  let pending;listeners.install({waitUntil:p=>pending=p});await pending;listeners.activate({waitUntil:p=>pending=p});await pending;assert.equal(skipped,0);assert.equal(claimed,0);
  const url='https://images.ygoprodeck.com/images/cards_small/89631139.jpg';listeners.fetch({request:new Request(url),respondWith:p=>pending=p});assert.equal(await (await pending).text(),'new');assert.equal(entries.size,800);assert.ok(entries.has(url));assert.ok(!entries.has('https://images.ygoprodeck.com/images/cards_small/0.jpg'));
 });
+
+test('quota recovery evicts old artwork even when the cache has fewer than 800 entries',async()=>{
+ const listeners={},scope='https://example.com/repo/',entries=new Map(Array.from({length:3},(_,i)=>['https://images.ygoprodeck.com/images/cards_small/'+i+'.jpg',new Response('old')]));let puts=0;
+ const cache={match:async r=>entries.get(r.url),keys:async()=>[...entries.keys()].map(url=>new Request(url)),delete:async r=>entries.delete(r.url),put:async(r,v)=>{if(++puts===1)throw Error('QuotaExceededError');entries.set(r.url,v);}};
+ const self={registration:{scope},addEventListener:(name,handler)=>listeners[name]=handler};
+ runInNewContext(await readFile(new URL('../sw.js',import.meta.url),'utf8'),{self,caches:{open:async()=>cache},URL,Map,Set,Date,Promise,Request,Response,setTimeout,fetch:async()=>new Response('live')});
+ let pending;const url='https://images.ygoprodeck.com/images/cards_small/89631139.jpg';listeners.fetch({request:new Request(url),respondWith:p=>pending=p});assert.equal(await (await pending).text(),'live');assert.equal(puts,2);assert.deepEqual([...entries.keys()],[url]);
+});
