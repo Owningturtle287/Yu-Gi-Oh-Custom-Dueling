@@ -468,3 +468,18 @@ test('single-year ranges persist and card readers show publication data and ATK/
   $('[data-action="reset-filters"]').click();assert.equal(app.state.draft.releaseStartYear,null);assert.equal(app.state.filtered.length,3);
  }finally{window.close();}
 });
+
+test('bulk import preserves a deck saved by another tab after this tab loaded',async()=>{
+ const first=createDeck('Original','first'),other=createDeck('Other tab','other'),imported=createDeck('Imported','imported');
+ const {window,app,$}=await boot('bulk-import-current-store',JSON.stringify({version:1,decks:[first]}));
+ try{
+  window.localStorage.setItem(STORAGE_KEY,JSON.stringify({version:1,decks:[first,other]}));app.navigate('decks');$('[data-action="deck-options"]').click();$('[data-action="backups"]').click();
+  Object.defineProperty($('#import-file'),'files',{value:[new window.File([JSON.stringify({version:1,decks:[imported]})],'backup.json',{type:'application/json'})],configurable:true});$('#import-file').dispatchEvent(new window.Event('change',{bubbles:true}));
+  for(let n=0;n<200&&!app.state.decks.some(d=>d.name==='Imported');n++)await new Promise(resolve=>setTimeout(resolve,5));
+  const stored=JSON.parse(window.localStorage.getItem(STORAGE_KEY)).decks;assert.equal(stored.length,3);assert.ok(stored.some(d=>d.id==='other'));assert.ok(stored.some(d=>d.name==='Imported'));
+ }finally{window.close();}
+});
+test('resetting only the release region marks the deck dirty',async()=>{
+ const deck=createDeck('OCG','region');deck.releaseBasis='ocg';const {window,app,$}=await boot('reset-region-dirty',JSON.stringify({version:1,decks:[deck]}));
+ try{app.navigate('archive');assert.equal(app.state.dirty,false);$('[data-action="filters"]').click();$('[data-action="reset-filters"]').click();assert.equal(app.state.draft.releaseBasis,'tcg');assert.equal(app.state.dirty,true);}finally{window.close();}
+});

@@ -1,0 +1,284 @@
+{
+  "release": "0.5.9",
+  "date": "2026-11-05",
+  "productionCodeCommit": "3e0981630d9f41a298d465e4603bc14dae34c4e6",
+  "unitTests": {
+    "tests": 537,
+    "passed": 537,
+    "failed": 0
+  },
+  "build": "passed",
+  "memory": {
+    "createdAndDestroyed": 120,
+    "retainedCallbacks": 0
+  },
+  "dependencies": {
+    "runtimeAdvisories": 0,
+    "allAdvisories": 0
+  },
+  "browser": {
+    "workflowRun": 42112286305,
+    "url": "https://github.com/Owningturtle287/Yu-Gi-Oh-Custom-Dueling/actions/runs/42112286305",
+    "result": "passed",
+    "viewports": [
+      [
+        844,
+        390
+      ],
+      [
+        667,
+        375
+      ],
+      [
+        568,
+        320
+      ],
+      [
+        740,
+        360
+      ],
+      [
+        390,
+        844
+      ],
+      [
+        320,
+        568
+      ],
+      [
+        1280,
+        720
+      ],
+      [
+        1024,
+        768
+      ]
+    ]
+  },
+  "ultimateOffering": {
+    "directedChecks": 12,
+    "failed": 0
+  },
+  "totals": {
+    "probes": 8078,
+    "games": 180,
+    "completedGames": 180,
+    "actions": 392534,
+    "replays": 436
+  },
+  "distinctFullGameSeeds": 120,
+  "note": "Two controller sweeps each include the same initial 60 seeded game scenarios. The separate game batch adds 60 new seeds. Synthetic probes are not complete matches or exhaustive interaction certification. Browser workflow validates the production code commit; final test-only additions include quota recovery and deck reorder identity assertions.",
+  "runs": [
+    {
+      "configuration": {
+        "games": 60,
+        "gameStart": 0,
+        "seed": 1001,
+        "limit": 2170,
+        "randomVersion": 3,
+        "promptVersion": 2,
+        "probeSide": 0,
+        "aiSizes": [
+          30,
+          40,
+          60
+        ],
+        "sweep": true,
+        "battleFlips": true,
+        "actionLimit": 2500
+      },
+      "started": "2026-11-05T21:18:46.869Z",
+      "finished": "2026-11-05T21:31:08.926Z",
+      "eraEnd": "2006-12-31",
+      "archive": 14655,
+      "eligible": 2170,
+      "probes": 4039,
+      "games": 60,
+      "completedGames": 60,
+      "actions": 190902,
+      "replays": 215,
+      "coverage": {
+        "probed": 2170,
+        "drawn": 1659,
+        "played": 1445,
+        "activated": 819,
+        "resolved": 825
+      },
+      "aiDeckSizes": {
+        "30": 20,
+        "40": 20,
+        "60": 20
+      },
+      "rulesRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+      "poolHash": "839ace5e550b2383d5c8f753164afcbd1dfb90291656e9ffd46a389f4e8cad34",
+      "cardsSnapshotHash": "2ba2ca84a8cf7ffc382c5bfbafcf48752c2f3810b6a41ff71e9dc3c1f9b6e931",
+      "setsSnapshotHash": "cecf5b10d25e75b1b06bca56fef27412c130dc67d6e94d22f1d22a866ffb9bac",
+      "failures": [],
+      "timeouts": [],
+      "distinctEffects": 827
+    },
+    {
+      "configuration": {
+        "games": 60,
+        "gameStart": 0,
+        "seed": 1001,
+        "limit": 2170,
+        "randomVersion": 3,
+        "promptVersion": 2,
+        "probeSide": 1,
+        "aiSizes": [
+          30,
+          40,
+          60
+        ],
+        "sweep": true,
+        "battleFlips": true,
+        "actionLimit": 2500
+      },
+      "started": "2026-11-05T21:18:46.801Z",
+      "finished": "2026-11-05T21:31:47.763Z",
+      "eraEnd": "2006-12-31",
+      "archive": 14655,
+      "eligible": 2170,
+      "probes": 4039,
+      "games": 60,
+      "completedGames": 60,
+      "actions": 193967,
+      "replays": 215,
+      "coverage": {
+        "probed": 2170,
+        "drawn": 1659,
+        "played": 1440,
+        "activated": 814,
+        "resolved": 821
+      },
+      "aiDeckSizes": {
+        "30": 20,
+        "40": 20,
+        "60": 20
+      },
+      "rulesRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+      "poolHash": "839ace5e550b2383d5c8f753164afcbd1dfb90291656e9ffd46a389f4e8cad34",
+      "cardsSnapshotHash": "2ba2ca84a8cf7ffc382c5bfbafcf48752c2f3810b6a41ff71e9dc3c1f9b6e931",
+      "setsSnapshotHash": "cecf5b10d25e75b1b06bca56fef27412c130dc67d6e94d22f1d22a866ffb9bac",
+      "failures": [],
+      "timeouts": [],
+      "distinctEffects": 822
+    },
+    {
+      "configuration": {
+        "games": 60,
+        "gameStart": 60,
+        "seed": 1001,
+        "limit": 2170,
+        "randomVersion": 3,
+        "promptVersion": 2,
+        "probeSide": 0,
+        "aiSizes": [
+          30,
+          40,
+          60
+        ],
+        "sweep": false,
+        "battleFlips": false,
+        "actionLimit": 2500
+      },
+      "started": "2026-11-05T21:30:49.828Z",
+      "finished": "2026-11-05T21:31:23.722Z",
+      "eraEnd": "2006-12-31",
+      "archive": 14655,
+      "eligible": 2170,
+      "probes": 0,
+      "games": 60,
+      "completedGames": 60,
+      "actions": 7665,
+      "replays": 6,
+      "coverage": {
+        "probed": 0,
+        "drawn": 827,
+        "played": 435,
+        "activated": 197,
+        "resolved": 198
+      },
+      "aiDeckSizes": {
+        "30": 20,
+        "40": 20,
+        "60": 20
+      },
+      "rulesRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+      "poolHash": "839ace5e550b2383d5c8f753164afcbd1dfb90291656e9ffd46a389f4e8cad34",
+      "cardsSnapshotHash": "2ba2ca84a8cf7ffc382c5bfbafcf48752c2f3810b6a41ff71e9dc3c1f9b6e931",
+      "setsSnapshotHash": "cecf5b10d25e75b1b06bca56fef27412c130dc67d6e94d22f1d22a866ffb9bac",
+      "failures": [],
+      "timeouts": [],
+      "distinctEffects": 199
+    }
+  ],
+  "sourceHashes": {
+    "package-lock.json": "1f47d9b5fe3d6b7390a4962e4fb7e2d985b006dffe4292c84a393fbe0646db65",
+    "package.json": "1c454be1cd222589223e1b097c358257f48f44b80923c25f6fc3d2c6f5cfadb5",
+    "scripts/audit-duels.mjs": "f43dccf8c8a43a9c3d93236e6ec0728ce02534da18a21ebc714e4a239b171a0d",
+    "scripts/bench-ai.mjs": "84ce9dbeaa5c2f90d483a91cf0a94cc6526368c8a46cfbc286c2f286541ed6d0",
+    "scripts/build.mjs": "c9b4320ad5d95b19d5ecb0f6f4f9f6645a77f4fcfdec39fab24cbed5263a86b9",
+    "scripts/check-api.mjs": "2b96da2873f08b54648345d5f9abd18ed732a5e1f0c420269d4b0979b12b0091",
+    "scripts/check-duel-api.mjs": "4216600b5747547c4a27ddbe8c7a55b7ba41b85b0766e64d34e98cb2da4d77ae",
+    "scripts/check-menu-layout.mjs": "53c1008230a207a0fcbbbfde12204e1808dc5b7fa0fd4c5bc455a83fa0a3a841",
+    "scripts/check-runtime-memory.mjs": "fc8a700c10b6cfc0628b5012c4a385abe618fb8be5367a85664d1a11b3528ebd",
+    "scripts/prepare-runtime.mjs": "ca2ca2e3bdc4ae829e0a2bc2049201b08b102672156a1e7f5c2a6264c0812790",
+    "scripts/serve.mjs": "22d1c118ee32617fca1d30f73e8e915b485e9248121d8780f99484c996002735",
+    "scripts/tune-ai.mjs": "bccd14f6311e990e3cef0f3a1e8400898563293b87659958472d8c659d763b1c",
+    "src/app.js": "38e25979a94342a1bf9898dbe5106ee64e3beb626e034297d2e74e02ffced47c",
+    "src/card-details.js": "6551b7cfdc28a2d71603304c14974028c7f8e1c77100987e9d9bdc0f7a76bbde",
+    "src/card-filters.js": "60682b9cc599fcb4612b9199457064d49eed5fbf009543d10c330659246043e2",
+    "src/cards.js": "a6c3a123f5ae7eaa79c39b828b6a762d19de4499bdd957f0a67b9c49a1c2bb4c",
+    "src/core.js": "dba0b45ab6e1e39f05353901b8fc1e27b7b4b2be35c417fe7718f2da96ef1785",
+    "src/deck-view.js": "772e5e57f456147e0dda102412be4266b8a638b3b393f6dc017774a4c111e834",
+    "src/duel/ai-client.js": "82d515d599b6905cd1cd842ed439ca62227b3375dc2d2823da35c8f61e58e7f5",
+    "src/duel/ai-combat.js": "fb0a440367b25ec8e1a41e250eb244882e7938b477d0c7288b056ac825f85cb6",
+    "src/duel/ai-guidance.js": "191114c7f4d54b81a64c5f7d0b60148a7a08663f1e076c6e9436229a69272330",
+    "src/duel/ai-knowledge.js": "ab9d56b8279790986866cd395dacd2cfadaf8ca71eddc053d7673629751a68e6",
+    "src/duel/ai-learning.js": "4b7452a8f2378817f26749be8b3224f17cb236e12bab49b5e6df090fcf732ee8",
+    "src/duel/ai-memory.js": "7a0ffbc59d931322db554dbdca65cad8621837210d2ebe787d0fd39ad30d7dd3",
+    "src/duel/ai-physics.js": "158a6d4690493ef0f45499e3f3089f9b5af98d450888a353bdf4d38da280f857",
+    "src/duel/ai-turn.js": "84cec38690a4d935154d98b07c42ded0f16fb11466fe8b5870c8d8bd215aeed9",
+    "src/duel/ai-worker.js": "51de3f82addf20ff164e11d43c34f8b52ba15fabbf0f41f8da9e8323838675e7",
+    "src/duel/ai.js": "41155fef44b1c0cccbd02dd208a9e7588df5a8686ab8a6387c35406761c53698",
+    "src/duel/arena-layout.js": "07055739792cac1e745f3ece73b6749bb8f0f40f04c841ea8eed52de1728cd08",
+    "src/duel/attack-arrows.js": "a9ccaf1d2cadd24751f4da8f4f8d165ef444e7ef562335b8a2794354c3517f3e",
+    "src/duel/battle-presentation.js": "33725dbfa854c584ec5fb3ba0c5f741891c33c7db5f9ee0769b6508430d09e06",
+    "src/duel/battle-timing.js": "a033f6dd044d7419c1ac8368344fd15ecde53d89db285f28c4ad9b14ec1d407b",
+    "src/duel/card-view.js": "00250998ae7a6122278e7c67455abb9848f11fc0ea6e2e98d5f185fd998f10f7",
+    "src/duel/catalog.js": "4e1b210a737058776aa5c71d2a082b7bef1e1a7063dcdb06246bf83af3f01da4",
+    "src/duel/chain-art.js": "98c28bdfa43d4373ced8d0e73478d5c1708d02be0a9a032b38dda0f069d9751f",
+    "src/duel/choice-view.js": "c9fd92d670e1d089f691007db14c7ded8aff7cc751f6066616e05e553e8d490c",
+    "src/duel/config.js": "8f92569da74f23ddd2fe13a619b915df8068de64cba0873241c970ac0f5ddcde",
+    "src/duel/decks.js": "7e0e83d2bb806c1a43be230c61c3dcc0550e027b199dbd291a8b898738c10d43",
+    "src/duel/declaration-art.js": "434022fb571d43dd481fa160a1e3634a0b608adf41d62e322a53c426797a96d2",
+    "src/duel/declaration-icons.js": "e8bb9e0b187dd2a2e3f7a89ec06571eabb69e68bb3b04485a0a28e2e14433938",
+    "src/duel/dom.js": "d6f892e61031ae1df91c33a2e95d76952c20dcabe3d47e4ad389c8156c6093e7",
+    "src/duel/effects.js": "a38e2225e27d9909df7f605dd0a271bfb1dfb17761f754247a0d3f5f8bba1c5e",
+    "src/duel/engine.js": "d552b5e702c1393de8a68afa3aeee7ae775ca3fa254359a27cd5b7d7fa7a7833",
+    "src/duel/feedback.js": "a74212d8b985c4f916e1c064f3e329be39290eca014e98320ffa5d7c3e68e5bf",
+    "src/duel/field.js": "5a3bc856e99281ff73a6b9afc32a312594ba562644794055567253353ca93894",
+    "src/duel/flow.js": "a74b18a3f1fcfa479f63973067a4c98ec93099f29a5486f3c52c1289d061b2af",
+    "src/duel/identities.js": "f146ccbf5440fcdb3553c668e30a2bae502f13c81f5521773a486ca1caecfb4c",
+    "src/duel/intro.js": "b0ba583f266859d6e0677f38150098209590b4c601b7c7baa46442da4fc62fee",
+    "src/duel/log.js": "c24d71e4a55bd6a57e1656d96c690d76ca06bac3d567df95f8defa52f2cfb9ba",
+    "src/duel/motion.js": "ddffc3f454da47b829f57cbb145cc09c0a88470e383cda36918551b7ce29f212",
+    "src/duel/native-ai.js": "8f3f0a09d470a719cbbac9a7da052f2f4fd75c42b2a97a2d49a8363da1fd03f0",
+    "src/duel/native-engine.js": "6e51941c2e2316dc6a257892f189ed415388db581258f368bacbbe197d7de699",
+    "src/duel/native-loader.js": "38a798047783030baf5233d11ce8faaf838e72d0196df920d6e60ad9c7050432",
+    "src/duel/native-prompts.js": "dfd579c0071bf6c672a849d6c46909eebe67790b4d07ba4c0442809c57ab9bcb",
+    "src/duel/random.js": "63b9823e54e3d0968a987a16bd3795f4feb32d6c08f74a7f662ab87c78ecf87e",
+    "src/duel/recovery.js": "662db1ee1078f367d92e88ea43d8975dac5c8345f9ea96ab0eda5033cec7d2db",
+    "src/duel/responses.js": "463886846951e903c20454e392f9ae1ad859bd33b35d3a473342ad2020cd8500",
+    "src/duel/rules-manifest.js": "dd9f22a68b3b3f1baf1393bbe1ecb2ff9f947aab54cefa3d1a271f0378dae399",
+    "src/duel/saves.js": "2de8552c73d5eee011c77897a0cb2f96a6482dae7db9b60172a85e3bdbab8c63",
+    "src/duel/ui.js": "2c0dd8dadd5993bc2c883e196a38e9b117932de5f21b146f4021dc1bac7f2481",
+    "src/duel/viewport.js": "be083667a97ea6ea76a0078376394d5c22117e08b879bf54a7a7fddc275b2339",
+    "src/era.js": "bb14438defeccc5b6aecef156e483a1d9cb22a984284dad8b64750045b5df39b",
+    "src/icons.js": "cd24b94b39f7c9a09339b665164524d410b294579b10d392ff3fa89042ab468a",
+    "src/layout.js": "5cc4bd6835002b9b79e31da9395bf39c2133ed973622bfe1809e60b01daa0424",
+    "sw.js": "8be0d92bfc1f80310f65b7758731ef724f1b3904dea9c52fba12df5cc863a492"
+  }
+}

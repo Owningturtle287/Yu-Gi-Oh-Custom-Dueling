@@ -9,6 +9,7 @@ import {freshSeed,seededRandom,legacyRandom,shuffled,deriveSeed} from './random.
 import { effectExplanation } from './effects.js';
 import { BATTLE_STEPS, CORE_BATTLE_HINTS, battleContext } from './battle-timing.js';
 import {describeNative,choiceContext,phaseEffectText} from './native-prompts.js';
+import {locationKey,trackIdentities} from './identities.js';
 export { findCard, PHASES, PHASE_LABELS };
 
 const names=['deck','hand','monsters','spells','grave','banished','extra'];
@@ -34,7 +35,8 @@ export function nativeSeed(seed,version=2){
 // public events and field queries into the existing arena's presentation model.
 export function createNativeBackend({rules=defaultNativeRules}={}) {
   const matches=new Map();let nextMatch=0;
-  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,promptVersion=2,revealVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,promptVersion=2,revealVersion=2,identityVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+    if(![1,2].includes(identityVersion))throw new Error('Unsupported saved duel identity version.');
     if(![1,2,3].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
     if(![1,2].includes(rulesVersion))throw new Error('Unsupported saved duel rules version.');
     if(![1,2].includes(promptVersion))throw new Error('Unsupported saved duel prompt version.');
@@ -57,7 +59,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:nativeSeed(seed,randomVersion),team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
     if(!handle)throw new Error('The duel rules engine could not start.');
     const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,revealSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
-    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,promptVersion,revealVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];
+    r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,promptVersion,revealVersion,identityVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];r.identities=new Map();
     r.life=[lp,lp];
     r.reason=Object.fromEntries([...scripts['constant.lua'].matchAll(/^REASON_(\w+)\s*=\s*(0x[\da-f]+|\d+)/gmi)].map(([,key,value])=>[key,Number(value)]));
     r.side=team=>team===0?first:1-first;r.team=side=>side===first?0:1;
@@ -149,7 +151,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   }
   function sync(r){
     const {lib,handle,module:m}=r,L=m.OcgLocation,Q=m.OcgQueryFlags;
-    const previous=r.state.players,pool=cardsIn(r.state),used=new Set();
+    const previous=r.state.players,pool=cardsIn(r.state),used=new Set(),identities=new Map();
     const flags=Q.CODE|Q.POSITION|Q.TYPE|Q.ATTACK|Q.DEFENSE|Q.OWNER|Q.LEVEL|Q.RACE|Q.ATTRIBUTE|Q.IS_PUBLIC|Q.STATUS|Q.COUNTERS;
     const raceName=value=>({WINGEDBEAST:'Winged Beast',BEASTWARRIOR:'Beast-Warrior',SEASERPENT:'Sea Serpent',DIVINE:'Divine-Beast'})[value]||value?.toLowerCase().replace(/^./,c=>c.toUpperCase());
     const field=lib.duelQueryField(handle),players=previous.map(p=>({...emptyPlayer(p.name),lp:p.lp}));
@@ -164,7 +166,8 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
           if(zone==='monsters'&&index>=5||zone==='spells'&&index>5)return;
           const old=zone==='spells'&&index===5?previous[side].field:previous[side][zone][index];
           const same=old?.coreCode===q.code&&!used.has(old.uid)?old:pool.find(c=>c.coreCode===q.code&&!used.has(c.uid));
-          const uid=same?.uid||`${r.id}-c${++r.uid}`;used.add(uid);
+          const key=locationKey({controller,location,sequence:index}),tracked=r.identities.get(key),candidate=r.bootstrap.options.identityVersion===1?same?.uid:tracked;
+          const uid=candidate&&!used.has(candidate)?candidate:`${r.id}-c${++r.uid}`;used.add(uid);identities.set(key,uid);
           const card={uid,coreCode:q.code,card:descriptor(r,q.code),owner:r.side(q.owner??controller),controller:side,public:!!q.isPublic,disabled:!!(q.status&1),faceUp:!!(q.position&m.OcgPosition.FACEUP),position:q.position&m.OcgPosition.DEFENSE?'defense':'attack',currentStats:{atk:Math.max(0,q.attack||0),def:Math.max(0,q.defense||0)}};
           if(q.level!==undefined)card.currentLevel=q.level;
           if(q.type!==undefined)card.currentType=q.type;
@@ -178,7 +181,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
         });
       }
     }
-    r.state.players=players;observePublic(r.state);
+    r.identities=identities;r.state.players=players;observePublic(r.state);
   }
   function describe(r,value){
     return describeNative(r.records,value);
@@ -187,7 +190,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   const effectName=r=>effectSource(r)?.card.name;
   function movementLog(r,msg){
     const L=r.module.OcgLocation,P=r.module.OcgPosition,R=r.reason,s=r.state,reason=msg.reason||0;
-    const from=cardAt(r,msg.from),side=r.side(msg.to.controller),owner=side===0?'your':'AI’s';
+    const from=findCard(r.state,r.movedIdentities?.get(msg))||cardAt(r,msg.from),side=r.side(msg.to.controller),owner=side===0?'your':'AI’s';
     const zone=location=>({[L.DECK]:'deck',[L.HAND]:'hand',[L.MZONE]:'monsters',[L.SZONE]:'spells',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'})[location];
     const visible=msg.from.location===L.GRAVE||!!(msg.from.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.from.location)||msg.to.location===L.GRAVE||!!(msg.to.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.to.location);
     rememberMove(s,{uid:from?.uid,card:descriptor(r,msg.card),fromSide:r.side(msg.from.controller),fromZone:zone(msg.from.location),toSide:side,toZone:zone(msg.to.location),visible});
@@ -305,6 +308,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     r.state.visualAction=null;r.state.window=null;r.state.choice=null;r.state.revealedUIDs=[];r.selected=[];r.sumPlan=undefined;
     for(let step=0;step<3000;step++){
       const status=lib.duelProcess(handle),messages=lib.duelGetMessage(handle);let prompt=null;
+      if(r.bootstrap.options.identityVersion===2)r.movedIdentities=trackIdentities(r.identities,messages,m,()=>`${r.id}-c${++r.uid}`);
       for(const msg of messages){event(r,msg);if(selectionTypes(m).has(msg.type))prompt=msg;}
       if(r.errors.length)throw new Error('Card script error: '+r.errors.splice(0).join(' ').slice(0,240));
       if(r.state.winner!==null||status===m.OcgProcessResult.END){sync(r);r.prompt=null;actions(r);return;}
@@ -365,11 +369,12 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     if(!p||s.winner!==null)return;
     const side=r.side(p.player),out=s.actions[side];
     const add=(action,response,stage=null)=>{const id=`${r.epoch}:${out.length}`;out.push({...action,id});r.reply.set(id,{response,stage});};
+    const actionText=item=>{const value=describe(r,item.description);return descriptor(r,item.code).name==='Ultimate Offering'&&value==='Special Summon'?'Normal Summon/Set':value;};
     const targetName=(card,item)=>card&&(card.controller===side||card.faceUp||card.public||s.revealedUIDs?.includes(card.uid)||item.location===m.OcgLocation.GRAVE)?card.card.name:'Face-down card';
     const located=(item,type,label,response,extra={})=>{const card=sourceAt(r,item);add({type,uid:card?.uid,label,...(item.code&&['ACTIVATE','EFFECT'].includes(type)?{effectCard:descriptor(r,item.code)}:{}),...extra},response);};
     if(p.type===T.SELECT_IDLECMD){
       if(!s.chain.length)r.sourceUid=null;
-      for(const [key,command,type,label] of [['summons',m.SelectIdleCMDAction.SELECT_SUMMON,'SUMMON','Normal Summon'],['special_summons',m.SelectIdleCMDAction.SELECT_SPECIAL_SUMMON,'SUMMON','Special Summon'],['pos_changes',m.SelectIdleCMDAction.SELECT_POS_CHANGE,'POSITION','Change position'],['monster_sets',m.SelectIdleCMDAction.SELECT_MONSTER_SET,'SUMMON','Set in Defense'],['spell_sets',m.SelectIdleCMDAction.SELECT_SPELL_SET,'SET','Set Spell / Trap'],['activates',m.SelectIdleCMDAction.SELECT_ACTIVATE,'ACTIVATE','Activate effect']])p[key].forEach((item,index)=>located(item,type,label,{type:R.SELECT_IDLECMD,action:command,index},{set:key==='monster_sets',special:key==='special_summons',tributes:[],flip:key==='pos_changes'&&!sourceAt(r,item)?.faceUp,effectText:item.description?describe(r,item.description):''}));
+      for(const [key,command,type,label] of [['summons',m.SelectIdleCMDAction.SELECT_SUMMON,'SUMMON','Normal Summon'],['special_summons',m.SelectIdleCMDAction.SELECT_SPECIAL_SUMMON,'SUMMON','Special Summon'],['pos_changes',m.SelectIdleCMDAction.SELECT_POS_CHANGE,'POSITION','Change position'],['monster_sets',m.SelectIdleCMDAction.SELECT_MONSTER_SET,'SUMMON','Set in Defense'],['spell_sets',m.SelectIdleCMDAction.SELECT_SPELL_SET,'SET','Set Spell / Trap'],['activates',m.SelectIdleCMDAction.SELECT_ACTIVATE,'ACTIVATE','Activate effect']])p[key].forEach((item,index)=>located(item,type,label,{type:R.SELECT_IDLECMD,action:command,index},{set:key==='monster_sets',special:key==='special_summons',tributes:[],flip:key==='pos_changes'&&!sourceAt(r,item)?.faceUp,effectText:item.description?actionText(item):''}));
       if(p.to_bp)add({type:'NEXT',label:'Battle'},{type:R.SELECT_IDLECMD,action:m.SelectIdleCMDAction.TO_BP,index:null});
       else if(p.to_ep)add({type:'NEXT',label:'End'},{type:R.SELECT_IDLECMD,action:m.SelectIdleCMDAction.TO_EP,index:null});
       if(p.to_ep)add({type:'END'},{type:R.SELECT_IDLECMD,action:m.SelectIdleCMDAction.TO_EP,index:null});return;
@@ -383,7 +388,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       r.attackSelectionUid=null;
       s.pending=null;s.battleStep=null;r.lastAttack=null;r.battleStrike=null;
       if(!s.chain.length)r.sourceUid=null;
-      p.chains.forEach((item,index)=>located(item,'ACTIVATE','Activate effect',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_CHAIN,index},{effectText:describe(r,item.description)}));
+      p.chains.forEach((item,index)=>located(item,'ACTIVATE','Activate effect',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_CHAIN,index},{effectText:actionText(item)}));
       const battleExitBlocked=!p.to_m2&&!p.to_ep;
       s.battleOptions=p.attacks.map(item=>({uid:sourceAt(r,item)?.uid,canDirect:!!item.can_direct,battleExitBlocked})).filter(item=>item.uid);
       p.attacks.forEach((item,index)=>located(item,'ATTACK','Attack',{type:R.SELECT_BATTLECMD,action:m.SelectBattleCMDAction.SELECT_BATTLE,index},{canDirect:!!item.can_direct,battleExitBlocked,...(!s.players[1-side].monsters.some(Boolean)&&item.can_direct?{target:null}:{})}));
@@ -395,7 +400,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       const context=timing&H.MAIN_END?`Before ${PHASE_LABELS[s.phase]} ends, you may activate a legal fast effect.`:timing&(H.SUMMON|H.SPSUMMON|H.FLIPSUMMON)?'A monster was summoned. You may respond before play continues.':timing&H.CHAIN_END?'The previous chain has finished. You may start a new response chain.':`You may activate a legal fast effect during ${PHASE_LABELS[s.phase]}.`;
       s.window={priority:side,promptId:`${r.id}:p${r.promptSequence}`,forced:p.forced,phaseTrigger:p.selects.some(item=>!!phaseEffectText(descriptor(r,item.code),s.phase)),battleStep:s.battleStep,timing:battleContext(s)||context,event:{kind:s.pending?.kind||((timing&(H.SUMMON|H.SPSUMMON|H.FLIPSUMMON))?'summon':s.chain.length?'chain':'phase'),side:s.active}};
       if(!p.forced)add({type:'PASS'},{type:R.SELECT_CHAIN,index:null});
-      p.selects.forEach((item,index)=>located(item,'ACTIVATE','Activate '+descriptor(r,item.code).name,{type:R.SELECT_CHAIN,index},{effectText:describe(r,item.description)}));return;
+      p.selects.forEach((item,index)=>located(item,'ACTIVATE','Activate '+descriptor(r,item.code).name,{type:R.SELECT_CHAIN,index},{effectText:actionText(item)}));return;
     }
     const promptSource=p.type===T.SELECT_EFFECTYN&&(sourceAt(r,p)||(p.code?{uid:null,card:descriptor(r,p.code),side}:null));
     const source=promptSource||effectSource(r);
@@ -473,6 +478,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   }
   function applyAction(state,action,side=state.active){
     const r=matches.get(state.runtimeId);if(!r)throw new Error('This duel has ended. Start a new match.');
+    if(r.failed)throw new Error('This duel must be restored from its last checkpoint before continuing.');
     r.state=structuredClone(state);r.state.visualAction=null;
     if(action.type==='ACK_REVEAL'){
       const reveal=r.state.reveals?.[0];
@@ -489,14 +495,16 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     if(legal.type==='ATTACK'){r.attackSelectionUid=legal.uid;r.battleExitBlocked=legal.battleExitBlocked;}
     if(r.prompt.type===r.module.OcgMessageType.SELECT_EFFECTYN&&legal.yes)r.sourceUid=state.choice?.trigger?.uid||r.sourceUid;
     if(legal.type==='PASS'||r.prompt.type===r.module.OcgMessageType.SELECT_EFFECTYN&&legal.yes===false){const trigger=state.choice?.optionalResponse?findCard(state,state.choice.trigger.uid):null;const label=trigger&&(trigger.controller===0||trigger.faceUp||trigger.public||state.revealedUIDs?.includes(trigger.uid))?trigger.card.name:null;log(r,`${who(side)} ${side===0?'pass':'passes'}${label?' on '+label+'’s optional effect':state.chain.length?' on responding to '+state.chain.at(-1).card.name:' this response opportunity'}; play continues.`,'response',[],side);}
-    r.lib.duelSetResponse(r.handle,reply.response);pump(r);return r.state;
+    try{r.lib.duelSetResponse(r.handle,reply.response);pump(r);return r.state;}
+    catch(error){r.failed=true;error.duelAdvanced=true;throw error;}
   }
   function destroyMatch(state){const r=matches.get(state?.runtimeId);if(r){r.lib.destroyDuel(r.handle);matches.delete(r.id);}}
-  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r)throw new Error('This duel is no longer available.');return {version:1,presentationRevision:4,queryRevision:2,revision:r.manifest.scriptsRevision,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
+  function exportMatch(state){const r=matches.get(state?.runtimeId);if(!r||r.failed)throw new Error('This duel is no longer available. Restore its last checkpoint.');return {version:1,presentationRevision:4,queryRevision:2,revision:r.manifest.scriptsRevision,rulesFingerprint:r.fingerprint,...structuredClone(r.bootstrap),history:structuredClone(r.history),checkpoint:checkpoint(state)};}
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
-    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,promptVersion:save.options?.promptVersion??1,revealVersion:save.options?.revealVersion??1,cards});
+    if(save.rulesFingerprint&&save.rulesFingerprint!==pack.fingerprint)throw new Error('This saved duel uses a different card database or rules runtime.');
+    let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,promptVersion:save.options?.promptVersion??1,revealVersion:save.options?.revealVersion??1,identityVersion:save.options?.identityVersion??1,cards});
     const legacy=![2,3,4].includes(save.presentationRevision);
     const acknowledgeLegacyLists=()=>{
       while((legacy&&state.reveals?.[0]?.presentationOnly)||(![3,4].includes(save.presentationRevision)&&state.reveals?.[0]?.deckTop)){const reveal=state.reveals[0];state=applyAction(state,legalActions(state,reveal.viewer)[0],reveal.viewer);}

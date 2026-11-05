@@ -37,12 +37,13 @@ export async function loadCards({ fetchImpl = fetch, cache, force = false, now =
 export function browserCardCache() {
   let database;
   const open = () => database ||= new Promise((resolve, reject) => {
+    let failed=false;
     const request = indexedDB.open('duel-atlas', 1);
     request.onupgradeneeded = () => request.result.createObjectStore('archive');
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-    request.onblocked = () => reject(new Error('Archive cache is busy.'));
-  });
+    request.onsuccess = () => {if(failed){request.result.close();return;}request.result.onversionchange=()=>{request.result.close();database=null;};resolve(request.result);};
+    request.onerror = () => {failed=true;reject(request.error);};
+    request.onblocked = () => {failed=true;reject(new Error('Archive cache is busy.'));};
+  }).catch(error=>{database=null;throw error;});
   return {
     async read() {
       const db = await open();

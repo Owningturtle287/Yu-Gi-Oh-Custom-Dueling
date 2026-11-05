@@ -59,14 +59,16 @@ export function battlePlan(state,side,{first=null,targets=null,available=null,wi
   search:for(let depth=0;depth<maxDepth&&frontier.length;depth++){
     const candidates=[];
     for(const node of frontier){
+      const remainingEnemies=new Set(node.enemies),lostFriends=new Set(node.moves.filter(move=>move.outcome.ownLost).map(move=>move.uid));
+      const projected={...state,players:state.players.map((player,index)=>({...player,lp:index===side?node.lp:node.enemyLP,monsters:player.monsters.map(c=>c&&(index===side?!lostFriends.has(c.uid):remainingEnemies.has(c.uid))?c:null)}))};
       for(const fighter of fighters){
         const remaining=node.remaining.find(r=>r.uid===fighter.card.uid);if(!remaining?.count||depth===0&&first&&fighter.card.uid!==first)continue;
         const choices=node.enemies.map(uid=>enemyByUID.get(uid));if(!choices.length||fighter.direct)choices.push(null);
         for(const target of choices){
           if(depth===0&&targets&&!targets.has(target?.uid||null))continue;
           if(nodes>=maxNodes)break search;
-          const outcomeKey=fighter.card.uid+':'+(target?.uid||'direct');
-          if(!outcomes.has(outcomeKey))outcomes.set(outcomeKey,battleOutcome(state,side,fighter.card,target));
+          const outcomeKey=node.lp+':'+node.enemyLP+'|'+node.enemies.join(',')+'|'+projected.players[side].monsters.map(c=>c?.uid||'').join(',')+'|'+fighter.card.uid+':'+(target?.uid||'direct');
+          if(!outcomes.has(outcomeKey))outcomes.set(outcomeKey,battleOutcome(projected,side,fighter.card,target));
           const outcome=outcomes.get(outcomeKey),lp=node.lp-outcome.ownDamage,enemyLP=node.enemyLP-outcome.enemyDamage;
           let score=node.score+outcome.value;
           const uncertain=node.uncertain||!!target?.hidden;

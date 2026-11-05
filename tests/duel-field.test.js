@@ -93,13 +93,13 @@ test('Attack shortcut selects a highlighted Set monster on the board without a t
     assert.equal(r.$(`[data-duel-card="${attacker.uid}"]`).dataset.role,'source');assert.equal(r.$(`[data-duel-card="${target.uid}"]`).dataset.role,'target');
   }finally{r.close();}
 });
-test('opening banner blocks phase decisions, can be skipped, and exiting discards the live match',async()=>{
+test('opening banner blocks phase decisions, can be skipped, and navigation retains the live match',async()=>{
   const r=await rig({width:844,height:390,animations:true,opening:true});try{
     const initial=r.controller.getMatch(),frozen=JSON.stringify(initial);assert.ok(r.$('.duel-intro'));assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,2);
     await new Promise(resolve=>setTimeout(resolve,80));assert.equal(JSON.stringify(r.controller.getMatch()),frozen);
     r.$('.duel-intro-skip').click();await waitFor(()=>r.controller.getMatch().phase==='main1'&&r.$('.duel-arena').dataset.moving==='false');
     assert.equal(initial.players[0].hand.length,5);assert.equal(r.$('.duel-exit'),null);assert.equal(r.main.querySelectorAll('.duel-side[inert]').length,0);
-    r.controller.leave();r.controller.enter();assert.equal(r.controller.getMatch(),null);assert.ok(r.$('.solo-setup'));
+    const live=r.controller.getMatch();r.controller.leave();r.controller.enter();assert.equal(r.controller.getMatch(),live);assert.ok(r.$('.duel-arena'));
   }finally{r.close();}
 });
 

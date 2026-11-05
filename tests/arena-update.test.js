@@ -127,7 +127,7 @@ test('Save & exit ends the runtime and explicitly resumes a staged native Tribut
     const runtime=r.s.runtimeId,deck=r.s.players[0].deck.map(c=>c.card.id);r.$('[data-duel="duel-menu"]').click();r.$('[data-duel="save-exit"]').click();assert.equal(r.controller.getMatch(),null);assert.ok(r.$('.solo-setup'));
     r.$('[data-duel-tab="3"]').click();assert.equal(r.main.querySelectorAll('[data-resume-duel]').length,1);r.$('[data-resume-duel]').click();await waitFor(()=>r.controller.getMatch()?.choice?.selected.length===1);
     assert.notEqual(r.s.runtimeId,runtime);assert.equal(r.s.normalSummons[0],0);assert.deepEqual(r.s.players[0].deck.map(c=>c.card.id),deck);assert.ok(r.$('[data-duel="cancel-choice"]'));
-    r.controller.leave();r.controller.enter();assert.equal(r.controller.getMatch(),null);assert.ok(r.$('.solo-setup'));
+    const resumed=r.s;assert.equal(r.controller.persistRecovery(),true);r.controller.leave();r.controller.enter();assert.equal(r.controller.getMatch(),resumed);assert.equal(r.s.choice.selected.length,1);assert.ok(r.$('.duel-arena'));
   }finally{r.close();}
 });
 test('Jirai Gumo renders distinct coin faces and explains the actual call and LP consequence',async()=>{

@@ -1,7 +1,7 @@
 import { dateForBasis, cardReleaseDate, normalizeReleaseYear, releaseCutoff, releaseRangeFilter, availableInRange } from './era.js';
 import {MECHANICS,effectFlag,matchesMonsterFilters,matchesSpellTrapType} from './card-filters.js';
 export {MECHANICS} from './card-filters.js';
-export const VERSION = '0.5.8';
+export const VERSION = '0.5.9';
 export const SECTIONS = ['main', 'extra', 'side'];
 export const LIMITS = { main: 60, extra: 15, side: 15 };
 export const STORAGE_KEY = 'duel-atlas.decks.v1';
@@ -115,26 +115,33 @@ export function validateDeck(value, { preserveNameLimit = false } = {}) {
   next.updatedAt = typeof value.updatedAt === 'string' ? value.updatedAt : deck.updatedAt;
   return next;
 }
-export function readDecks(storage) {
+export function readDeckStore(storage) {
   const raw = storage.getItem(STORAGE_KEY);
-  if (!raw) return [];
+  if (!raw) return {version:1,decks:[],rejectedDecks:[]};
   const data = JSON.parse(raw);
   if (data.version !== 1 || !Array.isArray(data.decks)) throw new Error('Saved deck data is unreadable. Export a backup before changing browser storage.');
   // Older releases admitted too many same-name variants. Keep those decks
   // editable with warnings so their owners can remove the excess copies.
-  return data.decks.map(deck => validateDeck(deck, { preserveNameLimit: true }));
+  const decks=[],rejectedDecks=Array.isArray(data.rejectedDecks)?[...data.rejectedDecks]:[];
+  for(const value of data.decks)try{decks.push(validateDeck(value,{preserveNameLimit:true}));}catch{rejectedDecks.push(value);}
+  return {...data,decks,rejectedDecks};
+}
+export function readDecks(storage,{onRejected=()=>{}}={}) {const data=readDeckStore(storage);if(data.rejectedDecks.length)onRejected(data.rejectedDecks);return data.decks;}
+export function mergeSavedDecks(storage, imported, rejected=[]){
+  const data=readDeckStore(storage),decks=[...imported,...data.decks];
+  storage.setItem(STORAGE_KEY,JSON.stringify({...data,decks,rejectedDecks:[...data.rejectedDecks,...rejected]}));return decks;
 }
 export function saveDeck(storage, deck) {
   const valid = validateDeck({ ...deck, updatedAt: new Date().toISOString() }, { preserveNameLimit: true });
-  const next = [...readDecks(storage).filter(d => d.id !== valid.id), valid].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, decks: next }));
+  const data=readDeckStore(storage),next = [...data.decks.filter(d => d.id !== valid.id), valid].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  storage.setItem(STORAGE_KEY, JSON.stringify({...data,decks:next}));
   return next;
 }
 export function deleteSavedDeck(storage, id) {
   // Read the current persisted list so deleting from an older tab cannot erase
   // decks saved by another tab. Commit storage before changing any UI state.
-  const next = readDecks(storage).filter(deck => deck.id !== id);
-  storage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, decks: next }));
+  const data=readDeckStore(storage),next = data.decks.filter(deck => deck.id !== id);
+  storage.setItem(STORAGE_KEY, JSON.stringify({...data,decks:next}));
   return next;
 }
 export function exportJSON(deck) { return JSON.stringify({ version: 1, deck }, null, 2); }
