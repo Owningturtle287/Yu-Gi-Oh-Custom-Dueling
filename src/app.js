@@ -1,5 +1,5 @@
 import {publicationHTML,cardFactsHTML,battleStatsHTML} from './card-details.js';
-import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, saveDeck, deleteSavedDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
+import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, readDeckStore, mergeSavedDecks, saveDeck, deleteSavedDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
 import { loadCards, browserCardCache } from './cards.js';
 import { icon } from './icons.js';
 import { MIN_RELEASE_YEAR, currentYear, normalizeReleaseYear, hydrateDeckDates, buildYearHighlights } from './era.js';
@@ -13,10 +13,10 @@ import {ATTRIBUTES,MONSTER_TYPES,SUBTYPES,SPELL_TRAP_TYPES} from './card-filters
 const $ = (selector, root = document) => root.querySelector(selector);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 const main = $('#main'), modal = $('#modal');
-const state = { route: 'home', cards: [], cardIndex: new Map(), cardStatus: 'loading', source: '', cardError: '', cacheWarning: false, filters: { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', spellTrapType: '', sort: 'az' }, filtered: [], yearHighlights: new Map(), decks: [], draft: createDeck(), section: 'main', dirty: false, storageError: '' };
+const state = { route: 'home', cards: [], cardIndex: new Map(), cardStatus: 'loading', source: '', cardError: '', cacheWarning: false, filters: { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', spellTrapType: '', sort: 'az' }, filtered: [], yearHighlights: new Map(), decks: [], draft: createDeck(), section: 'main', dirty: false, storageError: '', storageWarning:'' };
 let cache;
 try {
-  state.decks = readDecks(localStorage);
+  state.decks = readDecks(localStorage,{onRejected:rows=>state.storageWarning=`${rows.length} damaged deck entries were preserved for recovery. Back up all decks before clearing storage.`});
   if (state.decks.length) state.draft = structuredClone(state.decks[0]);
 } catch (error) { state.storageError = error.message; }
 try { cache = browserCardCache(); } catch { /* API browsing can work without IndexedDB. */ }
@@ -451,8 +451,7 @@ async function handleImport(file) {
         if (state.storageError) throw new Error('Browser storage is unavailable. Import a single-deck backup to edit it for this session.');
         confirmReplace(() => {
           try {
-            const next = [...copies, ...state.decks];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, decks: next }));
+            const next = mergeSavedDecks(localStorage,copies,Array.isArray(parsed.rejectedDecks)?parsed.rejectedDecks:[]);
             state.decks = next; state.draft = structuredClone(copies[0]); state.dirty = false; state.section = 'main';
             closeDialog(); navigate('decks'); toast(`Restored ${copies.length} deck${copies.length === 1 ? '' : 's'} as new copies.`);
           } catch { toast('Could not restore decks to browser storage. Existing decks were kept.', true); }
@@ -481,7 +480,7 @@ function showInstall() {
   if ($('#install-now')) $('#install-now').onclick = async () => { await installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; showInstall(); };
 }
 function showSettings() {
-  showDialog(`${dialogHeader('App settings')}<section class="settings-card"><h3>On this device</h3><p>${state.decks.length} saved decks · archive refreshes daily</p><button data-action="refresh-settings">Refresh archive</button><button data-action="backup-all">Back up all decks</button></section>${state.storageError ? '<p class="inline-error">Browser storage could not be read. Back up the saved data before fixing or clearing it in browser settings.</p>' : ''}<button data-action="close">Done</button>`, 'settings-body');
+  showDialog(`${dialogHeader('App settings')}<section class="settings-card"><h3>On this device</h3><p>${state.decks.length} saved decks · archive refreshes daily</p><button data-action="refresh-settings">Refresh archive</button><button data-action="backup-all">Back up all decks</button></section>${state.storageWarning?`<p class="inline-error">${escape(state.storageWarning)}</p>`:''}${state.storageError ? '<p class="inline-error">Browser storage could not be read. Back up the saved data before fixing or clearing it in browser settings.</p>' : ''}<button data-action="close">Done</button>`, 'settings-body');
 }
 function showAbout() {
   showDialog(`${dialogHeader('About Duel Atlas')}<span class="pill gold">v${VERSION} · FUNCTIONALITY TEST</span><p>Explore the full archive, build local decks and play Solo with the supported ${ERA_YEAR} TCG pool. Multiplayer is coming later.</p><p>Solo uses current card text and modern turn rules. Open Solo → Rules & cards for supported cards and limits.</p><p>Data and official card art: <a href="https://ygoprodeck.com/api-guide/" target="_blank" rel="noopener noreferrer">YGOPRODeck</a>. An independent fan app, unaffiliated with Konami. Card names and images belong to their rights holders; Duel Atlas branding is original.</p><p>Rules powered by <a href="https://github.com/n1xx1/ocgcore-wasm">ocgcore-wasm</a>, <a href="https://github.com/edo9300/ygopro-core">EDOPro</a> and <a href="https://github.com/ProjectIgnis/CardScripts">Project Ignis</a>. <a href="./assets/rules/THIRD_PARTY_NOTICES.md">Licenses & source</a>.</p><button data-action="close">Done</button>`, 'about-body');
@@ -492,7 +491,7 @@ const actions = {
  close: closeDialog, filters: showFilters, retry: () => requestArchive(true),
  'clear-search': () => { state.filters.query = ''; $('#card-search').value = ''; updateArchive(); $('#card-search').focus(); },
  'all-years': () => { state.draft.releaseStartYear=null; state.draft.releaseYear=null; state.dirty=true; closeDialog(); if(state.route==='decks')renderDeck();else renderArchive(); },
- 'reset-filters': () => { if(state.draft.releaseStartYear!=null)state.dirty=true;state.draft.releaseStartYear=null;state.draft.releaseBasis='tcg';Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', spellTrapType: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
+ 'reset-filters': () => { if(state.draft.releaseStartYear!=null||state.draft.releaseBasis!=='tcg')state.dirty=true;state.draft.releaseStartYear=null;state.draft.releaseBasis='tcg';Object.assign(state.filters, { query: '', category: 'All', attribute: '', race: '', subtype: '', mechanic: '', spellTrapType: '', sort: 'az' }); if (state.draft.releaseYear !== null) { state.draft.releaseYear = null; state.dirty = true; } closeDialog(); if (state.route === 'decks') renderDeck(); else renderArchive(); },
  'add-card': () => {
     try {
       const section = $('#add-section').value;
@@ -511,7 +510,7 @@ const actions = {
  import: () => $('#import-file').click(), install: showInstall, settings: showSettings, about: showAbout,
  'refresh-settings': () => { closeDialog(); navigate('archive'); requestArchive(true); },
  'backup-all': () => {
-   try { download(JSON.stringify({ version: 1, decks: state.decks, rawStorage: state.storageError ? localStorage.getItem(STORAGE_KEY) : undefined }, null, 2), 'duel-atlas-all-decks.json'); }
+   try { download(JSON.stringify({ version: 1, ...(state.storageError?{decks:[],rawStorage:localStorage.getItem(STORAGE_KEY)}:readDeckStore(localStorage)) }, null, 2), 'duel-atlas-all-decks.json'); }
    catch { toast('Saved data is not accessible in this browser.', true); }
  }
 };
@@ -545,7 +544,7 @@ main.addEventListener('change', event => {
 $('#app-menu').onclick = showMenu;
 $('#import-file').onchange = event => handleImport(event.target.files[0]);
 window.addEventListener('hashchange', () => { const route = location.hash.slice(1); if (route !== state.route) navigate(route); });
-window.addEventListener('beforeunload', event => { if (state.dirty) { event.preventDefault(); event.returnValue = ''; } });
+window.addEventListener('beforeunload', event => { solo.persistRecovery();if (state.dirty||solo.hasLiveMatch()) { event.preventDefault(); event.returnValue = ''; } });
 document.querySelectorAll('[data-icon]').forEach(element => element.innerHTML = icon(element.dataset.icon));
 navigate(location.hash.slice(1) || 'home', false);
 if ('serviceWorker' in navigator) {

@@ -89,3 +89,13 @@ test('unavailable Cache Storage does not break online app assets or card artwork
   assert.equal(calls.filter(call=>call===url).length,1);
  }
 });
+
+test('updates wait for open sessions, and the artwork cache evicts oldest entries at its limit',async()=>{
+ const listeners={},scope='https://example.com/repo/';let skipped=0,claimed=0;
+ const entries=new Map(Array.from({length:800},(_,i)=>['https://images.ygoprodeck.com/images/cards_small/'+i+'.jpg',new Response('old')]));
+ const cache={addAll:async()=>{},match:async r=>entries.get(r.url),keys:async()=>[...entries.keys()].map(url=>new Request(url)),delete:async r=>entries.delete(r.url),put:async(r,v)=>entries.set(r.url,v)};
+ const self={registration:{scope},skipWaiting:()=>skipped++,clients:{claim:()=>claimed++},addEventListener:(name,handler)=>listeners[name]=handler};
+ runInNewContext(await readFile(new URL('../sw.js',import.meta.url),'utf8'),{self,caches:{open:async()=>cache,keys:async()=>[]},URL,Map,Set,Date,Promise,Request,Response,setTimeout,fetch:async()=>new Response('new')});
+ let pending;listeners.install({waitUntil:p=>pending=p});await pending;listeners.activate({waitUntil:p=>pending=p});await pending;assert.equal(skipped,0);assert.equal(claimed,0);
+ const url='https://images.ygoprodeck.com/images/cards_small/89631139.jpg';listeners.fetch({request:new Request(url),respondWith:p=>pending=p});assert.equal(await (await pending).text(),'new');assert.equal(entries.size,800);assert.ok(entries.has(url));assert.ok(!entries.has('https://images.ygoprodeck.com/images/cards_small/0.jpg'));
+});

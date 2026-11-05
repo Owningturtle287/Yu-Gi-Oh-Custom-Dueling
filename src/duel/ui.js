@@ -17,7 +17,9 @@ import { icon } from '../icons.js';
 import { declarationIcon, declarationLabel } from './declaration-icons.js';
 import { applyArenaGeometry, handGeometry } from './arena-layout.js';
 import {landscapeSize,isRotated} from './viewport.js';
-import {readDuelSaves,saveDuel,deleteDuelSave} from './saves.js';
+import {readDuelSaves,inspectDuelSaves,saveDuel,deleteDuelSave} from './saves.js';
+import {normalizeSoloConfig,SOLO_CONFIG_KEY} from './config.js';
+import {readRecoveries,writeRecovery,removeRecovery,exportDuelRecovery} from './recovery.js';
 import {phaseEffectText,activationText,activationLabel,activationUnchanged} from './native-prompts.js';
 import {freshSeed,deriveSeed} from './random.js';
 import { choiceIntent, choiceVisuals } from './choice-view.js';
@@ -32,7 +34,7 @@ import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, 
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]);
 const option=(value,label,selected)=>`<option value="${escape(value)}" ${value===selected?'selected':''}>${escape(label)}</option>`;
-const CONFIG='duel-atlas.solo-config.v1';
+const CONFIG=SOLO_CONFIG_KEY;
 const cardBack=()=>`<img class="card-back-image" src="${CARD_BACK}" alt="" decoding="async">`;
 const labelFor=action=>['ACTIVATE','EFFECT'].includes(action.type)&&action.effectText?activationLabel(action):action.label||({SUMMON:action.set?'Set in Defense':'Normal Summon',FLIP:'Flip Summon',POSITION:'Change position',SET:'Set Spell / Trap',ACTIVATE:'Activate card',EFFECT:'Use effect',ATTACK:'Attack',CHOOSE:'Choose target',DISCARD:'Discard'}[action.type]||action.type);
 const image=card=>{
@@ -46,7 +48,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   const aiClient=createAIClient({choose:chooseAIAction});
   let learningStorage;try{learningStorage=globalThis.localStorage;}catch{/* Session-only learning. */}
   const learner=createLearningSession({storage:learningStorage});
-  let thinking=0,launchSequence=0;
+  let thinking=0,launchSequence=0,decisionFailures=0,playError=null,disposed=false;
   const cancelThinking=()=>{thinking=0;aiClient.cancel();};
   let config={sides:[defaultSide(),defaultSide()],aiSpeed:'normal',first:'coin',lp:8000,animations:true,learning:true},tab=0,match=null,active=false,timer=null,sets=[],setsStatus='idle',starting=false,selection=[],moving=false,presentation=0,openingTurn=null,logFilter='all',fieldSelection=null,cue=null,arenaActions=[],inspectedUid=null,cardGroups=[],cancelArt=()=>{};
   const motion=createMotionPlayer(main), reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -60,6 +62,17 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   const responsePolicy=createResponsePolicy();
   let responseSeen=null,responseIndex=0,chainReturnResponse=false;
   let saveId=null,handExpanded=false,resultShown=false,orderDraft=null,selectionRead=null;
+  let recoveryId=null,recoveryTimer=null,recoveryWarning=false;
+  const recoveryWindow=main.ownerDocument.defaultView;
+  const clearRecoveryTimer=()=>{if(recoveryTimer!==null)recoveryWindow.clearTimeout(recoveryTimer);recoveryTimer=null;};
+  const discardRecovery=()=>{clearRecoveryTimer();try{removeRecovery(learningStorage,recoveryId);}catch{}recoveryId=null;};
+  function recoveryEntry(id){return {id,manualId:saveId,name:match.players.map(p=>p.name).join(' vs '),savedAt:Date.now(),turn:match.turn,lp:match.players.map(p=>p.lp),replay:engine.exportMatch(match),decks:match.deckBackups,config,learning:config.learning?learner.snapshot():null};}
+  function persistRecovery(){
+    clearRecoveryTimer();if(!match||!engine.exportMatch||match.version!==2)return false;
+    if(match.winner!==null){discardRecovery();return true;}
+    try{recoveryId??=globalThis.crypto.randomUUID();writeRecovery(learningStorage,recoveryEntry(recoveryId));recoveryWarning=false;return true;}catch{if(!recoveryWarning){recoveryWarning=true;toast('Automatic duel recovery is unavailable. Keep this tab open or use Save & exit before leaving.',true);}return false;}
+  }
+  function queueRecovery(){clearRecoveryTimer();if(match?.winner!==null){discardRecovery();return;}recoveryTimer=recoveryWindow.setTimeout(persistRecovery,150);}
   let observedTable=null;
   const tableObserver=typeof window.ResizeObserver==='function'?new window.ResizeObserver(()=>{fitArena();attackArrows.refresh();}):null;
   function fitArena(){
@@ -79,7 +92,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     presentation++;displayLP=null;displayedChain=null;moving=false;render();schedule();
   };
   function suspendPresentation(){
-    if(!active||!match)return;clearTimeout(timer);cancelThinking();cancelMotion();presentation++;displayLP=null;displayedChain=null;moving=false;
+    if(!active||!match)return;persistRecovery();clearTimeout(timer);cancelThinking();cancelMotion();presentation++;displayLP=null;displayedChain=null;moving=false;
   }
   function resumePresentation(){
     if(!active||!match||document.visibilityState==='hidden')return;suspendPresentation();render();schedule();
@@ -90,21 +103,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   window.addEventListener('pageshow',resumePresentation);
   window.addEventListener('resize',resize);
   reducedMotion.addEventListener?.('change',cancelMotion);
-  try {
-    const saved=JSON.parse(localStorage.getItem(CONFIG)||'null');
-    if(saved&&typeof saved==='object'){
-      const previousEnd=saved.eraEnd||'2004-12-31';
-      config={...config,...saved,sides:saved.sides?.length===2?saved.sides.map(side=>({...defaultSide(),...side,cutoff:side.cutoff===previousEnd?ERA_END:side.cutoff||ERA_END})):config.sides};
-    }
-  }catch{/* corrupt settings never replace saved decks */}
-  if(!AI_SPEEDS[config.aiSpeed])config.aiSpeed='normal';
-  if(!['coin','you','ai'].includes(config.first))config.first='coin';
-  delete config.difficulty; // Migrate older settings to the single full-strength policy.
-  if(![4000,8000].includes(config.lp))config.lp=8000;
-  config.animations=typeof config.animations==='boolean'?config.animations:true;
-  config.learning=typeof config.learning==='boolean'?config.learning:true;
-  config.eraEnd=ERA_END;
-  config.sides[0].size=40;config.sides[0].supplement=false;config.sides[1].size=deckSize(config.sides[1].size);config.sides[1].supplement=true;
+  try{config=normalizeSoloConfig(JSON.parse(learningStorage?.getItem(CONFIG)||'null'));}catch{config=normalizeSoloConfig(null);}
   // Deck/config storage failures are visible; leaving a live match is explicit.
   const persist=()=>{try{localStorage.setItem(CONFIG,JSON.stringify(config));}catch{toast('Solo settings apply for this session; browser storage is unavailable.',true);}};
   const saveSide=(side,deckId)=>{config.sides[side].deckId=deckId;config.sides[side].source='saved';persist();};
@@ -120,6 +119,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     render();
   }
   function renderSetup(){
+    const savedStatus=inspectDuelSaves(learningStorage),recoveries=readRecoveries(learningStorage);
     const cards=getCards(),ready=getStatus()==='ready',side=config.sides[tab],saved=tab<2?selectedDeck(tab):null,pool=tab<2?poolFor(cards,side):[];
     const deckSummary=index=>{const settings=config.sides[index],deck=selectedDeck(index);return settings.source==='saved'?(deck?.name||'Choose a deck'):settings.source==='set'?(settings.set||'Random set'):'Random cards';};
     const selectedSet=tab<2?sets.find(set=>set.name===side.set):null;
@@ -133,7 +133,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       <div class="duel-heading"><div><div class="eyebrow">THE ARENA</div><h1>Solo Duel</h1></div><button class="duel-era" data-duel="coverage" aria-haspopup="dialog">${ERA_YEAR} LAB <span>Rules & cards ↗</span></button></div>
       <div class="solo-tabs" role="tablist" aria-label="Duel setup">${[['Your deck','deck'],['AI deck','solo'],['Match','filter'],['Saved duels','save']].map(([name,glyph],index)=>`<button id="solo-tab-${index}" role="tab" aria-controls="solo-panel" aria-selected="${tab===index}" data-duel-tab="${index}">${icon(glyph)}<span>${name}</span></button>`).join('')}</div>
       <div class="solo-panel" id="solo-panel" role="tabpanel" aria-labelledby="solo-tab-${tab}" tabindex="0">
-      ${tab===3?`<div class="solo-panel-title"><span class="solo-sigil" aria-hidden="true">${icon('save')}</span><div><small>PICK UP WHERE YOU LEFT OFF</small><h2>Saved duels</h2></div></div><div class="duel-saved-list">${readDuelSaves(localStorage).map(save=>`<article><div><strong>${escape(save.name)}</strong><small>Turn ${save.turn} · ${save.lp.join(' / ')} LP</small></div><button class="primary" data-resume-duel="${escape(save.id)}" ${ready?'':'disabled'}>Resume</button><button data-delete-duel="${escape(save.id)}" aria-label="Delete saved duel">×</button></article>`).join('')||`<div class="solo-empty">${icon('save')}<strong>Your next move, saved.</strong><p>Save a duel from the arena menu to resume it here.</p></div>`}</div>`:tab<2?deckFields:
+      ${tab===3?`<div class="solo-panel-title"><span class="solo-sigil" aria-hidden="true">${icon('save')}</span><div><small>PICK UP WHERE YOU LEFT OFF</small><h2>Saved duels</h2></div></div><div class="duel-saved-list">${savedStatus.error||recoveries.error?`<p class="inline-error">${escape(savedStatus.error||recoveries.error)}</p>`:''}${savedStatus.rejected.length||recoveries.rejected?'<p class="inline-error">Damaged entries were preserved. Export a recovery backup before clearing storage.</p>':''}${recoveries.entries.map(save=>`<article><div><strong>Interrupted · ${escape(save.name)}</strong><small>Turn ${save.turn} · ${(Array.isArray(save.lp)?save.lp:[]).join(' / ')} LP</small></div><button class="primary" data-resume-recovery="${escape(save.id)}" ${ready?'':'disabled'}>Resume</button><button data-delete-recovery="${escape(save.id)}" aria-label="Discard interrupted duel">×</button></article>`).join('')}<button data-duel="export-duel-recovery">Export recovery backup</button>${savedStatus.saves.map(save=>`<article><div><strong>${escape(save.name)}</strong><small>Turn ${save.turn} · ${(Array.isArray(save.lp)?save.lp:[]).join(' / ')} LP</small></div><button class="primary" data-resume-duel="${escape(save.id)}" ${ready?'':'disabled'}>Resume</button><button data-delete-duel="${escape(save.id)}" aria-label="Delete saved duel">×</button></article>`).join('')||`<div class="solo-empty">${icon('save')}<strong>Your next move, saved.</strong><p>Save a duel from the arena menu to resume it here.</p></div>`}</div>`:tab<2?deckFields:
       `<div class="solo-panel-title"><span class="solo-sigil" aria-hidden="true">${icon('solo')}</span><div><small>YOUR DUEL, YOUR PACE</small><h2>Match settings</h2></div><button class="solo-ai-badge" data-duel="learning" title="AI learning on this device"><span class="solo-ai-name">Strategic </span>AI · ${config.learning?'Learning':'Fixed'}</button></div><div class="solo-match-fields"><label>AI decision speed<select id="solo-ai-speed">${Object.entries(AI_SPEEDS).map(([key,speed])=>option(key,speed.label,config.aiSpeed)).join('')}</select></label><label>Goes first<select id="solo-first">${[['coin','Coin toss'],['you','You'],['ai','AI']].map(([v,l])=>option(v,l,config.first)).join('')}</select></label><label>Life Points<select id="solo-lp">${[8000,4000].map(n=>option(n,n.toLocaleString(),config.lp)).join('')}</select></label><label class="solo-checkbox"><input id="solo-animations" type="checkbox" ${config.animations?'checked':''}> Duel animations</label></div>`}
       </div>
       <aside class="solo-launch"><div class="solo-versus"><div><small>YOU</small><strong>${escape(deckSummary(0))}</strong></div><span aria-hidden="true">VS</span><div><small>AI</small><strong>${escape(deckSummary(1))}</strong></div></div><p role="status">${ready?`Supported ${ERA_YEAR} TCG cards · no banlist`:getStatus()==='error'?'Open Archive to retry loading cards.':'Preparing card data…'}</p><button class="primary" data-duel="start" ${!ready?'disabled':''}>Start duel <span aria-hidden="true">→</span></button></aside>
@@ -183,7 +183,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       const first=config.first==='you'?0:config.first==='ai'?1:deriveSeed(seed,'first-player')%2;
       const next=await createMatch(decks.map(deck=>({...expandDeck(deck,getCards()),name:deck.name})),{seed,first,lp:config.lp,cards:getCards(),eligibility:config.sides});
       if(!active||launchToken!==launchSequence){engine.destroyMatch?.(next);return;}
-      saveId=null;handExpanded=false;resultShown=false;next.deckBackups=decks;introPending={coin:config.first==='coin',first,lp:config.lp};
+      saveId=null;playError=null;decisionFailures=0;recoveryId=globalThis.crypto.randomUUID();handExpanded=false;resultShown=false;next.deckBackups=decks;introPending={coin:config.first==='coin',first,lp:config.lp};
       const entry={id:++next.serial,turn:next.turn||1,phase:next.phase,side:first,kind:'phase',uids:[],message:(config.first==='coin'?`Opening coin toss: ${first===0?'Heads':'Tails'}. `:'')+(first===0?'You go first.':'AI goes first.')};next.log.push(entry);next.lastEvent=entry;
       if(config.learning&&next.version===2)learner.begin(next);else learner.discard();
       await present(null,next);
@@ -195,15 +195,15 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     try{
       if(!engine.exportMatch)throw new Error('Saving is unavailable for this rules runtime.');
       const id=saveId||globalThis.crypto?.randomUUID?.()||`duel-${Date.now()}`;
-      saveDuel(localStorage,{id,name:match.players.map(p=>p.name).join(' vs '),savedAt:Date.now(),turn:match.turn,lp:match.players.map(p=>p.lp),replay:engine.exportMatch(match),decks:match.deckBackups,config,learning:config.learning?learner.snapshot():null});saveId=id;toast('Duel saved on this device.');return true;
+      saveDuel(learningStorage,{id,name:match.players.map(p=>p.name).join(' vs '),savedAt:Date.now(),turn:match.turn,lp:match.players.map(p=>p.lp),replay:engine.exportMatch(match),decks:match.deckBackups,config,learning:config.learning?learner.snapshot():null});saveId=id;toast('Duel saved on this device.');return true;
     }catch(error){toast(error.message,true);return false;}
   }
-  async function resumeSaved(id){
-    if(starting||match||getStatus()!=='ready')return;const save=readDuelSaves(localStorage).find(s=>s.id===id);if(!save)return;
-    const launchToken=++launchSequence;starting=true;const button=[...main.querySelectorAll('[data-resume-duel]')].find(b=>b.dataset.resumeDuel===id);if(button){button.disabled=true;button.textContent='Resuming…';}try{const next=await engine.restoreMatch(save.replay,{cards:getCards()});if(!active||launchToken!==launchSequence){engine.destroyMatch?.(next);return;}config={...config,...save.config,sides:(save.config?.sides||config.sides).map(s=>({...defaultSide(),...s}))};config.sides[0].size=40;config.sides[0].supplement=false;config.sides[1].size=deckSize(config.sides[1].size);config.sides[1].supplement=true;saveId=id;resultShown=false;introPending=null;next.deckBackups=save.decks;match=next;if(config.learning&&next.version===2)learner.restore(next,save.learning);else learner.discard();render();schedule();}catch(error){if(active&&launchToken===launchSequence)toast(error.message,true);}finally{if(launchToken===launchSequence){starting=false;if(!match)render();}}
+  async function resumeSaved(id,recovery=false){
+    if(starting||match||getStatus()!=='ready')return;const save=(recovery?readRecoveries(learningStorage).entries:readDuelSaves(learningStorage)).find(s=>s.id===id);if(!save)return;
+    const launchToken=++launchSequence;starting=true;const button=[...main.querySelectorAll('[data-resume-duel]')].find(b=>b.dataset.resumeDuel===id);if(button){button.disabled=true;button.textContent='Resuming…';}try{const next=await engine.restoreMatch(save.replay,{cards:getCards()});if(!active||launchToken!==launchSequence){engine.destroyMatch?.(next);return;}config=normalizeSoloConfig(save.config||config);saveId=recovery?save.manualId||null:id;recoveryId=globalThis.crypto.randomUUID();playError=null;decisionFailures=0;resultShown=false;introPending=null;next.deckBackups=save.decks;match=next;if(config.learning&&next.version===2)learner.restore(next,save.learning);else learner.discard();if(persistRecovery()&&recovery)removeRecovery(learningStorage,id);render();schedule();}catch(error){if(active&&launchToken===launchSequence)toast(error.message,true);}finally{if(launchToken===launchSequence){starting=false;if(!match)render();}}
   }
   function exitCurrent(){
-    cancelThinking();cancelMotion();clearTimeout(timer);presentation++;moving=false;engine.destroyMatch?.(match);learner.discard();match=null;activationDraft=null;activationReview=null;displayLP=null;displayedChain=null;introPending=null;handExpanded=false;inspectedUid=null;fieldSelection=null;closeDialog();render();onExit();
+    discardRecovery();cancelThinking();cancelMotion();clearTimeout(timer);presentation++;moving=false;engine.destroyMatch?.(match);learner.discard();match=null;activationDraft=null;activationReview=null;displayLP=null;displayedChain=null;introPending=null;handExpanded=false;inspectedUid=null;fieldSelection=null;closeDialog();render();onExit();
   }
   function isHidden(uid){
     if(!uid)return false;
@@ -288,15 +288,15 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const rows=orderDraft.indices.map((index,i)=>{const entry=ordering.cards.find(c=>c.index===index),name=entry.card?.name||'Face-down card';return `<li data-order-index="${index}"><span class="order-position"><b>${i+1}</b><small>${escape(position(i))}</small></span><button class="order-card-read" data-order-read="${index}" ${entry.card?'':'disabled'} aria-label="Read ${escape(name)} effect">${entry.card?image(entry.card):cardBack()}</button><strong>${escape(name)}</strong><div class="order-moves"><button data-order-move="${index}" data-order-direction="-1" ${i===0?'disabled':''} aria-label="Move ${escape(name)} up">↑</button><button data-order-move="${index}" data-order-direction="1" ${i===orderDraft.indices.length-1?'disabled':''} aria-label="Move ${escape(name)} down">↓</button></div></li>`;}).join('');
     showDialog(`<aside class="order-sidebar"><div class="dialog-header"><h2 id="dialog-title">${escape(label)}</h2></div>${source?`<button class="order-source" data-duel="read-choice-source">${image(source)}<span><strong>${escape(source.name)}</strong><small>Read effect ↗</small></span></button>`:''}<p>${escape(match.choice.instructions)}</p><small class="order-rest">${kind.startsWith('deck')?`Only these ${ordering.cards.length} cards move. The rest of the Deck stays in order.`:kind==='chain'?'Last link resolves first.':'Review each position before confirming.'}</small><footer><button data-duel="order-reset" aria-label="Reset order">Reset</button><button class="primary" data-duel="order-confirm">Confirm order</button><button data-action="close" aria-label="Return to field">Field</button></footer></aside><ol class="duel-order-list" id="duel-options-list" aria-label="${escape(label)} · position 1 first">${rows}</ol>`,'duel-order-picker');
   }
-  function commitOrder(){
-    if(moving||!match?.choice?.ordering||orderDraft?.promptId!==match.choice.promptId)return;
-    const previous=match,indices=[...orderDraft.indices];
+  async function commitOrder(){
+    if(moving||playError||!match?.choice?.ordering||orderDraft?.promptId!==match.choice.promptId)return;
+    const previous=match,indices=[...orderDraft.indices],checkpoint=actionCheckpoint();
     try{
       let next=match;const reset=legalActions(next,0).find(a=>a.reset);if(reset)next=applyAction(next,reset,0);
       for(const index of indices){const action=legalActions(next,0).find(a=>a.orderIndex===index);if(!action)throw new Error('That order is no longer available.');next=applyAction(next,action,0);}
       const finish=legalActions(next,0).find(a=>a.finish);if(!finish)throw new Error('Choose an order for every card.');
       next=applyAction(next,finish,0);orderDraft=null;selectionRead=null;present(previous,next);
-    }catch(error){toast(error.message,true);}
+    }catch(error){await recoverFailure(error,checkpoint);}
   }
   function showReveal(index=null){
     const reveal=match?.reveals?.[0];if(!reveal||reveal.viewer!==0)return;
@@ -433,11 +433,12 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     arenaActions=actions;
     const busy=aiActions.length>0,candidates=fieldCandidates(fieldSelection),selected=inspection();
     if(!selected&&modal.querySelector('.duel-card-viewer')&&modal.open){cancelArt();closeDialog();}
-    const prompt=won?match.winner==='draw'?'A hard-fought draw.':match.winner===0?'Victory. Your strategy paid off.':'Defeat. A new strategy awaits.':fieldSelection?fieldSelection.native&&fieldSelection.kind==='tribute'?match.choice.instructions:`${fieldSelection.title} · ${fieldSelection.key==='tributes'?`choose ${candidates.remaining} more tribute${candidates.remaining===1?'':'s'}`:'tap a highlighted card'+(candidates.directSide!==null?' or the AI’s LP':'')}.`:inspectedUid?cardGroups.length?'Choose an action on the card. Close it to return.':'Duel paused · close card details to continue.':needsChoice?match.choice.title:discard?'Hand limit: choose a card to discard until six remain.':respond?match.window.timing?match.window.timing:match.chain.length?`Respond to ${match.chain.at(-1).card.name}, or pass.`:match.pending?.kind==='attack'?'An attack is incoming. Respond or pass.':'Response window · play a fast effect or pass.':busy?'AI is considering its next move…':mainPhaseLabel(match);
+    const prompt=playError?playError:won?match.winner==='draw'?'A hard-fought draw.':match.winner===0?'Victory. Your strategy paid off.':'Defeat. A new strategy awaits.':fieldSelection?fieldSelection.native&&fieldSelection.kind==='tribute'?match.choice.instructions:`${fieldSelection.title} · ${fieldSelection.key==='tributes'?`choose ${candidates.remaining} more tribute${candidates.remaining===1?'':'s'}`:'tap a highlighted card'+(candidates.directSide!==null?' or the AI’s LP':'')}.`:inspectedUid?cardGroups.length?'Choose an action on the card. Close it to return.':'Duel paused · close card details to continue.':needsChoice?match.choice.title:discard?'Hand limit: choose a card to discard until six remain.':respond?match.window.timing?match.window.timing:match.chain.length?`Respond to ${match.chain.at(-1).card.name}, or pass.`:match.pending?.kind==='attack'?'An attack is incoming. Respond or pass.':'Response window · play a fast effect or pass.':busy?'AI is considering its next move…':mainPhaseLabel(match);
     const passing=responsePolicy.isPassing(match);
     const cancelChoice=actions.find(a=>a.cancel);
     let controls;
-    if(match.reveals?.[0]?.viewer===0)controls='<button class="primary" data-duel="view-reveal">View cards</button>';
+    if(playError)controls='<button class="primary" data-duel="retry-play">Retry</button><button data-duel="save-exit">Save & exit</button>';
+    else if(match.reveals?.[0]?.viewer===0)controls='<button class="primary" data-duel="view-reveal">View cards</button>';
     else if(won)controls='<button class="primary" data-duel="rematch">New duel</button><button data-duel="duel-menu">Details</button>';
     else if(fieldSelection?.native)controls=`<button class="primary" data-duel="confirm-choice" ${!match.choice?.canFinish?'disabled':''}>Confirm</button><button data-duel="resolve-choice" aria-label="View selectable cards">Cards</button>${cancelChoice?`<button data-duel="cancel-choice" class="duel-cancel-choice" aria-label="${escape(cancelChoice.label)}">Cancel</button>`:''}`;
     else if(fieldSelection)controls=`${fieldSelection.mandatory?'':'<button data-duel="cancel-target" class="duel-cancel-choice">Cancel</button>'}<button data-duel="inspect-source" ${!fieldSelection.sourceUid?'disabled':''}>Card info</button>`;
@@ -483,7 +484,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const before=captureArena(main),motions=planMotion(previous,next,next.version===2?((next.visualAction?.presentation==='paired'?null:next.visualAction)||(action?.type==='ATTACK'?null:action)):action),token=++presentation;
     const nextCue=activityCue(previous,next,next.visualAction||action);
     cue=action?.cancel?null:nextCue||(previous?.phase===next.phase?cue:null);
-    fieldSelection=null;cancelArt();inspectedUid=null;selectionRead=null;displayedChain=previous?.chain||[];displayLP=previous&&feedbackEvents.some(e=>e.type==='life')?previous.players.map(p=>p.lp):null;match=next;
+    fieldSelection=null;cancelArt();inspectedUid=null;selectionRead=null;displayedChain=previous?.chain||[];displayLP=previous&&feedbackEvents.some(e=>e.type==='life')?previous.players.map(p=>p.lp):null;match=next;queueRecovery();
     if(match.active===0&&match.phase==='draw')openingTurn=match.turn;
     moving=true;if(!keepPicker)closeDialog();render();
 
@@ -541,7 +542,8 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     }catch(error){if(active&&token===presentation){moving=false;toast(error.message,true);render();}}
   }
   async function step(action,side=0,reviewed=false){
-    if(moving)return;
+    if(moving||playError)return;
+    const checkpoint=actionCheckpoint();
     if(side===0&&!reviewed&&['ACTIVATE','EFFECT'].includes(action.type)&&match.version===2&&!match.window?.forced&&reviewActivation(action))return;
     try{
       const starts=side===0&&(['ACTIVATE','EFFECT'].includes(action.type)||action.yes===true&&match.choice?.optionalResponse)&&!match.window?.forced;
@@ -549,7 +551,22 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
       const next=applyAction(match,action,side);
       if(activationDraft&&!activationUnchanged(activationDraft.before,next))activationDraft=null;
       await present(match,next,action,side);
-    }catch(error){activationDraft=null;toast(error.message,true);render();}
+    }catch(error){await recoverFailure(error,checkpoint);}
+  }
+  function actionCheckpoint(){return match?.version===2&&engine.exportMatch?{replay:engine.exportMatch(match),decks:match.deckBackups,learning:learner.snapshot()}:null;}
+  async function recoverFailure(error,checkpoint){
+    activationDraft=null;clearTimeout(timer);cancelThinking();
+    if(error.duelAdvanced&&checkpoint){
+      const failed=match;moving=true;
+      try{
+        const restored=await engine.restoreMatch(checkpoint.replay,{cards:getCards()});
+        if(disposed||match!==failed){engine.destroyMatch?.(restored);return;}
+        restored.deckBackups=checkpoint.decks;match=restored;if(config.learning)learner.restore(restored,checkpoint.learning);
+        playError='Duel restored to the last move after a rules error. Retry or save to continue later.';persistRecovery();
+      }catch{if(!disposed&&match===failed){match=null;playError=null;tab=3;if(active)toast('The duel stopped after a rules error. Resume its automatic checkpoint from Saved duels.',true);}}
+      finally{engine.destroyMatch?.(failed);moving=false;fieldSelection=null;inspectedUid=null;selectionRead=null;cue=null;if(active)closeDialog();}
+    }else{playError='Play paused after an error. Retry or save to continue later.';toast(error.message,true);}
+    if(active)render();
   }
   function finishOpening(){introPending=null;main.querySelector('.duel-arena').dataset.intro='false';for(const node of main.querySelectorAll('.duel-side[inert], .duel-phase-rail[inert]'))node.removeAttribute('inert');}
   async function resumeOpening(){
@@ -565,7 +582,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function schedule(){
     clearTimeout(timer);
-    if(!active||moving||thinking||!match||match.winner!==null||document.visibilityState==='hidden')return;
+    if(!active||moving||thinking||playError||!match||match.winner!==null||document.visibilityState==='hidden')return;
     if(introPending){resumeOpening();return;}
     if(match.reveals?.[0]?.viewer===0){if(!modal.open)showReveal();return;}
     if(inspectedUid&&!modal.open){dismissInspection();return;}
@@ -591,7 +608,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
         if(thinking!==token)return;thinking=0;
         if(!active||moving||match!==current||token!==presentation||document.visibilityState==='hidden')return;
         if(modal.open||prompt!==legalActions(match,1).map(a=>a.id).join('|')){schedule();return;}
-        const legal=legalActions(match,1).find(a=>a.id===action?.id);if(legal)step(legal,1);else schedule();
+        const legal=legalActions(match,1).find(a=>a.id===action?.id);if(legal){decisionFailures=0;step(legal,1);}else if(++decisionFailures>=2){playError='AI could not choose a move. Retry or save to continue later.';persistRecovery();render();}else schedule();
       },delay);return;
     }
     const actions=legalActions(match,0);
@@ -642,8 +659,10 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   function handleClick(event){
     if(!active)return;const target=event.target.closest('button');if(!target)return;
+    if(target.dataset.deleteRecovery){try{removeRecovery(learningStorage,target.dataset.deleteRecovery);render();}catch{toast('Could not discard the interrupted duel.',true);}return;}
+    if(target.dataset.resumeRecovery){resumeSaved(target.dataset.resumeRecovery,true);return;}
     if(target.dataset.resumeDuel){resumeSaved(target.dataset.resumeDuel);return;}
-    if(target.dataset.deleteDuel){try{deleteDuelSave(localStorage,target.dataset.deleteDuel);render();}catch{toast('Could not delete the saved duel.',true);}return;}
+    if(target.dataset.deleteDuel){try{deleteDuelSave(learningStorage,target.dataset.deleteDuel);render();}catch{toast('Could not delete the saved duel.',true);}return;}
     if(target.dataset.duelTab!==undefined){tab=Number(target.dataset.duelTab);render();if(tab<2&&config.sides[tab].source==='set'&&setsStatus==='idle')requestSets();return;}
     if(target.dataset.duelQuick){if(moving)return;const actions=legalActions(match,0).filter(action=>action.uid===target.dataset.duelQuick&&action.type===target.dataset.duelQuickType);choose(actions,`${labelFor(actions[0]||{})}: ${visibleName(target.dataset.duelQuick)}`);return;}
     if(target.dataset.fieldLp!==undefined){if(fieldSelection&&fieldCandidates(fieldSelection).directSide===Number(target.dataset.fieldLp))pickTarget(null);return;}
@@ -660,6 +679,8 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(target.dataset.orderRead!==undefined){const card=match.choice?.ordering?.cards.find(c=>c.index===Number(target.dataset.orderRead))?.card;readSelection(card);return;}
     if(target.dataset.orderMove!==undefined){if(!orderDraft)return;const from=orderDraft.indices.indexOf(Number(target.dataset.orderMove)),to=from+Number(target.dataset.orderDirection);if(from>=0&&to>=0&&to<orderDraft.indices.length){[orderDraft.indices[from],orderDraft.indices[to]]=[orderDraft.indices[to],orderDraft.indices[from]];showOrderPicker();modal.querySelector(`[data-order-move="${target.dataset.orderMove}"][data-order-direction="${target.dataset.orderDirection}"]:not([disabled])`)?.focus({preventScroll:true});}return;}
     const action=target.dataset.duel;
+    if(action==='retry-play'){playError=null;decisionFailures=0;cancelThinking();render();schedule();return;}
+    if(action==='export-duel-recovery'){try{const url=URL.createObjectURL(new Blob([exportDuelRecovery(learningStorage)],{type:'application/json'})),anchor=document.createElement('a');anchor.href=url;anchor.download='duel-atlas-duel-recovery.json';anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch{toast('Recovery data could not be exported.',true);}return;}
     if(action==='excavation'){showExcavation();return;}
     if(target.dataset.excavationSide!==undefined){showExcavation(Number(target.dataset.excavationSide));return;}
     if(target.dataset.excavationRead!==undefined){const group=match.excavationReport?.groups.find(g=>g.cards[0]?.controller===excavationSide);readSelection(group?.cards[Number(target.dataset.excavationRead)]?.card,'excavation');return;}
@@ -694,7 +715,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     if(action==='inspect-source'){if(fieldSelection?.sourceUid)inspect(fieldSelection.sourceUid);return;}
     if(action==='duel-menu')duelMenu();if(action==='log')showLog();if(action==='log-latest')jumpToLatest();
     if(action==='toggle-motion'){config.animations=!config.animations;persist();duelMenu();}
-    if(action==='rematch'){if(moving||starting||match?.winner===null)return;target.disabled=true;target.textContent='Dealing…';cancelThinking();cancelMotion();clearTimeout(timer);presentation++;engine.destroyMatch?.(match);match=null;moving=false;fieldSelection=null;inspectedUid=null;orderDraft=null;selectionRead=null;cue=null;openingTurn=null;responseSeen=null;revealSeen=null;closeDialog();start();return;}
+    if(action==='rematch'){if(moving||starting||match?.winner===null)return;discardRecovery();target.disabled=true;target.textContent='Dealing…';cancelThinking();cancelMotion();clearTimeout(timer);presentation++;engine.destroyMatch?.(match);match=null;moving=false;fieldSelection=null;inspectedUid=null;orderDraft=null;selectionRead=null;cue=null;openingTurn=null;responseSeen=null;revealSeen=null;closeDialog();start();return;}
     if(action==='surrender'){
       showDialog(`${header('Surrender this duel?')}<p>The current match will end. Your saved decks stay on this device.</p><div class="dialog-actions"><button data-action="close">Keep playing</button><button class="danger" data-duel="confirm-surrender">Surrender</button></div>`);
     }
@@ -706,13 +727,15 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   }
   document.addEventListener('click',handleClick);
   return {
-    enter(){active=true;render();if(!match&&config.sides.some(s=>s.source==='set')&&setsStatus==='idle')requestSets();},
-    leave(){launchSequence++;starting=false;engine.destroyMatch?.(match);learner.discard();match=null;activationDraft=null;activationReview=null;displayLP=null;displayedChain=null;introPending=null;handExpanded=false;document.documentElement.dataset.duelRotated='false';cancelThinking();cancelArt();attackArrows.sync(null,null,{hidden:true});responseSeen=null;active=false;inspectedUid=null;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();feedback.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');},
+    enter(){active=true;if(!match&&readRecoveries(learningStorage).entries.length)tab=3;render();if(!match&&config.sides.some(s=>s.source==='set')&&setsStatus==='idle')requestSets();},
+    leave(){launchSequence++;starting=false;persistRecovery();clearTimeout(timer);cancelThinking();cancelArt();attackArrows.sync(null,null,{hidden:true});active=false;inspectedUid=null;presentation++;moving=false;cancelMotion();introPending=null;displayLP=null;displayedChain=null;document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');},
+    hasLiveMatch:()=>!!match&&match.winner===null,
+    persistRecovery,
     refresh:render,
     setDesignedDeck:saveSide,
     getMatch:()=>match,
     getConfig:()=>structuredClone(config),
-    destroy(){launchSequence++;starting=false;tableObserver?.disconnect();cancelThinking();aiClient.destroy();engine.destroyMatch?.(match);learner.discard();cancelArt();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);modal.removeEventListener('cancel',revealCancel,true);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();feedback.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',suspendPresentation);window.removeEventListener('pageshow',resumePresentation);reducedMotion.removeEventListener?.('change',cancelMotion);}
+    destroy(){persistRecovery();disposed=true;clearRecoveryTimer();launchSequence++;starting=false;tableObserver?.disconnect();cancelThinking();aiClient.destroy();engine.destroyMatch?.(match);learner.discard();cancelArt();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);modal.removeEventListener('cancel',revealCancel,true);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();feedback.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',suspendPresentation);window.removeEventListener('pageshow',resumePresentation);reducedMotion.removeEventListener?.('change',cancelMotion);}
   };
 }
 function mainPhaseLabel(state){return ['main1','main2'].includes(state.phase)?state.turn===1?'Opening turn · Battle is skipped. Summon, Set, or activate a card.':'Summon, Set, or activate a card. Tap your hand to begin.':state.phase==='battle'?'Tap your Attack Position monster to choose an attack.':state.phase==='end'?'End Phase. Continue to your opponent’s turn.':`${PHASE_LABELS[state.phase]} Phase · continue when ready.`;}

@@ -28,7 +28,8 @@ for(const attackingSide of [0,1])for(const support of ['none','non-Fiend','face-
   s=advanceBattle(e,s,x=>!x.pending&&!x.choice&&!x.window);
   const negated=support==='face-up Fiend';
   assert.equal(s.players[attackingSide].monsters.some(c=>c?.uid===wolf),negated);
-  assert.equal(s.players[attackingSide].hand.some(c=>c.uid===wolf),!negated);
+  // The core shuffles the hidden hand after returning a card, retiring slot identities.
+  assert.equal(s.players[attackingSide].hand.some(c=>c.card.name==='Twin-Headed Wolf'),!negated);
   assert.ok(s.players[defendingSide].grave.some(c=>c.uid===hade));
   assert.equal(s.log.some(l=>/Hade-Hane.*negated by Twin-Headed Wolf/.test(l.message)),negated);
   assert.equal(s.log.some(l=>l.effectNotice?.card.name==='Twin-Headed Wolf'),negated,'Only real conditional negation receives a Wolf notice');
@@ -38,11 +39,15 @@ test('Hade-Hane returns three selected monsters when Wolf has no other Fiend',as
  const e=createNativeBackend({rules:()=>pack});let s=await e.createMatch(decks,{cards,first:0,seed:93,openingHands:[[],[]],initialFields:[{monsters:[body('Hade-Hane',{faceUp:false,defense:true}),body('Mystical Elf')]},{monsters:[body('Twin-Headed Wolf'),body('Mystical Elf')]}]});
  try{
   s=advanceBattle(e,s,x=>x.active===1&&x.phase==='main1'&&!x.window&&!x.choice);s=command(e,s,'NEXT',1);s=command(e,s,'ATTACK',1,'Twin-Headed Wolf');
+  const handBefore=s.players.flatMap(p=>p.hand).length;
   const hade=s.players[0].monsters[0].uid,targets=[s.players[0].monsters[1].uid,...s.players[1].monsters.filter(Boolean).map(c=>c.uid)];
   s=e.applyAction(s,s.actions[1].find(a=>a.target===hade),1);s=advanceBattle(e,s,x=>x.choice?.source?.card.name==='Hade-Hane'&&x.choice.selectionType==='select_card');
   for(const uid of targets)s=e.applyAction(s,s.actions[0].find(a=>a.target===uid),0);
   s=e.applyAction(s,s.actions[0].find(a=>a.finish),0);s=advanceBattle(e,s,x=>!x.pending&&!x.choice&&!x.window);
-  assert.equal(s.players.flatMap(p=>p.hand).filter(c=>targets.includes(c.uid)).length,3);
+  assert.equal(s.players.flatMap(p=>p.hand).length,handBefore+3);
+  assert.equal(s.players[1].hand.filter(c=>c.card.name==='Twin-Headed Wolf').length,1);
+  assert.ok(s.players[0].grave.some(c=>c.uid===hade));
+  assert.equal(s.players.flatMap(p=>p.monsters).filter(Boolean).length,0);
   assert.ok(!s.log.some(l=>/Hade-Hane.*negated/.test(l.message)));
  }finally{e.destroyMatch(s);}
 });

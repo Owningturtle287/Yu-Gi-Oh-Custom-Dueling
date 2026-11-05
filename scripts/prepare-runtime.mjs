@@ -1,4 +1,5 @@
 import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 await mkdir('vendor/ocgcore/dist', { recursive:true });
 await mkdir('vendor/ocgcore/lib', { recursive:true });
 for (const name of await readdir('node_modules/ocgcore-wasm/dist')) {
@@ -47,8 +48,11 @@ if(!runtime.includes(create))throw new Error('Pinned callback cleanup patch no l
 runtime=runtime.replace(create,'createDuel(E){let i=++r;O.set(i,{cardReader:E.cardReader,errorHandler:E.errorHandler,scriptReader:E.scriptReader});let T=c.stackSave(),R=c.stackAlloc(4),m=c.stackAlloc(104);try{Y(a(m),{...E,ptrSize:4,cardReader:0,cardReaderPayload:i,cardReaderDone:0,cardReaderDonePayload:0,errorHandler:0,errorHandlerPayload:i,scriptReader:0,scriptReaderPayload:i,enableUnsafeLibraries:!0});if(c._ocgapiCreateDuel(R,m)!=0){O.delete(i);return null}return{[D]:c.getValue(R,"i32"),atlasCallbackId:i}}catch(error){O.delete(i);throw error}finally{c.stackRestore(T)}},destroyDuel(E){try{c._ocgapiDestroyDuel(E[D])}finally{O.delete(E.atlasCallbackId)}}');
 await writeFile(indexPath,runtime);
 for (const name of ['ocgcore.sync.mjs','ocgcore.sync.wasm']) await cp('node_modules/ocgcore-wasm/lib/'+name,'vendor/ocgcore/lib/'+name);
+const runtimeHashes={};
+for(const path of ['dist/index.js',...(await readdir('vendor/ocgcore/dist')).filter(name=>name.endsWith('.js')&&name!=='index.js').sort().map(name=>'dist/'+name),'lib/ocgcore.sync.mjs','lib/ocgcore.sync.wasm'])runtimeHashes[path]=createHash('sha256').update(await readFile('vendor/ocgcore/'+path)).digest('hex');
+await writeFile('vendor/ocgcore/runtime.json',JSON.stringify(runtimeHashes));
 const manifest=JSON.parse(await readFile('assets/rules/manifest.json'));
-const paths=['src/duel/native-loader.js','src/duel/native-engine.js','src/duel/rules-manifest.js','assets/rules/manifest.json','assets/rules/AGPL-3.0.txt','assets/rules/CardScripts-README.md','assets/rules/THIRD_PARTY_NOTICES.md','assets/rules/CORE-LICENSE.txt','assets/rules/LUA-COPYRIGHT.txt','assets/rules/runtime-sources.json',...manifest.files.map(f=>'assets/rules/'+f.path),...(await readdir('vendor/ocgcore/dist')).filter(f=>f.endsWith('.js')).map(f=>'vendor/ocgcore/dist/'+f),'vendor/ocgcore/lib/ocgcore.sync.mjs','vendor/ocgcore/lib/ocgcore.sync.wasm'];
+const paths=['vendor/ocgcore/runtime.json','src/duel/native-loader.js','src/duel/native-engine.js','src/duel/rules-manifest.js','assets/rules/manifest.json','assets/rules/AGPL-3.0.txt','assets/rules/CardScripts-README.md','assets/rules/THIRD_PARTY_NOTICES.md','assets/rules/CORE-LICENSE.txt','assets/rules/LUA-COPYRIGHT.txt','assets/rules/runtime-sources.json',...manifest.files.map(f=>'assets/rules/'+f.path),...(await readdir('vendor/ocgcore/dist')).filter(f=>f.endsWith('.js')).map(f=>'vendor/ocgcore/dist/'+f),'vendor/ocgcore/lib/ocgcore.sync.mjs','vendor/ocgcore/lib/ocgcore.sync.wasm'];
 let worker=await readFile('sw.js','utf8');
 worker=worker.split('\n').filter(line=>!line.startsWith('const RULES = ')&&line!=='SHELL.push(...RULES);').join('\n').replace(/\n{3,}/g,'\n\n');
 worker=worker.replace('const shellURLs','const RULES = '+JSON.stringify(paths.map(p=>'./'+p))+';\nSHELL.push(...RULES);\nconst shellURLs');
