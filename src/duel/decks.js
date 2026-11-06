@@ -1,4 +1,4 @@
-import { createDeck, addCard, normalizeCard, cardCopyName } from '../core.js';
+import { createDeck, addCard, normalizeCard, cardCopyName, isExtra } from '../core.js';
 import { ERA_END, support, supportedPool, isMonster } from './catalog.js';
 import {matchesMonsterFilters,matchesSpellTrapType} from '../card-filters.js';
 import {validReleaseDate} from '../era.js';
@@ -30,13 +30,13 @@ export function validateDuelDeck(deck, cards, settings = defaultSide(), {min=40,
       const card = index.get(entry.card.id);
       if (!card || !support(card).ok) issues.push(`${entry.card.name}: ${card ? support(card).reason : 'not in the loaded archive'}.`);
       else if (!allowed.has(card.id)) issues.push(`${card.name}: excluded by this duelist’s filters.`);
-      if (card && (card.type.includes('Fusion') !== (section === 'extra'))) issues.push(`${card.name}: wrong deck section.`);
+      if (card && (isExtra(card) !== (section === 'extra'))) issues.push(`${card.name}: wrong deck section.`);
     }
   }
   return [...new Set(issues)];
 }
 export function generationProblem(pool,size=40) {
-  const main = pool.filter(c => !c.type.includes('Fusion'));
+  const main = pool.filter(c => !isExtra(c));
   const low = main.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||''));
   if (new Set(main.map(cardCopyName)).size * 3 < size) return `These filters leave fewer than ${size} available card copies. Broaden them or choose another set.`;
   if (new Set(low.map(cardCopyName)).size * 3 < Math.ceil(size*.4)) return `These filters need at least ${Math.ceil(size*.4)} copies of Level 4 or lower monsters for a playable random deck.`;
@@ -62,8 +62,8 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
   const problem = generationProblem(pool,size);
   if (problem) throw new Error(problem);
   let deck = createDeck(label.slice(0,60)); deck.releaseYear = Number(settings.cutoff.slice(0,4));
-  const low = pool.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !c.type.includes('Fusion'));
-  const high = pool.filter(c => isMonster(c) && c.level > 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !c.type.includes('Fusion'));
+  const low = pool.filter(c => isMonster(c) && c.level <= 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !isExtra(c));
+  const high = pool.filter(c => isMonster(c) && c.level > 4 && !/Ritual/.test(c.type) && !/Must (?:first )?be Special Summoned|Cannot be Normal Summoned\/Set/i.test(c.desc||'') && !isExtra(c));
   // Weighted sampling with a strict copy cap; no rejected filter is relaxed.
   const choose = list => {
     const copies = new Map();
@@ -78,9 +78,9 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
   };
   for (let n=0;n<Math.round(size*.5);n++) if (!choose(low)) break;
   for (let n=0;n<Math.round(size*.1);n++) if (!choose(high)) break;
-  const main = pool.filter(c => !c.type.includes('Fusion') && c.name !== 'Polymerization');
+  const main = pool.filter(c => !isExtra(c) && c.name !== 'Polymerization');
   while (deck.sections.main.reduce((n,e) => n+e.quantity,0)<size) {
-    if (!choose(main) && !choose(pool.filter(c => !c.type.includes('Fusion')))) throw new Error('Not enough card copies.');
+    if (!choose(main) && !choose(pool.filter(c => !isExtra(c)))) throw new Error('Not enough card copies.');
   }
   // Add only Fusions whose exact materials actually exist in this deck.
   const names = new Set(deck.sections.main.map(e => e.card.name));
@@ -92,6 +92,12 @@ export function generateDeck(cards, settings = defaultSide(), sets = [], seed = 
     if (--replace.quantity === 0) deck.sections.main = deck.sections.main.filter(e => e !== replace);
     deck = addCard(deck,polymer);
   }
+  const tunerLevels=deck.sections.main.filter(e=>/Tuner/.test(e.card.type)&&!isExtra(e.card)).map(e=>e.card.level);
+  const nonTuners=deck.sections.main.flatMap(e=>!isExtra(e.card)&&isMonster(e.card)&&!/Tuner/.test(e.card.type)&&e.card.level<=6?Array(e.quantity).fill(e.card.level):[]);
+  let sums=new Set([0]);for(const level of nonTuners)sums=new Set([...sums,...[...sums].map(n=>n+level).filter(n=>n<=12)]);
+  const synchros=pool.filter(c=>c.type==='Synchro Monster'&&/^1 Tuner \+ 1(?:\+| or more) non-Tuner monsters(?:\r?\n|$)/.test(c.desc||'')&&tunerLevels.some(level=>sums.has(c.level-level)&&c.level>level));
+  const room=15-deck.sections.extra.reduce((n,e)=>n+e.quantity,0);
+  for(const card of shuffled(synchros,random).slice(0,room))deck=addCard(deck,card,'extra');
   return deck;
 }
 export function prepareAIDeck(saved,cards,settings,seed=freshSeed()) {
@@ -101,7 +107,7 @@ export function prepareAIDeck(saved,cards,settings,seed=freshSeed()) {
   const main=shuffled(deck.sections.main.flatMap(e=>Array(e.quantity).fill(e.card)),random).slice(0,size);
   deck.sections.main=[];
   for(const card of main){const entry=deck.sections.main.find(e=>e.card.id===card.id);if(entry)entry.quantity++;else deck.sections.main.push({card,quantity:1});}
-  const pool=poolFor(cards,settings).filter(c=>!c.type.includes('Fusion'));
+  const pool=poolFor(cards,settings).filter(c=>!isExtra(c));
   while(deck.sections.main.reduce((n,e)=>n+e.quantity,0)<size){
     const counts=new Map();for(const e of Object.values(deck.sections).flat())counts.set(cardCopyName(e.card),(counts.get(cardCopyName(e.card))||0)+e.quantity);
     const candidates=pool.filter(c=>(counts.get(cardCopyName(c))||0)<3);

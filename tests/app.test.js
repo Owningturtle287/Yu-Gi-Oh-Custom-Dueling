@@ -66,7 +66,7 @@ test('home, archive detail, named deck, save/reopen, format, and export menus wo
     assert.equal($('.preview-panel button').disabled, true);
     $('.bottom-nav [data-route="home"]').click(); $('.launch-card[data-route="solo"]').click();
     assert.equal(app.state.route, 'solo');
-    assert.match($('#main').textContent, /[Ss]upported 2006 TCG cards/);
+    assert.match($('#main').textContent, /[Ss]upported 2010 TCG cards/);
     assert.ok($('[data-duel="start"]'));
     $('#app-menu').click(); assert.ok($('[data-action="install"]')); assert.ok($('[data-action="settings"]'));
     $('[data-action="install"]').click(); assert.match($('#modal').textContent, /Add to Home Screen/);
@@ -347,7 +347,7 @@ test('Solo setup has one AI policy and saves independent eligibility, speed, sav
     $('[data-duel-tab="2"]').click();assert.equal($('#solo-difficulty'),null);assert.match($('.solo-ai-badge').textContent,/Strategic AI/);assert.equal($('.solo-ai-badge').title,'AI learning on this device');change('#solo-ai-speed','relaxed');change('#solo-first','you');
     $('[data-duel-tab="1"]').click();change('#solo-source','saved');$('[data-duel="design"]').click();
     assert.equal(app.state.route,'decks');assert.match($('[data-action="return-solo"]').textContent,/Save & return/);
-    assert.equal(app.state.draft.releaseYear,2006);assert.equal(app.state.filtered.length,24);
+    assert.equal(app.state.draft.releaseYear,2010);assert.equal(app.state.filtered.length,24);
     $('.card-tile [data-quick-add]').click();$('[data-action="return-solo"]').click();
     assert.equal(app.state.route,'solo');assert.equal($('#solo-source').value,'saved');
     config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));

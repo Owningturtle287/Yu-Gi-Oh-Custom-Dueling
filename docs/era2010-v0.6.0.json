@@ -1,0 +1,268 @@
+{
+  "release": "0.6.0",
+  "date": "2026-11-06",
+  "eraEnd": "2010-12-31",
+  "pool": {
+    "datedTCG": 4148,
+    "playable": 4136,
+    "added": 1966,
+    "excluded": 12,
+    "scripts": 4103
+  },
+  "cardProbeCodeCommit": "7e4877c217a8082263663f954986c63c724df9c1",
+  "finalCodeCommit": "db0b22917a5d011981f97f0f10f85c29e39f4e5a",
+  "unitTests": {
+    "tests": 569,
+    "passed": 569,
+    "failed": 0
+  },
+  "build": "passed",
+  "memory": {
+    "createdAndDestroyed": 120,
+    "retainedCallbacks": 0
+  },
+  "browser": {
+    "workflowRun": 42216253494,
+    "url": "https://github.com/Owningturtle287/Yu-Gi-Oh-Custom-Dueling/actions/runs/42216253494",
+    "status": "passed",
+    "viewports": [
+      [
+        844,
+        390
+      ],
+      [
+        667,
+        375
+      ],
+      [
+        568,
+        320
+      ],
+      [
+        740,
+        360
+      ],
+      [
+        390,
+        844
+      ],
+      [
+        320,
+        568
+      ],
+      [
+        1280,
+        720
+      ],
+      [
+        1024,
+        768
+      ]
+    ],
+    "note": "The final follow-up also reruns browser CI; it adds Ghost Gardna response scoring, redirect accounting and regressions."
+  },
+  "nativeProbes": 15932,
+  "probeRuns": [
+    {
+      "configuration": {
+        "games": 120,
+        "gameStart": 0,
+        "seed": 1001,
+        "limit": 4136,
+        "randomVersion": 3,
+        "promptVersion": 2,
+        "probeSide": 0,
+        "aiSizes": [
+          30,
+          40,
+          60
+        ],
+        "sweep": true,
+        "battleFlips": true,
+        "rulesVersion": 3,
+        "probeFrom": null,
+        "offset": 0,
+        "actionLimit": 2500
+      },
+      "started": "2026-11-06T12:19:04.900Z",
+      "finished": "2026-11-06T12:39:01.197Z",
+      "coverage": {
+        "probed": 4136,
+        "drawn": 3204,
+        "played": 2830,
+        "activated": 1507,
+        "resolved": 1514
+      },
+      "probes": 7966,
+      "failures": [],
+      "rulesRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+      "poolHash": "ccfaec0908bde7ea64449d38278e5504896afa5c72e50e4705b3cbfe60390c38",
+      "cardsSnapshotHash": "2ba2ca84a8cf7ffc382c5bfbafcf48752c2f3810b6a41ff71e9dc3c1f9b6e931",
+      "setsSnapshotHash": "cecf5b10d25e75b1b06bca56fef27412c130dc67d6e94d22f1d22a866ffb9bac",
+      "rawAuditReportSha256": "38735918da2715e3207db46a0dd552960d41f00cbba07b252c78fce519781210"
+    },
+    {
+      "configuration": {
+        "games": 120,
+        "gameStart": 120,
+        "seed": 1001,
+        "limit": 4136,
+        "randomVersion": 3,
+        "promptVersion": 2,
+        "probeSide": 1,
+        "aiSizes": [
+          30,
+          40,
+          60
+        ],
+        "sweep": true,
+        "battleFlips": true,
+        "rulesVersion": 3,
+        "probeFrom": null,
+        "offset": 0,
+        "actionLimit": 2500
+      },
+      "started": "2026-11-06T12:19:06.105Z",
+      "finished": "2026-11-06T12:38:40.519Z",
+      "coverage": {
+        "probed": 4136,
+        "drawn": 3198,
+        "played": 2794,
+        "activated": 1483,
+        "resolved": 1491
+      },
+      "probes": 7966,
+      "failures": [],
+      "rulesRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+      "poolHash": "ccfaec0908bde7ea64449d38278e5504896afa5c72e50e4705b3cbfe60390c38",
+      "cardsSnapshotHash": "2ba2ca84a8cf7ffc382c5bfbafcf48752c2f3810b6a41ff71e9dc3c1f9b6e931",
+      "setsSnapshotHash": "cecf5b10d25e75b1b06bca56fef27412c130dc67d6e94d22f1d22a866ffb9bac",
+      "rawAuditReportSha256": "0315c8c5f687337d805e8b4c484f3ee5e65d85d353d784577732ef6751af1177"
+    }
+  ],
+  "initialGameDiagnostics": {
+    "games": 240,
+    "completed": 239,
+    "stall": {
+      "label": "game:89:ai60:Duelist Pack: Yusei",
+      "cause": "Two Ghost Gardna copies repeatedly redirected one attack to each other.",
+      "resolution": "AI scores the actual protective benefit and avoids previously visited redirect targets; native bookkeeping counts one attack across redirects. Both-controller and beneficial-redirect regressions pass; all 240 complete games were rerun."
+    }
+  },
+  "finalGames": {
+    "configuration": {
+      "games": 240,
+      "gameStart": 0,
+      "seed": 1001,
+      "limit": 4136,
+      "randomVersion": 3,
+      "promptVersion": 2,
+      "probeSide": 0,
+      "aiSizes": [
+        30,
+        40,
+        60
+      ],
+      "sweep": false,
+      "battleFlips": false,
+      "rulesVersion": 3,
+      "probeFrom": null,
+      "offset": 0,
+      "actionLimit": 2500
+    },
+    "started": "2026-11-06T12:42:40.741Z",
+    "finished": "2026-11-06T12:45:03.309Z",
+    "games": 240,
+    "completedGames": 240,
+    "actions": 28174,
+    "replays": 24,
+    "failures": [],
+    "timeouts": [],
+    "aiDeckSizes": {
+      "30": 80,
+      "40": 80,
+      "60": 80
+    },
+    "rulesRevision": "5138eb120d9f6f6caa04dbba22b64ef451302b95",
+    "poolHash": "ccfaec0908bde7ea64449d38278e5504896afa5c72e50e4705b3cbfe60390c38",
+    "cardsSnapshotHash": "2ba2ca84a8cf7ffc382c5bfbafcf48752c2f3810b6a41ff71e9dc3c1f9b6e931",
+    "setsSnapshotHash": "cecf5b10d25e75b1b06bca56fef27412c130dc67d6e94d22f1d22a866ffb9bac"
+  },
+  "sourceHashes": {
+    "assets/rules/manifest.json": "6cea436001d179c00bf99a2f42e517e1c06d9cbf2549b3942bd3aca87e15dc54",
+    "package-lock.json": "12872fc589df0590a26b5910e3dc9e16a9ff28c4ae3fa3a0111af5e879628e80",
+    "package.json": "56c669a443a43c1f6e46aac4faf8a0751804951280da43000fa1e7b3335b4646",
+    "scripts/audit-duels.mjs": "d76ba254712550e9625da0de8b4c0954ffcd3e3f39ca9396cc54a821f71dbafe",
+    "scripts/bench-ai.mjs": "84ce9dbeaa5c2f90d483a91cf0a94cc6526368c8a46cfbc286c2f286541ed6d0",
+    "scripts/build.mjs": "c9b4320ad5d95b19d5ecb0f6f4f9f6645a77f4fcfdec39fab24cbed5263a86b9",
+    "scripts/check-api.mjs": "2b96da2873f08b54648345d5f9abd18ed732a5e1f0c420269d4b0979b12b0091",
+    "scripts/check-duel-api.mjs": "4216600b5747547c4a27ddbe8c7a55b7ba41b85b0766e64d34e98cb2da4d77ae",
+    "scripts/check-menu-layout.mjs": "dd8c2afc223b17c2c7501062c66c915a9ac1018160ada3fd1f0cd5499e87f5f2",
+    "scripts/check-runtime-memory.mjs": "fc8a700c10b6cfc0628b5012c4a385abe618fb8be5367a85664d1a11b3528ebd",
+    "scripts/prepare-runtime.mjs": "ca2ca2e3bdc4ae829e0a2bc2049201b08b102672156a1e7f5c2a6264c0812790",
+    "scripts/serve.mjs": "22d1c118ee32617fca1d30f73e8e915b485e9248121d8780f99484c996002735",
+    "scripts/tune-ai.mjs": "bccd14f6311e990e3cef0f3a1e8400898563293b87659958472d8c659d763b1c",
+    "scripts/update-rules.py": "464681821983fa0df3b96feb6c8a50afa236452d8dcda41fce8cdcf6ea08426d",
+    "src/app.js": "38e25979a94342a1bf9898dbe5106ee64e3beb626e034297d2e74e02ffced47c",
+    "src/card-details.js": "6551b7cfdc28a2d71603304c14974028c7f8e1c77100987e9d9bdc0f7a76bbde",
+    "src/card-filters.js": "60682b9cc599fcb4612b9199457064d49eed5fbf009543d10c330659246043e2",
+    "src/cards.js": "a6c3a123f5ae7eaa79c39b828b6a762d19de4499bdd957f0a67b9c49a1c2bb4c",
+    "src/core.js": "0b28abac3314c2976e31d3c4a58e2d373f5dd9be7521560cbde7e41734b8d66f",
+    "src/deck-view.js": "772e5e57f456147e0dda102412be4266b8a638b3b393f6dc017774a4c111e834",
+    "src/duel/ai-client.js": "82d515d599b6905cd1cd842ed439ca62227b3375dc2d2823da35c8f61e58e7f5",
+    "src/duel/ai-combat.js": "fb0a440367b25ec8e1a41e250eb244882e7938b477d0c7288b056ac825f85cb6",
+    "src/duel/ai-guidance.js": "191114c7f4d54b81a64c5f7d0b60148a7a08663f1e076c6e9436229a69272330",
+    "src/duel/ai-knowledge.js": "ab9d56b8279790986866cd395dacd2cfadaf8ca71eddc053d7673629751a68e6",
+    "src/duel/ai-learning.js": "4b7452a8f2378817f26749be8b3224f17cb236e12bab49b5e6df090fcf732ee8",
+    "src/duel/ai-memory.js": "7a0ffbc59d931322db554dbdca65cad8621837210d2ebe787d0fd39ad30d7dd3",
+    "src/duel/ai-physics.js": "158a6d4690493ef0f45499e3f3089f9b5af98d450888a353bdf4d38da280f857",
+    "src/duel/ai-turn.js": "fd959518004e4b413abe817f5b8f94cf60c40e4816b440c94e07934a1aa9f43e",
+    "src/duel/ai-worker.js": "51de3f82addf20ff164e11d43c34f8b52ba15fabbf0f41f8da9e8323838675e7",
+    "src/duel/ai.js": "41155fef44b1c0cccbd02dd208a9e7588df5a8686ab8a6387c35406761c53698",
+    "src/duel/arena-layout.js": "07055739792cac1e745f3ece73b6749bb8f0f40f04c841ea8eed52de1728cd08",
+    "src/duel/attack-arrows.js": "a9ccaf1d2cadd24751f4da8f4f8d165ef444e7ef562335b8a2794354c3517f3e",
+    "src/duel/battle-presentation.js": "33725dbfa854c584ec5fb3ba0c5f741891c33c7db5f9ee0769b6508430d09e06",
+    "src/duel/battle-timing.js": "a033f6dd044d7419c1ac8368344fd15ecde53d89db285f28c4ad9b14ec1d407b",
+    "src/duel/card-view.js": "00250998ae7a6122278e7c67455abb9848f11fc0ea6e2e98d5f185fd998f10f7",
+    "src/duel/catalog.js": "ac03552e552da31711cb8d87e24c1f32e3f3e12c782c81c9ba281ad695524374",
+    "src/duel/chain-art.js": "98c28bdfa43d4373ced8d0e73478d5c1708d02be0a9a032b38dda0f069d9751f",
+    "src/duel/choice-view.js": "c9fd92d670e1d089f691007db14c7ded8aff7cc751f6066616e05e553e8d490c",
+    "src/duel/config.js": "8f92569da74f23ddd2fe13a619b915df8068de64cba0873241c970ac0f5ddcde",
+    "src/duel/decks.js": "4249794d4c4c7ebf816da3c6a5ad481e202751a2c87eef3df11284f7a7cb7870",
+    "src/duel/declaration-art.js": "434022fb571d43dd481fa160a1e3634a0b608adf41d62e322a53c426797a96d2",
+    "src/duel/declaration-icons.js": "e8bb9e0b187dd2a2e3f7a89ec06571eabb69e68bb3b04485a0a28e2e14433938",
+    "src/duel/dom.js": "d6f892e61031ae1df91c33a2e95d76952c20dcabe3d47e4ad389c8156c6093e7",
+    "src/duel/effects.js": "a38e2225e27d9909df7f605dd0a271bfb1dfb17761f754247a0d3f5f8bba1c5e",
+    "src/duel/engine.js": "d552b5e702c1393de8a68afa3aeee7ae775ca3fa254359a27cd5b7d7fa7a7833",
+    "src/duel/feedback.js": "a74212d8b985c4f916e1c064f3e329be39290eca014e98320ffa5d7c3e68e5bf",
+    "src/duel/field.js": "5a3bc856e99281ff73a6b9afc32a312594ba562644794055567253353ca93894",
+    "src/duel/flow.js": "a74b18a3f1fcfa479f63973067a4c98ec93099f29a5486f3c52c1289d061b2af",
+    "src/duel/identities.js": "f146ccbf5440fcdb3553c668e30a2bae502f13c81f5521773a486ca1caecfb4c",
+    "src/duel/intro.js": "b0ba583f266859d6e0677f38150098209590b4c601b7c7baa46442da4fc62fee",
+    "src/duel/log.js": "c24d71e4a55bd6a57e1656d96c690d76ca06bac3d567df95f8defa52f2cfb9ba",
+    "src/duel/motion.js": "ddffc3f454da47b829f57cbb145cc09c0a88470e383cda36918551b7ce29f212",
+    "src/duel/native-ai.js": "2337569ae7f19ccfa1108efa8f7f5c3a511a4951db96c9c9c4d2e0f283b5844b",
+    "src/duel/native-engine.js": "34165659b00507256272446bcdb97f646600093c1789b07542d8b8ad86eb6e44",
+    "src/duel/native-loader.js": "363d80cea85f669d65ca7f1b213e97dc43be870e5fe13f43916ce849a4cdea80",
+    "src/duel/native-prompts.js": "aa29432529e25732936faa08238a6080e823bcdb771bc048b65594a0feb3cde0",
+    "src/duel/random.js": "63b9823e54e3d0968a987a16bd3795f4feb32d6c08f74a7f662ab87c78ecf87e",
+    "src/duel/recovery.js": "662db1ee1078f367d92e88ea43d8975dac5c8345f9ea96ab0eda5033cec7d2db",
+    "src/duel/responses.js": "463886846951e903c20454e392f9ae1ad859bd33b35d3a473342ad2020cd8500",
+    "src/duel/rules-manifest.js": "71290b4ac4deff6de1b77883443eb1e85f549b3a095aee7a9a6f886530bb6b04",
+    "src/duel/saves.js": "2de8552c73d5eee011c77897a0cb2f96a6482dae7db9b60172a85e3bdbab8c63",
+    "src/duel/ui.js": "a80c510e8ad140bb10884568d88ebcbe780b31eb6e52b221760e38a352b504b5",
+    "src/duel/viewport.js": "be083667a97ea6ea76a0078376394d5c22117e08b879bf54a7a7fddc275b2339",
+    "src/era.js": "bb14438defeccc5b6aecef156e483a1d9cb22a984284dad8b64750045b5df39b",
+    "src/icons.js": "cd24b94b39f7c9a09339b665164524d410b294579b10d392ff3fa89042ab468a",
+    "src/layout.js": "5cc4bd6835002b9b79e31da9395bf39c2133ed973622bfe1809e60b01daa0424",
+    "sw.js": "106c1c2f0fa398ad39c5935ef7d3264d6661dddd7f8d157f87c9070c82e7bfaf",
+    "tests/era2006-replay.json": "b7abff2da353f6d018efad4339f050950f27ceed1939dcaaecd1880980901e2b",
+    "tests/era2010-fixtures.json": "7aa7e6ff79f391472c62a3d43d9b6bc00e04d85ec3cc073863408abd25f97cd6",
+    "tests/era2010.test.js": "2be093b17dac926a10de195482937f644877ce00010da067dd6d8a6b9cfef534"
+  },
+  "notes": [
+    "Synthetic probes exercise subject activation and battle/phase windows with tactical choices; complete games use the production planner.",
+    "Native card sweeps passed before the final Ghost Gardna fix; focused regressions and the full 240-game rerun validate that correction.",
+    "This does not certify every possible card combination. The game retains the established TCG release basis, current errata and no banlist."
+  ]
+}

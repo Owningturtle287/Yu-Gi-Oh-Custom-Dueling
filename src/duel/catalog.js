@@ -92,7 +92,7 @@ define('Exodia the Forbidden One', { op: 'passive', exodia: true });
 export function support(card) {
   if (!card?.tcgDate || card.tcgDate > ERA_END) return { ok: false, reason: `Outside the supported ${ERA_YEAR} TCG pool` };
   if (card.type === 'Token') return {ok:false,reason:'Tokens are created by effects, not included in decks'};
-  if (['Meteo the Matchless', 'Ulevo', 'King of Destruction - Xexex', 'Queen of Fate - Eternia', 'Testament of the Arcane Lords', '???'].includes(card.name)) return {ok:false,reason:'Collector prize / non-duel card'};
+  if (['Meteo the Matchless', 'Ulevo', 'King of Destruction - Xexex', 'Queen of Fate - Eternia', 'Testament of the Arcane Lords', 'Chimaera, the Master of Beasts', 'Emperor of Lightning', 'Get Your Game On!', '???'].includes(card.name)) return {ok:false,reason:'Collector prize / event-only card'};
   if (card.type === NORMAL && Number.isFinite(card.atk) && card.atk >= 0 && Number.isFinite(card.def) && card.def >= 0) return { ok: true, rule: { op: 'normal' } };
   if (card.type === 'Fusion Monster' && /^"[^"]+"(?: \+ "[^"]+")+\s*$/.test(card.desc?.split(/\r?\n/)[0]) && !card.desc?.split(/\r?\n/).slice(1).join('').trim()) return { ok: true, rule: { op: 'fusionBody', materials: [...card.desc.matchAll(/"([^"\\]+)"/g)].map(m => m[1]) } };
   if (Object.hasOwn(effects, card.name)) return { ok: true, rule: effects[card.name] };
