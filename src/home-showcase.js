@@ -27,7 +27,7 @@ export function createShowcase(root,{ImageClass=root.ownerDocument.defaultView.I
         root.dataset.card=SHOWCASE_CARDS[index][0];root.classList.add('has-art');
         root.querySelector('.showcase-name').textContent=SHOWCASE_CARDS[index][1];root.querySelector('.showcase-type').textContent=SHOWCASE_CARDS[index][2];
         break;
-      }catch{failed.add(candidate);}
+      }catch{if(destroyed)return;failed.add(candidate);}
     }
     busy=false;next.disabled=failed.size>=SHOWCASE_CARDS.length-1;schedule();
   }

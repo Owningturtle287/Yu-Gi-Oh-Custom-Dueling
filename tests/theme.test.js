@@ -19,6 +19,9 @@ test('themed menus retain readable action tones and the field retains its light 
       const style=css(button),foreground=style.getPropertyValue('--choice-accent'),background=style.getPropertyValue('--choice-bg');
       assert.ok(contrast(foreground,background)>=4.5,`${tone} must meet normal-text contrast`);
     }
+    const selected=window.document.createElement('button');selected.className='duel-choice-card';selected.setAttribute('aria-pressed','true');selected.innerHTML='<span class="duel-choice-copy"><strong>Selected monster</strong><small>Details</small></span>';$('.dialog-body').append(selected);
+    assert.equal(css(selected.querySelector('strong')).color,'#f1e8c9');assert.equal(css(selected.querySelector('small')).color,'#c1cdb4');
+    assert.ok(contrast('#c1cdb4','#2c4b35')>=4.5);
     for(const [width,height] of [[320,568],[390,844],[568,320],[844,390],[1024,768]]){
       window.happyDOM.setWindowSize({width,height});
       assert.equal(css($('.duel-table')).position,'relative');assert.equal(css($('.duel-session')).overflow,'hidden');
