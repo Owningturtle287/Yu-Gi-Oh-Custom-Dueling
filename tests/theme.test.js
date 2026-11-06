@@ -21,6 +21,9 @@ test('themed menus retain readable action tones and the field retains its light 
     }
     const setup=window.document.createElement('div');setup.className='app-shell';setup.innerHTML='<section class="solo-setup"><div class="solo-panel"><select><option>Deliberate</option></select></div></section>';window.document.body.append(setup);
     const select=setup.querySelector('select');assert.equal(css(select).backgroundColor,'#14251e');assert.equal(css(select).color,'#e6e6cf');assert.ok(contrast('#e6e6cf','#14251e')>=4.5);
+    const source=window.document.createElement('button');source.className='duel-choice-source';source.innerHTML='<strong>DNA Surgery</strong><small>Tap to read effect</small>';$('.dialog-body').append(source);
+    assert.equal(css(source.querySelector('strong')).color,'#2d4c34');assert.equal(css(source.querySelector('small')).color,'#52694c');assert.ok(contrast('#52694c','#dce4cd')>=4.5);
+    const saved=window.document.createElement('div');saved.className='duel-saved-list';saved.innerHTML='<article><div><strong>Saved duel</strong><small>Turn 3</small></div></article>';setup.querySelector('.solo-panel').append(saved);assert.equal(css(saved.querySelector('article')).color,'#e9e5c9');assert.ok(contrast('#bac7af','#344835')>=4.5);
     const selected=window.document.createElement('button');selected.className='duel-choice-card';selected.setAttribute('aria-pressed','true');selected.innerHTML='<span class="duel-choice-copy"><strong>Selected monster</strong><small>Details</small></span>';$('.dialog-body').append(selected);
     assert.equal(css(selected.querySelector('strong')).color,'#f1e8c9');assert.equal(css(selected.querySelector('small')).color,'#c1cdb4');
     assert.ok(contrast('#c1cdb4','#2c4b35')>=4.5);
