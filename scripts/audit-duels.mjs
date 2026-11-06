@@ -71,6 +71,9 @@ async function run(label,decks,options,{probe=null,battleProbe=false,cap=180,ful
         action??=actions.find(a=>engine.findCard(s,a.uid)?.card.id===probe.id&&['ACTIVATE','EFFECT'].includes(a.type));
         if(!battleProbe)action??=actions.find(a=>engine.findCard(s,a.uid)?.card.id===probe.id&&['SUMMON','POSITION'].includes(a.type)&&!a.set);
       }
+      // Synthetic rules probes advance battle/phase windows after offering the
+      // subject card. Complete games separately retain the production planner.
+      if(probe&&!battleProbe&&!s.choice&&!s.window&&!s.reveals?.length)action??=actions.find(a=>a.type==='ATTACK'&&!s.declinedAttacks?.[side]?.includes(a.uid)&&engine.findCard(s,a.uid)?.card.id===probe.id)||actions.find(a=>a.type==='ATTACK'&&!s.declinedAttacks?.[side]?.includes(a.uid))||actions.find(a=>a.type==='NEXT')||actions.find(a=>a.type==='END');
       action??=engine.chooseAIAction(s,side,{planning:full});assert.ok(action,'AI returned no continuation');
       recent.push({step:steps,index:actions.findIndex(a=>a.id===action.id),turn:s.turn,phase:s.phase,side,type:action.type,label:action.label,card:engine.findCard(s,action.uid)?.card.name,target:engine.findCard(s,action.target)?.card.name,choice:s.choice?.title});if(recent.length>15)recent.shift();
       if(s.choice?.stage){

@@ -142,6 +142,13 @@ function fusionUtility(ctx,sourceCard){
 
 function scoreEffect(ctx,a){
   const {s,side,p,foe}=ctx,source=locate(s,a.uid)||{uid:a.uid,card:a.effectCard},card=source.card;if(!card)return -200;
+  if(card.name==='Ghost Gardna'&&s.pending?.kind==='attack'&&s.pending.side!==side&&s.battleStep==='attack'){
+    if(s.pending.redirectTargets?.includes(source.uid))return -100000;
+    const attacker=locate(s,s.pending.uid),defender=locate(s,s.pending.target);
+    if(!attacker||!defender)return -200;
+    const before=battleOutcome(s,1-side,attacker,defender),after=battleOutcome(s,1-side,attacker,source);
+    return before.value-after.value-20;
+  }
   const profile=effectProfile(card,a.effectText),intent=profile.intent,opp=monsters(foe),ours=monsters(p);
   const upgrade=levelUpgrade(card,s.phase);
   if(upgrade&&(s.choice?.phaseTrigger||s.window?.phaseTrigger)&&/Special Summon/i.test(a.effectText||s.choice?.effectText||''))return 900;

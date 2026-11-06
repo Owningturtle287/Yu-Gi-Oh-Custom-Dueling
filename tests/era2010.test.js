@@ -95,3 +95,47 @@ test('Malefic Blue-Eyes pays its Deck banish cost before any chain without confu
  const e=backend();let s=await game(e,{hands:[['Malefic Blue-Eyes White Dragon'],[]],fields:[{field:[body('Ancient Forest')]},{}],main:[...Array(39).fill(get('Mystical Elf')),get('Blue-Eyes White Dragon')]});
  try{s=settle(e,e.applyAction(s,offered(e,s,0,'Malefic Blue-Eyes White Dragon'),0));assert.equal(s.players[0].monsters.find(Boolean).card.name,'Malefic Blue-Eyes White Dragon');assert.equal(s.players[0].banished[0].card.name,'Blue-Eyes White Dragon');assert.equal(s.excavationReport,undefined);await replay(e,s);}finally{e.destroyMatch(s);}
 });
+test('Red-Eyes once-per-turn summon and revival restrictions apply across different copies',async()=>{
+ const e=backend();let s=await game(e,{hands:[['Red-Eyes Darkness Metal Dragon','Red-Eyes Darkness Metal Dragon'],[]],fields:[{monsters:['Blue-Eyes White Dragon','Blue-Eyes White Dragon'].map(n=>body(n)),grave:[body('Blue-Eyes White Dragon')]},{}]});
+ try{s=settle(e,e.applyAction(s,offered(e,s,0,'Red-Eyes Darkness Metal Dragon'),0));assert.equal(offered(e,s,0,'Red-Eyes Darkness Metal Dragon'),undefined);s=settle(e,command(e,s,'ACTIVATE',0,'Red-Eyes Darkness Metal Dragon'));assert.equal(s.players[0].monsters.filter(Boolean).length,3);assert.equal(s.players[0].grave.length,0);assert.ok(!s.actions[0].some(a=>a.type==='ACTIVATE'&&e.findCard(s,a.uid)?.card.name==='Red-Eyes Darkness Metal Dragon'));await replay(e,s);}finally{e.destroyMatch(s);}
+});
+test('Judgment Dragon requires distinct Lightsworn names and pays 1000 LP for its field wipe',async()=>{
+ const e=backend();let s=await game(e,{hands:[['Judgment Dragon'],[]],fields:[{grave:['Ryko, Lightsworn Hunter','Lyla, Lightsworn Sorceress','Lumina, Lightsworn Summoner','Garoth, Lightsworn Warrior'].map(n=>body(n))},{monsters:[body('Blue-Eyes White Dragon')]}]});
+ try{s=settle(e,e.applyAction(s,offered(e,s,0,'Judgment Dragon'),0));s=settle(e,command(e,s,'ACTIVATE',0,'Judgment Dragon'));assert.equal(s.players[0].lp,7000);assert.equal(s.players[0].monsters.find(Boolean).card.name,'Judgment Dragon');assert.equal(s.players[1].monsters.filter(Boolean).length,0);await replay(e,s);}finally{e.destroyMatch(s);}
+});
+test('Dark Armed Dragon uses three DARKs to summon and banishes one as the cost to destroy a card',async()=>{
+ const e=backend();let s=await game(e,{hands:[['Dark Armed Dragon'],[]],fields:[{grave:['Dark Grepher','Armageddon Knight','The Dark Creator'].map(n=>body(n))},{monsters:[body('Blue-Eyes White Dragon')]}]});
+ try{s=settle(e,e.applyAction(s,offered(e,s,0,'Dark Armed Dragon'),0));s=settle(e,command(e,s,'ACTIVATE',0,'Dark Armed Dragon'));assert.equal(s.players[0].banished.length,1);assert.equal(s.players[1].monsters.filter(Boolean).length,0);await replay(e,s);}finally{e.destroyMatch(s);}
+});
+test('Gladiator Beast Gyzarus contact-fuses real materials and resolves its destruction trigger',async()=>{
+ const e=backend();let s=await game(e,{fields:[{monsters:['Gladiator Beast Bestiari','Gladiator Beast Laquari'].map(n=>body(n))},{monsters:[body('Blue-Eyes White Dragon')]}],extra:['Gladiator Beast Gyzarus']});
+ try{s=settle(e,e.applyAction(s,offered(e,s,0,'Gladiator Beast Gyzarus'),0));assert.equal(s.players[0].monsters.find(Boolean).card.name,'Gladiator Beast Gyzarus');assert.equal(s.players[0].deck.length,42);assert.equal(s.players[1].monsters.filter(Boolean).length,0);await replay(e,s);}finally{e.destroyMatch(s);}
+});
+test('Infernity Launcher sends itself as a cost and revives two targets with an empty hand',async()=>{
+ const e=backend();let s=await game(e,{hands:[['Infernity Launcher'],[]],fields:[{grave:['Infernity Archfiend','Infernity Necromancer'].map(n=>body(n))},{}]});
+ try{s=settle(e,command(e,s,'ACTIVATE',0,'Infernity Launcher'));s=settle(e,command(e,s,'ACTIVATE',0,'Infernity Launcher'));assert.equal(s.players[0].hand.length,0);assert.equal(s.players[0].monsters.filter(Boolean).length,2);assert.ok(s.players[0].grave.some(c=>c.card.name==='Infernity Launcher'));await replay(e,s);}finally{e.destroyMatch(s);}
+});
+test('Ryko destroys a card and mills three without creating an excavation report',async()=>{
+ const e=backend();let s=await game(e,{fields:[{monsters:[body('Ryko, Lightsworn Hunter',{faceUp:false,defense:true})]},{monsters:[body('Blue-Eyes White Dragon')]}]});
+ try{s=settle(e,command(e,s,'POSITION',0,'Ryko, Lightsworn Hunter'));assert.equal(s.players[1].monsters.filter(Boolean).length,0);assert.equal(s.players[0].deck.length,37);assert.equal(s.players[0].grave.length,3);assert.equal(s.excavationReport,undefined);await replay(e,s);}finally{e.destroyMatch(s);}
+});
+for(const card of ['Battle Fader','Gorz the Emissary of Darkness'])test(`${card} receives its actual direct-attack timing and native summon result`,async()=>{
+ const e=backend();let s=await game(e,{hands:[[card],[]],fields:[{},{monsters:[body('Blue-Eyes White Dragon')]}]});
+ try{s=settle(e,command(e,s,'END',0));s=command(e,s,'NEXT',1);s=command(e,s,'ATTACK',1,'Blue-Eyes White Dragon');let activated=false;
+ for(let n=0;n<120&&(s.choice||s.window||s.pending);n++){const side=s.actions[0].length?0:1,yes=s.actions[side].find(a=>a.yes===true&&s.choice?.source?.card.name===card),act=s.actions[side].find(a=>a.type==='ACTIVATE'&&(a.effectCard?.name||e.findCard(s,a.uid)?.card.name)===card);if(yes||act)activated=true;s=e.applyAction(s,yes||act||s.actions[side].find(a=>a.type==='PASS')||e.chooseAIAction(s,side),side);}
+ assert.ok(activated);assert.ok(s.players[0].monsters.some(c=>c?.card.name===card));if(card==='Battle Fader')assert.equal(s.players[0].lp,8000);else{assert.equal(s.players[0].lp,5000);assert.ok(s.players[0].monsters.some(c=>c?.currentStats.atk===3000&&c.card.type==='Token'));}await replay(e,s);
+ }finally{e.destroyMatch(s);}
+});
+for(const side of [0,1])test(`Ghost Gardna redirects never spend extra attacks or trap the AI in a two-copy loop, side ${side}`,async()=>{
+ const e=backend(),fields=[{},{}];fields[side]={monsters:[body('Ghost Gardna',{defense:true}),body('Ghost Gardna',{defense:true})]};fields[1-side]={monsters:[body('Blue-Eyes White Dragon')]};let s=await game(e,{first:side,fields});
+ try{s=settle(e,command(e,s,'END',side));s=command(e,s,'NEXT',1-side);const attacker=s.players[1-side].monsters[0].uid,guard=s.players[side].monsters[0].uid;s=command(e,s,'ATTACK',1-side,'Blue-Eyes White Dragon');s=e.applyAction(s,s.actions[1-side].find(a=>a.target===guard),1-side);if(s.actions[1-side].some(a=>a.finish))s=e.applyAction(s,s.actions[1-side].find(a=>a.finish),1-side);
+ assert.equal(s.choice.source.card.name,'Ghost Gardna');assert.equal(e.chooseAIAction(s,side,{variety:false}).yes,false);
+ // Human choices remain legal, including redirecting back to a previous card.
+ for(let n=0;n<2;n++)s=e.applyAction(s,s.actions[side].find(a=>a.yes===true),side);
+ assert.equal(s.attacksUsed[attacker],1);assert.equal(e.chooseAIAction(s,side,{variety:false}).yes,false);s=settle(e,s);assert.equal(s.players[side].monsters.filter(Boolean).length,1);assert.equal(s.attacksUsed[attacker],1);await replay(e,s);
+ }finally{e.destroyMatch(s);}
+});
+test('Ghost Gardna still redirects when sacrificing it protects a more valuable monster',async()=>{
+ const e=backend();let s=await game(e,{fields:[{monsters:[body('Ghost Gardna',{defense:true}),body('Dark Armed Dragon')]},{monsters:[body('Blue-Eyes White Dragon')]}]});
+ try{s=settle(e,command(e,s,'END',0));s=command(e,s,'NEXT',1);const protectedUid=s.players[0].monsters[1].uid;s=command(e,s,'ATTACK',1,'Blue-Eyes White Dragon');s=e.applyAction(s,s.actions[1].find(a=>a.target===protectedUid),1);if(s.actions[1].some(a=>a.finish))s=e.applyAction(s,s.actions[1].find(a=>a.finish),1);const action=e.chooseAIAction(s,0,{variety:false});assert.equal(action.yes,true);s=settle(e,e.applyAction(s,action,0));assert.ok(s.players[0].monsters.some(c=>c?.uid===protectedUid));assert.ok(s.players[0].grave.some(c=>c.card.name==='Ghost Gardna'));await replay(e,s);}finally{e.destroyMatch(s);}
+});
