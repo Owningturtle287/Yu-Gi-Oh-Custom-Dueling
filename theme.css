@@ -9,12 +9,12 @@ html:not(.duel-playing) .release { color:#c6c8b7; }
 html:not(.duel-playing) .release span { color:#d7c17d; background:#d3b86a15; border-color:#b59a5050; }
 /* Fine diagonal grain and a beveled rim carry across every menu action. */
 html:not(.duel-playing) button:not(.card-inspect):not(.deck-inspect):not(.quick-add):not(.quick-remove),#modal button:not(.duel-choice-read):not(.duel-response-art) {
- color:#e8e5d5; border-color:#9b875756; background:repeating-linear-gradient(125deg,#fff04 0 1px,transparent 1px 5px),linear-gradient(150deg,#35463a,#23352d); box-shadow:inset 0 1px #dfd4a529,inset 0 -1px #0003,0 3px 7px #0002;
+ color:#e8e5d5; border-color:#9b875756; background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 5px),linear-gradient(150deg,#35463a,#23352d); box-shadow:inset 0 1px #dfd4a529,inset 0 -1px #0003,0 3px 7px #0002;
 }
 html:not(.duel-playing) button:hover:not(:disabled):not(.card-inspect):not(.deck-inspect):not(.quick-add):not(.quick-remove),#modal button:hover:not(:disabled) { border-color:#c6a964; filter:brightness(1.1); }
 html:not(.duel-playing) button:focus-visible,#modal button:focus-visible,#modal input:focus-visible { outline:2px solid #e6be62; outline-offset:3px; }
-html:not(.duel-playing) button.primary,#modal button.primary { color:#fff8df; background:repeating-linear-gradient(125deg,#fff05 0 1px,transparent 1px 5px),linear-gradient(140deg,#36765b,#1c513f); border-color:#c5ab65; }
-#modal button.danger { color:#fff0df; border-color:#be8b6b; background:repeating-linear-gradient(125deg,#fff04 0 1px,transparent 1px 5px),linear-gradient(145deg,#9b4a42,#68342f); }
+html:not(.duel-playing) button.primary,#modal button.primary { color:#fff8df; background:repeating-linear-gradient(125deg,#ffffff05 0 1px,transparent 1px 5px),linear-gradient(140deg,#36765b,#1c513f); border-color:#c5ab65; }
+#modal button.danger { color:#fff0df; border-color:#be8b6b; background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 5px),linear-gradient(145deg,#9b4a42,#68342f); }
 html:not(.duel-playing) .bottom-nav button { color:#b7c3b5; background:transparent; box-shadow:none; border:1px solid transparent; }
 html:not(.duel-playing) .bottom-nav button[aria-current=page],html:not(.duel-playing) [aria-pressed=true]:not(.card-inspect),html:not(.duel-playing) .solo-tabs [aria-selected=true] { background:linear-gradient(145deg,#3f5941,#294335); color:#f3dc9f; border-color:#b89a5360; box-shadow:inset 3px 0 #c4a564,inset 0 1px #e6cd8633; }
 /* The entire former copy panel becomes a framed, double-buffered art window. */
@@ -43,7 +43,7 @@ html:not(.duel-playing) .home .launch-card { color:#efe8cd; border-color:#9d8954
 .home .launch-card strong { color:#f1e5c2; font-family:Georgia,serif; font-weight:400; }
 .home .launch-card small { color:#bdc9b6; }
 .home .launch-card>svg,.home .launch-card .arrow { color:#d7bc78; }
-html:not(.duel-playing) .home .solo-launch-card { background:repeating-linear-gradient(125deg,#fff04 0 1px,transparent 1px 6px),radial-gradient(ellipse at 100% 0,#e7c67220,transparent 65%),linear-gradient(125deg,#285b43,#193d30); border-color:#c3a15d; }
+html:not(.duel-playing) .home .solo-launch-card { background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 6px),radial-gradient(ellipse at 100% 0,#e7c67220,transparent 65%),linear-gradient(125deg,#285b43,#193d30); border-color:#c3a15d; }
 .home .solo-launch-card .soon-label { color:#dbc48b; }
 html:not(.duel-playing) .home .coming { background:#182a23; border-color:#94875955; }
 .home .coming strong,.home .coming>svg { color:#aeb8a1; }
@@ -103,7 +103,9 @@ html:not(.duel-playing) .section-label,html:not(.duel-playing) .empty-state { co
 #modal .choice-help { margin:0 0 2px; font-size:10px; line-height:1.4; }
 .allowed-key { color:#28603a; margin-left:8px; white-space:nowrap; }
 .blocked-key { color:#984237; margin-left:8px; white-space:nowrap; }
-#modal .year-context { display:none; }
+#modal .year-context { display:block; flex:none; max-height:38px; padding:4px 7px; border-color:#acb79a; background:#e2e5cf; }
+#modal .year-context strong { margin:0; font-size:9px; color:#53603a; }
+#modal .year-context ul { color:#4e6246; font-size:9px; }
 #modal .year-help { flex:none; font-size:9px; margin:0; }
 #modal .filter-tabs button,#modal .dialog-actions button { min-height:36px; }
 #modal .mechanic-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
@@ -130,3 +132,12 @@ html:not(.duel-playing) .section-label,html:not(.duel-playing) .empty-state { co
 @media(prefers-reduced-motion:reduce) {
  .showcase-image,.showcase-image.is-visible,.card-showcase[data-paused=true] .showcase-image { transition:none; transform:none; }
 }
+
+#modal .rules-body { display:flex; flex-direction:column; height:min(540px,calc(var(--duel-vh) * 100 - 28px)); overflow:hidden; min-height:0; gap:8px; padding:12px; }
+#modal .rules-body .mechanic-list { flex:1; min-height:0; overflow:auto; align-content:start; padding:3px; overscroll-behavior:contain; }
+#modal .rules-body>.button-row,#modal .rules-body>p { flex:none; }
+#modal .rules-body>p { margin:0; font-size:10px; }
+html:not(.duel-playing) .preview-panel { background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 6px),linear-gradient(140deg,#304235,#1e3027); border-color:#ae955259; }
+html:not(.duel-playing) .placeholder-art { color:#d6c18a; border-color:#c0a26170; background:radial-gradient(circle,#48684c,#243e30 65%); }
+#modal .menu-item svg { color:#d5c286; }
+#modal #year-filter-panel[hidden],#modal #card-filter-panel[hidden] { display:none; }

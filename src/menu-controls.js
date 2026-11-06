@@ -40,5 +40,5 @@ export function mountChoices(root){
       activate(next);next.focus();
     };
   });
-  root.addEventListener('change',()=>paintChoices(root));paintChoices(root);
+  root.onchange=()=>paintChoices(root);paintChoices(root);
 }

@@ -40,8 +40,9 @@ try{
    await nav.nth(i).scrollIntoViewIfNeeded();await nav.nth(i).evaluate(n=>n.dataset.layoutCheck='true');await visibleControls('[data-layout-check]');await nav.nth(i).evaluate(n=>delete n.dataset.layoutCheck);
   }
   await visibleControls(`${form} .dialog-actions button`);
-  const cards=page.locator(`${form} .choice-pane:not([hidden]) .radio-card`);
+  const cards=page.locator(`${form} .choice-pane:not([hidden]):visible .radio-card`);
   for(let i=0;i<await cards.count();i++){await cards.nth(i).scrollIntoViewIfNeeded();await cards.nth(i).evaluate(n=>n.dataset.layoutCheck='true');await visibleControls('[data-layout-check]');await cards.nth(i).evaluate(n=>delete n.dataset.layoutCheck);}
+  await page.locator(`${form} .choice-nav:visible,${form} .choice-pane:visible`).evaluateAll(nodes=>nodes.forEach(n=>n.scrollTop=0));
  }
  async function fittedShell(){
   const fit=await page.locator('.app-shell').evaluate(shell=>{const r=shell.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height,logicalWidth:shell.clientWidth,logicalHeight:shell.clientHeight,viewportWidth:innerWidth,viewportHeight:innerHeight};});
@@ -61,7 +62,7 @@ try{
   await page.setViewportSize({width:height,height:width});await fittedShell();
   await page.setViewportSize({width,height});await fittedShell();
   await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));await fittedShell();
-  await visibleControls('.home button,.bottom-nav button,#app-menu');await page.waitForSelector('.card-showcase.has-art');await capture(`home-${width}x${height}`);
+  await visibleControls('.home button,.bottom-nav button,#app-menu');await page.waitForSelector('.card-showcase.has-art');await page.waitForTimeout(1700);await capture(`home-${width}x${height}`);
   await page.locator('[data-showcase-pause]').click();assert.equal(await page.locator('[data-showcase-pause]').getAttribute('aria-pressed'),'true');
   await page.locator('[data-showcase-next]').click();await page.waitForFunction(()=>document.querySelector('.card-showcase').dataset.card==='dark-magician');await page.waitForTimeout(1700);await capture(`home-next-${width}x${height}`);
   await page.locator('.bottom-nav [data-route="archive"]').click();
@@ -124,6 +125,10 @@ try{
   assert.ok(await page.locator('.builder-archive-panel .card-tile').count());
   assert.ok(await page.evaluate(async()=>{const {state}=await import('/src/app.js');const {isEffectMonster}=await import('/src/card-filters.js');return state.filtered.every(isEffectMonster);}));
   await page.locator('[data-action="filters"]').click();await page.locator('[data-action="reset-filters"]').click();
+  await page.locator('[data-action="deck-options"]').click();await page.locator('[data-action="rules"]').click();
+  await visibleControls('.rules-body .button-row button,.rules-body .dialog-actions button');
+  for(const value of ['allow','block']){const radio=page.locator(`.rules-body [name="Synchro"][value="${value}"]`);await radio.locator('..').scrollIntoViewIfNeeded();await radio.check();}
+  await page.locator('.rules-body .mechanic-list').evaluate(n=>n.scrollTop=0);await capture(`mechanic-rules-${width}x${height}`);await page.locator('.rules-body .dialog-actions [data-action="close"]').click();
   const query=page.locator('#card-search');await query.fill('Mystical Elf');
   await page.locator('.builder-archive-panel [data-quick-add]').first().click();
   assert.equal(await query.inputValue(),'Mystical Elf');assert.ok(await page.locator('.builder-deck-panel .tray-card').count());
