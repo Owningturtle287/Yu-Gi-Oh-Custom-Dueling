@@ -149,3 +149,6 @@ html:not(.duel-playing) .placeholder-art { color:#d6c18a; border-color:#c0a26170
 #modal .rules-help summary { cursor:pointer; padding:4px 0; }
 #modal .rules-help p { margin:4px 0; font-size:10px; line-height:1.4; }
 #modal .choice-nav,#modal .choice-pane,#modal .mechanic-list { scrollbar-width:thin; scrollbar-color:#89916b #d7dcc5; }
+/* Setup selectors must override the legacy pale select surfaces together with their text. */
+html:not(.duel-playing) .app-shell select { color:#e6e6cf; background:#14251e; border-color:#a7955959; color-scheme:dark; }
+.solo-setup .duel-era span { color:#c9bb86; }

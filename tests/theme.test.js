@@ -19,6 +19,8 @@ test('themed menus retain readable action tones and the field retains its light 
       const style=css(button),foreground=style.getPropertyValue('--choice-accent'),background=style.getPropertyValue('--choice-bg');
       assert.ok(contrast(foreground,background)>=4.5,`${tone} must meet normal-text contrast`);
     }
+    const setup=window.document.createElement('div');setup.className='app-shell';setup.innerHTML='<section class="solo-setup"><div class="solo-panel"><select><option>Deliberate</option></select></div></section>';window.document.body.append(setup);
+    const select=setup.querySelector('select');assert.equal(css(select).backgroundColor,'#14251e');assert.equal(css(select).color,'#e6e6cf');assert.ok(contrast('#e6e6cf','#14251e')>=4.5);
     const selected=window.document.createElement('button');selected.className='duel-choice-card';selected.setAttribute('aria-pressed','true');selected.innerHTML='<span class="duel-choice-copy"><strong>Selected monster</strong><small>Details</small></span>';$('.dialog-body').append(selected);
     assert.equal(css(selected.querySelector('strong')).color,'#f1e8c9');assert.equal(css(selected.querySelector('small')).color,'#c1cdb4');
     assert.ok(contrast('#c1cdb4','#2c4b35')>=4.5);
