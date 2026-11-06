@@ -94,7 +94,7 @@ html:not(.duel-playing) .section-label,html:not(.duel-playing) .empty-state { co
 #modal .radio-card { position:relative; min-height:40px; display:flex; align-items:center; flex-direction:row; gap:7px; padding:7px 9px; margin:0; border:1px solid #bac2a9; border-radius:8px; background:repeating-linear-gradient(125deg,#86733505 0 1px,transparent 1px 5px),linear-gradient(140deg,#fcfbef,#e9ead7); cursor:pointer; color:#3a4936; font-size:11px; line-height:1.25; }
 #modal .radio-card:has(input:checked) { border-color:#576e36; box-shadow:inset 0 0 0 1px #576e36; background:linear-gradient(135deg,#e0e8cd,#cddaba); }
 #modal .radio-card:has(input:focus-visible) { outline:2px solid #795d15; outline-offset:2px; }
-#modal .radio-card input { position:absolute; opacity:0; width:1px; height:1px; min-height:0; margin:0; padding:0; }
+#modal .radio-card input { position:absolute; inset:0; opacity:0; width:100%; height:100%; min-height:0; margin:0; padding:0; z-index:1; cursor:pointer; }
 .choice-mark { display:grid; place-items:center; flex:none; width:21px; height:21px; border-radius:50%; font-size:15px; font-weight:700; }
 [data-allowed=true] .choice-mark { background:#d6e6ce; color:#23643a; }
 [data-allowed=false] .choice-mark { background:#f0d7c9; color:#993e35; }
