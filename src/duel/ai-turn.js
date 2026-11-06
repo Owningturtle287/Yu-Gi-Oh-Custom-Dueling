@@ -35,7 +35,7 @@ function variants(s,side,action){
   if(model==='backrow')return backrow(foe).sort((a,b)=>resourceValue(s,side,b)-resourceValue(s,side,a)).slice(0,2);
   if(['boost','multiply'].includes(model))return monsters(p).filter(c=>c.faceUp).sort((a,b)=>attack(b)-attack(a)).slice(0,2);
   if(model==='faceDown'||model==='debuff'||model==='halve'||model==='control')return monsters(foe).filter(c=>c.faceUp).sort((a,b)=>attack(b)-attack(a)).slice(0,2);
-  if(model==='revive')return [...p.grave,...(guide.ownGrave?[]:foe.grave)].filter(c=>monster(c)&&!c.hidden&&!/Fusion|Ritual/.test(c.card.type)&&!/Cannot be (?:Normal|Special) Summoned/i.test(c.card.desc||'')).sort((a,b)=>attack(b)-attack(a)).slice(0,2);
+  if(model==='revive')return [...p.grave,...(guide.ownGrave?[]:foe.grave)].filter(c=>monster(c)&&!c.hidden&&!/Fusion|Synchro|Xyz|Link|Ritual/.test(c.card.type)&&!/Cannot be (?:Normal|Special) Summoned/i.test(c.card.desc||'')).sort((a,b)=>attack(b)-attack(a)).slice(0,2);
   if(model==='fusionCheat')return p.extra.filter(c=>/Fusion/.test(c.card.type)&&!/Must (?:first )?be Fusion Summoned|cannot be Special Summoned/i.test(c.card.desc||'')).sort((a,b)=>attack(b)-attack(a)).slice(0,2);
   if(model==='tribe')return [...new Set(monsters(foe).filter(c=>c.faceUp&&!c.hidden).map(c=>c.card.race))];
   if(model==='wipe'||model==='backrowWipe'||model==='armedWipe')return [null];
@@ -103,7 +103,7 @@ function project(s,side,action,target){
 function followups(s,side){
   const p=s.players[side],actions=[];
   for(const c of p.hand){
-    if(monster(c)&&!s.projectedNormal&&!/Fusion|Ritual/.test(c.card.type)&&!/Cannot be Normal Summoned|Must.*(?:Special|Normal) Summoned/i.test(c.card.desc||'')&&(c.card.level||4)<=4){actions.push({type:'SUMMON',uid:c.uid});if(defense(c)>attack(c)+400||/FLIP:/.test(c.card.desc||''))actions.push({type:'SUMMON',uid:c.uid,set:true});}
+    if(monster(c)&&!s.projectedNormal&&!/Fusion|Synchro|Xyz|Link|Ritual/.test(c.card.type)&&!/Cannot be Normal Summoned|Must.*(?:Special|Normal) Summoned/i.test(c.card.desc||'')&&(c.card.level||4)<=4){actions.push({type:'SUMMON',uid:c.uid});if(defense(c)>attack(c)+400||/FLIP:/.test(c.card.desc||''))actions.push({type:'SUMMON',uid:c.uid,set:true});}
     if(c.card.type==='Spell Card')actions.push({type:'ACTIVATE',uid:c.uid});
   }
   for(const c of monsters(p).filter(c=>c.faceUp&&!c.disabled&&!s.projectedUsed.has(c.uid)))actions.push({type:'EFFECT',uid:c.uid});

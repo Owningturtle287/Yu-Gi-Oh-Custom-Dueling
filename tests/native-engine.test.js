@@ -5,7 +5,7 @@ import { loadNativeRules } from '../src/duel/native-loader.js';
 import { createNativeBackend } from '../src/duel/native-engine.js';
 import { normalizeCard, filterCards, createDeck, addCard, exportJSON, importJSON } from '../src/core.js';
 import { NATIVE_CARD_IDS } from '../src/duel/rules-manifest.js';
-import { support } from '../src/duel/catalog.js';
+import { support, ERA_END } from '../src/duel/catalog.js';
 import { generateDeck, expandDeck, defaultSide } from '../src/duel/decks.js';
 const cards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.meta.url))).data.map(normalizeCard);
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
@@ -56,7 +56,7 @@ test('Union equipment, Toon costs, spell counters, and scapegoat tokens use nati
   try{state=settle(move(state,'ACTIVATE','Scapegoat'));assert.equal(state.players[0].monsters.filter(Boolean).length,4);assert.ok(state.players[0].monsters.filter(Boolean).every(c=>c.position==='defense'));}finally{engine.destroyMatch(state);}
 });
 test('all three God Cards remain searchable today and are excluded from the 2002 playable pool without fabricated dates',()=>{
-  for(const name of ['Obelisk the Tormentor','Slifer the Sky Dragon','The Winged Dragon of Ra']){assert.equal(filterCards(cards,{query:name}).length,1);assert.equal(filterCards(cards,{query:name,year:2002}).length,0);assert.equal(support(get(name)).ok,false);}
+  for(const name of ['Obelisk the Tormentor','Slifer the Sky Dragon','The Winged Dragon of Ra']){assert.equal(filterCards(cards,{query:name}).length,1);assert.equal(filterCards(cards,{query:name,year:2002}).length,0);assert.equal(support(get(name)).ok,!!get(name).tcgDate&&get(name).tcgDate<=ERA_END);}
   const undated={...get('Mystical Elf'),id:123456,tcgDate:null,ocgDate:null};assert.equal(filterCards([undated]).length,1);assert.equal(filterCards([undated],{year:2004}).length,0);
   const regional={...undated,misc_info:[{tcg_date:'2005-02-31',ocg_date:'2004-12-31'},{tcg_date:'2005-01-01'}]};const normalized=normalizeCard(regional);assert.equal(normalized.tcgDate,'2005-01-01');assert.equal(filterCards([normalized],{year:2004,releaseBasis:'tcg'}).length,0);assert.equal(filterCards([normalized],{year:2004,releaseBasis:'ocg'}).length,1);assert.equal(filterCards([normalized],{year:2004,releaseBasis:'earliest'}).length,1);
   let deck={...createDeck('OCG'),releaseYear:2004,releaseBasis:'ocg'};deck=addCard(deck,normalized);assert.equal(importJSON(exportJSON(deck)).releaseBasis,'ocg');

@@ -35,10 +35,10 @@ export function nativeSeed(seed,version=2){
 // public events and field queries into the existing arena's presentation model.
 export function createNativeBackend({rules=defaultNativeRules}={}) {
   const matches=new Map();let nextMatch=0;
-  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=2,promptVersion=2,revealVersion=2,identityVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
+  async function createMatch(decks,{seed=freshSeed(),randomVersion=3,rulesVersion=3,promptVersion=2,revealVersion=2,identityVersion=2,first=0,lp=8000,cards=[],eligibility=[],openingHands=null,initialFields=null}={}) {
     if(![1,2].includes(identityVersion))throw new Error('Unsupported saved duel identity version.');
     if(![1,2,3].includes(randomVersion))throw new Error('Unsupported saved duel randomness version.');
-    if(![1,2].includes(rulesVersion))throw new Error('Unsupported saved duel rules version.');
+    if(![1,2,3].includes(rulesVersion))throw new Error('Unsupported saved duel rules version.');
     if(![1,2].includes(promptVersion))throw new Error('Unsupported saved duel prompt version.');
     if(![1,2].includes(revealVersion))throw new Error('Unsupported saved duel reveal version.');
     const pack=await rules(),{module:m,lib,records}=pack;
@@ -56,7 +56,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
       return {code,alias:0,setcodes:[],type:card.type==='Normal Monster'?17:card.type==='Spell Card'?2:card.type==='Trap Card'?4:33,level:card.level||0,attack:card.atk||0,defense:card.def||0,race:m.OcgRace[card.race?.toUpperCase().replace(/[^A-Z0-9]/g,'')]||1n,attribute:m.OcgAttribute[card.attribute]||0,lscale:0,rscale:0,link_marker:0};
     };
     const errors=[];
-    const handle=lib.createDuel({flags:m.OcgDuelMode.MODE_MR5|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:nativeSeed(seed,randomVersion),team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
+    const handle=lib.createDuel({flags:(rulesVersion>=3?m.OcgDuelMode.MODE_MR5&~m.OcgDuelMode.EMZONE:m.OcgDuelMode.MODE_MR5)|m.OcgDuelMode.TCG_SEGOC_NONPUBLIC|m.OcgDuelMode.TCG_SEGOC_FIRSTTRIGGER,seed:nativeSeed(seed,randomVersion),team1:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},team2:{startingLP:lp,startingDrawCount:openingHands?0:5,drawCountPerTurn:1},cardReader,scriptReader:name=>scripts[name]||null,errorHandler:(_type,text)=>errors.push(text)});
     if(!handle)throw new Error('The duel rules engine could not start.');
     const id='native-'+(++nextMatch),r={id,...pack,handle,api,preferred,canonical,cardReader,first,errors,reply:new Map(),epoch:0,promptSequence:0,revealSequence:0,uid:0,prompt:null,selected:[],lastAttack:null,hint:'Choose cards',sourceUid:null};
     r.bootstrap=structuredClone({decks,options:{seed,randomVersion,rulesVersion,promptVersion,revealVersion,identityVersion,first,lp,eligibility,openingHands,initialFields}});r.history=[];r.identities=new Map();
@@ -374,7 +374,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const located=(item,type,label,response,extra={})=>{const card=sourceAt(r,item);add({type,uid:card?.uid,label,...(item.code&&['ACTIVATE','EFFECT'].includes(type)?{effectCard:descriptor(r,item.code)}:{}),...extra},response);};
     if(p.type===T.SELECT_IDLECMD){
       if(!s.chain.length)r.sourceUid=null;
-      for(const [key,command,type,label] of [['summons',m.SelectIdleCMDAction.SELECT_SUMMON,'SUMMON','Normal Summon'],['special_summons',m.SelectIdleCMDAction.SELECT_SPECIAL_SUMMON,'SUMMON','Special Summon'],['pos_changes',m.SelectIdleCMDAction.SELECT_POS_CHANGE,'POSITION','Change position'],['monster_sets',m.SelectIdleCMDAction.SELECT_MONSTER_SET,'SUMMON','Set in Defense'],['spell_sets',m.SelectIdleCMDAction.SELECT_SPELL_SET,'SET','Set Spell / Trap'],['activates',m.SelectIdleCMDAction.SELECT_ACTIVATE,'ACTIVATE','Activate effect']])p[key].forEach((item,index)=>located(item,type,label,{type:R.SELECT_IDLECMD,action:command,index},{set:key==='monster_sets',special:key==='special_summons',tributes:[],flip:key==='pos_changes'&&!sourceAt(r,item)?.faceUp,effectText:item.description?actionText(item):''}));
+      for(const [key,command,type,label] of [['summons',m.SelectIdleCMDAction.SELECT_SUMMON,'SUMMON','Normal Summon'],['special_summons',m.SelectIdleCMDAction.SELECT_SPECIAL_SUMMON,'SUMMON','Special Summon'],['pos_changes',m.SelectIdleCMDAction.SELECT_POS_CHANGE,'POSITION','Change position'],['monster_sets',m.SelectIdleCMDAction.SELECT_MONSTER_SET,'SUMMON','Set in Defense'],['spell_sets',m.SelectIdleCMDAction.SELECT_SPELL_SET,'SET','Set Spell / Trap'],['activates',m.SelectIdleCMDAction.SELECT_ACTIVATE,'ACTIVATE','Activate effect']])p[key].forEach((item,index)=>located(item,type,key==='special_summons'&&descriptor(r,item.code).type.includes('Synchro')?'Synchro Summon':label,{type:R.SELECT_IDLECMD,action:command,index},{set:key==='monster_sets',special:key==='special_summons',tributes:[],flip:key==='pos_changes'&&!sourceAt(r,item)?.faceUp,effectText:item.description?actionText(item):''}));
       if(p.to_bp)add({type:'NEXT',label:'Battle'},{type:R.SELECT_IDLECMD,action:m.SelectIdleCMDAction.TO_BP,index:null});
       else if(p.to_ep)add({type:'NEXT',label:'End'},{type:R.SELECT_IDLECMD,action:m.SelectIdleCMDAction.TO_EP,index:null});
       if(p.to_ep)add({type:'END'},{type:R.SELECT_IDLECMD,action:m.SelectIdleCMDAction.TO_EP,index:null});return;
@@ -503,7 +503,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
   async function restoreMatch(save,{cards=[]}={}){
     if(save?.version!==1||!Array.isArray(save.history)||save.history.length>100000)throw new Error('This saved duel is invalid.');
     const pack=await rules();if(save.revision!==pack.manifest.scriptsRevision)throw new Error('This saved duel uses a different rules pack.');
-    if(save.rulesFingerprint&&save.rulesFingerprint!==pack.fingerprint)throw new Error('This saved duel uses a different card database or rules runtime.');
+    if(save.rulesFingerprint&&save.rulesFingerprint!==pack.fingerprint&&!pack.compatibleFingerprints?.includes(save.rulesFingerprint))throw new Error('This saved duel uses a different card database or rules runtime.');
     let state=await createMatch(save.decks,{...save.options,randomVersion:save.options?.randomVersion??1,rulesVersion:save.options?.rulesVersion??1,promptVersion:save.options?.promptVersion??1,revealVersion:save.options?.revealVersion??1,identityVersion:save.options?.identityVersion??1,cards});
     const legacy=![2,3,4].includes(save.presentationRevision);
     const acknowledgeLegacyLists=()=>{

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
-import {normalizeCard,cardCopyName} from '../src/core.js';
+import {normalizeCard,cardCopyName,isExtra} from '../src/core.js';
 import {supportedPool,ERA_END} from '../src/duel/catalog.js';
 import {defaultSide,eligibleSets,generateDeck,expandDeck,prepareAIDeck,seededRandom,validateDuelDeck} from '../src/duel/decks.js';
 import {loadNativeRules} from '../src/duel/native-loader.js';
@@ -92,7 +92,7 @@ const body=name=>({card:get(name)}),own=()=>({monsters:['Mystical Elf','Summoned
 if(process.env.AUDIT_SWEEP!=='0')for(const [index,card] of pool.slice(0,limit).entries()){
   for(const context of card.type==='Normal Monster'?['field']:['hand','field']){
     const fields=[own(),own()],hands=[['Dark Magician','Mystical Elf','Pot of Greed'].map(get),['Mystical Elf'].map(get)];
-    if(context==='hand'&&card.type!=='Trap Card'&&!card.type.includes('Fusion'))hands[probeSide].unshift(card);
+    if(context==='hand'&&card.type!=='Trap Card'&&!isExtra(card))hands[probeSide].unshift(card);
     else if(card.type.includes('Monster'))fields[probeSide].monsters[0]={card,faceUp:!/FLIP:/.test(card.desc),defense:/FLIP:/.test(card.desc)};
     else if(card.race==='Field')fields[probeSide].field=[{card,faceUp:context==='field'}];
     // Equip cards must be activated and assigned a real equip target. Normal
@@ -113,11 +113,11 @@ const available=eligibleSets(cards,sets,defaultSide()).filter(s=>!s.problem),sou
 const shuffle=(values,seed)=>{const a=[...values],random=seededRandom(seed);for(let i=a.length-1;i;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const staples=['Gemini Elf','Mechanicalchaser','Spear Dragon','D.D. Warrior Lady','Mystical Elf','Pot of Greed','Raigeki','Mystical Space Typhoon','Mirror Force','Monster Reborn','Graceful Charity','Waboku'];
 function coverageDeck(index){
-  const list=shuffle(pool.filter(c=>!c.type.includes('Fusion')),Math.floor(index/50)+71),main=[],counts=new Map();
+  const list=shuffle(pool.filter(c=>!isExtra(c)),Math.floor(index/50)+71),main=[],counts=new Map();
   const add=c=>{const name=cardCopyName(c);if(main.length>=40||(counts.get(name)||0)>=3)return;main.push(c);counts.set(name,(counts.get(name)||0)+1);};
   for(let n=0;n<20;n++)add(list[(index*20+n)%list.length]);
   for(let n=0;main.length<40;n++)add(get(staples[n%staples.length]));
-  return {name:'Coverage '+index,main,extra:pool.filter(c=>c.type.includes('Fusion')).slice(index%5,index%5+15)};
+  return {name:'Coverage '+index,main,extra:pool.filter(c=>isExtra(c)).slice(index%5,index%5+15)};
 }
 for(let n=gameStart;n<gameStart+games;n++){
   const seed=start+n,coverageGame=n%3===0,decks=coverageGame?[coverageDeck(n*2),coverageDeck(n*2+1)]:[0,1].map(side=>expandDeck(generateDeck(cards,sources[(n+side*7)%sources.length],sets,seed*97+side),cards));

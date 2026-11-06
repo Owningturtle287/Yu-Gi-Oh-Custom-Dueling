@@ -19,3 +19,5 @@ The complete application adapter and local patches are in this repository. `npm 
 Local correction: `overrides/c88132637.lua` rechecks Twin-Headed Wolf’s live controller and supporting Fiend before applying negation, and emits a card hint for attribution. It is included in the bundled script pack and retained by `scripts/update-rules.py`.
 
 Local correction: `overrides/c16768387.lua` uses Big Eye’s chosen amount (`ac`) when sorting the top of the Deck, instead of always using its maximum (`ct`). It is included in the bundled pack and retained by `scripts/update-rules.py`. Saved matches without rules version 2 use the original operation during verified replay.
+
+Local coverage correction: `overrides/c88264978.lua` retains the pinned upstream `pre-errata/c88264978.lua` source. Despite that directory name, this file implements the current Red-Eyes Darkness Metal Dragon text (each summon procedure/effect once per turn); the pinned official directory only supplies the old pre-errata variant under a different code. No Lua behavior was invented or rewritten. The source is from the same CardScripts revision linked above.

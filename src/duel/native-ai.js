@@ -118,7 +118,7 @@ function targetScore(ctx,a,intent,source){
 }
 function choiceIntent(ctx){
   const c=ctx.s.choice,hint=(c?.purpose||c?.title||'').toLowerCase(),source=sourceFor(ctx.s),profile=effectProfile(source?.card,c?.effectText);
-  if(c?.selectionType==='select_tribute'||/discard|release|tribute|fusion material|ritual|remove counter|cost/.test(hint)||decisionGuidance(source?.card).sendMonster&&/tograve|to grave/.test(hint))return {intent:'cost',source,profile};
+  if(c?.selectionType==='select_tribute'||/discard|release|tribute|material|ritual|remove counter|cost/.test(hint)||decisionGuidance(source?.card).sendMonster&&/tograve|to grave/.test(hint))return {intent:'cost',source,profile};
   if(c?.selectionType==='select_sum')return {intent:'material',source,profile};
   if(/spsummon|special summon/.test(hint))return {intent:'revive',source,profile};
   if(/atohand|add to hand/.test(hint))return {intent:'search',source,profile};
@@ -277,11 +277,24 @@ function scoreEffect(ctx,a){
   if(cost)utility-=cost*.3;
   return utility;
 }
+// Estimate costs for an offered Synchro action; the native procedure still
+// chooses and validates the actual materials, including special restrictions.
+function synchroCosts(ctx,card){
+  const field=monsters(ctx.p).filter(c=>c.faceUp),level=c=>c.currentLevel??c.card.level??0,tuner=c=>c.currentType!==undefined?!!(c.currentType&0x1000):/Tuner/.test(c.card.type);
+  const line=(card.card.desc||'').split(/\r?\n/)[0],names=[...line.matchAll(/"([^"]+)"/g)].map(m=>m[1]),tuners=/^2 Tuners/.test(line)?2:1;
+  let best=null,cost=Infinity;
+  for(let mask=1;mask<1<<field.length;mask++){
+    const selected=field.filter((_,index)=>mask&(1<<index));
+    if(selected.length<2||selected.reduce((n,c)=>n+level(c),0)!==level(card)||selected.filter(tuner).length!==tuners||!names.every(name=>selected.some(c=>c.card.name===name)))continue;
+    const value=selected.reduce((n,c)=>n+costValue(ctx.s,ctx.side,c),0);if(value<cost){cost=value;best=selected;}
+  }
+  return best;
+}
 function summonScore(ctx,a){
   const c=locate(ctx.s,a.uid);if(!c)return -500;const {s,side,p,foe}=ctx,profile=effectProfile(c.card),level=c.currentLevel||c.card.level||4;
   if(/the Forbidden One|Arm of the Forbidden One|Leg of the Forbidden One/.test(c.card.name))return -10000;
   const required=a.special?0:level>6?2:level>4?1:0;
-  const tributes=monsters(p).filter(c=>c.card.name!=='Sheep Token').sort((x,y)=>costValue(s,side,x)-costValue(s,side,y)).slice(0,required);
+  const tributes=a.special&&/Synchro/.test(c.card.type)?synchroCosts(ctx,c)||[]:monsters(p).filter(c=>c.card.name!=='Sheep Token').sort((x,y)=>costValue(s,side,x)-costValue(s,side,y)).slice(0,required);
   const remaining=p.monsters.map(c=>tributes.some(t=>t.uid===c?.uid)?null:c),slot=remaining.indexOf(null);if(slot<0)return -1000;
   const placed={...c,faceUp:!a.set,position:a.set?'defense':'attack',controller:side};remaining[slot]=placed;
   const next=withPlayers(s,side,{monsters:remaining}),costs=tributes.reduce((n,t)=>n+costValue(s,side,t),0);

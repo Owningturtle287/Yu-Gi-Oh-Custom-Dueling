@@ -11,6 +11,7 @@ let browser,page;
 try{
  browser=await chromium.launch({headless:true});
  const raw=[...JSON.parse(await readFile('tests/jar-graphics-fixtures.json')).data,...JSON.parse(await readFile('tests/chain-feedback-fixtures.json')).data,...JSON.parse(await readFile('tests/mechanics-audit-fixtures.json')).data,...JSON.parse(await readFile('tests/rules-fixtures.json')).data,...JSON.parse(await readFile('tests/audit-fixtures.json')).data,...JSON.parse(await readFile('tests/level-up-fixtures.json')).data,...JSON.parse(await readFile('tests/era2006-fixtures.json')).data.filter(c=>['Alien Grey','Clock Tower Prison','Cyber Dragon','Elemental HERO Neos'].includes(c.name))];
+ raw.push(...JSON.parse(await readFile('tests/era2010-fixtures.json')).data.filter(c=>['Stardust Dragon','Flamvell Magician','Junk Synchron','Effect Veiler'].includes(c.name)));
  const cards=[...new Map(raw.map(c=>[c.id,{...c,card_sets:[{set_name:'Layout test set'}]}])).values()].map(c=>({...c,card_images:raw.find(source=>source.id===c.id&&source.card_images?.[0]?.image_url)?.card_images||c.card_images}));
  async function visibleControls(selector){
   const clipped=await page.locator(selector).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden').flatMap(node=>{
@@ -121,8 +122,8 @@ try{
   }
   await page.locator('#solo-size').selectOption('30');await page.locator('[data-duel-tab="0"]').click();await page.locator('[data-duel-tab="1"]').click();assert.equal(await page.locator('#solo-size').inputValue(),'30');
   for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();if(tab===2)await capture(`match-settings-${width}x${height}`);await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
-  assert.match(await page.locator('.duel-era').textContent(),/2006 LAB/);
-  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2006-12-31');
+  assert.match(await page.locator('.duel-era').textContent(),/2010 LAB/);
+  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2010-12-31');
   const duelTaxonomy=await page.locator('#duel-filters').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);assert.deepEqual(duelTaxonomy,taxonomy);
   await page.locator('#duel-filters [name="attribute"]').selectOption('DIVINE');await page.locator('#duel-filters [name="subtype"]').selectOption('Effect');await page.locator('#duel-filters [name="spellTrapType"]').selectOption('Continuous');
   await visibleControls('#duel-filters select,#duel-filters button');await capture(`duel-filters-${width}x${height}`);
@@ -132,6 +133,9 @@ try{
   await page.locator('[name="cutoff"]').selectOption('2005-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();
   assert.match(await page.locator('.solo-filter-summary').textContent(),/2005 & earlier/);
   await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption('2006-12-31');await page.locator('#duel-filters button[type="submit"]').click();
+  for(const year of [2007,2008,2009,2010]){
+   await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption(year+'-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();assert.ok((await page.locator('.solo-filter-summary').textContent()).includes(year+' & earlier'));
+  }
   await page.locator('[data-duel-tab="2"]').click();await page.locator('.solo-ai-badge[data-duel="learning"]').click();
   await visibleControls('.duel-learning-body button');await capture(`learning-settings-${width}x${height}`);
   await page.locator('[data-duel="learning-toggle"]').click();assert.match(await page.locator('.solo-ai-badge').textContent(),/Fixed/);
@@ -360,6 +364,21 @@ try{
   await page.locator('[data-duel="reveal-done"]').click();await page.waitForFunction(()=>document.querySelector('.duel-reveal-caption')?.textContent.includes('AI'));await capture(`jar-ai-excavation-${width}x${height}`);await page.locator('[data-duel="reveal-done"]').click();await page.waitForFunction(()=>!window.layoutRig.getMatch().reveals.length&&document.querySelector('.duel-arena').dataset.moving==='false');
   await page.locator('[data-duel="excavation"]').click();await visibleControls('.excavation-tabs button,.duel-excavation-body>.dialog-actions button');assert.match(await page.locator('.excavation-tabs').textContent(),/left in Deck/);assert.ok(await page.locator('.excavation-card-art').first().evaluate(n=>n.clientHeight>=80&&n.clientWidth>=50),'Excavation thumbnails remain readable on short phones');assert.ok(await page.locator('[data-excavation-read]').first().evaluate(button=>button.offsetHeight<=button.closest('ol').clientHeight+1),'The report shows each card and its result above the footer');await capture(`jar-results-${width}x${height}`);
   await page.locator('[data-excavation-side="1"]').click();await page.locator('[data-excavation-read]').last().scrollIntoViewIfNeeded();await page.locator('[data-excavation-read]').last().click();await page.locator('.duel-selection-info').waitFor();await visibleControls('.duel-selection-info button');await page.locator('[data-duel="selection-back"]').click();assert.equal(await page.locator('[data-excavation-side="1"]').getAttribute('aria-pressed'),'true');
+  await page.evaluate(()=>window.layoutRig.destroy());
+  // Resolve a genuine Synchro material prompt through the field controls.
+  await page.evaluate(async()=>{
+   const {state,navigate}=await import('/src/app.js');navigate('home');const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js'),catalog=state.cards,get=n=>catalog.find(c=>c.name===n),engine=createNativeBackend();
+   let match=await engine.createMatch([0,1].map(()=>({name:'Synchro layout',main:Array(40).fill(get('Mystical Elf')),extra:[get('Stardust Dragon')]})),{cards:catalog,seed:131,openingHands:[[],[]],initialFields:[{monsters:['Flamvell Magician','Mystical Elf'].map(n=>({card:get(n)}))},{}]});match=engine.applyAction(match,match.actions[0].find(a=>a.special&&a.type==='SUMMON'),0);
+   const main=document.querySelector('#main'),modal=document.querySelector('#modal');const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>{if(modal.open)modal.close();},dialogHeader:t=>`<div class="dialog-header"><h2>${t}</h2><button data-action="close">×</button></div>`,toast:e=>{throw Error(e);},onDesign(){},engine:{...engine,createMatch:async()=>match}});controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
+  });
+  await page.waitForFunction(()=>document.querySelector('.duel-arena')?.dataset.moving==='false');
+  for(let step=0;step<6&&await page.evaluate(()=>!!window.layoutRig.getMatch().choice);step++){
+   await visibleControls('.duel-controls button');await capture(`synchro-materials-${step}-${width}x${height}`);
+   const confirm=page.locator('[data-duel="confirm-choice"]:not([disabled])');
+   if(await confirm.count())await confirm.click();else await page.locator('.duel-zone[data-role="eligible"]').first().click();
+   await page.waitForFunction(()=>document.querySelector('.duel-arena').dataset.moving==='false');
+  }
+  assert.equal(await page.evaluate(()=>window.layoutRig.getMatch().players[0].monsters.filter(Boolean).map(c=>c.card.name).join()),'Stardust Dragon');
   await page.evaluate(()=>window.layoutRig.destroy());
   await context.close();page=null;
   console.log(`Menu controls fit ${width} × ${height}`);
