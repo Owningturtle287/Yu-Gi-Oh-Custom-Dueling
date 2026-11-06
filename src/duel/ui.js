@@ -1,3 +1,4 @@
+import {radioGroup,permissionGroup,choicePanels,choices,mountChoices,radioValue} from '../menu-controls.js';
 import {publicationHTML,cardFactsHTML,battleStatsHTML} from '../card-details.js';
 import { defaultSide, poolFor, eligibleSets, generateDeck, validateDuelDeck, expandDeck, loadSets, setLabel, deckSize, prepareAIDeck } from './decks.js';
 import {ATTRIBUTES,MONSTER_TYPES,SUBTYPES,MECHANICS,SPELL_TRAP_TYPES} from '../card-filters.js';
@@ -110,7 +111,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   const selectedDeck=side=>getDecks().find(deck=>deck.id===config.sides[side].deckId);
   const candidateSets=side=>eligibleSets(getCards(),sets,config.sides[side]);
   const header=title=>dialogHeader(escape(title));
-  function render(){if(!active)return;document.querySelector('meta[name=theme-color]')?.setAttribute('content',match?'#e5eeeb':'#eef3f5');document.documentElement.classList.toggle('duel-playing',!!match);document.documentElement.dataset.duelRotated=String(!!match&&window.innerHeight>window.innerWidth);if(match)renderArena();else renderSetup();}
+  function render(){if(!active)return;document.querySelector('meta[name=theme-color]')?.setAttribute('content',match?'#e5eeeb':'#172621');document.documentElement.classList.toggle('duel-playing',!!match);document.documentElement.dataset.duelRotated=String(!!match&&window.innerHeight>window.innerWidth);if(match)renderArena();else renderSetup();}
   async function requestSets(force=false){
     if(setsStatus==='loading')return;
     setsStatus='loading';render();
@@ -151,13 +152,22 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     for(const [id,key] of [['solo-ai-speed','aiSpeed'],['solo-first','first'],['solo-lp','lp'],['solo-animations','animations']])main.querySelector('#'+id)?.addEventListener('change',event=>{config[key]=key==='lp'?Number(event.target.value):key==='animations'?event.target.checked:event.target.value;persist();});
   }
   function filters(){
-    const side=config.sides[tab],races=MONSTER_TYPES;
-    showDialog(`${header(`${tab===0?'Your':'AI'} card eligibility`)}<form id="duel-filters"><div class="solo-settings-grid"><label>Release year<select name="cutoff">${Array.from({length:ERA_YEAR-1996+1},(_,i)=>ERA_YEAR-i).map(year=>option(year+'-12-31',year+' & earlier',side.cutoff)).join('')}</select></label><label>Monster subtype<select name="subtype">${option('','All',side.subtype)}${SUBTYPES.map(s=>option(s,s,side.subtype)).join('')}</select></label><label>Monster type<select name="race">${option('','All',side.race)}${races.map(r=>option(r,r,side.race)).join('')}</select></label><label>Monster attribute<select name="attribute">${option('','All',side.attribute)}${ATTRIBUTES.map(a=>option(a,a,side.attribute)).join('')}</select></label><label>Mechanic<select name="mechanic">${option('','All',side.mechanic)}${MECHANICS.map(m=>option(m,m,side.mechanic)).join('')}</select></label><label>Spell / Trap type<select name="spellTrapType">${option('','All',side.spellTrapType)}${SPELL_TRAP_TYPES.map(t=>option(t,t,side.spellTrapType)).join('')}</select></label></div><div class="solo-settings-grid" title="Spell/Trap eligibility is independent of monster filters">${['spells','traps'].map(key=>`<label class="solo-checkbox"><input name="${key}" type="checkbox" ${side[key]?'checked':''}> Allow ${key}</label>`).join('')}</div><div class="dialog-actions"><button type="button" data-action="close">Cancel</button><button type="submit" class="primary">Apply filters</button></div></form>`,'duel-filter-body');
-    for(const key of ['cutoff','race','attribute','subtype','mechanic','spellTrapType'])modal.querySelector(`[name="${key}"]`).value=side[key];
+    const side=config.sides[tab];
+    const groups=[
+      {name:'cutoff',title:'Release year',mode:'maximum',values:Array.from({length:ERA_YEAR-1996+1},(_,i)=>[`${ERA_YEAR-i}-12-31`,`${ERA_YEAR-i} & earlier`])},
+      {name:'subtype',title:'Monster subtype',values:choices(SUBTYPES)},
+      {name:'race',title:'Monster type',values:choices(MONSTER_TYPES)},
+      {name:'attribute',title:'Monster attribute',values:choices(ATTRIBUTES)},
+      {name:'mechanic',title:'Mechanic',values:choices(MECHANICS)},
+      {name:'spellTrapType',title:'Spell / Trap type',values:choices(SPELL_TRAP_TYPES)},
+      {title:'Spells & Traps',html:`${permissionGroup('spells','Spell cards',side.spells)}${permissionGroup('traps','Trap cards',side.traps)}<p class="choice-help">These permissions work independently of monster filters.</p>`}
+    ].map(group=>({...group,value:side[group.name]}));
+    showDialog(`${header(`${tab===0?'Your':'AI'} card eligibility`)}<form id="duel-filters"><p class="choice-help">Choose one per group. <span class="allowed-key">✓ Allowed</span><span class="blocked-key">× Excluded</span> · All allows the entire group.</p>${choicePanels(groups,'duel-choice')}<div class="dialog-actions"><button type="button" data-action="close">Cancel</button><button type="submit" class="primary">Apply filters</button></div></form>`,'duel-filter-body');
+    mountChoices(modal);
     modal.querySelector('#duel-filters').onsubmit=event=>{
       event.preventDefault();const form=event.target;
-      for(const key of ['cutoff','race','attribute','subtype','mechanic','spellTrapType'])side[key]=form.elements.namedItem(key).value;
-      for(const key of ['spells','traps'])side[key]=form.elements.namedItem(key).checked;
+      for(const key of ['cutoff','race','attribute','subtype','mechanic','spellTrapType'])side[key]=radioValue(form,key);
+      for(const key of ['spells','traps'])side[key]=radioValue(form,key)==='allow';
       if(side.cutoff>ERA_END||side.cutoff<'1996-01-01'){toast(`Choose a date from 1996 through ${ERA_YEAR}.`,true);return;}
       side.set='';persist();closeDialog();render();
     };
@@ -728,14 +738,14 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   document.addEventListener('click',handleClick);
   return {
     enter(){active=true;if(!match&&readRecoveries(learningStorage).entries.length)tab=3;render();if(!match&&config.sides.some(s=>s.source==='set')&&setsStatus==='idle')requestSets();},
-    leave(){launchSequence++;starting=false;persistRecovery();clearTimeout(timer);cancelThinking();cancelArt();attackArrows.sync(null,null,{hidden:true});active=false;inspectedUid=null;presentation++;moving=false;cancelMotion();introPending=null;displayLP=null;displayedChain=null;document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');},
+    leave(){launchSequence++;starting=false;persistRecovery();clearTimeout(timer);cancelThinking();cancelArt();attackArrows.sync(null,null,{hidden:true});active=false;inspectedUid=null;presentation++;moving=false;cancelMotion();introPending=null;displayLP=null;displayedChain=null;document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#172621');},
     hasLiveMatch:()=>!!match&&match.winner===null,
     persistRecovery,
     refresh:render,
     setDesignedDeck:saveSide,
     getMatch:()=>match,
     getConfig:()=>structuredClone(config),
-    destroy(){persistRecovery();disposed=true;clearRecoveryTimer();launchSequence++;starting=false;tableObserver?.disconnect();cancelThinking();aiClient.destroy();engine.destroyMatch?.(match);learner.discard();cancelArt();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);modal.removeEventListener('cancel',revealCancel,true);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();feedback.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#eef3f5');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',suspendPresentation);window.removeEventListener('pageshow',resumePresentation);reducedMotion.removeEventListener?.('change',cancelMotion);}
+    destroy(){persistRecovery();disposed=true;clearRecoveryTimer();launchSequence++;starting=false;tableObserver?.disconnect();cancelThinking();aiClient.destroy();engine.destroyMatch?.(match);learner.discard();cancelArt();attackArrows.destroy();modal.removeEventListener('close',dialogClosed);modal.removeEventListener('cancel',revealCancel,true);active=false;presentation++;moving=false;motion.cancel();intro.cancel();effects.cancel();feedback.cancel();battle.cancel();clearTimeout(timer);document.documentElement.classList.remove('duel-playing');document.documentElement.dataset.duelRotated='false';document.querySelector('meta[name=theme-color]')?.setAttribute('content','#172621');document.removeEventListener('click',handleClick);window.removeEventListener('resize',resize);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',suspendPresentation);window.removeEventListener('pageshow',resumePresentation);reducedMotion.removeEventListener?.('change',cancelMotion);}
   };
 }
 function mainPhaseLabel(state){return ['main1','main2'].includes(state.phase)?state.turn===1?'Opening turn · Battle is skipped. Summon, Set, or activate a card.':'Summon, Set, or activate a card. Tap your hand to begin.':state.phase==='battle'?'Tap your Attack Position monster to choose an attack.':state.phase==='end'?'End Phase. Continue to your opponent’s turn.':`${PHASE_LABELS[state.phase]} Phase · continue when ready.`;}

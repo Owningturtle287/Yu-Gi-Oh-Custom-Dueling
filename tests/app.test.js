@@ -5,6 +5,11 @@ import { Window } from 'happy-dom';
 import { cards } from './fixtures.js';
 import { STORAGE_KEY, createDeck, addCard, totals } from '../src/core.js';
 
+function choose($,window,selector,value){
+  const node=$(selector),group=node.matches('fieldset')?node:node.closest('fieldset');
+  const input=[...group.querySelectorAll('input[type=radio]')].find(input=>input.value===value);
+  assert.ok(input,selector+' has choice '+value);input.checked=true;input.dispatchEvent(new window.Event('change',{bubbles:true}));
+}
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 async function boot(suffix, saved, fail = false, catalog = cards) {
   const window = new Window({ url: 'https://example.com/Yu-Gi-Oh-Custom-Dueling/' });
@@ -85,12 +90,12 @@ test('persistent deck and archive panes filter and sort without changing saved o
     const before=JSON.stringify(app.state.draft);
     assert.ok($('.builder-deck-panel .deck-tray'));assert.ok($('.builder-archive-panel #archive-panel'));
     assert.deepEqual([...document.querySelectorAll('.tray-card')].map(c=>Number(c.dataset.deckCard)),[89631139,83764718,44095762]);
-    $('[data-action="deck-view-filters"]').click();$('#deck-category').value='Trap';$('#deck-category').dispatchEvent(new window.Event('change',{bubbles:true}));
+    $('[data-action="deck-view-filters"]').click();choose($,window,'#deck-category','Trap');$('#deck-category').dispatchEvent(new window.Event('change',{bubbles:true}));
     assert.equal(document.querySelectorAll('.tray-card').length,1);assert.match($('.deck-view-summary').textContent,/1 of 3 cards/);
     $('#deck-query').value='missing';$('#deck-query').dispatchEvent(new window.Event('input',{bubbles:true}));assert.match($('.deck-tray').textContent,/No matching cards/);
     $('#deck-query').value='';$('#deck-query').dispatchEvent(new window.Event('input',{bubbles:true}));
-    $('#deck-category').value='All';$('#deck-category').dispatchEvent(new window.Event('change',{bubbles:true}));
-    $('#deck-sort').value='atk';$('#deck-sort').dispatchEvent(new window.Event('change',{bubbles:true}));
+    choose($,window,'#deck-category','All');$('#deck-category').dispatchEvent(new window.Event('change',{bubbles:true}));
+    choose($,window,'#deck-sort','atk');$('#deck-sort').dispatchEvent(new window.Event('change',{bubbles:true}));
     assert.equal($('.tray-card').dataset.deckCard,'89631139');assert.equal(JSON.stringify(app.state.draft),before);assert.equal(app.state.dirty,false);
     $('[data-action="close"]').click();const art=$('.tray-card img');$('.tray-card [data-quick-add]').click();assert.equal(totals(app.state.draft).main,4);assert.match($('.deck-view-summary').textContent,/4 of 4 cards/);assert.equal($('.tray-card img'),art,'Quantity edits retain loaded card art');
     assert.equal($('#card-search'),search);assert.equal(search.value,'Blue-Eyes');assert.ok($('.builder-panel-heading #deck-query'));
@@ -252,7 +257,7 @@ test('filter controls stay inside the deck workspace and saving preserves the re
   try {
     app.navigate('decks');
     $('[data-action="filters"]').click();
-    $('#filters-form select[name="category"]').value = 'Spell';
+    choose($,window,'#filters-form input[name="category"]','Spell');
     $('#filters-form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
     assert.equal(app.state.route, 'decks');
     assert.ok($('#deck-picker'));
@@ -269,15 +274,15 @@ test('builder, Archive and duel share every taxonomy choice, and independent due
   const added=JSON.parse(await readFile(new URL('./era2006-fixtures.json',import.meta.url))).data.filter(c=>['Cyber Dragon','Elemental HERO Flame Wingman'].includes(c.name));
   const catalog=[...cards,...added],{window,app,$}=await boot('shared-taxonomy',null,false,catalog);
   const fields=['race','attribute','subtype','mechanic','spellTrapType'];
-  const choices=()=>Object.fromEntries(fields.map(key=>[key,[...$(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))]));
+  const choices=()=>Object.fromEntries(fields.map(key=>[key,[...document.querySelectorAll(`[name="${key}"]`)].map(o=>({value:o.value,label:o.closest('.radio-card').querySelector('.choice-label').textContent}))]));
   try{
     app.navigate('decks');$('[data-action="filters"]').click();const builder=choices();assert.ok(builder.subtype.some(o=>o.value==='Effect'));assert.ok(builder.attribute.some(o=>o.value==='DIVINE'));
-    $('[name="subtype"]').value='Effect';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.deepEqual(app.state.filtered.map(c=>c.name),['Cyber Dragon']);
+    choose($,window,'[name="subtype"]','Effect');$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.deepEqual(app.state.filtered.map(c=>c.name),['Cyber Dragon']);
     app.navigate('archive');assert.deepEqual(app.state.filtered.map(c=>c.name),['Cyber Dragon','Elemental HERO Flame Wingman']);$('[data-action="filters"]').click();assert.deepEqual(choices(),builder);$('[data-action="close"]').click();
     app.navigate('solo');$('[data-duel="filters"]').click();assert.deepEqual(choices(),builder);
-    $('[name="attribute"]').value='DIVINE';$('[name="subtype"]').value='Effect';$('[name="mechanic"]').value='Fusion';$('[name="spellTrapType"]').value='Quick-Play';$('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
+    choose($,window,'[name="attribute"]','DIVINE');choose($,window,'[name="subtype"]','Effect');choose($,window,'[name="mechanic"]','Fusion');choose($,window,'[name="spellTrapType"]','Quick-Play');$('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
     const config=JSON.parse(localStorage.getItem('duel-atlas.solo-config.v1'));assert.equal(config.sides[0].attribute,'DIVINE');assert.equal(config.sides[0].subtype,'Effect');assert.equal(config.sides[0].mechanic,'Fusion');assert.equal(config.sides[0].spellTrapType,'Quick-Play');assert.equal(config.sides[1].attribute,'');
-    $('[data-duel="filters"]').click();assert.equal($('[name="attribute"]').value,'DIVINE');assert.equal($('[name="spellTrapType"]').value,'Quick-Play');
+    $('[data-duel="filters"]').click();assert.equal($('[name="attribute"]:checked').value,'DIVINE');assert.equal($('[name="spellTrapType"]:checked').value,'Quick-Play');
   }finally{app.navigate('home');window.close();}
 });
 test('the builder shows loading and updates its card results when an API request completes', async () => {
@@ -301,10 +306,10 @@ test('Spirit and release-year controls filter results, update year context, and 
   const { window, app, $ } = await boot('spirit-year-filter', null, false, [...cards, spirit]);
   try {
     app.navigate('decks'); $('[data-action="filters"]').click();
-    $('#filters-form select[name="subtype"]').value = 'Spirit';
+    choose($,window,'#filters-form input[name="subtype"]','Spirit');
     $('[data-filter-panel="year"]').click();
     assert.equal($('#year-filter-panel').hidden, false);
-    $('#release-year').value = '2013'; $('#release-year').dispatchEvent(new window.Event('change', { bubbles: true }));
+    choose($,window,'#release-year','2013'); $('#release-year').dispatchEvent(new window.Event('change', { bubbles: true }));
     assert.match($('#year-context').textContent, /2013/);
     $('#filters-form').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
     assert.equal(app.state.draft.releaseYear, 2013);
@@ -314,7 +319,7 @@ test('Spirit and release-year controls filter results, update year context, and 
     $('[data-quick-add="16889337"]').click(); $('[data-action="save-deck"]').click();
     assert.equal(JSON.parse(window.localStorage.getItem(STORAGE_KEY)).decks[0].releaseYear, 2013);
     $('[data-action="filters"]').click();
-    assert.equal($('#release-year').value, '2013');
+    assert.equal($('#release-year input:checked').value, '2013');
     $('[data-action="reset-filters"]').click();
     assert.equal(app.state.draft.releaseYear, null);
     assert.equal(app.state.filters.subtype, '');
@@ -335,12 +340,12 @@ const soloCatalog = Array.from({length:24},(_,index)=>({...cards[0],id:500000+in
 async function waitFor(predicate){const end=Date.now()+2000;while(!predicate()&&Date.now()<end)await new Promise(resolve=>setTimeout(resolve,10));assert.ok(predicate(),'UI did not reach its expected ready state');}
 test('Solo setup has one AI policy and saves independent eligibility, speed, saved decks and builder return', async () => {
   const {window,app,$}=await boot('solo-setup',null,false,soloCatalog);
-  const change=(selector,value)=>{const input=$(selector);input.value=value;input.dispatchEvent(new window.Event('change',{bubbles:true}));};
+  const change=(selector,value)=>{const input=$(selector);if(input.type==='radio'){choose($,window,selector,value);return;}input.value=value;input.dispatchEvent(new window.Event('change',{bubbles:true}));};
   try{
     $('.bottom-nav [data-route="solo"]').click();assert.ok($('.solo-setup'));
     $('[data-duel-tab="1"]').click();$('[data-duel="filters"]').click();
     change('#duel-filters [name="race"]','Warrior');change('#duel-filters [name="attribute"]','EARTH');
-    $('#duel-filters [name="traps"]').checked=false;
+    choose($,window,'#duel-filters [name="traps"]','block');
     $('#duel-filters').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
     let config=JSON.parse(window.localStorage.getItem('duel-atlas.solo-config.v1'));
     assert.equal(config.sides[1].race,'Warrior');assert.equal(config.sides[1].traps,false);assert.equal(config.sides[0].race,'');
@@ -387,7 +392,7 @@ test('a Solo match starts, tracks phases, offers summons, exits cleanly and star
 });
 test('Set monsters use the authentic sideways card back; AI speed and the expanded log work in a match',async()=>{
   const {window,app,$}=await boot('solo-presentation',null,false,soloCatalog);
-  const change=(selector,value)=>{const input=$(selector);input.value=value;input.dispatchEvent(new window.Event('change',{bubbles:true}));};
+  const change=(selector,value)=>{const input=$(selector);if(input.type==='radio'){choose($,window,selector,value);return;}input.value=value;input.dispatchEvent(new window.Event('change',{bubbles:true}));};
   try{
     app.navigate('solo');$('[data-duel-tab="2"]').click();change('#solo-first','you');change('#solo-ai-speed','fast');
     $('#solo-animations').checked=false;$('#solo-animations').dispatchEvent(new window.Event('change',{bubbles:true}));
@@ -438,9 +443,9 @@ test('archive region cutoffs survive saving, and searching all years retains the
   const {window,app,$}=await boot('regional-cutoff',null,false,[regional]);
   try{
     app.navigate('archive');const search=$('#card-search');search.value='Regional Dragon';search.dispatchEvent(new window.Event('input',{bubbles:true}));
-    $('[data-action="filters"]').click();$('[data-filter-panel="year"]').click();$('#release-year').value='2004';document.querySelector('[name=releaseBasis]').value='tcg';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
+    $('[data-action="filters"]').click();$('[data-filter-panel="year"]').click();choose($,window,'#release-year','2004');choose($,window,'[name=releaseBasis]','tcg');$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));
     assert.equal(app.state.filtered.length,0);assert.ok($('[data-action="all-years"]'));$('[data-action="all-years"]').click();assert.equal(app.state.filters.query,'Regional Dragon');assert.equal(app.state.filtered.length,1);
-    $('[data-action="filters"]').click();$('#release-year').value='2004';document.querySelector('[name=releaseBasis]').value='ocg';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(app.state.filtered.length,1);
+    $('[data-action="filters"]').click();choose($,window,'#release-year','2004');choose($,window,'[name=releaseBasis]','ocg');$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(app.state.filtered.length,1);
     $('.card-tile [data-quick-add]').click();app.navigate('decks');$('[data-action="save-deck"]').click();assert.equal(app.state.decks[0].releaseBasis,'ocg');assert.equal(app.state.decks[0].releaseYear,2004);
   }finally{app.navigate('home');window.close();}
 });
@@ -461,10 +466,10 @@ test('single-year ranges persist and card readers show publication data and ATK/
  const dated=[{...cards[0],id:700001,name:'Early card',tcgDate:'2005-12-31'},{...cards[0],id:700002,name:'Only 2006',tcgDate:'2006-12-31',ocgDate:'2006-01-01',card_sets:[{set_name:'Original set'},{set_name:'Later set'}]},{...cards[0],id:700003,name:'Later card',tcgDate:'2007-01-01'}];
  const {window,app,$}=await boot('year-range-reader',null,false,dated);
  try{
-  app.navigate('decks');$('[data-action="filters"]').click();$('#release-start-year').value='2006';$('#release-year').value='2006';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.deepEqual(app.state.filtered.map(c=>c.id),[700002]);assert.match($('#result-meta').textContent,/TCG 2006–2006/);
+  app.navigate('decks');$('[data-action="filters"]').click();choose($,window,'#release-start-year','2006');choose($,window,'#release-year','2006');$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.deepEqual(app.state.filtered.map(c=>c.id),[700002]);assert.match($('#result-meta').textContent,/TCG 2006–2006/);
   $('.card-inspect').click();assert.ok($('.card-art-frame'));assert.ok($('.detail-top .card-battle-stats'));assert.equal($('.detail-meta .card-battle-stats'),null);assert.match($('.card-publication').textContent,/2006-12-31/);assert.match($('.card-publication').textContent,/2006-01-01/);assert.deepEqual([...document.querySelectorAll('.card-set-details li')].map(n=>n.textContent),['Original set','Later set']);
   $('[data-action="add-card"]').click();$('[data-action="close"]').click();$('[data-action="save-deck"]').click();const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)).decks[0];assert.equal(saved.releaseStartYear,2006);assert.equal(saved.releaseYear,2006);
-  $('[data-action="filters"]').click();assert.equal($('#release-start-year').value,'2006');assert.equal($('#release-year').value,'2006');$('#release-start-year').value='2007';$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(app.state.draft.releaseStartYear,2006);assert.ok($('#modal').open);
+  $('[data-action="filters"]').click();assert.equal($('#release-start-year input:checked').value,'2006');assert.equal($('#release-year input:checked').value,'2006');choose($,window,'#release-start-year','2007');$('#filters-form').dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true}));assert.equal(app.state.draft.releaseStartYear,2006);assert.ok($('#modal').open);
   $('[data-action="reset-filters"]').click();assert.equal(app.state.draft.releaseStartYear,null);assert.equal(app.state.filtered.length,3);
  }finally{window.close();}
 });

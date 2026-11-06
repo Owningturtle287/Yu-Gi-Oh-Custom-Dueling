@@ -27,6 +27,23 @@ try{
   }));
   assert.deepEqual(clipped,[],`All ${selector} controls must be visible`);
  }
+ async function chooseRadio(selector,value){
+  const input=selector.startsWith('#release-')?page.locator(`${selector} input[value="${value}"]`):page.locator(`${selector}[value="${value}"]`);
+  const pane=await input.evaluate(n=>n.closest('.choice-pane')?.id);
+  if(pane)await page.locator(`[data-choice-panel="${pane}"]`).click();
+  await input.locator('..').scrollIntoViewIfNeeded();await input.check();
+ }
+ async function choiceControls(form){
+  assert.equal(await page.locator(`${form} select`).count(),0,'Restriction controls are native radios');
+  const nav=page.locator(`${form} .choice-nav button:visible`);
+  for(let i=0;i<await nav.count();i++){
+   await nav.nth(i).scrollIntoViewIfNeeded();await nav.nth(i).evaluate(n=>n.dataset.layoutCheck='true');await visibleControls('[data-layout-check]');await nav.nth(i).evaluate(n=>delete n.dataset.layoutCheck);
+  }
+  await visibleControls(`${form} .dialog-actions button`);
+  const cards=page.locator(`${form} .choice-pane:not([hidden]):visible .radio-card`);
+  for(let i=0;i<await cards.count();i++){await cards.nth(i).scrollIntoViewIfNeeded();await cards.nth(i).evaluate(n=>n.dataset.layoutCheck='true');await visibleControls('[data-layout-check]');await cards.nth(i).evaluate(n=>delete n.dataset.layoutCheck);}
+  await page.locator(`${form} .choice-nav:visible,${form} .choice-pane:visible`).evaluateAll(nodes=>nodes.forEach(n=>n.scrollTop=0));
+ }
  async function fittedShell(){
   const fit=await page.locator('.app-shell').evaluate(shell=>{const r=shell.getBoundingClientRect();return {left:r.left,top:r.top,width:r.width,height:r.height,logicalWidth:shell.clientWidth,logicalHeight:shell.clientHeight,viewportWidth:innerWidth,viewportHeight:innerHeight};});
   for(const [actual,expected] of [[fit.left,0],[fit.top,0],[fit.width,fit.viewportWidth],[fit.height,fit.viewportHeight],[fit.logicalWidth,Math.max(fit.viewportWidth,fit.viewportHeight)],[fit.logicalHeight,Math.min(fit.viewportWidth,fit.viewportHeight)]])assert.ok(Math.abs(actual-expected)<2,JSON.stringify(fit));
@@ -45,7 +62,9 @@ try{
   await page.setViewportSize({width:height,height:width});await fittedShell();
   await page.setViewportSize({width,height});await fittedShell();
   await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));await fittedShell();
-  await visibleControls('.home button,.bottom-nav button,#app-menu');await capture(`home-${width}x${height}`);
+  await visibleControls('.home button,.bottom-nav button,#app-menu');await page.waitForSelector('.card-showcase.has-art');await page.waitForTimeout(1700);await capture(`home-${width}x${height}`);
+  await page.locator('[data-showcase-pause]').click();assert.equal(await page.locator('[data-showcase-pause]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-showcase-next]').click();await page.waitForFunction(()=>document.querySelector('.card-showcase').dataset.card==='dark-magician');await page.waitForTimeout(1700);await capture(`home-next-${width}x${height}`);
   await page.locator('.bottom-nav [data-route="archive"]').click();
   await page.locator('.archive-screen .card-tile').first().waitFor();await fittedShell();
   assert.equal(await page.locator('.topbar').isVisible(),false,'Archive removes the app header');
@@ -96,16 +115,20 @@ try{
   await page.locator('[data-action="deck-options"]').click();assert.ok(await page.locator('#modal').evaluate(n=>n.clientWidth>=Math.min(480,Math.max(innerWidth,innerHeight)-24)-4),'Shared menus use the landscape width');await visibleControls('.menu-body button');await page.locator('[data-action="app-info"]').click();await visibleControls('.menu-body button');await page.locator('.dialog-header [data-action="close"]').click();
   const taxonomyFields=['attribute','race','subtype','mechanic','spellTrapType'];
   await page.locator('[data-action="filters"]').click();
-  const taxonomy=await page.locator('#filters-form').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);
+  const taxonomy=await page.locator('#filters-form').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelectorAll(`[name="${key}"]`)].map(o=>({value:o.value,label:o.closest('.radio-card').querySelector('.choice-label').textContent}))])),taxonomyFields);
   assert.ok(taxonomy.subtype.some(o=>o.value==='Effect'));assert.ok(taxonomy.attribute.some(o=>o.value==='DIVINE'));
-  await visibleControls('#filters-form select,#filters-form button');await capture(`builder-filters-${width}x${height}`);
-  await page.locator('[data-filter-panel="year"]').click();await visibleControls('#filters-form select,#filters-form button');await capture(`builder-year-filters-${width}x${height}`);await page.locator('#release-start-year').selectOption('2006');await page.locator('#release-year').selectOption('2006');await capture(`exact-year-filters-${width}x${height}`);await page.locator('#filters-form button[type="submit"]').click();
+  await choiceControls('#filters-form');await capture(`builder-filters-${width}x${height}`);
+  await page.locator('[data-filter-panel="year"]').click();await choiceControls('#filters-form');await capture(`builder-year-filters-${width}x${height}`);await chooseRadio('#release-start-year','2006');await chooseRadio('#release-year','2006');await capture(`exact-year-filters-${width}x${height}`);await page.locator('#filters-form button[type="submit"]').click();
   assert.ok(await page.evaluate(async()=>{const {state}=await import('/src/app.js');return state.filtered.length>0&&state.filtered.every(c=>c.tcgDate?.startsWith('2006'));}));
-  await page.locator('[data-action="filters"]').click();await page.locator('[data-filter-panel="year"]').click();assert.equal(await page.locator('#release-start-year').inputValue(),'2006');assert.equal(await page.locator('#release-year').inputValue(),'2006');await page.locator('[data-action="reset-filters"]').click();await page.locator('[data-action="filters"]').click();
-  await page.locator('#filters-form [name="subtype"]').selectOption('Effect');await page.locator('#filters-form button[type="submit"]').click();
+  await page.locator('[data-action="filters"]').click();await page.locator('[data-filter-panel="year"]').click();assert.equal(await page.locator('#release-start-year input:checked').inputValue(),'2006');assert.equal(await page.locator('#release-year input:checked').inputValue(),'2006');await page.locator('[data-action="reset-filters"]').click();await page.locator('[data-action="filters"]').click();
+  await chooseRadio('#filters-form [name="subtype"]','Effect');await page.locator('#filters-form button[type="submit"]').click();
   assert.ok(await page.locator('.builder-archive-panel .card-tile').count());
   assert.ok(await page.evaluate(async()=>{const {state}=await import('/src/app.js');const {isEffectMonster}=await import('/src/card-filters.js');return state.filtered.every(isEffectMonster);}));
   await page.locator('[data-action="filters"]').click();await page.locator('[data-action="reset-filters"]').click();
+  await page.locator('[data-action="deck-options"]').click();await page.locator('[data-action="rules"]').click();
+  await visibleControls('.rules-body .button-row button,.rules-body .dialog-actions button');
+  for(const value of ['allow','block']){const radio=page.locator(`.rules-body [name="Synchro"][value="${value}"]`);await radio.locator('..').scrollIntoViewIfNeeded();await radio.check();}
+  await page.locator('.rules-body .mechanic-list').evaluate(n=>n.scrollTop=0);await capture(`mechanic-rules-${width}x${height}`);await page.locator('.rules-body .dialog-actions [data-action="close"]').click();
   const query=page.locator('#card-search');await query.fill('Mystical Elf');
   await page.locator('.builder-archive-panel [data-quick-add]').first().click();
   assert.equal(await query.inputValue(),'Mystical Elf');assert.ok(await page.locator('.builder-deck-panel .tray-card').count());
@@ -123,18 +146,18 @@ try{
   await page.locator('#solo-size').selectOption('30');await page.locator('[data-duel-tab="0"]').click();await page.locator('[data-duel-tab="1"]').click();assert.equal(await page.locator('#solo-size').inputValue(),'30');
   for(const tab of [1,2,3,0]){await page.locator(`[data-duel-tab="${tab}"]`).click();if(tab===2)await capture(`match-settings-${width}x${height}`);await visibleControls('.solo-setup button,.solo-setup select,.solo-setup input');}
   assert.match(await page.locator('.duel-era').textContent(),/2010 LAB/);
-  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]').inputValue(),'2010-12-31');
-  const duelTaxonomy=await page.locator('#duel-filters').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelector(`[name="${key}"]`).options].map(o=>({value:o.value,label:o.textContent}))])),taxonomyFields);assert.deepEqual(duelTaxonomy,taxonomy);
-  await page.locator('#duel-filters [name="attribute"]').selectOption('DIVINE');await page.locator('#duel-filters [name="subtype"]').selectOption('Effect');await page.locator('#duel-filters [name="spellTrapType"]').selectOption('Continuous');
-  await visibleControls('#duel-filters select,#duel-filters button');await capture(`duel-filters-${width}x${height}`);
+  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('[name="cutoff"]:checked').inputValue(),'2010-12-31');
+  const duelTaxonomy=await page.locator('#duel-filters').evaluate((form,fields)=>Object.fromEntries(fields.map(key=>[key,[...form.querySelectorAll(`[name="${key}"]`)].map(o=>({value:o.value,label:o.closest('.radio-card').querySelector('.choice-label').textContent}))])),taxonomyFields);assert.deepEqual(duelTaxonomy,taxonomy);
+  await chooseRadio('#duel-filters [name="attribute"]','DIVINE');await chooseRadio('#duel-filters [name="subtype"]','Effect');await chooseRadio('#duel-filters [name="spellTrapType"]','Continuous');
+  await choiceControls('#duel-filters');await capture(`duel-filters-${width}x${height}`);
   await page.locator('#duel-filters button[type="submit"]').click();assert.match(await page.locator('.solo-filter-summary').textContent(),/DIVINE/);
-  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('#duel-filters [name="attribute"]').inputValue(),'DIVINE');
-  for(const field of ['attribute','subtype','spellTrapType'])await page.locator(`#duel-filters [name="${field}"]`).selectOption('');
-  await page.locator('[name="cutoff"]').selectOption('2005-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();
+  await page.locator('[data-duel="filters"]').click();assert.equal(await page.locator('#duel-filters [name="attribute"]:checked').inputValue(),'DIVINE');
+  for(const field of ['attribute','subtype','spellTrapType'])await chooseRadio(`#duel-filters [name="${field}"]`,'');
+  await chooseRadio('[name="cutoff"]','2005-12-31');await choiceControls('#duel-filters');await page.locator('#duel-filters button[type="submit"]').click();
   assert.match(await page.locator('.solo-filter-summary').textContent(),/2005 & earlier/);
-  await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption('2006-12-31');await page.locator('#duel-filters button[type="submit"]').click();
+  await page.locator('[data-duel="filters"]').click();await chooseRadio('[name="cutoff"]','2006-12-31');await page.locator('#duel-filters button[type="submit"]').click();
   for(const year of [2007,2008,2009,2010]){
-   await page.locator('[data-duel="filters"]').click();await page.locator('[name="cutoff"]').selectOption(year+'-12-31');await visibleControls('#duel-filters button,#duel-filters select');await page.locator('#duel-filters button[type="submit"]').click();assert.ok((await page.locator('.solo-filter-summary').textContent()).includes(year+' & earlier'));
+   await page.locator('[data-duel="filters"]').click();await chooseRadio('[name="cutoff"]',year+'-12-31');await choiceControls('#duel-filters');await page.locator('#duel-filters button[type="submit"]').click();assert.ok((await page.locator('.solo-filter-summary').textContent()).includes(year+' & earlier'));
   }
   await page.locator('[data-duel-tab="2"]').click();await page.locator('.solo-ai-badge[data-duel="learning"]').click();
   await visibleControls('.duel-learning-body button');await capture(`learning-settings-${width}x${height}`);

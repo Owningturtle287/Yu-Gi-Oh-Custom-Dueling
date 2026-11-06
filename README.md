@@ -1,10 +1,12 @@
-# Duel Atlas · v0.6.0
+# Duel Atlas · v0.6.1
 
 A mobile-first Yu-Gi-Oh! PWA with a full card archive, local deck workshop, and **Solo Duel · 2010 Lab**. The app is static HTML, CSS and ES-module JavaScript, with an offline synchronous WebAssembly rules runtime. It needs no custom backend, account, duel server, WebRTC, or multiplayer service.
 
 Live app: https://Owningturtle287.github.io/Yu-Gi-Oh-Custom-Dueling/
 
 ## This functionality-testing release
+
+- v0.6.1 replaces the Home text panel with an offline six-card artwork gallery, decoded crossfades, pause/next controls, and reduced-motion support. Jade, brass, and parchment textures carry across menus. Archive/deck filters, year ranges, Solo eligibility, and mechanic permissions use native radio cards with green checks and red X marks; existing saved filter and deck formats stay compatible.
 
 - v0.6.0 expands Solo through December 31, 2010: 4,136 playable TCG cards, adding 1,966. The pinned pack includes 4,103 scripts/helpers, with current-text Red-Eyes Darkness Metal Dragon coverage. Synchros use the Extra Deck, real native material procedures, and AI material-cost estimates. Random decks keep Extra Deck monsters out of Main and can include compatible generic Synchros. Year filters extend through 2010 while preserving narrower selections. Verified additive rules compatibility retains v0.5.9 saved duels. See [2010 validation](docs/era2010-v0.6.0.md).
 - v0.5.9 fixes cross-tab bulk imports, damaged deck/save isolation, malformed Solo preferences, transient archive-cache failures, duplicate-card identities and projected Spirit Barrier combat. Live duels survive navigation and gain automatic reload recovery. AI failures pause with Retry; native response errors restore the pre-action checkpoint. New saves identify the complete rules database/runtime; legacy replays remain supported. App updates wait for open sessions, card-art caching is bounded, and the test DOM dependency is patched. Ultimate Offering keeps its legal repeated 500 LP Normal Summon/Set activations with a corrected label. See [audit fixes and validation](docs/audit-fixes-v0.5.9.md).

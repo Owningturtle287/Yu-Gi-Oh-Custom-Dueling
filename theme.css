@@ -1,0 +1,162 @@
+/* Duel Atlas: engraved brass, jade lacquer and midnight card-table surfaces. */
+html:not(.duel-playing) { color-scheme:dark; --text:#eee7d4; --muted:#b9c1b0; --line:#64705a; --panel:#202e2a; --accent:#d8bd79; --surface:#172722; }
+html:not(.duel-playing) body { background:#101c1a; color:var(--text); }
+html:not(.duel-playing) .app-shell { background:radial-gradient(ellipse at 80% 0,#31544855,transparent 60%),repeating-linear-gradient(125deg,#e6cc8a03 0 1px,transparent 1px 8px),#14231f; }
+html:not(.duel-playing) .topbar,html:not(.duel-playing) .bottom-nav { background:linear-gradient(100deg,#172621,#1e3029); border-color:#b89a5350; }
+html:not(.duel-playing) .topbar { border-bottom:1px solid #b89a5350; }
+html:not(.duel-playing) .brand,html:not(.duel-playing) .brand b { color:#e7d29d; }
+html:not(.duel-playing) .release { color:#c6c8b7; }
+html:not(.duel-playing) .release span { color:#d7c17d; background:#d3b86a15; border-color:#b59a5050; }
+/* Fine diagonal grain and a beveled rim carry across every menu action. */
+html:not(.duel-playing) .app-shell button:where(:not(.card-inspect):not(.deck-inspect):not(.quick-add):not(.quick-remove)),#modal button:where(:not(.duel-choice-read):not(.duel-response-art)) {
+ color:#e8e5d5; border-color:#9b875756; background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 5px),linear-gradient(150deg,#35463a,#23352d); box-shadow:inset 0 1px #dfd4a529,inset 0 -1px #0003,0 3px 7px #0002;
+}
+html:not(.duel-playing) button:hover:not(:disabled):not(.card-inspect):not(.deck-inspect):not(.quick-add):not(.quick-remove),#modal button:hover:not(:disabled) { border-color:#c6a964; filter:brightness(1.1); }
+html:not(.duel-playing) button:focus-visible,#modal button:focus-visible,#modal input:focus-visible { outline:2px solid #e6be62; outline-offset:3px; }
+html:not(.duel-playing) .app-shell button.primary,#modal button.primary { color:#fff8df; background:repeating-linear-gradient(125deg,#ffffff05 0 1px,transparent 1px 5px),linear-gradient(140deg,#36765b,#1c513f); border-color:#c5ab65; }
+#modal button.danger { color:#fff0df; border-color:#be8b6b; background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 5px),linear-gradient(145deg,#9b4a42,#68342f); }
+html:not(.duel-playing) .bottom-nav button { color:#b7c3b5; background:transparent; box-shadow:none; border:1px solid transparent; }
+html:not(.duel-playing) .bottom-nav button[aria-current=page],html:not(.duel-playing) [aria-pressed=true]:not(.card-inspect),html:not(.duel-playing) .solo-tabs [aria-selected=true] { background:linear-gradient(145deg,#3f5941,#294335); color:#f3dc9f; border-color:#b89a5360; box-shadow:inset 3px 0 #c4a564,inset 0 1px #e6cd8633; }
+/* The entire former copy panel becomes a framed, double-buffered art window. */
+.home .home-hero.card-showcase { position:relative; isolation:isolate; padding:0; border:1px solid #b99e5d99; background:#0b1717; box-shadow:0 14px 35px #0005,inset 0 0 0 4px #c6ad5f20; }
+.card-showcase:after { content:''; position:absolute; inset:6px; border:1px solid #f3d38450; border-radius:inherit; pointer-events:none; z-index:4; }
+.showcase-image { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transform:scale(1.045); transition:opacity 1.6s ease-in-out,transform 8s linear; }
+.showcase-image.is-visible { opacity:1; transform:scale(1.12); }
+.showcase-fallback { position:absolute; inset:0; display:grid; place-items:center; background:radial-gradient(circle,#3c5a4866,transparent 70%),repeating-conic-gradient(from 45deg,#c2a35b06 0deg 1deg,transparent 1deg 20deg); }
+.showcase-fallback img { width:40%; opacity:.5; }
+.showcase-shade { position:absolute; inset:0; background:linear-gradient(0deg,#081514e8,transparent 45%,#08151405 70%,#0815149c); pointer-events:none; }
+.showcase-top,.showcase-bottom { position:absolute; left:22px; right:22px; z-index:3; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.showcase-top { top:23px; align-items:flex-start; }
+.showcase-top .eyebrow { font-size:9px; letter-spacing:2px; color:#f9ebbf; text-shadow:0 1px 5px #000; }
+.showcase-edition { font-size:8px; letter-spacing:1px; color:#f1e5bf; white-space:nowrap; }
+.showcase-bottom { bottom:23px; align-items:flex-end; }
+.showcase-type { display:block; color:#dcc58c; font-size:8px; letter-spacing:1.5px; margin-bottom:6px; }
+.showcase-name { display:block; color:#fff4d9; font-family:Georgia,serif; font-size:clamp(18px,2.3vw,30px); font-weight:400; line-height:1.1; text-shadow:0 2px 8px #0008; }
+.showcase-controls { display:flex; gap:5px; flex:none; }
+html:not(.duel-playing) .showcase-controls button { min-width:34px; min-height:34px; width:34px; height:34px; padding:0; border-radius:50%; font-size:17px; background:#152c23c9; color:#f8e6b3; backdrop-filter:blur(8px); }
+.card-showcase[data-paused=true] .showcase-image { transition:opacity 1.6s ease-in-out; transform:scale(1.06); }
+.home .home-paths { gap:9px; }
+.home .home-paths .home-status { position:static; flex:none; min-height:26px; color:#d4d8c8; font-size:10px; gap:9px; }
+.home-status small { color:#a7b9a5; font-size:9px; margin-top:1px; }
+.home-paths .section-label { color:#b6bdab; font-size:9px; }
+html:not(.duel-playing) .home .launch-card { color:#efe8cd; border-color:#9d895459; background:repeating-linear-gradient(125deg,#e5dba305 0 1px,transparent 1px 6px),radial-gradient(ellipse at 0 0,#b6a15a18,transparent 70%),linear-gradient(140deg,#31433a,#1d3028); box-shadow:inset 0 1px #d7c57d2b,0 6px 14px #0002; }
+.home .launch-card strong { color:#f1e5c2; font-family:Georgia,serif; font-weight:400; }
+.home .launch-card small { color:#bdc9b6; }
+.home .launch-card>svg,.home .launch-card .arrow { color:#d7bc78; }
+html:not(.duel-playing) .home .solo-launch-card { background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 6px),radial-gradient(ellipse at 100% 0,#e7c67220,transparent 65%),linear-gradient(125deg,#285b43,#193d30); border-color:#c3a15d; }
+.home .solo-launch-card .soon-label { color:#dbc48b; }
+html:not(.duel-playing) .home .coming { background:#182a23; border-color:#94875955; }
+.home .coming strong,.home .coming>svg { color:#aeb8a1; }
+.home .coming .soon-label { background:#283b2c; color:#c8c09d; border-color:#ab925648; }
+/* Setup, archive, deck workshop and auxiliary screens share the same material. */
+.solo-setup .duel-heading h1,.solo-panel-title h2 { color:#f0e5c3; font-family:Georgia,serif; font-weight:400; }
+.solo-setup .duel-heading .eyebrow,.solo-panel-title small { color:#c6b982; }
+.solo-setup #solo-panel,.builder-deck-panel,.builder-archive-panel { background:repeating-linear-gradient(125deg,#dbcb8c03 0 1px,transparent 1px 7px),linear-gradient(140deg,#293a30,#1b2d26); border-color:#aa91524d; box-shadow:inset 0 1px #cfbb7b19; }
+.solo-setup .solo-panel label,.solo-format,.solo-empty,.solo-empty p,.solo-setup .solo-set-status,.deck-view-summary,.deck-switch-row .deck-state { color:#c0cbb6; }
+.solo-panel-title .solo-sigil { background:#354835; color:#d0ba7c; border-color:#a18c5755; }
+.solo-pool-count { color:#d9c58b; }
+.solo-setup .solo-launch { background:radial-gradient(ellipse at 100% 0,#c6aa5a22,transparent 75%),#16362a; border-color:#a98e505e; }
+.solo-setup .solo-launch .primary { background:repeating-linear-gradient(125deg,#fff1 0 1px,transparent 1px 5px),linear-gradient(145deg,#e3cc93,#bd9b55); color:#233d2c; border-color:#ddc386; }
+.solo-setup .solo-filter-summary strong { color:#ebdfb6; }
+.solo-setup .solo-filter-summary small,.solo-format small { color:#b7c2aa; }
+.solo-ai-badge { background:#3b4931; color:#dfcf96; }
+html:not(.duel-playing) input:not([type=radio]):not([type=checkbox]),html:not(.duel-playing) select,html:not(.duel-playing) .search-wrap,html:not(.duel-playing) .deck-query { color:#e6e6cf; background:#14251e; border-color:#a7955959; color-scheme:dark; }
+html:not(.duel-playing) input::placeholder { color:#adb8a5; }
+html:not(.duel-playing) .card-workspace .card-inspect,html:not(.duel-playing) .card-workspace .deck-inspect { background:none; box-shadow:none; }
+html:not(.duel-playing) .result-meta { color:#b9c4ad; }
+html:not(.duel-playing) .section-label,html:not(.duel-playing) .empty-state { color:#c4ccb6; }
+/* Parchment dialog interiors keep dense card text and all prompt tones readable. */
+#modal { color-scheme:light; color:#263c30; border:1px solid #b89b5f; background:#eee9d6; box-shadow:0 20px 80px #0008,0 0 0 4px #bda56a25; --text:#263c30; --muted:#5d6e58; --line:#b6b99e; }
+#modal::backdrop { background:#071811b8; backdrop-filter:blur(5px); }
+#modal .dialog-body { color:#263c30; background:repeating-linear-gradient(115deg,#8d743005 0 1px,transparent 1px 5px),radial-gradient(ellipse at 0 0,#fffdf0,transparent 80%),#eee9d6; }
+#modal .dialog-header h2 { color:#294231; font-family:Georgia,serif; font-weight:400; }
+#modal p,#modal .help-note,#modal .muted { color:#53604b; }
+#modal input:not([type=radio]):not([type=checkbox]),#modal select { color:#263c30; background:#faf7e9; border-color:#a6af94; color-scheme:light; }
+#modal .menu-item { color:#eee8ce; }
+#modal .menu-item small { color:#c2cbb8; }
+#modal button[data-choice-tone] { color:var(--choice-accent); border-color:var(--choice-border); background:repeating-linear-gradient(125deg,#fff2 0 1px,transparent 1px 5px),linear-gradient(145deg,var(--choice-bg),#f2efde); }
+#modal button[aria-selected=true],#modal button[aria-pressed=true] { color:#f5e7bb; border-color:#a68a4a; background:linear-gradient(145deg,#54704b,#2c4b35); }
+/* A short group navigator and one independently scrolling radio panel. */
+#modal:has(.filter-body),#modal:has(.duel-filter-body) { width:min(850px,calc(var(--duel-vw) * 100 - 24px)); }
+#modal .filter-body,#modal .duel-filter-body { display:flex; flex-direction:column; height:min(540px,calc(var(--duel-vh) * 100 - 28px)); min-height:0; overflow:hidden; padding:14px; gap:8px; }
+#filters-form,#duel-filters { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+#modal .filter-tabs,#modal .dialog-header,#modal .dialog-actions { flex:none; }
+#modal .filter-panel,#modal #year-filter-panel { flex:1; display:flex; flex-direction:column; min-height:0; gap:7px; overflow:hidden; }
+#modal .filter-panel[hidden],#modal .choice-pane[hidden] { display:none; }
+#modal .choice-workspace { flex:1; display:grid; grid-template-columns:150px minmax(0,1fr); gap:12px; min-height:0; overflow:hidden; }
+.choice-nav { min-height:0; display:flex; flex-direction:column; gap:5px; overflow:auto; padding:3px; overscroll-behavior:contain; }
+#modal .choice-nav button { flex:none; min-height:36px; padding:7px 9px; text-align:left; font-size:11px; border-radius:7px; }
+.choice-panes { min-height:0; min-width:0; overflow:hidden; }
+.choice-pane { height:100%; overflow:auto; overscroll-behavior:contain; scroll-padding:5px; padding:3px; }
+#modal .choice-group { min-width:0; padding:0; margin:0 0 12px; border:0; }
+#modal .choice-group legend { font-size:12px; font-weight:650; color:#354c34; padding:2px 0 9px; }
+.radio-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+#modal .radio-card { position:relative; min-height:40px; display:flex; align-items:center; flex-direction:row; gap:7px; padding:7px 9px; margin:0; border:1px solid #bac2a9; border-radius:8px; background:repeating-linear-gradient(125deg,#86733505 0 1px,transparent 1px 5px),linear-gradient(140deg,#fcfbef,#e9ead7); cursor:pointer; color:#3a4936; font-size:11px; line-height:1.25; }
+#modal .radio-card:has(input:checked) { border-color:#576e36; box-shadow:inset 0 0 0 1px #576e36; background:linear-gradient(135deg,#e0e8cd,#cddaba); }
+#modal .radio-card:has(input:focus-visible) { outline:2px solid #795d15; outline-offset:2px; }
+#modal .radio-card input { position:absolute; inset:0; opacity:0; width:100%; height:100%; min-height:0; margin:0; padding:0; z-index:1; cursor:pointer; }
+.choice-mark { display:grid; place-items:center; flex:none; width:21px; height:21px; border-radius:50%; font-size:15px; font-weight:700; }
+[data-allowed=true] .choice-mark { background:#d6e6ce; color:#23643a; }
+[data-allowed=false] .choice-mark { background:#f0d7c9; color:#993e35; }
+[data-allowed=neutral] .choice-mark { color:#5e683f; }
+.choice-label { overflow-wrap:anywhere; }
+#modal .choice-help { margin:0 0 2px; font-size:10px; line-height:1.4; }
+.allowed-key { color:#28603a; margin-left:8px; white-space:nowrap; }
+.blocked-key { color:#984237; margin-left:8px; white-space:nowrap; }
+#modal .year-context { display:block; flex:none; max-height:38px; padding:4px 7px; border-color:#acb79a; background:#e2e5cf; }
+#modal .year-context strong { margin:0; font-size:9px; color:#53603a; }
+#modal .year-context ul { color:#4e6246; font-size:9px; }
+#modal .year-help { flex:none; font-size:9px; margin:0; }
+#modal .filter-tabs button,#modal .dialog-actions button { min-height:36px; }
+#modal .mechanic-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+#modal .mechanic-list .choice-group { margin:0; }
+#modal .mechanic-list .radio-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#modal .deck-view-filters { display:flex; flex-direction:column; gap:8px; }
+@media(max-height:540px),(orientation:portrait) and (max-width:540px) {
+ .home .home-paths { gap:6px; }
+ .home .home-paths .home-status { font-size:9px; min-height:23px; }
+ .home-status small { font-size:8px; }
+ .showcase-top { top:17px; left:17px; right:17px; }
+ .showcase-top .eyebrow { font-size:7px; letter-spacing:1.2px; }
+ .showcase-edition { font-size:7px; }
+ .showcase-bottom { bottom:18px; left:17px; right:17px; }
+ .showcase-name { font-size:19px; }
+ .showcase-type { font-size:7px; letter-spacing:1px; }
+ #modal .filter-body,#modal .duel-filter-body { padding:10px; gap:6px; }
+ #modal .choice-workspace { grid-template-columns:125px minmax(0,1fr); gap:7px; }
+ #modal .choice-nav button { font-size:10px; min-height:34px; padding:5px 7px; }
+ #modal .radio-card { min-height:36px; font-size:10px; padding:5px 6px; gap:5px; }
+ .radio-grid { gap:5px; }
+ #modal .choice-group legend { padding-bottom:6px; font-size:11px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .showcase-image,.showcase-image.is-visible,.card-showcase[data-paused=true] .showcase-image { transition:none; transform:none; }
+}
+
+#modal .rules-body { display:flex; flex-direction:column; height:min(540px,calc(var(--duel-vh) * 100 - 28px)); overflow:hidden; min-height:0; gap:8px; padding:12px; }
+#modal .rules-body .mechanic-list { flex:1; min-height:0; overflow:auto; align-content:start; padding:3px; overscroll-behavior:contain; }
+#modal .rules-body>.button-row,#modal .rules-body>p { flex:none; }
+#modal .rules-body>p { margin:0; font-size:10px; }
+html:not(.duel-playing) .preview-panel { background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 6px),linear-gradient(140deg,#304235,#1e3027); border-color:#ae955259; }
+html:not(.duel-playing) .placeholder-art { color:#d6c18a; border-color:#c0a26170; background:radial-gradient(circle,#48684c,#243e30 65%); }
+#modal .menu-item svg { color:#d5c286; }
+#modal #year-filter-panel[hidden],#modal #card-filter-panel[hidden] { display:none; }
+#modal .duel-choice-card[aria-pressed=true] .duel-choice-copy strong,#modal button.duel-position-card strong,#modal button.order-source strong,#modal button.duel-choice-source strong { color:#f1e8c9; }
+#modal .duel-choice-card[aria-pressed=true] .duel-choice-copy small,#modal button.duel-position-card small,#modal button.order-source small,#modal button.duel-choice-source small { color:#c1cdb4; }
+
+#modal .radio-card[data-allowed=false]:has(input:checked) { border-color:#a2634d; box-shadow:inset 0 0 0 1px #a2634d; background:linear-gradient(135deg,#f1ddd0,#e6c8b8); }
+#modal .rules-help { flex:none; max-height:76px; overflow:auto; color:#566447; font-size:10px; line-height:1.4; }
+#modal .rules-help summary { cursor:pointer; padding:4px 0; }
+#modal .rules-help p { margin:4px 0; font-size:10px; line-height:1.4; }
+#modal .choice-nav,#modal .choice-pane,#modal .mechanic-list { scrollbar-width:thin; scrollbar-color:#89916b #d7dcc5; }
+/* Setup selectors must override the legacy pale select surfaces together with their text. */
+html:not(.duel-playing) .app-shell select { color:#e6e6cf; background:#14251e; border-color:#a7955959; color-scheme:dark; }
+.solo-setup .duel-era span { color:#c9bb86; }
+/* Card-reference buttons use parchment lacquer so their effect labels stay readable. */
+#modal button.duel-choice-source,#modal button.duel-position-card,#modal button.order-source { color:#2d4c34; border-color:#a6b28f; background:repeating-linear-gradient(125deg,#ffffff20 0 1px,transparent 1px 5px),linear-gradient(140deg,#f4f1dc,#dce4cd); }
+#modal button.duel-choice-source strong,#modal button.duel-position-card strong,#modal button.order-source strong { color:#2d4c34; }
+#modal button.duel-choice-source small,#modal button.duel-position-card small,#modal button.order-source small,#modal .duel-public-card small { color:#52694c; }
+#modal .saved-row small { color:#becbb6; }
+.solo-setup .duel-saved-list article { color:#e9e5c9; background:linear-gradient(140deg,#344835,#21372b); border-color:#a58e5359; }
+.solo-setup .duel-saved-list small { color:#bac7af; }
+#modal .saved-row .icon-button,.solo-setup .duel-saved-list button[data-delete-duel],.solo-setup .duel-saved-list button[data-delete-recovery] { color:#ffe4cf; background:linear-gradient(145deg,#884d40,#603c32); border-color:#bd8c69; }

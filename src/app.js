@@ -1,3 +1,5 @@
+import {radioGroup,permissionGroup,choicePanels,choices,mountChoices,radioValue,paintChoices} from './menu-controls.js';
+import {createShowcase} from './home-showcase.js';
 import {publicationHTML,cardFactsHTML,battleStatsHTML} from './card-details.js';
 import { VERSION, MECHANICS, SECTIONS, LIMITS, createDeck, validName, totals, addCard, removeCard, deckWarnings, readDecks, readDeckStore, mergeSavedDecks, saveDeck, deleteSavedDeck, exportJSON, importJSON, exportYDK, importYDK, isExtra, validateDeck, STORAGE_KEY, filterCards } from './core.js';
 import { loadCards, browserCardCache } from './cards.js';
@@ -21,7 +23,7 @@ try {
 } catch (error) { state.storageError = error.message; }
 try { cache = browserCardCache(); } catch { /* API browsing can work without IndexedDB. */ }
 let toastTimer, gridObserver, gridFrame, previousFocus, detailCard, cardRequest;
-let duelDesign = null;
+let duelDesign = null, homeShowcase;
 const deckView = {query:'',category:'All',sort:'type'};
 const solo = createSoloController({ main, modal, getCards: () => state.cards, getDecks: () => state.decks, getStatus: () => state.cardStatus, showDialog, dialogHeader, closeDialog, toast,
   onExit: () => navigate('home'),
@@ -76,6 +78,7 @@ document.addEventListener('error', event => {
   }
 }, true);
 function navigate(route, focus = true) {
+  homeShowcase?.destroy();
   solo.leave();
   const routes = ['home', 'archive', 'decks', 'multiplayer', 'solo'];
   state.route = routes.includes(route) ? route : 'home';
@@ -93,16 +96,18 @@ function navigate(route, focus = true) {
   if (focus) main.focus({ preventScroll: true });
 }
 function renderHome() {
+  homeShowcase?.destroy();
   const archiveStatus = state.cardStatus === 'ready' ? `${state.cards.length.toLocaleString()} cards ${state.source === 'api' ? 'in your archive' : 'available from cache'}` : state.cardStatus === 'loading' ? 'Preparing your card archive…' : 'Archive unavailable · open to retry';
   main.innerHTML = `<section class="screen home" aria-label="Home">
-    <div class="home-hero"><div class="hero-copy"><div class="eyebrow">THE DUELIST’S WORKSHOP</div><h1>Build a deck.<br><span>Make your move.</span></h1><p>Your cards. Your next duel.</p></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><img src="./assets/emblem.svg" alt=""></div><div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<small>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'}</small></span></div></div>
-    <div class="home-paths"><div class="section-label"><span>CHOOSE YOUR PATH</span><span>THROUGH ${ERA_YEAR}</span></div><div class="home-grid">
+    <div class="home-hero card-showcase" aria-label="Classic card artwork"><h1 class="sr-only">Duel Atlas</h1><div class="showcase-fallback" aria-hidden="true"><img src="./assets/emblem.svg" alt=""></div><img class="showcase-image" alt=""><img class="showcase-image" alt=""><div class="showcase-shade"></div><div class="showcase-top"><span class="eyebrow">THE DUELIST’S GALLERY</span><span class="showcase-edition">1996 — ${ERA_YEAR}</span></div><div class="showcase-bottom"><div><span class="showcase-type">A WORLD OF DUELS</span><strong class="showcase-name">Duel Atlas</strong></div><div class="showcase-controls"><button type="button" data-showcase-pause aria-label="Pause artwork slideshow">Ⅱ</button><button type="button" data-showcase-next aria-label="Next card artwork">→</button></div></div></div>
+    <div class="home-paths"><div class="home-status"><span class="status-dot"></span><span>${escape(archiveStatus)}<small>${state.decks.length} saved deck${state.decks.length === 1 ? '' : 's'}</small></span></div><div class="section-label"><span>CHOOSE YOUR PATH</span><span>THROUGH ${ERA_YEAR}</span></div><div class="home-grid">
       <button class="launch-card solo-launch-card" data-route="solo">${icon('solo')}<span class="arrow" aria-hidden="true">↗</span><span class="soon-label">PLAY SOLO</span><strong>Enter the arena</strong><small>Classic cards. A strategic rival.</small></button>
       <button class="launch-card archive-launch" data-route="archive">${icon('archive')}<span class="arrow" aria-hidden="true">↗</span><strong>Card Archive</strong><small>Find your next ace</small></button>
       <button class="launch-card" data-route="decks">${icon('deck')}<span class="arrow" aria-hidden="true">↗</span><strong>Deck Builder</strong><small>Craft your strategy</small></button>
       <button class="launch-card coming" data-route="multiplayer">${icon('people')}<strong>Multiplayer</strong><span class="soon-label">COMING SOON</span></button>
     </div></div>
   </section>`;
+  homeShowcase=createShowcase(main.querySelector('.card-showcase'));
 }
 function renderArchive() {
   main.innerHTML = `<section class="screen card-workspace archive-screen" aria-label="Card Archive"><h1 class="sr-only">Card Archive</h1>
@@ -229,25 +234,29 @@ function yearContextHTML(value,basis=state.draft.releaseBasis||'tcg') {
   return `<strong>New in ${year} · from ${region} release data</strong><ul>${lines.map(line => `<li>${escape(line)}</li>`).join('')}</ul>`;
 }
 function showFilters() {
-  const options = (values, selected, title) => `<option value="">${title}</option>${values.map(value => `<option ${selected === value ? 'selected' : ''} value="${escape(value)}">${escape(value)}</option>`).join('')}`;
-  const races = MONSTER_TYPES;
-  const years = Array.from({ length: currentYear() - MIN_RELEASE_YEAR }, (_, index) => currentYear() - index - 1);
-  const selectedYear = state.draft.releaseYear,selectedStart=state.draft.releaseStartYear??null;
-  const yearOptions = `<option value="current" ${selectedYear === null ? 'selected' : ''}>Today (${currentYear()})</option>${years.map(year => `<option value="${year}" ${selectedYear === year ? 'selected' : ''}>${year}</option>`).join('')}`;
+  const years=Array.from({length:currentYear()-MIN_RELEASE_YEAR+1},(_,i)=>String(currentYear()-i));
+  const selectedYear=state.draft.releaseYear,selectedStart=state.draft.releaseStartYear??null;
+  const groups=[
+    {name:'category',title:'Category',values:[['All','All cards'],['Monster','Monster'],['Spell','Spell'],['Trap','Trap'],['Extra','Extra Deck']]},
+    {name:'attribute',title:'Monster attribute',values:choices(ATTRIBUTES)},
+    {name:'race',title:'Monster type',values:choices(MONSTER_TYPES)},
+    {name:'subtype',title:'Monster subtype',values:choices(SUBTYPES)},
+    {name:'mechanic',title:'Mechanic',values:choices(MECHANICS)},
+    {name:'spellTrapType',title:'Spell / Trap type',values:choices(SPELL_TRAP_TYPES)},
+    {name:'sort',title:'Sort order',mode:'choice',values:[['az','Name A–Z'],['za','Name Z–A'],['atk','Highest ATK'],['level','Highest level / rank / Link']]}
+  ].map(group=>({...group,value:state.filters[group.name]}));
+  const dates=[
+    {name:'startYear',id:'release-start-year',title:'Beginning year',mode:'minimum',value:selectedStart??'',values:[['','Any year'],...years.map(y=>[y,y])]},
+    {name:'year',id:'release-year',title:'End year',mode:'maximum',value:selectedYear??'current',values:[['current',`Today (${currentYear()})`],...years.slice(1).map(y=>[y,y])]},
+    {name:'releaseBasis',title:'Release region',mode:'choice',value:state.draft.releaseBasis||'tcg',values:[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']]}
+  ];
   showDialog(`${dialogHeader('Card filters')}<form id="filters-form">
-    <div class="filter-tabs" role="tablist" aria-label="Filter panels"><button type="button" id="card-filter-tab" role="tab" aria-selected="true" aria-controls="card-filter-panel" data-filter-panel="cards">Card filters</button><button type="button" id="year-filter-tab" role="tab" aria-selected="false" aria-controls="year-filter-panel" data-filter-panel="year">Release dates · ${selectedStart?selectedStart+'–':''}${selectedYear ?? currentYear()}</button></div>
-    <div id="card-filter-panel" class="field-grid filter-panel" role="tabpanel" aria-labelledby="card-filter-tab">
-      <label>Category<select name="category">${['All', 'Monster', 'Spell', 'Trap', 'Extra'].map(category => `<option value="${category}" ${state.filters.category === category ? 'selected' : ''}>${category === 'Extra' ? 'Extra Deck' : category === 'All' ? 'All cards' : category}</option>`).join('')}</select></label>
-      <label>Monster attribute<select name="attribute">${options(ATTRIBUTES, state.filters.attribute, 'All')}</select></label>
-      <label>Monster type<select name="race">${options(races, state.filters.race, 'All')}</select></label>
-      <label>Monster subtype<select name="subtype">${options(SUBTYPES, state.filters.subtype, 'All')}</select></label>
-      <label>Mechanic<select name="mechanic">${options(MECHANICS, state.filters.mechanic, 'All')}</select></label>
-      <label>Spell / Trap type<select name="spellTrapType">${options(SPELL_TRAP_TYPES, state.filters.spellTrapType, 'All')}</select></label>
-      <label>Sort by<select name="sort">${[['az', 'Name A–Z'], ['za', 'Name Z–A'], ['atk', 'Highest ATK'], ['level', 'Highest level / rank / Link']].map(([value, label]) => `<option value="${value}" ${state.filters.sort === value ? 'selected' : ''}>${label}</option>`).join('')}</select></label>
-    </div>
-    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden><label for="release-start-year">Beginning year<select id="release-start-year" name="startYear"><option value="">Any year</option>${[currentYear(),...years].map(year=>`<option value="${year}">${year}</option>`).join('')}</select></label><label for="release-year">End year<select id="release-year" name="year">${yearOptions}</select></label><label>Release region<select name="releaseBasis">${[['tcg','TCG · international'],['ocg','OCG · Japan / Asia'],['earliest','Earliest TCG or OCG']].map(([v,l])=>`<option value="${v}" ${(state.draft.releaseBasis||'tcg')===v?'selected':''}>${l}</option>`).join('')}</select></label><div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Choose the same year twice for one year only. Uses the first release in your selected region. Undated cards appear only with Any year → Today.</p></div>
+    <div class="filter-tabs" role="tablist" aria-label="Filter panels"><button type="button" id="card-filter-tab" role="tab" aria-selected="true" aria-controls="card-filter-panel" data-filter-panel="cards">Card filters</button><button type="button" id="year-filter-tab" role="tab" aria-selected="false" aria-controls="year-filter-panel" data-filter-panel="year">Release dates · ${selectedStart?selectedStart+'–':''}${selectedYear??currentYear()}</button></div>
+    <div id="card-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="card-filter-tab"><p class="choice-help">Choose one per group. <span class="allowed-key">✓ Allowed</span><span class="blocked-key">× Excluded</span> · All allows the entire group.</p>${choicePanels(groups,'archive-choice')}</div>
+    <div id="year-filter-panel" class="filter-panel" role="tabpanel" aria-labelledby="year-filter-tab" hidden>${choicePanels(dates,'date-choice')}<div id="year-context" class="year-context" role="status" aria-live="polite">${yearContextHTML(selectedYear)}</div><p class="year-help">Choose the same year twice for one year only. Uses the first release in your selected region. Undated cards appear only with Any year → Today.</p></div>
     <div class="dialog-actions"><button type="button" data-action="reset-filters">Reset filters</button><button class="primary" type="submit">Show cards</button></div>
   </form>`, 'filter-body');
+  mountChoices(modal);
   const activatePanel = panel => {
     const year = panel === 'year';
     $('#card-filter-panel').hidden = year; $('#year-filter-panel').hidden = !year;
@@ -261,11 +270,9 @@ function showFilters() {
       activatePanel(panel); $(`[data-filter-panel="${panel}"]`).focus({ preventScroll: true });
     };
   });
-  $('#release-year').value = selectedYear === null ? 'current' : String(selectedYear);
-  $('#release-start-year').value=selectedStart===null?'':String(selectedStart);
-  const updateYearContext=()=>{ $('#year-context').innerHTML=yearContextHTML($('#release-year').value,modal.querySelector('[name=releaseBasis]').value); };
-  $('#release-start-year').onchange=()=>{const start=Number($('#release-start-year').value),end=normalizeReleaseYear($('#release-year').value)??currentYear();$('#release-start-year').setCustomValidity(start>end?'Beginning year cannot be after the end year.':'');updateYearContext();};
-  $('#release-year').onchange=()=>$('#release-start-year').onchange();modal.querySelector('[name=releaseBasis]').onchange=updateYearContext;
+  $('#filters-form').addEventListener('change',()=>{
+    $('#year-context').innerHTML=yearContextHTML(radioValue(modal,'year'),radioValue(modal,'releaseBasis'));
+  });
   $('#filters-form').addEventListener('submit', event => {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.target)), year = normalizeReleaseYear(data.year), startYear=normalizeReleaseYear(data.startYear);
@@ -343,8 +350,9 @@ function refreshDeckWorkspace({ resetTray = false } = {}) {
   renderGrid();
 }
 function showDeckViewFilters() {
-  showDialog(`${dialogHeader('Organize your deck view')}<div class="deck-view-filters"><label>Show<select id="deck-category">${['All','Monster','Spell','Trap'].map(value=>`<option value="${value}" ${deckView.category===value?'selected':''}>${value==='All'?'All cards':value+'s'}</option>`).join('')}</select></label><label>Order<select id="deck-sort">${[['type','Card type'],['az','Name A–Z'],['atk','Highest ATK'],['def','Highest DEF'],['level','Highest Level / Rank']].map(([value,label])=>`<option value="${value}" ${deckView.sort===value?'selected':''}>${label}</option>`).join('')}</select></label></div><p>View settings keep the saved deck order intact.</p><div class="dialog-actions"><button data-action="reset-deck-view">Reset view</button><button class="primary" data-action="close">Done</button></div>`,'deck-view-filter-body');
-  for(const [id,key] of [['deck-category','category'],['deck-sort','sort']])$('#'+id).onchange=event=>{deckView[key]=event.target.value;refreshDeckWorkspace({resetTray:true});};
+  showDialog(`${dialogHeader('Organize your deck view')}<div class="deck-view-filters">${radioGroup({name:'deck-category',id:'deck-category',title:'Show',value:deckView.category,values:['All','Monster','Spell','Trap'].map(v=>[v,v==='All'?'All cards':v+'s'])})}${radioGroup({name:'deck-sort',id:'deck-sort',title:'Order',value:deckView.sort,mode:'choice',values:[['type','Card type'],['az','Name A–Z'],['atk','Highest ATK'],['def','Highest DEF'],['level','Highest Level / Rank']]})}</div><p>View settings keep the saved deck order intact.</p><div class="dialog-actions"><button data-action="reset-deck-view">Reset view</button><button class="primary" data-action="close">Done</button></div>`,'deck-view-filter-body');
+  mountChoices(modal);
+  for(const [name,key] of [['deck-category','category'],['deck-sort','sort']])modal.querySelectorAll(`[name="${name}"]`).forEach(input=>input.onchange=()=>{deckView[key]=radioValue(modal,name);refreshDeckWorkspace({resetTray:true});});
 }
 function showDeckOptions() {
   showDialog(`${dialogHeader('Deck options')}<p>${escape(state.draft.name)} · ${state.dirty ? 'unsaved changes' : 'current deck'}</p><button class="menu-item" data-action="rename">${icon('edit')}<span>Rename deck</span></button><button class="menu-item" data-action="open-decks">${icon('deck')}<span>Manage saved decks<small>Open or delete saved decks</small></span></button><button class="menu-item" data-action="rules">${icon('rules')}<span>Rules / Format<small>Summoning mechanic restrictions</small></span></button><button class="menu-item" data-action="backups">${icon('backup')}<span>Import / Export<small>JSON and YDK backups</small></span></button><button class="menu-item" data-action="app-info">${icon('info')}<span>App menu<small>Settings, install help and credits</small></span></button>`, 'menu-body');
@@ -418,9 +426,10 @@ function deleteDeck(id) {
   };
 }
 function showRules() {
-  showDialog(`${dialogHeader('Rules / Format')}<p>Choose which summoning mechanics this deck allows.</p><div class="button-row"><button data-preset="all">All mechanics</button><button data-preset="pre">Pre-Synchro</button></div><div class="mechanic-list">${MECHANICS.map(m => `<label><input type="checkbox" name="${m}" ${state.draft.mechanics[m] ? 'checked' : ''}><span>${m}</span></label>`).join('')}</div><p class="help-note">These are mechanic restrictions, not historical release-date formats. Pre-Synchro enables Fusion only. These editor switches do not apply a banlist. Solo validates supported cards separately.</p><p class="muted">Existing cards stay in your deck; disabled mechanics are flagged for review.</p><div class="dialog-actions"><button data-action="close">Cancel</button><button class="primary" id="apply-rules">Apply to deck</button></div>`);
+  showDialog(`${dialogHeader('Rules / Format')}<p>Choose which summoning mechanics this deck allows.</p><div class="button-row"><button data-preset="all">All mechanics</button><button data-preset="pre">Pre-Synchro</button></div><div class="mechanic-list">${MECHANICS.map(m=>permissionGroup(m,m,state.draft.mechanics[m])).join('')}</div><details class="rules-help"><summary>About mechanic restrictions</summary><p>These are mechanic restrictions, not historical release-date formats. Pre-Synchro enables Fusion only. These editor switches do not apply a banlist. Solo validates supported cards separately.</p><p>Existing cards stay in your deck; disabled mechanics are flagged for review.</p></details><div class="dialog-actions"><button data-action="close">Cancel</button><button class="primary" id="apply-rules">Apply to deck</button></div>`,'rules-body');
+  mountChoices(modal);
   $('#apply-rules').onclick = () => {
-    state.draft.mechanics = Object.fromEntries(MECHANICS.map(m => [m, $(`input[name="${m}"]`, modal).checked]));
+    state.draft.mechanics = Object.fromEntries(MECHANICS.map(m => [m, radioValue(modal,m)==='allow']));
     state.dirty = true; closeDialog(); if (state.route === 'decks') refreshDeckWorkspace(); toast('Mechanic restrictions updated. Tap Save deck to keep them.');
   };
 }
@@ -503,7 +512,7 @@ const actions = {
     } catch (error) { $('#detail-error').textContent = error.message; }
  },
  rename: () => showNameDialog(true), 'new-deck': () => showNameDialog(false), 'save-deck': persistDeck, 'open-decks': showSavedDecks,
- 'reset-deck-view': () => { deckView.query=''; deckView.category='All'; $('#deck-query').value=''; if($('#deck-category'))$('#deck-category').value='All'; refreshDeckWorkspace({resetTray:true}); },
+ 'reset-deck-view': () => { deckView.query=''; deckView.category='All'; $('#deck-query').value=''; if($('#deck-category')){modal.querySelector('[name="deck-category"][value="All"]').checked=true;paintChoices(modal);} refreshDeckWorkspace({resetTray:true}); },
  'app-info':showMenu, rules: showRules, backups: showBackups, 'deck-options': showDeckOptions, 'deck-view-filters':showDeckViewFilters, 'find-cards': () => { navigate('decks'); $('#card-search').focus({ preventScroll: true }); },
  'export-json': () => download(exportJSON(state.draft), safeFilename() + '.json'),
  'export-ydk': () => download(exportYDK(state.draft), safeFilename() + '.ydk', 'text/plain'),
@@ -533,7 +542,7 @@ document.addEventListener('click', event => {
   }
   if (target.dataset.openDeck) { openDeck(target.dataset.openDeck); return; }
   if (target.dataset.deleteDeck) { deleteDeck(target.dataset.deleteDeck); return; }
-  if (target.dataset.preset) MECHANICS.forEach(m => $(`input[name="${m}"]`, modal).checked = target.dataset.preset === 'all' || m === 'Fusion');
+  if (target.dataset.preset) { MECHANICS.forEach(m => {const value=target.dataset.preset === 'all' || m === 'Fusion'?'allow':'block';modal.querySelector(`input[name="${m}"][value="${value}"]`).checked=true;});paintChoices(modal); }
 });
 main.addEventListener('change', event => {
   if (event.target.id !== 'deck-picker') return;
