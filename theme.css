@@ -8,12 +8,12 @@ html:not(.duel-playing) .brand,html:not(.duel-playing) .brand b { color:#e7d29d;
 html:not(.duel-playing) .release { color:#c6c8b7; }
 html:not(.duel-playing) .release span { color:#d7c17d; background:#d3b86a15; border-color:#b59a5050; }
 /* Fine diagonal grain and a beveled rim carry across every menu action. */
-html:not(.duel-playing) button:not(.card-inspect):not(.deck-inspect):not(.quick-add):not(.quick-remove),#modal button:not(.duel-choice-read):not(.duel-response-art) {
+html:not(.duel-playing) .app-shell button:where(:not(.card-inspect):not(.deck-inspect):not(.quick-add):not(.quick-remove)),#modal button:where(:not(.duel-choice-read):not(.duel-response-art)) {
  color:#e8e5d5; border-color:#9b875756; background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 5px),linear-gradient(150deg,#35463a,#23352d); box-shadow:inset 0 1px #dfd4a529,inset 0 -1px #0003,0 3px 7px #0002;
 }
 html:not(.duel-playing) button:hover:not(:disabled):not(.card-inspect):not(.deck-inspect):not(.quick-add):not(.quick-remove),#modal button:hover:not(:disabled) { border-color:#c6a964; filter:brightness(1.1); }
 html:not(.duel-playing) button:focus-visible,#modal button:focus-visible,#modal input:focus-visible { outline:2px solid #e6be62; outline-offset:3px; }
-html:not(.duel-playing) button.primary,#modal button.primary { color:#fff8df; background:repeating-linear-gradient(125deg,#ffffff05 0 1px,transparent 1px 5px),linear-gradient(140deg,#36765b,#1c513f); border-color:#c5ab65; }
+html:not(.duel-playing) .app-shell button.primary,#modal button.primary { color:#fff8df; background:repeating-linear-gradient(125deg,#ffffff05 0 1px,transparent 1px 5px),linear-gradient(140deg,#36765b,#1c513f); border-color:#c5ab65; }
 #modal button.danger { color:#fff0df; border-color:#be8b6b; background:repeating-linear-gradient(125deg,#ffffff04 0 1px,transparent 1px 5px),linear-gradient(145deg,#9b4a42,#68342f); }
 html:not(.duel-playing) .bottom-nav button { color:#b7c3b5; background:transparent; box-shadow:none; border:1px solid transparent; }
 html:not(.duel-playing) .bottom-nav button[aria-current=page],html:not(.duel-playing) [aria-pressed=true]:not(.card-inspect),html:not(.duel-playing) .solo-tabs [aria-selected=true] { background:linear-gradient(145deg,#3f5941,#294335); color:#f3dc9f; border-color:#b89a5360; box-shadow:inset 3px 0 #c4a564,inset 0 1px #e6cd8633; }
@@ -143,3 +143,9 @@ html:not(.duel-playing) .placeholder-art { color:#d6c18a; border-color:#c0a26170
 #modal #year-filter-panel[hidden],#modal #card-filter-panel[hidden] { display:none; }
 #modal .duel-choice-card[aria-pressed=true] .duel-choice-copy strong,#modal button.duel-position-card strong,#modal button.order-source strong,#modal button.duel-choice-source strong { color:#f1e8c9; }
 #modal .duel-choice-card[aria-pressed=true] .duel-choice-copy small,#modal button.duel-position-card small,#modal button.order-source small,#modal button.duel-choice-source small { color:#c1cdb4; }
+
+#modal .radio-card[data-allowed=false]:has(input:checked) { border-color:#a2634d; box-shadow:inset 0 0 0 1px #a2634d; background:linear-gradient(135deg,#f1ddd0,#e6c8b8); }
+#modal .rules-help { flex:none; max-height:76px; overflow:auto; color:#566447; font-size:10px; line-height:1.4; }
+#modal .rules-help summary { cursor:pointer; padding:4px 0; }
+#modal .rules-help p { margin:4px 0; font-size:10px; line-height:1.4; }
+#modal .choice-nav,#modal .choice-pane,#modal .mechanic-list { scrollbar-width:thin; scrollbar-color:#89916b #d7dcc5; }
