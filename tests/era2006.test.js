@@ -212,8 +212,8 @@ test('legacy default Solo cutoffs expand once while narrower filters and match p
   const r=ui({sides:[{...defaultSide(),cutoff:'2004-12-31',race:'Dragon'},{...defaultSide(),cutoff:'2002-12-31'}],lp:4000,first:'ai',animations:false});
   try{
     const config=r.controller.getConfig();assert.equal(config.eraEnd,ERA_END);assert.equal(config.sides[0].cutoff,ERA_END);assert.equal(config.sides[0].race,'Dragon');assert.equal(config.sides[1].cutoff,'2002-12-31');assert.equal(config.lp,4000);assert.equal(config.first,'ai');
-    r.$('[data-duel="filters"]').click();const select=r.$('[name="cutoff"]');assert.equal(select.value,ERA_END);assert.equal(select.options.length,15);assert.equal(select.options[0].textContent,'2010 & earlier');
-    select.value='2004-12-31';r.$('#duel-filters').dispatchEvent(new r.window.Event('submit',{bubbles:true,cancelable:true}));const saved=JSON.parse(localStorage.getItem('duel-atlas.solo-config.v1'));assert.equal(saved.eraEnd,ERA_END);assert.equal(saved.sides[0].cutoff,'2004-12-31');
+    r.$('[data-duel="filters"]').click();const options=[...r.modal.querySelectorAll('[name="cutoff"]')];assert.equal(r.$('[name="cutoff"]:checked').value,ERA_END);assert.equal(options.length,15);assert.equal(options[0].closest('label').querySelector('.choice-label').textContent,'2010 & earlier');
+    r.$('[name="cutoff"][value="2004-12-31"]').checked=true;r.$('#duel-filters').dispatchEvent(new r.window.Event('submit',{bubbles:true,cancelable:true}));const saved=JSON.parse(localStorage.getItem('duel-atlas.solo-config.v1'));assert.equal(saved.eraEnd,ERA_END);assert.equal(saved.sides[0].cutoff,'2004-12-31');
   }finally{r.close();}
 });
 test('a user-selected older cutoff in the new era stays selected and reaches the deck designer',()=>{
