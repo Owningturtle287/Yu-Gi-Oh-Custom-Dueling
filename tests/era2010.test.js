@@ -90,3 +90,8 @@ test('a full five-zone field blocks Extra Deck summons instead of creating invis
  s=await game(e,{hands:[['Instant Fusion'],[]],fields:[{monsters:Array.from({length:4},()=>body('Mystical Elf'))},{}],extra:['Thousand-Eyes Restrict']});
  try{s=settle(e,command(e,s,'ACTIVATE',0,'Instant Fusion'));assert.equal(s.players[0].monsters.filter(Boolean).length,5);assert.ok(s.players[0].monsters.some(c=>c?.card.name==='Thousand-Eyes Restrict'));await replay(e,s);}finally{e.destroyMatch(s);}
 });
+
+test('Malefic Blue-Eyes pays its Deck banish cost before any chain without confusing excavation state',async()=>{
+ const e=backend();let s=await game(e,{hands:[['Malefic Blue-Eyes White Dragon'],[]],fields:[{field:[body('Ancient Forest')]},{}],main:[...Array(39).fill(get('Mystical Elf')),get('Blue-Eyes White Dragon')]});
+ try{s=settle(e,e.applyAction(s,offered(e,s,0,'Malefic Blue-Eyes White Dragon'),0));assert.equal(s.players[0].monsters.find(Boolean).card.name,'Malefic Blue-Eyes White Dragon');assert.equal(s.players[0].banished[0].card.name,'Blue-Eyes White Dragon');assert.equal(s.excavationReport,undefined);await replay(e,s);}finally{e.destroyMatch(s);}
+});

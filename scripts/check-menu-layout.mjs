@@ -368,17 +368,17 @@ try{
   // Resolve a genuine Synchro material prompt through the field controls.
   await page.evaluate(async()=>{
    const {state,navigate}=await import('/src/app.js');navigate('home');const {createNativeBackend}=await import('/src/duel/native-engine.js'),{createSoloController}=await import('/src/duel/ui.js'),catalog=state.cards,get=n=>catalog.find(c=>c.name===n),engine=createNativeBackend();
-   let match=await engine.createMatch([0,1].map(()=>({name:'Synchro layout',main:Array(40).fill(get('Mystical Elf')),extra:[get('Stardust Dragon')]})),{cards:catalog,seed:131,openingHands:[[],[]],initialFields:[{monsters:['Flamvell Magician','Mystical Elf'].map(n=>({card:get(n)}))},{}]});match=engine.applyAction(match,match.actions[0].find(a=>a.special&&a.type==='SUMMON'),0);
+   let match=await engine.createMatch([0,1].map(()=>({name:'Synchro layout',main:Array(40).fill(get('Mystical Elf')),extra:[get('Stardust Dragon')]})),{cards:catalog,seed:131,openingHands:[[],[]],initialFields:[{monsters:['Flamvell Magician','Mystical Elf','Mystical Elf'].map(n=>({card:get(n)}))},{}]});match=engine.applyAction(match,match.actions[0].find(a=>a.special&&a.type==='SUMMON'),0);
    const main=document.querySelector('#main'),modal=document.querySelector('#modal');const controller=createSoloController({main,modal,getCards:()=>catalog,getDecks:()=>[],getStatus:()=>'ready',showDialog:(html,classes)=>{modal.innerHTML=`<div class="dialog-body ${classes}">${html}</div>`;if(!modal.open)modal.showModal();},closeDialog:()=>{if(modal.open)modal.close();},dialogHeader:t=>`<div class="dialog-header"><h2>${t}</h2><button data-action="close">×</button></div>`,toast:e=>{throw Error(e);},onDesign(){},engine:{...engine,createMatch:async()=>match}});controller.enter();main.querySelector('[data-duel="start"]').click();window.layoutRig=controller;
   });
   await page.waitForFunction(()=>document.querySelector('.duel-arena')?.dataset.moving==='false');
   for(let step=0;step<6&&await page.evaluate(()=>!!window.layoutRig.getMatch().choice);step++){
    await visibleControls('.duel-controls button');await capture(`synchro-materials-${step}-${width}x${height}`);
    const confirm=page.locator('[data-duel="confirm-choice"]:not([disabled])');
-   if(await confirm.count())await confirm.click();else await page.locator('.duel-zone[data-role="eligible"]').first().click();
+   if(await confirm.count())await confirm.click();else if(await page.locator('.duel-zone[data-role="eligible"]').count())await page.locator('.duel-zone[data-role="eligible"]').first().click();else await page.locator('[data-duel-choice]').first().click();
    await page.waitForFunction(()=>document.querySelector('.duel-arena').dataset.moving==='false');
   }
-  assert.equal(await page.evaluate(()=>window.layoutRig.getMatch().players[0].monsters.filter(Boolean).map(c=>c.card.name).join()),'Stardust Dragon');
+  assert.equal(await page.evaluate(()=>window.layoutRig.getMatch().players[0].monsters.filter(Boolean).map(c=>c.card.name).sort().join()),'Mystical Elf,Stardust Dragon');
   await page.evaluate(()=>window.layoutRig.destroy());
   await context.close();page=null;
   console.log(`Menu controls fit ${width} × ${height}`);

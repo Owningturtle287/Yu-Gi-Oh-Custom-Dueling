@@ -194,7 +194,7 @@ export function createNativeBackend({rules=defaultNativeRules}={}) {
     const zone=location=>({[L.DECK]:'deck',[L.HAND]:'hand',[L.MZONE]:'monsters',[L.SZONE]:'spells',[L.GRAVE]:'grave',[L.REMOVED]:'banished',[L.EXTRA]:'extra'})[location];
     const visible=msg.from.location===L.GRAVE||!!(msg.from.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.from.location)||msg.to.location===L.GRAVE||!!(msg.to.position&P.FACEUP)&&[L.MZONE,L.SZONE,L.REMOVED].includes(msg.to.location);
     rememberMove(s,{uid:from?.uid,card:descriptor(r,msg.card),fromSide:r.side(msg.from.controller),fromZone:zone(msg.from.location),toSide:side,toZone:zone(msg.to.location),visible});
-    if(s.excavationReport?.chainId===s.chainId&&msg.from.location===L.DECK&&[L.MZONE,L.GRAVE,L.REMOVED].includes(msg.to.location)){
+    if(s.excavationReport&&s.excavationReport.chainId===s.chainId&&msg.from.location===L.DECK&&[L.MZONE,L.GRAVE,L.REMOVED].includes(msg.to.location)){
       const group=s.excavationReport.groups.find(g=>g.cards[0]?.controller===r.side(msg.from.controller));
       const revealed=group?.cards.find(c=>!c.result&&(r.canonical.get(c.card.id)||c.card.id)===msg.card);
       if(revealed)revealed.result=msg.to.location===L.REMOVED?'Banished':msg.to.location===L.GRAVE?'Sent to GY':msg.to.position&P.FACEUP?`Summoned in ${msg.to.position&P.DEFENSE?'Defense':'Attack'}`:'Set in Defense';

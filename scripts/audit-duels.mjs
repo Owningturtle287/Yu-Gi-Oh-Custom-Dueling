@@ -14,15 +14,17 @@ assert.ok(process.env.DUEL_CARD_SNAPSHOT,'Set DUEL_CARD_SNAPSHOT to a full API s
 const cards=JSON.parse(await readFile(process.env.DUEL_CARD_SNAPSHOT,'utf8')).data.map(normalizeCard);
 const pool=supportedPool(cards),byName=new Map(pool.map(c=>[c.name,c])),get=name=>{assert.ok(byName.has(name),name);return byName.get(name);};
 const sets=process.env.DUEL_SET_SNAPSHOT?JSON.parse(await readFile(process.env.DUEL_SET_SNAPSHOT,'utf8')).filter(s=>s.tcg_date&&s.tcg_date<=ERA_END).map(s=>({name:s.set_name,date:s.tcg_date})):[];
+const probePool=pool.filter(c=>!process.env.AUDIT_FROM||c.tcgDate>=process.env.AUDIT_FROM);
 const output=resolve(process.env.AUDIT_OUT||'audit-output');await mkdir(output,{recursive:true});
 const games=Number(process.env.AUDIT_GAMES??300),gameStart=Number(process.env.AUDIT_GAME_START||0),limit=Number(process.env.AUDIT_LIMIT||pool.length),start=Number(process.env.AUDIT_SEED||1001);
+const offset=Number(process.env.AUDIT_OFFSET||0);
 const probeSide=Number(process.env.AUDIT_SIDE||0),aiSizes=(process.env.AUDIT_AI_SIZES||'30,40,60').split(',').map(Number);
 assert.ok([0,1].includes(probeSide));assert.ok(aiSizes.length&&aiSizes.every(n=>Number.isInteger(n)&&n>=30&&n<=60));
 const report={eraEnd:ERA_END,archive:cards.length,eligible:pool.length,started:new Date().toISOString(),probes:0,games:0,completedGames:0,actions:0,replays:0,failures:[],timeouts:[],messages:{},prompts:{},types:{},effects:[],cards:[]};
 const coverage=new Map(pool.map(c=>[c.id,{id:c.id,name:c.name,contexts:[],drawn:false,played:false,activated:false,resolved:false}])),effects=new Set();
 let currentEvents=[];
 const pack=await loadNativeRules({fetchImpl:async url=>new Response(await readFile(url)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
-report.configuration={games,gameStart,seed:start,limit,randomVersion:Number(process.env.AUDIT_RANDOM_VERSION||3),promptVersion:2,probeSide,aiSizes,sweep:process.env.AUDIT_SWEEP!=='0',battleFlips:process.env.AUDIT_FLIPS==='1',actionLimit:Number(process.env.AUDIT_MAX_ACTIONS||2500)};
+report.configuration={games,gameStart,seed:start,limit,randomVersion:Number(process.env.AUDIT_RANDOM_VERSION||3),promptVersion:2,probeSide,aiSizes,sweep:process.env.AUDIT_SWEEP!=='0',battleFlips:process.env.AUDIT_FLIPS==='1',rulesVersion:Number(process.env.AUDIT_RULES_VERSION||3),probeFrom:process.env.AUDIT_FROM||null,offset,actionLimit:Number(process.env.AUDIT_MAX_ACTIONS||2500)};
 report.rulesRevision=pack.manifest.scriptsRevision;
 report.poolHash=createHash('sha256').update(JSON.stringify(pool.map(c=>[c.id,c.name,c.type,c.desc,c.level,c.atk,c.def,c.race,c.attribute,c.tcgDate]))).digest('hex');
 report.cardsSnapshotHash=createHash('sha256').update(await readFile(process.env.DUEL_CARD_SNAPSHOT)).digest('hex');
@@ -52,10 +54,10 @@ function inspect(s){
 }
 async function replay(s){const saved=engine.exportMatch(s),restored=await engine.restoreMatch(saved,{cards});try{assert.equal(engine.exportMatch(restored).checkpoint,saved.checkpoint);report.replays++;}finally{engine.destroyMatch(restored);currentEvents=[];}}
 async function run(label,decks,options,{probe=null,battleProbe=false,cap=180,full=false,replayAt=0,replayEnd=false}={}){
-  let s,steps=0,replayed=false,battleCommitted=false,lastPrompt='',staging=new Map();const recent=[];
+  let s,lastReplay=null,steps=0,replayed=false,battleCommitted=false,lastPrompt='',staging=new Map();const recent=[];
   try{
     if(full)for(const [side,deck] of decks.entries())assert.deepEqual(validateDuelDeck({sections:{main:deck.main.map(card=>({card,quantity:1})),extra:deck.extra.map(card=>({card,quantity:1})),side:[]}},cards,defaultSide(),{min:side===1?30:40,max:60}),[],'Full-game decks must pass the app’s actual deck validator');
-    currentEvents=[];s=await engine.createMatch(decks,{cards,randomVersion:process.env.AUDIT_RANDOM_VERSION?Number(process.env.AUDIT_RANDOM_VERSION):3,...options});inspect(s);
+    currentEvents=[];s=await engine.createMatch(decks,{cards,rulesVersion:Number(process.env.AUDIT_RULES_VERSION||3),randomVersion:process.env.AUDIT_RANDOM_VERSION?Number(process.env.AUDIT_RANDOM_VERSION):3,...options});inspect(s);
     while(s.winner===null&&steps<cap&&(full||s.turn<3||s.choice||s.window)){
       const side=s.actions[0].length?0:1,actions=s.actions[side];let action;
       if(battleProbe&&!battleCommitted){
@@ -69,27 +71,28 @@ async function run(label,decks,options,{probe=null,battleProbe=false,cap=180,ful
         action??=actions.find(a=>engine.findCard(s,a.uid)?.card.id===probe.id&&['ACTIVATE','EFFECT'].includes(a.type));
         if(!battleProbe)action??=actions.find(a=>engine.findCard(s,a.uid)?.card.id===probe.id&&['SUMMON','POSITION'].includes(a.type)&&!a.set);
       }
-      action??=engine.chooseAIAction(s,side);assert.ok(action,'AI returned no continuation');
-      recent.push({turn:s.turn,phase:s.phase,side,type:action.type,label:action.label,card:engine.findCard(s,action.uid)?.card.name,target:engine.findCard(s,action.target)?.card.name,choice:s.choice?.title});if(recent.length>15)recent.shift();
+      action??=engine.chooseAIAction(s,side,{planning:full});assert.ok(action,'AI returned no continuation');
+      recent.push({step:steps,index:actions.findIndex(a=>a.id===action.id),turn:s.turn,phase:s.phase,side,type:action.type,label:action.label,card:engine.findCard(s,action.uid)?.card.name,target:engine.findCard(s,action.target)?.card.name,choice:s.choice?.title});if(recent.length>15)recent.shift();
       if(s.choice?.stage){
         if(lastPrompt!==s.choice.promptId){lastPrompt=s.choice.promptId;staging=new Map();}
         const signature=JSON.stringify(actions.map(a=>[a.label,a.selected,a.finish]));const n=(staging.get(signature)||0)+1;staging.set(signature,n);assert.ok(n<=3,'Selection repeatedly cycles without confirming');
       }
       if(battleProbe&&s.choice?.attackUid&&action.finish&&s.choice.selected.length)battleCommitted=true;
-      s=engine.applyAction(s,action,side);steps++;report.actions++;report.types[action.type]=(report.types[action.type]||0)+1;inspect(s);
+      if(steps%10===0)lastReplay=engine.exportMatch(s);s=engine.applyAction(s,action,side);steps++;report.actions++;report.types[action.type]=(report.types[action.type]||0)+1;inspect(s);
       if(!replayed&&replayAt&&steps>=replayAt){await replay(s);replayed=true;}
     }
     if(full){report.games++;if(s.winner!==null)report.completedGames++;else {const timeout={label,turn:s.turn,steps,recent};report.timeouts.push(timeout);await writeFile(resolve(output,`timeout-${report.timeouts.length}.json`),JSON.stringify({timeout,replay:engine.exportMatch(s),players:s.players},null,2));console.log('LIMIT',JSON.stringify(timeout));}}
     else {assert.ok(s.winner!==null||s.turn>=3,'Card probe did not reach its next turn');if(replayEnd)await replay(s);report.probes++;if(probe)coverage.get(probe.id).contexts.push(label.split(':')[0]+':controller'+probeSide);}
   }catch(error){
-    const failure={label,message:error.message,turn:s?.turn,phase:s?.phase,choice:s?.choice?.title,recent};report.failures.push(failure);
-    if(s)await writeFile(resolve(output,`failure-${report.failures.length}.json`),JSON.stringify({failure,replay:engine.exportMatch(s)},null,2));
+    const failure={checkpointStep:steps-steps%10,label,message:error.message,turn:s?.turn,phase:s?.phase,choice:s?.choice?.title,recent};report.failures.push(failure);
+    await writeFile(resolve(output,`failure-${report.failures.length}.json`),JSON.stringify({failure,replay:lastReplay},null,2));
     console.log('FAIL',JSON.stringify(failure));
   }finally{engine.destroyMatch(s);}
 }
 const normalDeck=()=>({name:'Card probe',main:['Mystical Elf','Gemini Elf','Dark Magician','Blue-Eyes White Dragon','Summoned Skull'].flatMap(n=>Array(8).fill(get(n))),extra:['Flame Swordsman','Thousand-Eyes Restrict','XYZ-Dragon Cannon'].map(get)});
 const body=name=>({card:get(name)}),own=()=>({monsters:['Mystical Elf','Summoned Skull'].map(body),spells:[{...body('Waboku'),faceUp:false}],grave:['Sangan','Mystical Space Typhoon','Blue-Eyes White Dragon'].map(body)});
-if(process.env.AUDIT_SWEEP!=='0')for(const [index,card] of pool.slice(0,limit).entries()){
+if(process.env.AUDIT_SWEEP!=='0')for(const [relative,card] of probePool.slice(offset,offset+limit).entries()){
+  const index=offset+relative;
   for(const context of card.type==='Normal Monster'?['field']:['hand','field']){
     const fields=[own(),own()],hands=[['Dark Magician','Mystical Elf','Pot of Greed'].map(get),['Mystical Elf'].map(get)];
     if(context==='hand'&&card.type!=='Trap Card'&&!isExtra(card))hands[probeSide].unshift(card);
@@ -102,7 +105,7 @@ if(process.env.AUDIT_SWEEP!=='0')for(const [index,card] of pool.slice(0,limit).e
   }
   if((index+1)%100===0)console.log(JSON.stringify({stage:'probes',cards:index+1,probes:report.probes,failures:report.failures.length,actions:report.actions}));
 }
-if(process.env.AUDIT_FLIPS==='1')for(const [index,card] of pool.filter(c=>/FLIP:/.test(c.desc)).entries()){
+if(process.env.AUDIT_FLIPS==='1')for(const [index,card] of probePool.filter(c=>/FLIP:/.test(c.desc)).entries()){
   const fields=[{},{}],hands=[[],[]],decks=[normalDeck(),normalDeck()];
   fields[probeSide]={monsters:[{card,faceUp:false,defense:true},body('Mystical Elf')],grave:['Giant Soldier of Stone','Dark Hole','Mirror Force'].map(body)};
   fields[1-probeSide]={monsters:[body('Blue-Eyes White Dragon')],spells:[{...body('Pot of Greed'),faceUp:false}]};
