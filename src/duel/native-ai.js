@@ -1,4 +1,4 @@
-import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,combatTraits,resourceValue,costValue,drawValue,handRemovalOptions} from './ai-knowledge.js';
+import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,equipBoostTargets,combatTraits,resourceValue,costValue,drawValue,handRemovalOptions} from './ai-knowledge.js';
 import {battleOutcome,battlePlan,incomingDamage} from './ai-combat.js';
 import {planTurn} from './ai-turn.js';
 import {attackAllowed,effectDamage} from './ai-physics.js';
@@ -203,7 +203,13 @@ function scoreEffect(ctx,a){
       const gain=backrow(foe).reduce((n,c)=>n+valueOf(ctx,c),0),loss=profile.scope==='foe'?0:backrow(p).filter(c=>c.uid!==a.uid).reduce((n,c)=>n+valueOf(ctx,c)*(c.faceUp?1:.8),0);
       utility=gain-loss-200;break;
     }
-    case 'boost':case 'equip':utility=Math.max(-1000,...ours.map(c=>boostTargetScore(ctx,c,profile)));break;
+    case 'equip':{
+      const recipients=equipBoostTargets(card,ours);
+      if(!recipients.length)return -100000;
+      utility=Math.max(...recipients.map(recipient=>boostTargetScore(ctx,recipient,profile)));
+      break;
+    }
+    case 'boost':utility=Math.max(-1000,...ours.map(c=>boostTargetScore(ctx,c,profile)));break;
     case 'harmfulEquip':utility=bestTarget(ctx,'removal',source)-150;break;
     case 'pierce':utility=canBattle(s)&&opp.some(c=>c.position==='defense')&&ours.some(c=>attack(c)>Math.max(0,...opp.map(defense)))?500:-200;break;
     case 'megamorph':utility=p.lp<foe.lp&&ours.length?650:opp.length&&p.lp>foe.lp?500:-400;break;

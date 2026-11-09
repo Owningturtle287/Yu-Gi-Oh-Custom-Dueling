@@ -400,6 +400,21 @@ test('inspection immediately uses the field thumbnail; closing by the dialog clo
     await waitFor(()=>JSON.stringify(r.controller.getMatch())!==frozen);
   }finally{r.close();}
 });
+test('the duel card reader keeps the last calculation visible after a temporary ATK bonus ends',async()=>{
+  const r=await rig();
+  try{
+    const s=r.controller.getMatch();
+    const dash=put(s,0,{...monster,id:34257001,name:'Dash Warrior',atk:600});
+    s.turn=2;
+    s.phase='battle';
+    s.log.push({turn:s.turn,battleNotice:{attacker:{uid:dash.uid,atk:1800},defender:null}});
+    r.controller.refresh();
+    r.$(`[data-duel-card="${dash.uid}"]`).click();
+    assert.match(r.$('.card-battle-stats').textContent,/ATK 600/);
+    assert.match(r.$('.duel-card-viewer').textContent,/Last battle used 1,800 ATK at damage calculation/);
+  }finally{r.close();}
+});
+
 test('on-demand log replaces the terminal while card descriptions and LP remain accessible',async()=>{
   const r=await rig();try{
     const style=r.window.document.createElement('style');style.textContent=await readFile(new URL('../duel.css',import.meta.url),'utf8');r.window.document.head.append(style);

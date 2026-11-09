@@ -4,6 +4,7 @@ import {memoryFor,knownCard} from './ai-memory.js';
 import {decisionGuidance,retentionBonus,levelUpgrade} from './ai-guidance.js';
 import {effects} from './catalog.js';
 import {currentCardData} from './card-view.js';
+import {ATTRIBUTES,MONSTER_TYPES} from '../card-filters.js';
 export const AI_NAME='Strategic AI';
 export const allCards=s=>s.players.flatMap(p=>['hand','deck','monsters','spells','grave','banished','extra'].flatMap(z=>p[z].filter(Boolean)).concat(p.field?[p.field]:[]));
 export const locate=(s,uid)=>uid?allCards(s).find(c=>c.uid===uid)||null:null;
@@ -80,11 +81,31 @@ export function effectProfile(card,detail=''){
   if(/add.*(?:hand|Deck)|return.*(?:GY|Graveyard).*hand/i.test(resolution))return {intent:'search'};
   const damage=resolution.match(/(?:inflict|take|gains?) (\d+) (?:damage|LP|Life Points)/i);
   if(damage)return {intent:/inflict/.test(damage[0])?'burn':'heal',amount:Number(damage[1])};
-  if(card.race==='Equip')return {intent:/loses|decrease/i.test(resolution)?'harmfulEquip':'equip',atk:Number(resolution.match(/(?:gains?|increase\S*) (\d+) ATK/i)?.[1]||300)};
+  if(card.race==='Equip'){
+    if(/loses|decrease/i.test(resolution))return {intent:'harmfulEquip'};
+    const bonus=resolution.match(/(?:gains?|increase\S*) (\d+) ATK( and DEF)?/i);
+    const defenseBonus=resolution.match(/gains? (\d+) DEF/i);
+    const atk=Number(bonus?.[1]??(defenseBonus?0:300));
+    const def=Number(bonus?.[2]?bonus[1]:defenseBonus?.[1]??0);
+    return {intent:'equip',atk,def};
+  }
   if(card.race==='Field')return {intent:'field'};
   if(/gains? (\d+) ATK/i.test(resolution))return {intent:'boost',atk:Number(resolution.match(/gains? (\d+) ATK/i)[1])};
   if(/gains? (\d+) DEF/i.test(resolution))return {intent:'boost',def:Number(resolution.match(/gains? (\d+) DEF/i)[1])};
   return {intent:'unknown'};
+}
+// Estimate recipients before paying for a beneficial Equip Spell. The core
+// supplies the actual legal targets once the player commits to activation.
+export function equipBoostTargets(equip, friendlyMonsters){
+  const faceUp=friendlyMonsters.filter(card=>card.faceUp);
+  const qualifier=text(equip).match(/\bEquip only to (?:a|an) ([^.]+?)(?:-Type)? monster(?: you control)?\./i)?.[1]?.toUpperCase();
+  if(!qualifier)return faceUp;
+
+  const race=MONSTER_TYPES.find(type=>type.toUpperCase()===qualifier);
+  if(race)return faceUp.filter(card=>(card.currentRace??card.card.race)===race);
+  if(ATTRIBUTES.includes(qualifier))return faceUp.filter(card=>(card.currentAttribute??card.card.attribute)===qualifier);
+
+  return faceUp;
 }
 export function combatTraits(card){
   if(!card||card.disabled||card.hidden)return {};
