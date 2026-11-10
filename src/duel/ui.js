@@ -29,7 +29,7 @@ import { automaticEffectAction, effectExplanation, effectNotices, cardPresentati
 import { createDuelIntro,coinMarkup } from './intro.js';
 import {battlePresentations,createBattlePlayer} from './battle-presentation.js';
 import { createAttackArrows } from './attack-arrows.js';
-import { BATTLE_STEPS, responseAdvice } from './battle-timing.js';
+import { BATTLE_STEPS, lastBattleStat, responseAdvice } from './battle-timing.js';
 import { cardArtURLs, cardTypeLabel, sharpenCardArt, currentCardData, cardStatText, cardCounters } from './card-view.js';
 import { cardRotation, makeFieldSelection, fieldCandidates, pickFieldCandidate, quickCardActions, activityCue, cardActivity } from './field.js';
 
@@ -369,6 +369,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
   function openInspection(){
     const selected=inspection();if(!selected)return;const {card,groups}=selected;cardGroups=groups;
     const details=currentCardData(card),values=isMonster(details)?cardStatText(card,stats(match,card)):null,counters=cardCounters(card).map(c=>c.label).join(' · ');
+    const battleNote=lastBattleStat(match,card,values);
     const ownHand=match.players[0].hand.some(c=>c.uid===card.uid);
     const usedNormal=match.normalSummons?.[0]||match.normalUsed;
     const summonNote=ownHand&&values&&match.active===0&&['main1','main2'].includes(match.phase)&&!match.window&&!match.choice&&!groups.some(g=>g.actions.some(a=>a.type==='SUMMON'))&&usedNormal?'You already Normal Summoned/Set this turn. Tribute Summons normally share that limit; another summon needs a card effect.':'';
@@ -376,7 +377,7 @@ export function createSoloController({main,modal,getCards,getDecks,getStatus,sho
     const timingNote=match.phase==='main2'&&card.controller===0&&card.faceUp&&match.players[0].monsters.some(c=>c?.uid===card.uid)&&phaseEffectText(card.card,'end')?'End Phase effect: choose End Phase to reach its activation window. The effect is offered when its conditions are met.':'';
     cancelArt();
     const source=main.querySelector(`[data-motion-uid="${card.uid}"] img:not(.card-back-image)`)||modal.querySelector(`[data-duel-card="${card.uid}"] img`);
-    showDialog(`${header(card.card.name)}<div class="duel-inspect-visual card-reader-visual"><div class="duel-inspect-art">${image(card.card)}</div>${values?battleStatsHTML(details,values):''}</div><aside class="duel-inspect-options"><div class="duel-inspect-meta">${cardFactsHTML(details)}${counters?`<span class="duel-counter-description">${escape(counters)}</span>`:''}</div>${publicationHTML(publicationCard(card.card))}<div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}${timingNote?`<p class="duel-summon-note">${escape(timingNote)}</p>`:''}${flipNote?`<p class="duel-summon-note">${escape(flipNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
+    showDialog(`${header(card.card.name)}<div class="duel-inspect-visual card-reader-visual"><div class="duel-inspect-art">${image(card.card)}</div>${values?battleStatsHTML(details,values):''}</div><aside class="duel-inspect-options"><div class="duel-inspect-meta">${cardFactsHTML(details)}${counters?`<span class="duel-counter-description">${escape(counters)}</span>`:''}</div>${publicationHTML(publicationCard(card.card))}<div class="effect-text duel-inspect-description" id="duel-card-description" tabindex="0" aria-label="Card description">${escape(card.card.desc)}</div>${battleNote?`<p class="duel-summon-note">${escape(battleNote)}</p>`:''}${summonNote?`<p class="duel-summon-note">${escape(summonNote)}</p>`:''}${timingNote?`<p class="duel-summon-note">${escape(timingNote)}</p>`:''}${flipNote?`<p class="duel-summon-note">${escape(flipNote)}</p>`:''}<div class="duel-card-actions">${groups.map((group,index)=>`<button class="primary" data-duel-group="${index}" data-choice-tone="${choiceIntent(group.actions[0]).tone}">${escape(group.label)}${group.actions.length>1?'…':''}</button>`).join('')}</div></aside>`,'duel-card-viewer');
     cancelArt=sharpenCardArt(modal.querySelector('.duel-inspect-art'),card.card,{source});
   }
   function dismissInspection(){

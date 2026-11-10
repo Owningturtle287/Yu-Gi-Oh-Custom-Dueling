@@ -9,6 +9,8 @@ import {battlePresentations,battleGeometry,createBattlePlayer} from '../src/duel
 import {damageDuel,advanceBattle,command} from './battle-fixtures.js';
 
 const cards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.meta.url))).data.map(normalizeCard);
+const dashWarrior=normalizeCard({id:34257001,name:'Dash Warrior',type:'Effect Monster',race:'Warrior',attribute:'WIND',level:3,atk:600,def:1200,desc:'If this card attacks, it gains 1200 ATK during the Damage Step only.'});
+cards.push(dashWarrior);
 const rules=await loadNativeRules({fetchImpl:async u=>new Response(await readFile(u)),wasmBinary:await readFile(new URL('../vendor/ocgcore/lib/ocgcore.sync.wasm',import.meta.url))});
 test('battle receipts come from calculated combat, retain destroyed card art, and never reveal at declaration',async()=>{
   for(const side of [0,1]){
@@ -21,16 +23,30 @@ test('battle receipts come from calculated combat, retain destroyed card art, an
     }finally{engine.destroyMatch(s);}
   }
 });
+test('Dash Warrior uses 1,800 ATK against a monster, then returns to 600',async()=>{
+  const engine=createNativeBackend({rules:()=>rules});
+  let s=await damageDuel(engine,cards,{attacker:'Dash Warrior',defendingSide:1,defense:false,faceDown:false,traps:['Castle Walls']});
+  try{
+    const uid=s.pending.uid;
+    assert.equal(engine.findCard(s,uid).currentStats.atk,600);
+    s=advanceBattle(engine,s,state=>!state.pending);
+    const [battle]=battlePresentations(null,s);
+    assert.equal(battle.attacker.atk,1800);
+    assert.equal(s.players[1].lp,7000);
+    assert.equal(s.players[1].grave.some(card=>card.card.name==='Mystical Elf'),true);
+    assert.equal(engine.findCard(s,uid).currentStats.atk,600);
+  }finally{engine.destroyMatch(s);}
+});
 test('an attack stopped by Mirror Force never receives a battle presentation',async()=>{
   const engine=createNativeBackend({rules:()=>rules});let s=await damageDuel(engine,cards,{traps:['Mirror Force']});try{
     s=command(engine,s,'ACTIVATE',0,'Mirror Force');s=advanceBattle(engine,s,x=>!x.pending&&!x.chain.length);
     assert.equal(battlePresentations(null,s).length,0);assert.ok(s.players[1].grave.some(c=>c.card.name==='Dark Magician'));
   }finally{engine.destroyMatch(s);}
 });
-test('native direct attacks carry an LP target rather than inventing a defender',async()=>{
-  const engine=createNativeBackend({rules:()=>rules}),get=name=>cards.find(c=>c.name===name);let s=await engine.createMatch([0,1].map(()=>({name:'Direct attack',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards,first:1,seed:7,openingHands:[[],[]],initialFields:[{monsters:[{card:get('Dark Magician')}]},{}]});try{
+for(const [name,atk] of [['Dark Magician',2500],['Dash Warrior',1800]])test(`${name} direct attack uses the calculated ATK against LP`,async()=>{
+  const engine=createNativeBackend({rules:()=>rules}),get=name=>cards.find(c=>c.name===name);let s=await engine.createMatch([0,1].map(()=>({name:'Direct attack',main:Array(40).fill(get('Mystical Elf')),extra:[]})),{cards,first:1,seed:7,openingHands:[[],[]],initialFields:[{monsters:[{card:get(name)}]},{}]});try{
     s=command(engine,s,'END',1);s=command(engine,s,'NEXT',0);s=command(engine,s,'ATTACK',0);
-    s=advanceBattle(engine,s,x=>x.log.some(l=>l.battleNotice));const event=battlePresentations(null,s)[0];assert.equal(event.defender,null);assert.equal(event.targetLP,8000);assert.equal(event.side,0);
+    s=advanceBattle(engine,s,x=>x.log.some(l=>l.battleNotice));const event=battlePresentations(null,s)[0];assert.equal(event.defender,null);assert.equal(event.targetLP,8000);assert.equal(event.side,0);assert.equal(event.attacker.atk,atk);assert.equal(s.players[1].lp,8000-atk);
   }finally{engine.destroyMatch(s);}
 });
 const card=(id,name)=>({id,name,card_images:[{image_url_small:`https://images.ygoprodeck.com/images/cards_small/${id}.jpg`}]});

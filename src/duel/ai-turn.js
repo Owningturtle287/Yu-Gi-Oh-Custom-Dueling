@@ -1,5 +1,5 @@
 import {locate,attack,defense,monsters,backrow,monster,resourceValue,costValue,handRemovalOptions} from './ai-knowledge.js';
-import {battlePlan} from './ai-combat.js';
+import {battlePlan,exposedAttackLoss} from './ai-combat.js';
 import {decisionGuidance,PLANNING_WEIGHTS,fusionOptions} from './ai-guidance.js';
 import {memoryFor} from './ai-memory.js';
 import {effectDamage} from './ai-physics.js';
@@ -23,7 +23,7 @@ function best(s,side,cards){return [...cards].sort((a,b)=>resourceValue(s,side,b
 function variants(s,side,action){
   const source=locate(s,action.uid),p=s.players[side],foe=s.players[1-side];if(!source)return [];
   const guide=decisionGuidance(source.card,action.effectText),model=guide.model;
-  if(action.type==='SUMMON')return [null];
+  if(action.type==='SUMMON'||action.type==='POSITION'&&source.faceUp)return [null];
   if(model==='fusion')return fusionOptions(s,side,source.card).slice(0,3);
   if(!['ACTIVATE','EFFECT'].includes(action.type)||!model||['body','draw','burn','controller'].includes(model))return [];
   if(model==='remove'){
@@ -43,12 +43,19 @@ function variants(s,side,action){
 }
 function project(s,side,action,target){
   const next=copy(s),p=next.players[side],foe=next.players[1-side],source=locate(next,action.uid);if(!source)return null;
+  if(action.type==='POSITION'){
+    const position=source.position==='attack'?'defense':'attack';
+    replace(next,side,source,{...source,position});
+    return next;
+  }
   if(action.type==='SUMMON'){
     if(!action.special&&next.projectedNormal)return null;
     const required=action.special?0:(source.currentLevel||source.card.level||4)>6?2:(source.currentLevel||source.card.level||4)>4?1:0;
     const tributes=monsters(p).filter(c=>!c.card.name.endsWith('Token')).sort((a,b)=>costValue(next,side,a)-costValue(next,side,b)).slice(0,required);
     if(tributes.length!==required)return null;for(const c of tributes)remove(next,c);
-    if(!place(next,side,source,action.set?'defense':'attack',!action.set))return null;
+    const exposedNormalSummon=!action.special&&!action.set&&source.card.type==='Normal Monster';
+    const placed=exposedNormalSummon?{...source,exposedNormalSummon}:source;
+    if(!place(next,side,placed,action.set?'defense':'attack',!action.set))return null;
     if(!action.special)next.projectedNormal=true;
     const guide=decisionGuidance(source.card);
     if(!action.set&&guide.summonRemove){const c=best(next,side,monsters(foe));if(c)remove(next,c);else remove(next,locate(next,source.uid));}
@@ -79,7 +86,17 @@ function project(s,side,action,target){
     case 'armedWipe':for(const c of monsters(foe).filter(c=>c.faceUp&&attack(c)<=attack(sent)))remove(next,c);break;
     case 'backrowWipe':for(const c of [...backrow(foe),...(guide.scope==='all'?backrow(p):[])].filter(c=>c.uid!==source.uid))remove(next,c);break;
     case 'tribe':for(const c of [...monsters(p),...monsters(foe)].filter(c=>c.faceUp&&c.card.race===target))remove(next,c);break;
-    case 'control':if(!c||p.monsters.every(Boolean))return null;replace(next,1-side,c,null);place(next,side,{...c,borrowed:guide.borrowed});break;
+    case 'control':{
+      if(!c)return null;
+      if(guide.tribute){
+        const payment=monsters(p).sort((a,b)=>costValue(next,side,a)-costValue(next,side,b)).slice(0,guide.tribute);
+        if(payment.length<guide.tribute)return null;
+        for(const material of payment)remove(next,material);
+      }
+      if(!place(next,side,{...c,borrowed:guide.borrowed}))return null;
+      replace(next,1-side,c,null);
+      break;
+    }
     case 'revive':if(!c||p.monsters.every(Boolean))return null;for(const q of next.players)q.grave=q.grave.filter(x=>x.uid!==c.uid);place(next,side,c);break;
     case 'fusionCheat':if(!c||p.monsters.every(Boolean))return null;p.extra=p.extra.filter(x=>x.uid!==c.uid);place(next,side,c);break;
     case 'boost':case 'multiply':{
@@ -112,7 +129,7 @@ function followups(s,side){
 function evaluate(s,side,weights){
   const p=s.players[side],foe=s.players[1-side];
   const available=monsters(p).filter(c=>c.faceUp&&c.position==='attack'&&!c.projectedNoAttack).map(c=>({uid:c.uid}));
-  const plan=battleAllowed(s)?battlePlan(s,side,{available,width:8,maxNodes:240}):{score:0,moves:[]};
+  const plan=battleAllowed(s)?battlePlan(s,side,{available,width:8,maxNodes:240,protectLastBlocker:true}):{score:0,moves:[]};
   const after=copy(s);let uncertain=false;
   for(const move of plan.moves){const attacker=locate(after,move.uid),victim=locate(after,move.target);if(!attacker)continue;const o=move.outcome;uncertain ||= !!victim?.hidden;after.players[side].lp=Math.max(0,after.players[side].lp-o.ownDamage);after.players[1-side].lp=Math.max(0,after.players[1-side].lp-o.enemyDamage);if(o.ownLost)remove(after,attacker);if(o.enemyLost&&victim)remove(after,victim);const guide=decisionGuidance(attacker.card);if(guide.afterAttack&&locate(after,attacker.uid))replace(after,side,attacker,{...attacker,position:guide.afterAttack});}
   for(const [who,q] of after.players.entries())for(const c of monsters(q)){
@@ -129,7 +146,16 @@ function evaluate(s,side,weights){
   response.players=after.players.map((q,who)=>who===side?q:{...q,monsters:q.monsters.map(c=>c?.faceUp&&attack(c)>defense(c)?{...c,position:'attack'}:c)});
   const reply=battlePlan(response,1-side,{width:6,maxNodes:160});
   let value=(material(side)-material(1-side))*weights.material+(hand(side)-hand(1-side))*weights.hand+(after.players[side].lp-after.players[1-side].lp)*weights.damage-Math.min(12000,reply.score)*weights.reply;
-  if(after.players[side].lp<=0)value-=200000;else if(lethal)value+=200000;else if(reply.score>=100000)value-=90000;
+  const danger=after.players[side].lp<=0||reply.lethal;
+  if(after.players[side].lp<=0)value-=200000;
+  else if(lethal)value+=200000;
+  else if(danger)value-=90000;
+
+  // A player can choose a weaker attacker as an easy LP target even when a
+  // different target scores better on material. Price that exposure after
+  // projected boosts, removal and attacks have had a chance to pay off.
+  const exposed=monsters(after.players[side]).find(card=>card.exposedNormalSummon);
+  if(exposed&&!lethal)value-=exposedAttackLoss(response,side,exposed)*weights.reply;
   // Set backrow creates risk, not knowledge of any specific hidden trap.
   const unseen=backrow(foe).filter(c=>c.hidden).length,memory=memoryFor(s,side),pattern=memory?.patterns?.[1-side];
   const caution=1+Math.min(1,(pattern?.traps||0)/Math.max(1,pattern?.sets||0));
@@ -141,27 +167,35 @@ function evaluate(s,side,weights){
   for(const seen of Object.values(memory?.seen||{}))if(memory?.handKnown?.[1-side]?.[seen.id])handNames.add(seen.name);
   if(handNames.has('Raigeki'))value-=material(side)*.25;
   else if(handNames.has('Dark Hole'))value-=Math.max(0,material(side)-material(1-side))*.2;
-  return {value,lethal};
+  return {value,lethal,danger};
 }
-function boardKey(s){return s.players.map(p=>[p.lp,p.hand.map(c=>c.uid).sort().join(','),p.monsters.map(c=>c?[c.uid,c.position,attack(c),defense(c),c.projectedNoAttack].join(':'):'-').join(','),p.spells.map(c=>c?.uid||'-').join(',')].join('|')).join('/')+'|'+s.projectedNormal+'|'+[...s.projectedUsed].sort().join(',')+'|'+(s.projectedEndDamage||0);}
-export function planTurn(state,side,ranked,{width=4,depth=3,maxNodes=96,weights=PLANNING_WEIGHTS}={}){
+function boardKey(s){return s.players.map(p=>[p.lp,p.hand.map(c=>c.uid).sort().join(','),p.monsters.map(c=>c?[c.uid,c.position,attack(c),defense(c),c.projectedNoAttack,c.exposedNormalSummon].join(':'):'-').join(','),p.spells.map(c=>c?.uid||'-').join(',')].join('|')).join('/')+'|'+s.projectedNormal+'|'+[...s.projectedUsed].sort().join(',')+'|'+(s.projectedEndDamage||0);}
+export function planTurn(state,side,ranked,{width=6,depth=4,maxNodes=128,weights=PLANNING_WEIGHTS}={}){
   const roots=new Map();if(state.choice||state.window||state.active!==side||!['main1','main2'].includes(state.phase))return {roots,nodes:0};
   const start=copy(state);start.projectedNormal=!!(state.normalSummons?.[side]);
   const cache=new Map();let nodes=0;
   const assess=s=>{const key=boardKey(s);if(!cache.has(key)){cache.set(key,evaluate(s,side,weights));nodes++;}return cache.get(key);};
   const baseline=assess(start);
   // Limit real roots, but retain low-scoring summon/effect setups for combos.
-  const eligible=ranked.filter(r=>['SUMMON','ACTIVATE','EFFECT'].includes(r.action.type)&&r.score>-5000).slice(0,10);
+  const eligible=ranked.filter(r=>['SUMMON','ACTIVATE','EFFECT','POSITION'].includes(r.action.type)&&r.score>-5000).slice(0,14);
   let frontier=[];
   for(const row of eligible)for(const target of variants(start,side,row.action)){
     if(nodes>=maxNodes)break;const s=project(start,side,row.action,target);if(!s)continue;const result=assess(s),node={s,root:row.action.id,result,steps:1};
     if(!roots.has(node.root)||roots.get(node.root).value<result.value)roots.set(node.root,{...result,value:result.value,delta:result.value-baseline.value,steps:1});frontier.push(node);
   }
   for(let d=1;d<depth&&frontier.length&&nodes<maxNodes;d++){
-    const candidates=[];for(const node of frontier.sort((a,b)=>b.result.value-a.result.value).slice(0,width))for(const action of followups(node.s,side))for(const target of variants(node.s,side,action)){
+    // Different action orders can reach the same board. Give each board one
+    // beam slot so a genuinely different line can still be explored.
+    const distinct=new Map();
+    for(const node of frontier){
+      const key=boardKey(node.s),previous=distinct.get(key);
+      if(!previous||node.result.value>previous.result.value)distinct.set(key,node);
+    }
+    const bestBoards=[...distinct.values()].sort((a,b)=>b.result.value-a.result.value).slice(0,width);
+    const candidates=[];for(const node of bestBoards)for(const action of followups(node.s,side))for(const target of variants(node.s,side,action)){
       if(nodes>=maxNodes)break;const s=project(node.s,side,action,target);if(!s)continue;const result=assess(s),value=result.value-d*35,next={s,root:node.root,result:{...result,value},steps:d+1};
       if(!roots.has(node.root)||roots.get(node.root).value<value)roots.set(node.root,{...result,value,delta:value-baseline.value,steps:d+1});candidates.push(next);
     }frontier=candidates;
   }
-  return {roots,nodes,baseline:baseline.value};
+  return {roots,nodes,baseline:baseline.value,danger:baseline.danger};
 }

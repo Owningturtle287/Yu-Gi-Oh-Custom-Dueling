@@ -1,7 +1,7 @@
-import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,combatTraits,resourceValue,costValue,drawValue,handRemovalOptions} from './ai-knowledge.js';
-import {battleOutcome,battlePlan,incomingDamage} from './ai-combat.js';
+import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,equipBoostTargets,combatTraits,resourceValue,costValue,drawValue,handRemovalOptions} from './ai-knowledge.js';
+import {battleOutcome,battlePlan,exposedAttackLoss,incomingDamage,lethalAfterBattle} from './ai-combat.js';
 import {planTurn} from './ai-turn.js';
-import {attackAllowed,effectDamage} from './ai-physics.js';
+import {affectedBy,attackAllowed,effectDamage} from './ai-physics.js';
 import {decisionGuidance,levelUpgrade,fusionOptions} from './ai-guidance.js';
 import {learningAdjustment} from './ai-learning.js';
 
@@ -40,7 +40,13 @@ function boostTargetScore(ctx,c,profile){
     const before=battleOutcome(s,attacker.controller,attacker,defender),after=battleOutcome(s,attacker.controller,attacker.uid===c.uid?improved:attacker,defender?.uid===c.uid?improved:defender);
     let gain=(after.value-before.value)*(attacking?1:-1);
     if(attacking&&ctx.foe.lp<=after.enemyDamage&&ctx.foe.lp>before.enemyDamage)gain+=100000;
-    if(!attacking&&ctx.p.lp<=before.enemyDamage&&ctx.p.lp>after.enemyDamage)gain+=100000;
+    if(!attacking&&after.enemyDamage<ctx.p.lp){
+      const preventsCurrentLethal=before.enemyDamage>=ctx.p.lp;
+      const savesTheBlocker=profile.temporary&&before.enemyLost&&!after.enemyLost
+        &&lethalAfterBattle(s,side,attacker,defender,before)
+        &&!lethalAfterBattle(s,side,attacker,defender?.uid===c.uid?improved:defender,after);
+      if(preventsCurrentLethal||savesTheBlocker)gain+=100000;
+    }
     return gain-400;
   }
   if(!canBattle(s)&&profile.temporary)return -600;
@@ -49,6 +55,25 @@ function boostTargetScore(ctx,c,profile){
   const gain=Math.max(...foes.map(target=>battleOutcome(s,side,improved,target).value-battleOutcome(s,side,c,target).value));
   return gain+(profile.temporary?-400:150);
 }
+function revivalAttackGain(ctx,card){
+  const {s,side,p}=ctx;
+  const slot=p.monsters.indexOf(null);
+  if(slot<0||!canBattle(s))return 0;
+
+  const revived={...card,controller:side,faceUp:true,position:'attack'};
+  if(!attackAllowed(s,side,revived))return 0;
+  const field=[...p.monsters];
+  field[slot]=revived;
+  const players=s.players.map((player,index)=>({
+    ...player,
+    grave:player.grave.filter(unit=>unit.uid!==card.uid),
+    monsters:index===side?field:player.monsters
+  }));
+  const battle=battlePlan({...s,players,battleOptions:[]},side,{width:6,maxNodes:120,protectLastBlocker:true});
+  if(battle.lethal&&!backrow(ctx.foe).some(card=>!card.faceUp))return 100000;
+  return Math.max(0,Math.min(2500,battle.score-ctx.plan.score))*.6;
+}
+
 function targetScore(ctx,a,intent,source){
   const c=locate(ctx.s,a.target);if(!c)return -1000;
   const where=zoneOf(ctx.s,c.uid),own=where?.side===ctx.side;
@@ -66,6 +91,10 @@ function targetScore(ctx,a,intent,source){
       value=monster(c)?550+attack(c)*.4+defense(c)*.08:-1000;
       if(attack(c)>Math.max(0,...monsters(ctx.foe).map(body)))value+=350;
       if(!monsters(ctx.p).length)value+=200;
+      const faceUpRevival=['Monster Reborn','Premature Burial','Call of the Haunted'].includes(source?.card.name);
+      if(monster(c)&&faceUpRevival&&ctx.actions.some(action=>action.target===c.uid)){
+        value+=revivalAttackGain(ctx,c);
+      }
     }
     if(intent!=='revive'&&!own)value=-value;
     if(['search','recover'].includes(intent)&&monster(c)){
@@ -140,8 +169,40 @@ function fusionUtility(ctx,sourceCard){
   return scores.length?Math.max(...scores):-1000;
 }
 
+function attackRemovalScore(ctx,source){
+  const {s,side,p}=ctx;
+  const attackEvent=s.pending;
+  const attacker=locate(s,attackEvent?.uid);
+  if(attackEvent?.kind!=='attack'||!attacker||attacker.controller===side)return -500;
+  if(!affectedBy(attacker,source,side,attacker.controller))return -100000;
+
+  const defender=locate(s,attackEvent.target);
+  const hit=battleOutcome(s,1-side,attacker,defender);
+  const stopped={ownLost:true,enemyLost:false,ownDamage:0,enemyDamage:0};
+  const stillLethal=lethalAfterBattle(s,side,attacker,defender,stopped);
+  // Spending the only answer on a small attack can leave a stronger one
+  // free to finish the duel. Wait while the current attack is survivable.
+  if(stillLethal&&hit.enemyDamage<p.lp)return -500;
+
+  const savesDuel=!stillLethal&&lethalAfterBattle(s,side,attacker,defender,hit);
+  const saved=hit.enemyLost?valueOf(ctx,defender):0;
+  return valueOf(ctx,attacker)+saved+hit.enemyDamage*.6-650+(savesDuel?100000:0);
+}
+
+function saveBoardWipe(ctx,profile,victims){
+  if(!victims.length||!canBattle(ctx.s)||backrow(ctx.foe).some(card=>!card.faceUp))return false;
+  const freeWins=new Set(ctx.plan.moves.filter(({outcome})=>
+    outcome.enemyLost&&!outcome.ownLost&&!outcome.ownDamage&&!outcome.uncertainty
+  ).map(move=>move.target));
+  if(!victims.every(card=>card.faceUp&&freeWins.has(card.uid)))return false;
+  if(ctx.plan.lethal||profile.scope==='all')return true;
+  const clear=withPlayers(ctx.s,1-ctx.side,{monsters:ctx.foe.monsters.map(()=>null)});
+  return !battlePlan(clear,ctx.side).lethal;
+}
+
 function scoreEffect(ctx,a){
   const {s,side,p,foe}=ctx,source=locate(s,a.uid)||{uid:a.uid,card:a.effectCard},card=source.card;if(!card)return -200;
+  if(['Sakuretsu Armor','Dimensional Prison'].includes(card.name))return attackRemovalScore(ctx,source);
   if(card.name==='Ghost Gardna'&&s.pending?.kind==='attack'&&s.pending.side!==side&&s.battleStep==='attack'){
     if(s.pending.redirectTargets?.includes(source.uid))return -100000;
     const attacker=locate(s,s.pending.uid),defender=locate(s,s.pending.target);
@@ -190,6 +251,7 @@ function scoreEffect(ctx,a){
     case 'exchange':utility=p.hand.length&&foe.hand.length?Math.max(0,...p.hand.filter(c=>c.uid!==a.uid).map(c=>valueOf(ctx,c)))*-.6+180:-500;break;
     case 'wipe':case 'mirror':{
       const victims=intent==='mirror'?opp.filter(c=>c.position==='attack'):opp;
+      if(intent==='wipe'&&card.type==='Spell Card'&&saveBoardWipe(ctx,profile,victims))return -100000;
       const gain=victims.reduce((n,c)=>n+valueOf(ctx,c),0),loss=profile.scope==='all'?ours.filter(c=>c.uid!==source.uid).reduce((n,c)=>n+valueOf(ctx,c),0):0;
       utility=gain-loss-200;
       // Clearing the last blockers can be worth a one-for-one to win now.
@@ -203,7 +265,13 @@ function scoreEffect(ctx,a){
       const gain=backrow(foe).reduce((n,c)=>n+valueOf(ctx,c),0),loss=profile.scope==='foe'?0:backrow(p).filter(c=>c.uid!==a.uid).reduce((n,c)=>n+valueOf(ctx,c)*(c.faceUp?1:.8),0);
       utility=gain-loss-200;break;
     }
-    case 'boost':case 'equip':utility=Math.max(-1000,...ours.map(c=>boostTargetScore(ctx,c,profile)));break;
+    case 'equip':{
+      const recipients=equipBoostTargets(card,ours);
+      if(!recipients.length)return -100000;
+      utility=Math.max(...recipients.map(recipient=>boostTargetScore(ctx,recipient,profile)));
+      break;
+    }
+    case 'boost':utility=Math.max(-1000,...ours.map(c=>boostTargetScore(ctx,c,profile)));break;
     case 'harmfulEquip':utility=bestTarget(ctx,'removal',source)-150;break;
     case 'pierce':utility=canBattle(s)&&opp.some(c=>c.position==='defense')&&ours.some(c=>attack(c)>Math.max(0,...opp.map(defense)))?500:-200;break;
     case 'megamorph':utility=p.lp<foe.lp&&ours.length?650:opp.length&&p.lp>foe.lp?500:-400;break;
@@ -249,11 +317,12 @@ function scoreEffect(ctx,a){
     }
     case 'protect':case 'cylinder':case 'battleHeal':case 'mirrorWall':{
       const attackEvent=s.pending,attacker=locate(s,attackEvent?.uid),defender=locate(s,attackEvent?.target);
-      if(attackEvent?.kind!=='attack'||attacker?.controller===side){utility=-1000;break;}
+      if(attackEvent?.kind!=='attack'||!attacker||attacker.controller===side){utility=-1000;break;}
       const o=battleOutcome(s,1-side,attacker,defender),damage=o.enemyDamage;
       const reflected=intent==='cylinder'?effectDamage(s,1-side,attack(attacker)):0;
       utility=intent==='cylinder'?reflected*.5+damage*.6+(o.enemyLost?valueOf(ctx,defender):0)-180:intent==='battleHeal'?attack(attacker)*.25-50:damage*.6+(o.enemyLost?valueOf(ctx,defender):0)-180;
-      if(damage>=p.lp)utility+=100000;
+      const stopsTheTurn=['Waboku','Negate Attack','Battle Fader','Swift Scarecrow'].includes(card.name);
+      if(damage>=p.lp||stopsTheTurn&&lethalAfterBattle(s,side,attacker,defender,o))utility+=100000;
       if(intent==='cylinder'&&reflected>=foe.lp)utility+=100000;
       break;
     }
@@ -297,7 +366,7 @@ function synchroCosts(ctx,card){
   }
   return best;
 }
-function summonScore(ctx,a){
+function summonScore(ctx,a,planning){
   const c=locate(ctx.s,a.uid);if(!c)return -500;const {s,side,p,foe}=ctx,profile=effectProfile(c.card),level=c.currentLevel||c.card.level||4;
   if(/the Forbidden One|Arm of the Forbidden One|Leg of the Forbidden One/.test(c.card.name))return -10000;
   const required=a.special?0:level>6?2:level>4?1:0;
@@ -309,12 +378,21 @@ function summonScore(ctx,a){
   let score=350+(a.set?defense(c):attack(c))*.18-costs*.85;
   if(a.set){
     if(/FLIP:|flipped face-up/i.test(text(c)))score+=500;
-    if(defense(c)>=enemyPower)score+=250;else if(defense(c)<attack(c))score-=200;
+    if(defense(c)>=enemyPower)score+=250;else if(canBattle(s)&&defense(c)<attack(c))score-=200;
   }else{
     if(attack(c)>=enemyPower)score+=220;
+    if(!canBattle(s)&&!a.special&&c.card.type==='Normal Monster'&&attack(c)<enemyPower){
+      // With no attack available this turn, a weak vanilla body is cover.
+      score-=200+attack(c)*.18;
+    }
     if(attack(c)<enemyPower&&defense(c)>attack(c)+400)score-=300;
     if(canBattle(s))score+=(battlePlan(next,side,{available:null}).score-ctx.plan.score)*.6;
     if(['search','removal','backrowRemoval','draw'].includes(profile.intent))score+=200;
+    if(!planning&&!a.special&&c.card.type==='Normal Monster'){
+      // The worker fallback skips turn search, so score the immediate risk.
+      const reply={...next,active:1-side,phase:'battle',turnEffects:[]};
+      score-=exposedAttackLoss(reply,side,placed)*.3;
+    }
     // A modest Tribute upgrade can be the only way through persistent public
     // defenders. Value opening that wall beyond this turn's immediate damage,
     // rather than endlessly replacing small attackers in a recycling matchup.
@@ -343,7 +421,7 @@ function makeContext(state,side,actions){
   const s=aiObservation(state,side),p=s.players[side],foe=s.players[1-side];
   s.battleOptions=s.battleOptions.filter(a=>a.battleExitBlocked||!s.declinedAttacks[side].includes(a.uid));
   const available=s.battleOptions.length?s.battleOptions:actions.filter(a=>a.type==='ATTACK'&&(a.battleExitBlocked||!s.declinedAttacks[side].includes(a.uid))).map(a=>({uid:a.uid,canDirect:a.canDirect||a.target===null}));
-  const plan=battlePlan(s,side,{available:available.length||s.phase==='battle'&&!s.choice&&!s.window?available:null});
+  const plan=battlePlan(s,side,{protectLastBlocker:true,available:available.length||s.phase==='battle'&&!s.choice&&!s.window?available:null});
   return {s,side,p,foe,actions,plan,choicePlan:null};
 }
 function scoreChoice(ctx,a){
@@ -359,7 +437,7 @@ function scoreChoice(ctx,a){
     if(a.cancel)return c.attackRequired?-Infinity:0;
     if(a.finish)return Infinity;
     if(a.selected)return -100000;
-    ctx.choicePlan??=battlePlan(ctx.s,ctx.side,{first:c.attackUid,targets:new Set(ctx.actions.filter(a=>a.target!==undefined).map(a=>a.target))});
+    ctx.choicePlan??=battlePlan(ctx.s,ctx.side,{protectLastBlocker:true,first:c.attackUid,targets:new Set(ctx.actions.filter(a=>a.target!==undefined).map(a=>a.target))});
     return ctx.choicePlan.roots.get(c.attackUid+':'+(a.target||'direct'))?.score??-10000;
   }
   if(a.finish){
@@ -428,7 +506,7 @@ export function rankAIActions(state,side=1,{planning=true,weights,learning}={}){
       const entries=[...ctx.plan.roots.values()].filter(n=>n.moves[0].uid===a.uid);
       return entries.length?Math.max(...entries.map(n=>n.score)):-1000;
     }
-    if(a.type==='SUMMON')return summonScore(ctx,a);
+    if(a.type==='SUMMON')return summonScore(ctx,a,planning);
     if(a.type==='ACTIVATE'||a.type==='EFFECT')return scoreEffect(ctx,a);
     if(a.type==='SET'){
       const c=locate(ctx.s,a.uid);if(!c)return -100;
@@ -446,7 +524,13 @@ export function rankAIActions(state,side=1,{planning=true,weights,learning}={}){
   if(planning){
     const plan=planTurn(ctx.s,side,ranked,{weights});
     for(const row of ranked){const projection=plan.roots.get(row.action.id);if(!projection)continue;
-      row.projection=projection;row.score=projection.lethal?200000+Math.min(5000,row.score)-projection.steps*20:row.score+Math.max(-1800,Math.min(5000,projection.delta))*.45;
+      row.projection=projection;
+      if(projection.lethal)row.score=200000+Math.min(5000,row.score)-projection.steps*20;
+      else {
+        row.score+=Math.max(-1800,Math.min(5000,projection.delta))*.65;
+        if(plan.danger&&!projection.danger)row.score+=4000;
+        if(!plan.danger&&projection.danger)row.score=Math.min(row.score,-4000);
+      }
     }
     ranked.sort((a,b)=>b.score-a.score||a.index-b.index);
   }

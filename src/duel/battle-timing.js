@@ -20,6 +20,22 @@ export function battleContext(state){
   return step.text;
 }
 
+// The receipt preserves calculation stats after the live field stats reset.
+export function lastBattleStat(state,card,values){
+  if(!card.faceUp||!values)return '';
+  const entry=state.log.findLast(row=>row.turn===state.turn&&(
+    row.battleNotice?.attacker.uid===card.uid||row.battleNotice?.defender?.uid===card.uid
+  ));
+  if(!entry)return '';
+
+  const {attacker,defender}=entry.battleNotice;
+  const participant=attacker.uid===card.uid?attacker:defender;
+  const stat=participant.defense?'def':'atk';
+  const used=participant[stat];
+  if(!Number.isFinite(used)||used===values[stat])return '';
+  return `Last battle used ${used.toLocaleString()} ${stat.toUpperCase()} at damage calculation.`;
+}
+
 // Small AI/advice hints, not an effect implementation. Legal targets and all
 // stat changes still come from the core and its card scripts.
 export const COMBAT_BOOSTS={
