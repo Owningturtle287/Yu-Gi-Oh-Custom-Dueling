@@ -1,5 +1,5 @@
 import {aiObservation,locate,attack,defense,monsters,backrow,monster,text,zoneOf,effectProfile,equipBoostTargets,combatTraits,resourceValue,costValue,drawValue,handRemovalOptions} from './ai-knowledge.js';
-import {battleOutcome,battlePlan,incomingDamage} from './ai-combat.js';
+import {battleOutcome,battlePlan,exposedAttackLoss,incomingDamage} from './ai-combat.js';
 import {planTurn} from './ai-turn.js';
 import {attackAllowed,effectDamage} from './ai-physics.js';
 import {decisionGuidance,levelUpgrade,fusionOptions} from './ai-guidance.js';
@@ -303,7 +303,7 @@ function synchroCosts(ctx,card){
   }
   return best;
 }
-function summonScore(ctx,a){
+function summonScore(ctx,a,planning){
   const c=locate(ctx.s,a.uid);if(!c)return -500;const {s,side,p,foe}=ctx,profile=effectProfile(c.card),level=c.currentLevel||c.card.level||4;
   if(/the Forbidden One|Arm of the Forbidden One|Leg of the Forbidden One/.test(c.card.name))return -10000;
   const required=a.special?0:level>6?2:level>4?1:0;
@@ -321,6 +321,11 @@ function summonScore(ctx,a){
     if(attack(c)<enemyPower&&defense(c)>attack(c)+400)score-=300;
     if(canBattle(s))score+=(battlePlan(next,side,{available:null}).score-ctx.plan.score)*.6;
     if(['search','removal','backrowRemoval','draw'].includes(profile.intent))score+=200;
+    if(!planning&&!a.special&&c.card.type==='Normal Monster'){
+      // The worker fallback skips turn search, so score the immediate risk.
+      const reply={...next,active:1-side,phase:'battle',turnEffects:[]};
+      score-=exposedAttackLoss(reply,side,placed)*.3;
+    }
     // A modest Tribute upgrade can be the only way through persistent public
     // defenders. Value opening that wall beyond this turn's immediate damage,
     // rather than endlessly replacing small attackers in a recycling matchup.
@@ -434,7 +439,7 @@ export function rankAIActions(state,side=1,{planning=true,weights,learning}={}){
       const entries=[...ctx.plan.roots.values()].filter(n=>n.moves[0].uid===a.uid);
       return entries.length?Math.max(...entries.map(n=>n.score)):-1000;
     }
-    if(a.type==='SUMMON')return summonScore(ctx,a);
+    if(a.type==='SUMMON')return summonScore(ctx,a,planning);
     if(a.type==='ACTIVATE'||a.type==='EFFECT')return scoreEffect(ctx,a);
     if(a.type==='SET'){
       const c=locate(ctx.s,a.uid);if(!c)return -100;

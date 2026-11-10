@@ -59,6 +59,65 @@ test('the AI can still equip its own eligible Beast-Warrior to win a battle',asy
  }finally{e.destroyMatch(s);}
 });
 
+const darkruler='Two-Mouth Darkruler';
+const luster='Luster Dragon #2';
+const rescue='Rescue Warrior';
+const grimoire='Dark World Grimoire';
+const united='United We Stand';
+const eraCards=JSON.parse(await readFile(new URL('./era2010-fixtures.json',import.meta.url))).data;
+const ruleCards=JSON.parse(await readFile(new URL('./rules-fixtures.json',import.meta.url))).data;
+cards.push(...[
+ {id:57305373,name:darkruler,type:'Normal Monster',race:'Dinosaur',attribute:'EARTH',atk:900,def:700,level:3},
+ {id:17658803,name:luster,type:'Normal Monster',race:'Dragon',attribute:'WIND',atk:2400,def:1400,level:6},
+ ...eraCards.filter(card=>[rescue,grimoire].includes(card.name)),
+ ruleCards.find(card=>card.name===united)
+].map(normalizeCard));
+
+async function darkrulerBoard(engine,{defender=true,equip=false}={}){
+ const decksWithNoOtherSummon=decks();
+ decksWithNoOtherSummon[1].main=Array(40).fill(get('Blue-Eyes White Dragon'));
+ const state=await engine.createMatch(decksWithNoOtherSummon,{
+  cards,seed:83,first:0,
+  openingHands:[[],[get(darkruler),...(equip?[get(united)]:[])]],
+  initialFields:[
+   {monsters:[body(luster)]},
+   {monsters:defender?[body(rescue,{defense:true})]:[],spells:[body(grimoire)]}
+  ]
+ });
+ return settle(engine,command(engine,settle(engine,state),'END',0));
+}
+
+for(const defender of [true,false])test(`AI protects its LP with Darkruler in Defense against Luster Dragon, existing defender: ${defender}`,async()=>{
+ const e=backend();
+ let s=await darkrulerBoard(e,{defender});
+ try{
+  for(const planning of [true,false]){
+   const choice=chooseAIAction(s,1,{planning,variety:false});
+   assert.equal(choice.type,'SUMMON');
+   assert.equal(find(e,s,choice),darkruler);
+   assert.equal(choice.set,true);
+  }
+  s=settle(e,e.applyAction(s,chooseAIAction(s,1,{variety:false}),1));
+  const placed=s.players[1].monsters.find(card=>card?.card.name===darkruler);
+  assert.equal(placed.position,'defense');
+  assert.equal(placed.faceUp,false);
+ }finally{e.destroyMatch(s);}
+});
+
+test('AI can summon Darkruler in Attack when United We Stand creates a winning attack',async()=>{
+ const e=backend();
+ let s=await darkrulerBoard(e,{equip:true});
+ try{
+  const choice=chooseAIAction(s,1,{variety:false});
+  assert.equal(find(e,s,choice),darkruler);
+  assert.equal(choice.type,'SUMMON');
+  assert.equal(Boolean(choice.set),false);
+  s=play(e,s);
+  assert.ok(s.players[0].grave.some(card=>card.card.name===luster));
+  assert.ok(s.log.some(entry=>entry.effectNotice?.card.name===united&&entry.kind==='activate'));
+ }finally{e.destroyMatch(s);}
+});
+
 for(const side of [0,1])test(`avoids a fatal public Amazoness Swords Woman reflection, controller ${side}`,async()=>{
  const e=backend(),fields=[{},{}];fields[side]={monsters:[body('Blue-Eyes White Dragon')]};fields[1-side]={monsters:[body('Amazoness Swords Woman')]};let s=await game(e,fields,[[],[]],{first:1-side,lp:1000});
  try{s=settle(e,command(e,settle(e,s),'END',1-side));const view=aiObservation(s,side),prediction=battleOutcome(view,side,view.players[side].monsters[0],view.players[1-side].monsters[0]);assert.equal(prediction.ownDamage,1500);assert.equal(prediction.enemyDamage,0);s=play(e,s,{side});assert.notEqual(s.winner,1-side);assert.equal(s.players[side].lp,1000);assert.ok(!s.log.some(l=>l.kind==='attack'&&l.side===side));await replay(e,s);}finally{e.destroyMatch(s);}

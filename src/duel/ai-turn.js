@@ -1,5 +1,5 @@
 import {locate,attack,defense,monsters,backrow,monster,resourceValue,costValue,handRemovalOptions} from './ai-knowledge.js';
-import {battlePlan} from './ai-combat.js';
+import {battlePlan,exposedAttackLoss} from './ai-combat.js';
 import {decisionGuidance,PLANNING_WEIGHTS,fusionOptions} from './ai-guidance.js';
 import {memoryFor} from './ai-memory.js';
 import {effectDamage} from './ai-physics.js';
@@ -48,7 +48,9 @@ function project(s,side,action,target){
     const required=action.special?0:(source.currentLevel||source.card.level||4)>6?2:(source.currentLevel||source.card.level||4)>4?1:0;
     const tributes=monsters(p).filter(c=>!c.card.name.endsWith('Token')).sort((a,b)=>costValue(next,side,a)-costValue(next,side,b)).slice(0,required);
     if(tributes.length!==required)return null;for(const c of tributes)remove(next,c);
-    if(!place(next,side,source,action.set?'defense':'attack',!action.set))return null;
+    const exposedNormalSummon=!action.special&&!action.set&&source.card.type==='Normal Monster';
+    const placed=exposedNormalSummon?{...source,exposedNormalSummon}:source;
+    if(!place(next,side,placed,action.set?'defense':'attack',!action.set))return null;
     if(!action.special)next.projectedNormal=true;
     const guide=decisionGuidance(source.card);
     if(!action.set&&guide.summonRemove){const c=best(next,side,monsters(foe));if(c)remove(next,c);else remove(next,locate(next,source.uid));}
@@ -130,6 +132,12 @@ function evaluate(s,side,weights){
   const reply=battlePlan(response,1-side,{width:6,maxNodes:160});
   let value=(material(side)-material(1-side))*weights.material+(hand(side)-hand(1-side))*weights.hand+(after.players[side].lp-after.players[1-side].lp)*weights.damage-Math.min(12000,reply.score)*weights.reply;
   if(after.players[side].lp<=0)value-=200000;else if(lethal)value+=200000;else if(reply.score>=100000)value-=90000;
+
+  // A player can choose a weaker attacker as an easy LP target even when a
+  // different target scores better on material. Price that exposure after
+  // projected boosts, removal and attacks have had a chance to pay off.
+  const exposed=monsters(after.players[side]).find(card=>card.exposedNormalSummon);
+  if(exposed&&!lethal)value-=exposedAttackLoss(response,side,exposed)*weights.reply;
   // Set backrow creates risk, not knowledge of any specific hidden trap.
   const unseen=backrow(foe).filter(c=>c.hidden).length,memory=memoryFor(s,side),pattern=memory?.patterns?.[1-side];
   const caution=1+Math.min(1,(pattern?.traps||0)/Math.max(1,pattern?.sets||0));
@@ -143,7 +151,7 @@ function evaluate(s,side,weights){
   else if(handNames.has('Dark Hole'))value-=Math.max(0,material(side)-material(1-side))*.2;
   return {value,lethal};
 }
-function boardKey(s){return s.players.map(p=>[p.lp,p.hand.map(c=>c.uid).sort().join(','),p.monsters.map(c=>c?[c.uid,c.position,attack(c),defense(c),c.projectedNoAttack].join(':'):'-').join(','),p.spells.map(c=>c?.uid||'-').join(',')].join('|')).join('/')+'|'+s.projectedNormal+'|'+[...s.projectedUsed].sort().join(',')+'|'+(s.projectedEndDamage||0);}
+function boardKey(s){return s.players.map(p=>[p.lp,p.hand.map(c=>c.uid).sort().join(','),p.monsters.map(c=>c?[c.uid,c.position,attack(c),defense(c),c.projectedNoAttack,c.exposedNormalSummon].join(':'):'-').join(','),p.spells.map(c=>c?.uid||'-').join(',')].join('|')).join('/')+'|'+s.projectedNormal+'|'+[...s.projectedUsed].sort().join(',')+'|'+(s.projectedEndDamage||0);}
 export function planTurn(state,side,ranked,{width=4,depth=3,maxNodes=96,weights=PLANNING_WEIGHTS}={}){
   const roots=new Map();if(state.choice||state.window||state.active!==side||!['main1','main2'].includes(state.phase))return {roots,nodes:0};
   const start=copy(state);start.projectedNormal=!!(state.normalSummons?.[side]);

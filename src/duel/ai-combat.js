@@ -48,6 +48,18 @@ export function battleOutcome(state,side,attacker,target){
   if(target&&!enemyLost&&!ownLost&&!enemyDamage&&!ownDamage)value-=35;
   return {ownDamage,enemyDamage,ownLost,enemyLost,uncertainty,value};
 }
+// Score the worst public one-sided battle against a newly exposed monster.
+export function exposedAttackLoss(state,side,target){
+  const opponent=1-side,materialLoss=resourceValue(state,side,target);
+  let worst=0;
+  for(const attacker of monsters(state.players[opponent])){
+    if(!attacker.faceUp||attacker.hidden||attacker.position!=='attack')continue;
+    const {enemyLost,ownLost,enemyDamage}=battleOutcome(state,opponent,attacker,target);
+    if(enemyLost&&!ownLost)worst=Math.max(worst,materialLoss+enemyDamage);
+  }
+  return worst;
+}
+
 export function battlePlan(state,side,{first=null,targets=null,available=null,width=36,maxNodes=6000}={}){
   const p=state.players[side],foe=state.players[1-side];
   const options=available||state.battleOptions?.length&&state.battleOptions||monsters(p).filter(c=>c.faceUp&&c.position==='attack').map(c=>({uid:c.uid,canDirect:combatTraits(c).direct}));
