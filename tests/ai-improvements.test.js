@@ -44,7 +44,11 @@ test('the AI holds Mystical Moon when only the opponent has a face-up Beast-Warr
 
 test('the AI can still equip its own eligible Beast-Warrior to win a battle',async()=>{
  const e=backend();
- let s=await game(e,[{monsters:[body('Battle Ox')]},{monsters:[body('Battle Ox')]}],[[],[moon.name]]);
+ const d=decks();
+ d[1].main=Array(40).fill(get('Blue-Eyes White Dragon'));
+ let s=await e.createMatch(d,{cards,seed:71,first:0,openingHands:[[],[moon]],
+  initialFields:[{monsters:[body('Battle Ox')]},{monsters:[body('Battle Ox')]}]
+ });
  try{
   s=settle(e,command(e,settle(e,s),'END',0));
   const friendly=s.players[1].monsters[0].uid,opposing=s.players[0].monsters[0].uid;
@@ -115,6 +119,129 @@ test('AI can summon Darkruler in Attack when United We Stand creates a winning a
   s=play(e,s);
   assert.ok(s.players[0].grave.some(card=>card.card.name===luster));
   assert.ok(s.log.some(entry=>entry.effectNotice?.card.name===united&&entry.kind==='activate'));
+ }finally{e.destroyMatch(s);}
+});
+
+cards.push(...[
+ eraCards.find(card=>card.name==='Dash Warrior'),
+ ruleCards.find(card=>card.name==='Yomi Ship'),
+ {id:14315573,name:'Negate Attack',type:'Trap Card',race:'Counter',
+  desc:'When an opponent’s monster declares an attack: Target the attacking monster; negate the attack, then end the Battle Phase.'},
+ {id:56120475,name:'Sakuretsu Armor',type:'Trap Card',race:'Normal',
+  desc:'When an opponent’s monster declares an attack: Target the attacking monster; destroy that target.'}
+].map(normalizeCard));
+
+test('AI sets a weak Normal Monster on the opening turn before either side can attack',async()=>{
+ const e=backend();
+ let s=await game(e,[{},{}],[[],[darkruler]],{first:1});
+ try{
+  s=settle(e,s);
+  const action=chooseAIAction(s,1);
+  assert.equal(find(e,s,action),darkruler);
+  assert.equal(action.type,'SUMMON');
+  assert.equal(action.set,true);
+ }finally{e.destroyMatch(s);}
+});
+
+test('AI stops a small first attack when the remaining attacker can finish the duel',async()=>{
+ const e=backend();
+ let s=await game(e,[
+  {monsters:[body('Charcoal Inpachi'),body('Blue-Eyes White Dragon')]},
+  {spells:[body('Negate Attack',{faceUp:false})]}
+ ],[[],[]],{first:1,lp:2500});
+ try{
+  s=settle(e,command(e,settle(e,s),'END',1));
+  s=settle(e,command(e,s,'NEXT',0));
+  s=command(e,s,'ATTACK',0,'Charcoal Inpachi');
+  s=advance(e,s,state=>state.actions[1].some(action=>action.type==='ACTIVATE'));
+  const answer=chooseAIAction(s,1);
+  assert.equal(answer.type,'ACTIVATE');
+  assert.equal(find(e,s,answer),'Negate Attack');
+  s=settle(e,e.applyAction(s,answer,1));
+  assert.equal(s.players[1].lp,2500);
+  assert.ok(!s.actions[0].some(action=>action.type==='ATTACK'));
+ }finally{e.destroyMatch(s);}
+});
+
+test('AI saves Sakuretsu Armor for the attacker that can deal lethal damage',async()=>{
+ const e=backend();
+ let s=await game(e,[
+  {monsters:[body('Charcoal Inpachi'),body('Blue-Eyes White Dragon')]},
+  {spells:[body('Sakuretsu Armor',{faceUp:false})]}
+ ],[[],[]],{first:1,lp:2500});
+ try{
+  s=settle(e,command(e,settle(e,s),'END',1));
+  s=settle(e,command(e,s,'NEXT',0));
+  s=command(e,s,'ATTACK',0,'Charcoal Inpachi');
+  s=advance(e,s,state=>state.actions[1].some(action=>action.type==='ACTIVATE'));
+  assert.equal(chooseAIAction(s,1).type,'PASS');
+  s=settle(e,s);
+  assert.equal(s.players[1].lp,2400);
+  s=command(e,s,'ATTACK',0,'Blue-Eyes White Dragon');
+  s=advance(e,s,state=>state.actions[1].some(action=>action.type==='ACTIVATE'));
+  const answer=chooseAIAction(s,1);
+  assert.equal(find(e,s,answer),'Sakuretsu Armor');
+  s=settle(e,e.applyAction(s,answer,1));
+  assert.equal(s.players[1].lp,2400);
+  assert.ok(s.players[0].grave.some(card=>card.card.name==='Blue-Eyes White Dragon'));
+ }finally{e.destroyMatch(s);}
+});
+
+test('AI keeps its last blocker when a profitable trade would expose a lethal direct attack',async()=>{
+ const e=backend();
+ let s=await game(e,[
+  {monsters:[body('Yomi Ship'),body('Blue-Eyes White Dragon')]},
+  {monsters:[body(darkruler)]}
+ ],[[],[]],{lp:2950});
+ try{
+  s=settle(e,command(e,settle(e,s),'END',0));
+  s=settle(e,command(e,s,'NEXT',1));
+  assert.ok(s.actions[1].some(action=>action.type==='ATTACK'));
+  assert.ok(['NEXT','END'].includes(chooseAIAction(s,1).type));
+  assert.equal(s.players[1].monsters.find(Boolean).card.name,darkruler);
+ }finally{e.destroyMatch(s);}
+});
+
+test('AI uses Dash Warrior’s Damage Step bonus when deciding whether to attack',async()=>{
+ const e=backend();
+ let s=await game(e,[{monsters:[body('Battle Ox')]},{monsters:[body('Dash Warrior')]}]);
+ try{
+  s=settle(e,command(e,settle(e,s),'END',0));
+  s=settle(e,command(e,s,'NEXT',1));
+  assert.equal(chooseAIAction(s,1).type,'ATTACK');
+  s=play(e,s);
+  assert.ok(s.players[0].grave.some(card=>card.card.name==='Battle Ox'));
+  assert.equal(s.log.find(entry=>entry.battleNotice?.attacker.card.name==='Dash Warrior').battleNotice.attacker.atk,1800);
+ }finally{e.destroyMatch(s);}
+});
+
+test('AI revives a smaller monster that can attack for lethal through Gravity Bind',async()=>{
+ const e=backend();
+ let s=await game(e,[
+  {spells:[body('Gravity Bind')],grave:[body('Blue-Eyes White Dragon'),body('Charcoal Inpachi')]},
+  {}
+ ],[[],['Monster Reborn']],{lp:100});
+ try{
+  s=settle(e,command(e,settle(e,s),'END',0));
+  s=command(e,s,'ACTIVATE',1,'Monster Reborn');
+  assert.equal(e.findCard(s,chooseAIAction(s,1).target).card.name,'Charcoal Inpachi');
+  s=play(e,s);
+  assert.equal(s.winner,1);
+ }finally{e.destroyMatch(s);}
+});
+
+for(const lp of [8000,2500])test(`AI saves Raigeki for a meaningful payoff against a weak defender, LP ${lp}`,async()=>{
+ const e=backend();
+ const d=decks();
+ d[1].main=Array(40).fill(get('Blue-Eyes White Dragon'));
+ let s=await e.createMatch(d,{cards,seed:71,first:0,lp,openingHands:[[],[get('Raigeki')]],initialFields:[
+  {monsters:[body('Charcoal Inpachi')]},
+  {monsters:[body('Summoned Skull')]}
+ ]});
+ try{
+  s=play(e,settle(e,command(e,settle(e,s),'END',0)));
+  assert.equal(s.log.some(entry=>entry.kind==='activate'&&entry.effectNotice?.card.name==='Raigeki'),lp===2500);
+  assert.equal(s.winner,lp===2500?1:null);
  }finally{e.destroyMatch(s);}
 });
 

@@ -1,13 +1,16 @@
 import {hiddenBeliefs} from './ai-memory.js';
 import {locate,attack,defense,monsters,backrow,combatTraits,resourceValue} from './ai-knowledge.js';
 import {attackAllowed,attackLimit,effectDamage,battleDamage} from './ai-physics.js';
-const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+const damageSteps=new Set(['start','beforeCalculation','calculation','afterCalculation','end']);
+const attackCount=card=>Math.min(2,combatTraits(card).attacks??1);
+const attackBonus=card=>card.card.name==='Dash Warrior'&&!card.disabled&&!card.hidden?1200:0;
 
 // A bounded combat search, not a second rules engine. Candidate declarations
 // still come from the core. Replan after every response/stat change/attack.
 export function battleOutcome(state,side,attacker,target){
   const at=combatTraits(attacker),dt=combatTraits(target),foe=state.players[1-side];
-  let atk=attack(attacker),ownDamage=0,enemyDamage=0,ownLost=false,enemyLost=false,effectOwnDamage=0;
+  const alreadyCalculatedStats=state.pending?.uid===attacker.uid&&damageSteps.has(state.battleStep);
+  let atk=attack(attacker)+(alreadyCalculatedStats?0:attackBonus(attacker)),ownDamage=0,enemyDamage=0,ownLost=false,enemyLost=false,effectOwnDamage=0;
   if(!attackAllowed(state,side,attacker))return {ownDamage:0,enemyDamage:0,ownLost:false,enemyLost:false,uncertainty:0,value:-100000,legal:false};
   if(backrow(foe).some(c=>c.faceUp&&!c.disabled&&c.card.name==='Mirror Wall'))atk=Math.floor(atk/2);
   let uncertainty=0;
@@ -60,13 +63,28 @@ export function exposedAttackLoss(state,side,target){
   return worst;
 }
 
-export function battlePlan(state,side,{first=null,targets=null,available=null,width=36,maxNodes=6000}={}){
+// If the last blocker falls, count the public attackers that can hit the
+// now-open field next turn. Spent attacks and turn-specific protection reset.
+function openFieldThreat(state,side){
+  const opponent=1-side;
+  const reply={...state,active:opponent,turnEffects:[],pending:null,battleStep:null};
+  const strikes=[];
+  for(const attacker of monsters(reply.players[opponent])){
+    if(!attacker.faceUp||attacker.hidden||attacker.position!=='attack')continue;
+    const damage=battleOutcome(reply,opponent,attacker,null).enemyDamage;
+    for(let i=0;i<attackCount(attacker);i++)strikes.push(damage);
+  }
+  return strikes.sort((a,b)=>b-a).slice(0,attackLimit(reply)).reduce((sum,damage)=>sum+damage,0);
+}
+
+export function battlePlan(state,side,{first=null,targets=null,available=null,width=36,maxNodes=6000,protectLastBlocker=false}={}){
   const p=state.players[side],foe=state.players[1-side];
-  const options=available||state.battleOptions?.length&&state.battleOptions||monsters(p).filter(c=>c.faceUp&&c.position==='attack').map(c=>({uid:c.uid,canDirect:combatTraits(c).direct}));
+  const nativeOptions=available??(state.battleOptions?.length?state.battleOptions:null);
+  const options=nativeOptions??monsters(p).filter(c=>c.faceUp&&c.position==='attack').map(c=>({uid:c.uid,canDirect:combatTraits(c).direct}));
   const fighters=options.map(o=>({card:locate(state,o.uid),direct:o.canDirect})).filter(o=>o.card&&o.card.position==='attack'&&attackAllowed(state,side,o.card));
   const enemies=monsters(foe),enemyByUID=new Map(enemies.map(c=>[c.uid,c]));
-  const maxDepth=Math.min(7,attackLimit(state),fighters.reduce((n,f)=>n+Math.min(2,combatTraits(f.card).attacks),0));
-  const start={remaining:fighters.map(f=>({uid:f.card.uid,count:Math.max(1,Math.min(2,combatTraits(f.card).attacks)-(state.attacksUsed?.[f.card.uid]||0))})),enemies:enemies.map(c=>c.uid),lp:p.lp,enemyLP:foe.lp,score:0,uncertain:false,moves:[]};
+  const maxDepth=Math.min(7,attackLimit(state),fighters.reduce((n,f)=>n+attackCount(f.card),0));
+  const start={remaining:fighters.map(f=>({uid:f.card.uid,count:Math.max(nativeOptions?1:0,attackCount(f.card)-(state.attacksUsed?.[f.card.uid]||0))})),enemies:enemies.map(c=>c.uid),lp:p.lp,enemyLP:foe.lp,score:0,uncertain:false,moves:[]};
   let frontier=[start],best=start,nodes=0;const roots=new Map(),outcomes=new Map();
   search:for(let depth=0;depth<maxDepth&&frontier.length;depth++){
     const candidates=[];
@@ -84,7 +102,15 @@ export function battlePlan(state,side,{first=null,targets=null,available=null,wi
           const outcome=outcomes.get(outcomeKey),lp=node.lp-outcome.ownDamage,enemyLP=node.enemyLP-outcome.enemyDamage;
           let score=node.score+outcome.value;
           const uncertain=node.uncertain||!!target?.hidden;
-          if(lp<=0)score-=1000000;else if(enemyLP<=0)score+=uncertain?15000:1000000;
+          if(lp<=0)score-=1000000;
+          else if(enemyLP<=0)score+=uncertain?15000:1000000;
+          else if(protectLastBlocker&&outcome.ownLost&&monsters(projected.players[side]).length===1){
+            const reply={...projected,players:projected.players.map((player,index)=>({...player,monsters:player.monsters.map(card=>{
+              if(card?.uid===fighter.card.uid||outcome.enemyLost&&card?.uid===target?.uid)return null;
+              return card;
+            })}))};
+            if(openFieldThreat(reply,side)>=lp)score-=1000000;
+          }
           const move={uid:fighter.card.uid,target:target?.uid||null,outcome};
           const next={remaining:node.remaining.map(r=>r.uid===fighter.card.uid?{...r,count:outcome.ownLost?0:r.count-1}:r),enemies:outcome.enemyLost?node.enemies.filter(uid=>uid!==target.uid):node.enemies,lp,enemyLP,score,uncertain,moves:[...node.moves,move]};
           nodes++;
@@ -100,8 +126,31 @@ export function battlePlan(state,side,{first=null,targets=null,available=null,wi
     const unique=new Map();for(const node of candidates){const key=node.remaining.map(r=>r.uid+':'+r.count).join(',')+'|'+node.enemies.join(',')+'|'+node.lp+'|'+node.enemyLP;const old=unique.get(key);if(!old||node.score>old.score)unique.set(key,node);}
     frontier=[...unique.values()].sort((a,b)=>b.score-a.score).slice(0,width);
   }
-  return {score:best.score,moves:best.moves,first:best.moves[0]||null,roots,nodes};
+  return {score:best.score,lethal:best.lp>0&&best.enemyLP<=0&&!best.uncertain,moves:best.moves,first:best.moves[0]||null,roots,nodes};
 }
+// Forecast the rest of a declared battle without giving the attacker a
+// second copy of its current strike. Only publicly visible attackers are used.
+export function lethalAfterBattle(state,side,attacker,defender,outcome){
+  const opponent=1-side;
+  const lp=state.players[side].lp-outcome.enemyDamage;
+  if(lp<=0)return true;
+  const enemyLP=state.players[opponent].lp-outcome.ownDamage;
+  if(enemyLP<=0||attackLimit(state)===1)return false;
+
+  const players=state.players.map((player,index)=>({
+    ...player,
+    lp:index===side?lp:enemyLP,
+    monsters:player.monsters.map(card=>{
+      if(card?.uid===attacker.uid)return outcome.ownLost?null:attacker;
+      if(defender&&card?.uid===defender.uid)return outcome.enemyLost?null:defender;
+      return card;
+    })
+  }));
+  const attacksUsed={...state.attacksUsed,[attacker.uid]:Math.max(1,state.attacksUsed?.[attacker.uid]||0)};
+  const remaining={...state,players,attacksUsed,battleOptions:[],pending:null,battleStep:null};
+  return battlePlan(remaining,opponent,{width:6,maxNodes:120}).lethal;
+}
+
 export function incomingDamage(state,side){
   const p=state.players[side],foe=state.players[1-side],ours=monsters(p),theirs=monsters(foe).filter(c=>c.faceUp&&attackAllowed(state,1-side,c));
   if(!ours.length)return theirs.reduce((n,c)=>n+attack(c),0);

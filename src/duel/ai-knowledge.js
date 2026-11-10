@@ -51,7 +51,7 @@ define('Magician of Faith|Mask of Darkness|Sinister Serpent|Night Assailant|Dark
 define('Confiscation|The Forceful Sentry|Delinquent Duo','disruptHand');define('Exchange','exchange');
 define('Book of Moon|Tsukuyomi|Enemy Controller|Block Attack|Stop Defense|Book of Taiyou|Bite Shoes','position');
 define('Solemn Judgment|Magic Jammer|Seven Tools of the Bandit|Divine Wrath|Magic Drain|Magic Reflector','negate');
-define('Negate Attack|Waboku|Kuriboh','protect');define('Magic Cylinder','cylinder');define('Enchanted Javelin','battleHeal');
+define('Negate Attack|Waboku|Kuriboh|Battle Fader|Swift Scarecrow','protect');define('Magic Cylinder','cylinder');define('Enchanted Javelin','battleHeal');
 define('Scapegoat','tokens');define('Rush Recklessly','boost',{atk:700,temporary:true});define('Reinforcements','boost',{atk:500,temporary:true});
 define('Castle Walls','boost',{def:500,temporary:true});define('The Reliable Guardian','boost',{def:700,temporary:true});
 define('Limiter Removal','machineBoost');define('Mirror Wall','mirrorWall');
